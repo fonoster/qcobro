@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QCobro — Solicita tu Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- ═══════════════ HERO ROW (Desktop: side-by-side | Mobile: stacked) ═══════════════ -->
+  <section class="hero-row">
+    <!-- Mobile Nav (hidden on desktop) -->
+    <nav class="mobile-nav">
+      <div class="mobile-nav__logo">
+        <span class="mobile-nav__logo-text">QCobro</span>
+        <span class="mobile-nav__logo-sub">by Fonoster</span>
+      </div>
+      <a href="#" class="mobile-nav__login">Iniciar sesión</a>
+    </nav>
+
+    <!-- Left: Form -->
+    <div class="hero-form">
+      <header class="hero-form__header">
+        <div class="logo-group">
+          <span class="logo-text">QCobro</span>
+          <span class="logo-sub">by Fonoster</span>
+        </div>
+        <a href="#" class="login-link">¿Ya tienes cuenta? Iniciar sesión</a>
+      </header>
+
+      <div class="form-content">
+        <h1 class="form-heading">Solicita tu demo personalizada</h1>
+        <p class="form-subheading">Descubre cómo QCobro puede recuperar tu cartera vencida con IA. Completa el formulario y te contactamos en menos de 24 horas.</p>
+
+        <form class="demo-form" action="#" method="post">
+          <div class="form-row">
+            <div class="input-group">
+              <label class="input-label">Nombre</label>
+              <input type="text" class="input-field" placeholder="Tu nombre">
+            </div>
+            <div class="input-group">
+              <label class="input-label">Apellido</label>
+              <input type="text" class="input-field" placeholder="Tu apellido">
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Email corporativo</label>
+            <input type="email" class="input-field" placeholder="tu@empresa.com">
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Teléfono</label>
+            <input type="tel" class="input-field" placeholder="+52 55 1234 5678">
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Empresa</label>
+            <input type="text" class="input-field" placeholder="Nombre de tu empresa">
+          </div>
+
+          <div class="form-row">
+            <div class="input-group">
+              <label class="input-label">Tipo de empresa</label>
+              <div class="select-wrapper">
+                <select class="select-field">
+                  <option value="" disabled selected>Banco / Financiera</option>
+                  <option value="banco">Banco</option>
+                  <option value="financiera">Financiera</option>
+                  <option value="cooperativa">Cooperativa</option>
+                  <option value="fintech">Fintech</option>
+                  <option value="otro">Otro</option>
+                </select>
+                <svg class="select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Cuentas en cartera</label>
+              <div class="select-wrapper">
+                <select class="select-field">
+                  <option value="" disabled selected>1,000 – 10,000</option>
+                  <option value="lt1000">&lt; 1,000</option>
+                  <option value="1k-10k">1,000 – 10,000</option>
+                  <option value="10k-50k">10,000 – 50,000</option>
+                  <option value="gt50k">&gt; 50,000</option>
+                </select>
+                <svg class="select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn">Solicitar demo gratis</button>
+          <p class="form-disclaimer">Al enviar aceptas nuestra política de privacidad. Sin compromiso, sin tarjeta de crédito.</p>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right: Value Props (green gradient) -->
+    <div class="hero-value">
+      <p class="hero-value__tagline">Elimina las llamadas perdidas, recupera más cartera y libera a tu equipo para lo que realmente importa.</p>
+
+      <div class="demo-visual">
+        <h2 class="demo-visual__heading">Escucha a QCobro en acción</h2>
+
+        <!-- Full audio player (desktop) -->
+        <div class="audio-player audio-player--desktop">
+          <button class="audio-player__play" aria-label="Reproducir">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+          </button>
+          <span class="audio-player__time">0:00 / 1:00</span>
+          <div class="audio-player__track">
+            <div class="audio-player__fill"></div>
+            <div class="audio-player__dot"></div>
+          </div>
+          <svg class="audio-player__volume" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/></svg>
+        </div>
+        <!-- Simplified audio pill (mobile) -->
+        <div class="audio-pill audio-pill--mobile">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+          <span>Escucha el demo de QCobro · 1:00</span>
+        </div>
+
+        <p class="demo-visual__caption demo-visual__caption--desktop">Escucha cómo QCobro negocia un plan de pago con un cliente real — con empatía, en español, y cumpliendo la regulación.</p>
+        <p class="demo-visual__caption demo-visual__caption--mobile">Escucha cómo QCobro negocia con empatía, en español.</p>
+      </div>
+
+      <div class="hero-divider"></div>
+
+      <div class="trust-stats">
+        <div class="trust-stat">
+          <span class="trust-stat__value trust-stat__value--green">3.5×</span>
+          <span class="trust-stat__label">más contactos</span>
+        </div>
+        <div class="trust-stat">
+          <span class="trust-stat__value">62%</span>
+          <span class="trust-stat__label">menos costos</span>
+        </div>
+        <div class="trust-stat">
+          <span class="trust-stat__value trust-stat__value--green">&lt; 48h</span>
+          <span class="trust-stat__label">para salir en vivo</span>
+        </div>
+        <div class="trust-stat">
+          <span class="trust-stat__value">100%</span>
+          <span class="trust-stat__label">grabado y auditable</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ TRUSTED BY ═══════════════ -->
+  <section class="trusted-by">
+    <p class="trusted-by__label">Empresas que ya recuperan más con QCobro</p>
+    <div class="trusted-by__logos">
+      <span class="trusted-by__logo">Banco Andes</span>
+      <span class="trusted-by__logo">Cooperativa Norte</span>
+      <span class="trusted-by__logo">FinCred</span>
+      <span class="trusted-by__logo">PrestaYa</span>
+      <span class="trusted-by__logo">Microfin Latam</span>
+      <span class="trusted-by__logo">Credired</span>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════════ VALUE PROPS ═══════════════ -->
+  <section class="value-props">
+    <h2 class="value-props__heading">Resultados desde el primer mes</h2>
+    <div class="value-props__cards">
+      <div class="vp-card">
+        <div class="vp-card__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        </div>
+        <span class="vp-card__stat">3.5×</span>
+        <h3 class="vp-card__title">Más contactos efectivos</h3>
+        <p class="vp-card__body">Alcanza hasta 3.5 veces más deudores que un call center tradicional. Sin agregar un solo agente.</p>
+      </div>
+      <div class="vp-card">
+        <div class="vp-card__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2.5"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+        </div>
+        <span class="vp-card__stat">62%</span>
+        <h3 class="vp-card__title">Reducción de costos</h3>
+        <p class="vp-card__body">Reduce el costo por cuenta gestionada en más de la mitad. Paga solo por resultados, no por asientos.</p>
+      </div>
+      <div class="vp-card">
+        <div class="vp-card__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+        </div>
+        <span class="vp-card__stat">&lt; 48h</span>
+        <h3 class="vp-card__title">Configuración rápida</h3>
+        <p class="vp-card__body">Sal en vivo en menos de 48 horas. Integra tu CRM o core bancario vía API. ROI desde el primer mes.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
+  <section class="how-it-works">
+    <div class="hiw-eyebrow">
+      <span class="hiw-eyebrow__desktop">Cómo funciona</span>
+      <span class="hiw-eyebrow__mobile">Simple. Rápido. Auditado.</span>
+    </div>
+    <h2 class="how-it-works__heading">De tu cartera a pagos reales, en 3 pasos</h2>
+
+    <div class="hiw-steps">
+      <!-- Step 1 -->
+      <div class="hiw-step">
+        <div class="hiw-step__number">1</div>
+        <h3 class="hiw-step__title">Conectas tu cartera</h3>
+        <div class="hiw-step__mock">
+          <span class="hiw-mock__line1">📄 cartera_abril.csv</span>
+          <span class="hiw-mock__line2">12,430 cuentas cargadas</span>
+          <div class="hiw-mock__bar">
+            <div class="hiw-mock__bar-fill"></div>
+          </div>
+        </div>
+        <p class="hiw-step__body">Sube un CSV o integra tu CRM / core bancario vía API en minutos.</p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="hiw-step">
+        <div class="hiw-step__number">2</div>
+        <h3 class="hiw-step__title">QCobro llama y negocia</h3>
+        <div class="hiw-step__mock hiw-step__mock--chat">
+          <div class="chat-bubble chat-bubble--agent">Buenos días, le llamo de...</div>
+          <div class="chat-bubble chat-bubble--client">Sí, puedo pagar el viernes</div>
+          <div class="chat-bubble chat-bubble--agent">Perfecto, registrado ✓</div>
+        </div>
+        <p class="hiw-step__body">El agente IA contacta, identifica intención de pago y ofrece soluciones dentro de tus reglas.</p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="hiw-step">
+        <div class="hiw-step__number">3</div>
+        <h3 class="hiw-step__title">Recibes compromisos y pagos</h3>
+        <div class="hiw-step__mock hiw-step__mock--results">
+          <div class="result-row">
+            <span class="result-row__label">Promesas hoy</span>
+            <span class="result-row__value result-row__value--green">312</span>
+          </div>
+          <div class="result-row">
+            <span class="result-row__label">Recuperado</span>
+            <span class="result-row__value">$287,430</span>
+          </div>
+        </div>
+        <p class="hiw-step__body">Cada acuerdo queda registrado, auditado y listo para cobrar — con grabación completa.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ TESTIMONIALS ═══════════════ -->
+  <section class="testimonials">
+    <h2 class="testimonials__heading">Lo que dicen nuestros clientes</h2>
+    <div class="testimonials__grid">
+      <div class="testimonial-card">
+        <span class="testimonial-card__stars">★★★★★</span>
+        <p class="testimonial-card__quote">"Pasamos de llamar 800 cuentas al día a 12,000. Y la tasa de promesa subió del 9% al 23%. QCobro cambió nuestro negocio."</p>
+        <div class="testimonial-card__author">
+          <div class="author-avatar">LM</div>
+          <div class="author-info">
+            <span class="author-info__name">Laura Méndez</span>
+            <span class="author-info__role">Gerente de Cobranza, FinCred</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <span class="testimonial-card__stars">★★★★★</span>
+        <p class="testimonial-card__quote">"Lo que más me sorprendió fue la empatía del agente. Los clientes nos agradecen la llamada. Eso antes no pasaba."</p>
+        <div class="testimonial-card__author">
+          <div class="author-avatar">CR</div>
+          <div class="author-info">
+            <span class="author-info__name">Carlos Ruiz</span>
+            <span class="author-info__role">Dir. de Operaciones, Cooperativa Norte</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <span class="testimonial-card__stars">★★★★★</span>
+        <p class="testimonial-card__quote">"Integramos QCobro con nuestro core bancario en dos días. ROI en el primer mes. Mi equipo no quiere volver atrás."</p>
+        <div class="testimonial-card__author">
+          <div class="author-avatar">AV</div>
+          <div class="author-info">
+            <span class="author-info__name">Ana Villareal</span>
+            <span class="author-info__role">CTO, Banco Andes</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ INTEGRATIONS ═══════════════ -->
+  <section class="integrations">
+    <span class="integrations__label">Integraciones nativas y API abierta</span>
+    <h2 class="integrations__heading">Conecta con tus herramientas existentes</h2>
+    <div class="integrations__logos">
+      <span class="integration-pill">Salesforce</span>
+      <span class="integration-pill">HubSpot</span>
+      <span class="integration-pill">WhatsApp</span>
+      <span class="integration-pill">Zapier</span>
+      <span class="integration-pill">Twilio</span>
+      <span class="integration-pill">REST API</span>
+      <span class="integration-pill">Webhooks</span>
+    </div>
+    <p class="integrations__note">Construido sobre la plataforma de comunicaciones programables de Fonoster</p>
+  </section>
+
+  <!-- ═══════════════ FINAL CTA ═══════════════ -->
+  <section class="final-cta">
+    <h2 class="final-cta__heading">¿Listo para recuperar más cartera?</h2>
+    <p class="final-cta__sub">Agenda una demo de 20 minutos y ve a QCobro en acción con tu propia cartera.</p>
+    <div class="final-cta__buttons">
+      <a href="#" class="cta-primary">Solicitar demo gratis</a>
+      <a href="#" class="cta-secondary">Hablar con ventas →</a>
+    </div>
+  </section>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer class="footer">
+    <div class="footer__logo">
+      <span class="footer__logo-text">QCobro</span>
+      <span class="footer__logo-sub">by Fonoster</span>
+    </div>
+    <p class="footer__copy">© 2026 Fonoster, Inc. Todos los derechos reservados.</p>
+    <div class="footer__links">
+      <a href="#">Privacidad</a>
+      <a href="#">Términos</a>
+      <a href="#">Contacto</a>
+    </div>
+  </footer>
+</body>
+</html>
