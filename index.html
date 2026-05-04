@@ -35,40 +35,43 @@
         <h1 class="form-heading">Solicita tu demo personalizada</h1>
         <p class="form-subheading">Descubre cómo QCobro puede recuperar tu cartera vencida con IA. Completa el formulario y te contactamos en menos de 24 horas.</p>
 
-        <form class="demo-form" action="#" method="post">
+        <form class="demo-form">
           <div class="form-row">
             <div class="input-group">
               <label class="input-label">Nombre</label>
-              <input type="text" class="input-field" placeholder="Tu nombre">
+              <input type="text" class="input-field" name="nombre" placeholder="Tu nombre" required>
+              <span class="field-error"></span>
             </div>
             <div class="input-group">
               <label class="input-label">Apellido</label>
-              <input type="text" class="input-field" placeholder="Tu apellido">
+              <input type="text" class="input-field" name="apellido" placeholder="Tu apellido" required>
+              <span class="field-error"></span>
             </div>
           </div>
 
           <div class="input-group">
             <label class="input-label">Email corporativo</label>
-            <input type="email" class="input-field" placeholder="tu@empresa.com">
+            <input type="email" class="input-field" name="email" placeholder="tu@empresa.com" required>
+            <span class="field-error"></span>
           </div>
 
           <div class="input-group">
             <label class="input-label">Teléfono</label>
-            <input type="tel" class="input-field" placeholder="+52 55 1234 5678">
+            <input type="tel" class="input-field" name="telefono" placeholder="+1 809 123 4567">
           </div>
 
           <div class="input-group">
             <label class="input-label">Empresa</label>
-            <input type="text" class="input-field" placeholder="Nombre de tu empresa">
+            <input type="text" class="input-field" name="empresa" placeholder="Nombre de tu empresa" required>
+            <span class="field-error"></span>
           </div>
 
           <div class="form-row">
             <div class="input-group">
               <label class="input-label">Tipo de empresa</label>
               <div class="select-wrapper">
-                <select class="select-field">
-                  <option value="" disabled selected>Banco / Financiera</option>
-                  <option value="banco">Banco</option>
+                <select class="select-field" name="tipo_empresa">
+                  <option value="banco" selected>Banco</option>
                   <option value="financiera">Financiera</option>
                   <option value="cooperativa">Cooperativa</option>
                   <option value="fintech">Fintech</option>
@@ -80,9 +83,8 @@
             <div class="input-group">
               <label class="input-label">Cuentas en cartera</label>
               <div class="select-wrapper">
-                <select class="select-field">
-                  <option value="" disabled selected>1,000 – 10,000</option>
-                  <option value="lt1000">&lt; 1,000</option>
+                <select class="select-field" name="cuentas_en_cartera">
+                  <option value="lt1000" selected>&lt; 1,000</option>
                   <option value="1k-10k">1,000 – 10,000</option>
                   <option value="10k-50k">10,000 – 50,000</option>
                   <option value="gt50k">&gt; 50,000</option>
@@ -100,17 +102,20 @@
 
     <!-- Right: Value Props (green gradient) -->
     <div class="hero-value">
-      <p class="hero-value__tagline">Elimina las llamadas perdidas, recupera más cartera y libera a tu equipo para lo que realmente importa.</p>
+      <p class="hero-value__tagline">Cobra más, gasta menos, sin pausas, sin límites.</p>
 
       <div class="demo-visual">
         <h2 class="demo-visual__heading">Escucha a QCobro en acción</h2>
 
+        <audio id="demo-audio" preload="metadata" src="assets/cobro_demo.wav"></audio>
+
         <!-- Full audio player (desktop) -->
         <div class="audio-player audio-player--desktop">
           <button class="audio-player__play" aria-label="Reproducir">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            <svg class="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            <svg class="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
           </button>
-          <span class="audio-player__time">0:00 / 1:00</span>
+          <span class="audio-player__time">0:00 / 0:00</span>
           <div class="audio-player__track">
             <div class="audio-player__fill"></div>
             <div class="audio-player__dot"></div>
@@ -119,27 +124,28 @@
         </div>
         <!-- Simplified audio pill (mobile) -->
         <div class="audio-pill audio-pill--mobile">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
-          <span>Escucha el demo de QCobro · 1:00</span>
+          <svg class="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+          <svg class="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          <span class="audio-pill__label">Escucha el demo de QCobro · <span class="audio-pill__duration">0:00</span></span>
         </div>
 
-        <p class="demo-visual__caption demo-visual__caption--desktop">Escucha cómo QCobro negocia un plan de pago con un cliente real — con empatía, en español, y cumpliendo la regulación.</p>
-        <p class="demo-visual__caption demo-visual__caption--mobile">Escucha cómo QCobro negocia con empatía, en español.</p>
+        <p class="demo-visual__caption demo-visual__caption--desktop">Escucha cómo QCobro obtiene una promesa de pago de un cliente real — firme, en español, y cumpliendo la regulación.</p>
+        <p class="demo-visual__caption demo-visual__caption--mobile">Escucha cómo QCobro obtiene promesas de pago, firme, en español.</p>
       </div>
 
       <div class="hero-divider"></div>
 
       <div class="trust-stats">
         <div class="trust-stat">
-          <span class="trust-stat__value trust-stat__value--green">3.5×</span>
-          <span class="trust-stat__label">más contactos</span>
+          <span class="trust-stat__value trust-stat__value--green">+30K</span>
+          <span class="trust-stat__label">Interacciones al mes</span>
         </div>
         <div class="trust-stat">
-          <span class="trust-stat__value">62%</span>
+          <span class="trust-stat__value">10x</span>
           <span class="trust-stat__label">menos costos</span>
         </div>
         <div class="trust-stat">
-          <span class="trust-stat__value trust-stat__value--green">&lt; 48h</span>
+          <span class="trust-stat__value trust-stat__value--green">&lt; 7 dias</span>
           <span class="trust-stat__label">para salir en vivo</span>
         </div>
         <div class="trust-stat">
@@ -173,25 +179,25 @@
         <div class="vp-card__icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
         </div>
-        <span class="vp-card__stat">3.5×</span>
-        <h3 class="vp-card__title">Más contactos efectivos</h3>
-        <p class="vp-card__body">Alcanza hasta 3.5 veces más deudores que un call center tradicional. Sin agregar un solo agente.</p>
+        <span class="vp-card__stat">+30K</span>
+        <h3 class="vp-card__title">Interacciones mensuales</h3>
+        <p class="vp-card__body">Capacidad omnicanal real. Un solo ecosistema, sin sumar agentes ni infraestructura.</p>
       </div>
       <div class="vp-card">
         <div class="vp-card__icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2.5"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
         </div>
-        <span class="vp-card__stat">62%</span>
+        <span class="vp-card__stat">10x</span>
         <h3 class="vp-card__title">Reducción de costos</h3>
-        <p class="vp-card__body">Reduce el costo por cuenta gestionada en más de la mitad. Paga solo por resultados, no por asientos.</p>
+        <p class="vp-card__body">Reduce hasta 10 veces el costo por contacto frente a un call center tradicional al mismo volumen.</p>
       </div>
       <div class="vp-card">
         <div class="vp-card__icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
         </div>
-        <span class="vp-card__stat">&lt; 48h</span>
+        <span class="vp-card__stat">&lt; 7 dias</span>
         <h3 class="vp-card__title">Configuración rápida</h3>
-        <p class="vp-card__body">Sal en vivo en menos de 48 horas. Integra tu CRM o core bancario vía API. ROI desde el primer mes.</p>
+        <p class="vp-card__body">Prueba de concepto en menos de 7 dias. ROI desde el primer mes.</p>
       </div>
     </div>
   </section>
@@ -329,5 +335,172 @@
       <a href="#">Contacto</a>
     </div>
   </footer>
+
+  <script>
+  (function() {
+    // ─── Audio Player ───
+    var audio = document.getElementById('demo-audio');
+    var desktopPlayer = document.querySelector('.audio-player--desktop');
+    var mobilePill = document.querySelector('.audio-pill--mobile');
+
+    var playBtn = desktopPlayer.querySelector('.audio-player__play');
+    var iconPlay = desktopPlayer.querySelector('.icon-play');
+    var iconPause = desktopPlayer.querySelector('.icon-pause');
+    var timeDisplay = desktopPlayer.querySelector('.audio-player__time');
+    var track = desktopPlayer.querySelector('.audio-player__track');
+    var fill = desktopPlayer.querySelector('.audio-player__fill');
+    var dot = desktopPlayer.querySelector('.audio-player__dot');
+
+    var mobileIconPlay = mobilePill.querySelector('.icon-play');
+    var mobileIconPause = mobilePill.querySelector('.icon-pause');
+    var pillDuration = mobilePill.querySelector('.audio-pill__duration');
+
+    function formatTime(seconds) {
+      if (!isFinite(seconds)) return '0:00';
+      var m = Math.floor(seconds / 60);
+      var s = Math.floor(seconds % 60);
+      return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function syncPlayState() {
+      var playing = !audio.paused;
+      iconPlay.style.display = playing ? 'none' : '';
+      iconPause.style.display = playing ? '' : 'none';
+      mobileIconPlay.style.display = playing ? 'none' : '';
+      mobileIconPause.style.display = playing ? '' : 'none';
+      playBtn.setAttribute('aria-label', playing ? 'Pausar' : 'Reproducir');
+    }
+
+    function togglePlay() {
+      if (audio.paused) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    }
+
+    playBtn.addEventListener('click', togglePlay);
+    mobilePill.addEventListener('click', togglePlay);
+    mobilePill.style.cursor = 'pointer';
+
+    audio.addEventListener('play', syncPlayState);
+    audio.addEventListener('pause', syncPlayState);
+
+    audio.addEventListener('loadedmetadata', function() {
+      timeDisplay.textContent = '0:00 / ' + formatTime(audio.duration);
+      pillDuration.textContent = formatTime(audio.duration);
+    });
+
+    audio.addEventListener('timeupdate', function() {
+      var pct = (audio.currentTime / audio.duration) * 100 || 0;
+      fill.style.width = pct + '%';
+      dot.style.left = 'calc(' + pct + '% - 7px)';
+      timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
+    });
+
+    audio.addEventListener('ended', function() {
+      fill.style.width = '0%';
+      dot.style.left = '-3px';
+      syncPlayState();
+    });
+
+    track.addEventListener('click', function(e) {
+      var rect = track.getBoundingClientRect();
+      var pct = (e.clientX - rect.left) / rect.width;
+      audio.currentTime = pct * audio.duration;
+    });
+
+    track.style.cursor = 'pointer';
+
+    // ─── Form Validation ───
+    var form = document.querySelector('.demo-form');
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    function showError(field, message) {
+      field.classList.add('invalid');
+      var errorEl = field.parentElement.querySelector('.field-error');
+      if (errorEl) errorEl.textContent = message;
+    }
+
+    function clearError(field) {
+      field.classList.remove('invalid');
+      var errorEl = field.parentElement.querySelector('.field-error');
+      if (errorEl) errorEl.textContent = '';
+    }
+
+    form.querySelectorAll('.input-field[required]').forEach(function(field) {
+      field.addEventListener('input', function() { clearError(field); });
+    });
+
+    function validate() {
+      var valid = true;
+
+      var nombre = form.nombre;
+      if (!nombre.value.trim()) {
+        showError(nombre, 'El nombre es obligatorio');
+        valid = false;
+      } else { clearError(nombre); }
+
+      var apellido = form.apellido;
+      if (!apellido.value.trim()) {
+        showError(apellido, 'El apellido es obligatorio');
+        valid = false;
+      } else { clearError(apellido); }
+
+      var email = form.email;
+      if (!email.value.trim()) {
+        showError(email, 'El email es obligatorio');
+        valid = false;
+      } else if (!emailRegex.test(email.value.trim())) {
+        showError(email, 'Ingresa un email válido');
+        valid = false;
+      } else { clearError(email); }
+
+      var empresa = form.empresa;
+      if (!empresa.value.trim()) {
+        showError(empresa, 'El nombre de la empresa es obligatorio');
+        valid = false;
+      } else { clearError(empresa); }
+
+      return valid;
+    }
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      if (!validate()) return;
+
+      var btn = form.querySelector('.submit-btn');
+      var originalText = btn.textContent;
+      btn.textContent = 'Enviando...';
+      btn.disabled = true;
+
+      var payload = {
+        nombre: form.nombre.value.trim(),
+        apellido: form.apellido.value.trim(),
+        email: form.email.value.trim(),
+        telefono: form.telefono.value.trim(),
+        empresa: form.empresa.value.trim(),
+        tipo_empresa: form.tipo_empresa.value,
+        cuentas_en_cartera: form.cuentas_en_cartera.value
+      };
+
+      try {
+        await fetch('https://script.google.com/macros/s/AKfycbwB2WuEvbyzje0xi5JyjminYUPZJmg5mVqf4I8zE0t4QKm8cFtMAwRoLOd-DC1ow4WyHA/exec', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        btn.textContent = '¡Enviado!';
+        form.reset();
+        setTimeout(function() {
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }, 3000);
+      } catch (err) {
+        btn.textContent = 'Error — intenta de nuevo';
+        btn.disabled = false;
+      }
+    });
+  })();
+  </script>
 </body>
 </html>
