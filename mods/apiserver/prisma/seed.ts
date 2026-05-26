@@ -1,7 +1,10 @@
 import { PrismaClient } from "../src/generated/prisma/index.js";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+const url = process.env.DATABASE_URL ?? "file:./prisma/qcobro.db";
+const adapter = new PrismaBetterSqlite3({ url });
+const prisma = new PrismaClient({ adapter } as never);
 
 async function main() {
   const passwordHash = await bcrypt.hash("admin1234", 12);

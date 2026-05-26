@@ -1,9 +1,7 @@
 import { PrismaClient } from "../src/generated/prisma/index.js";
-import { PrismaLibSQL } from "@prisma/adapter-better-sqlite3";
-import Database from "better-sqlite3";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
-const dbPath = process.env.DATABASE_URL ?? "./prisma/qcobro.db";
-const sqlite = new Database(dbPath);
-const adapter = new PrismaLibSQL(sqlite);
+const url = process.env.DATABASE_URL ?? "file:./prisma/qcobro.db";
+const adapter = new PrismaBetterSqlite3({ url });
 
 export const prisma = new PrismaClient({ adapter } as never);
