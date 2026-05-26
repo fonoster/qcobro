@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QCobro — Solicita tu Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- ═══════════════ HERO ROW (Desktop: side-by-side | Mobile: stacked) ═══════════════ -->
+  <section class="hero-row">
+    <!-- Mobile Nav (hidden on desktop) -->
+    <nav class="mobile-nav">
+      <div class="mobile-nav__logo">
+        <span class="mobile-nav__logo-text">QCobro</span>
+        <span class="mobile-nav__logo-sub">by Fonoster</span>
+      </div>
+      <a href="#" class="mobile-nav__login">Iniciar sesión</a>
+    </nav>
+
+    <!-- Left: Form -->
+    <div class="hero-form">
+      <header class="hero-form__header">
+        <div class="logo-group">
+          <span class="logo-text">QCobro</span>
+          <span class="logo-sub">by Fonoster</span>
+        </div>
+        <a href="#" class="login-link">¿Ya tienes cuenta? Iniciar sesión</a>
+      </header>
+
+      <div class="form-content">
+        <h1 class="form-heading">Solicita tu demo gratis</h1>
+        <p class="form-subheading">Descubre cómo QCobro puede recuperar tu cartera vencida usando llamadas interactivas con Voz IA.</p>
+
+        <form class="demo-form">
+          <div class="form-row">
+            <div class="input-group">
+              <label class="input-label">Nombre</label>
+              <input type="text" class="input-field" name="nombre" placeholder="Tu nombre" required>
+              <span class="field-error"></span>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Apellido</label>
+              <input type="text" class="input-field" name="apellido" placeholder="Tu apellido" required>
+              <span class="field-error"></span>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Email corporativo</label>
+            <input type="email" class="input-field" name="email" placeholder="tu@empresa.com" required>
+            <span class="field-error"></span>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Teléfono</label>
+            <input type="tel" class="input-field" name="telefono" placeholder="+1 809 317 8070">
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Empresa</label>
+            <input type="text" class="input-field" name="empresa" placeholder="Nombre de tu empresa" required>
+            <span class="field-error"></span>
+          </div>
+
+          <div class="form-row">
+            <div class="input-group">
+              <label class="input-label">Tipo de empresa</label>
+              <div class="select-wrapper">
+                <select class="select-field" name="tipo_empresa">
+                  <option value="banco" selected>Banco</option>
+                  <option value="financiera">Financiera</option>
+                  <option value="cooperativa">Cooperativa</option>
+                  <option value="fintech">Fintech</option>
+                  <option value="otro">Otro</option>
+                </select>
+                <svg class="select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Cuentas en cartera</label>
+              <div class="select-wrapper">
+                <select class="select-field" name="cuentas_en_cartera">
+                  <option value="lt1000" selected>&lt; 1,000</option>
+                  <option value="1k-10k">1,000 – 10,000</option>
+                  <option value="10k-50k">10,000 – 50,000</option>
+                  <option value="gt50k">&gt; 50,000</option>
+                </select>
+                <svg class="select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn">Solicitar demo gratis</button>
+          <p class="form-disclaimer">Al enviar aceptas nuestra política de privacidad. Sin compromiso y sin pago por adelantado.</p>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right: Value Props (green gradient) -->
+    <div class="hero-value">
+      <p class="hero-value__tagline">Cobra más, gasta menos, sin pausas, sin límites.</p>
+
+      <div class="demo-visual">
+        <h2 class="demo-visual__heading">Escucha a QCobro en acción</h2>
+
+        <audio id="demo-audio" preload="metadata" src="assets/cobro_demo.wav"></audio>
+
+        <!-- Full audio player (desktop) -->
+        <div class="audio-player audio-player--desktop">
+          <button class="audio-player__play" aria-label="Reproducir">
+            <svg class="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            <svg class="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          </button>
+          <span class="audio-player__time">0:00 / 0:00</span>
+          <div class="audio-player__track">
+            <div class="audio-player__fill"></div>
+            <div class="audio-player__dot"></div>
+          </div>
+          <svg class="audio-player__volume" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/></svg>
+        </div>
+        <!-- Simplified audio pill (mobile) -->
+        <div class="audio-pill audio-pill--mobile">
+          <svg class="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+          <svg class="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          <span class="audio-pill__label">Escucha el demo de QCobro · <span class="audio-pill__duration">0:00</span></span>
+        </div>
+
+        <p class="demo-visual__caption demo-visual__caption--desktop">Escucha cómo QCobro negocia términos de pago con un cliente real — con rapidez, en español, y cumpliendo la regulación.</p>
+        <p class="demo-visual__caption demo-visual__caption--mobile">Escucha cómo QCobro negocia términos de pago, con rapidez, en español.</p>
+      </div>
+
+      <div class="hero-divider"></div>
+
+      <div class="trust-stats">
+        <div class="trust-stat">
+          <span class="trust-stat__value trust-stat__value--green">+30K</span>
+          <span class="trust-stat__label">Interacciones al mes</span>
+        </div>
+        <div class="trust-stat">
+          <span class="trust-stat__value">10x</span>
+          <span class="trust-stat__label">menos costos</span>
+        </div>
+        <div class="trust-stat">
+          <span class="trust-stat__value trust-stat__value--green">&lt; 7 dias</span>
+          <span class="trust-stat__label">para salir en vivo</span>
+        </div>
+        <div class="trust-stat">
+          <span class="trust-stat__value">100%</span>
+          <span class="trust-stat__label">grabado y auditable</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ TRUSTED BY ═══════════════ -->
+  <section class="trusted-by">
+    <p class="trusted-by__label">Diseñado para equipos de crédito, cooperativas y fintechs en crecimiento</p>
+    <div class="trusted-by__logos">
+      <span class="trusted-by__logo">Banco Ademi</span>
+      <span class="trusted-by__logo">Mikro</span>
+      <span class="trusted-by__logo">Credicefi</span>
+      <span class="trusted-by__logo">Credifácil</span>
+      <span class="trusted-by__logo">Credimás</span>
+      <span class="trusted-by__logo">CrediYa</span>
+      <span class="trusted-by__logo">CoopMaimón</span>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════════ VALUE PROPS ═══════════════ -->
+  <section class="value-props">
+    <h2 class="value-props__heading">Resultados desde el primer mes</h2>
+    <div class="value-props__cards">
+      <div class="vp-card">
+        <div class="vp-card__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        </div>
+        <span class="vp-card__stat">+30K</span>
+        <h3 class="vp-card__title">Interacciones mensuales</h3>
+        <p class="vp-card__body">Capacidad omnicanal real. Un solo ecosistema, sin sumar agentes ni infraestructura.</p>
+      </div>
+      <div class="vp-card">
+        <div class="vp-card__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2.5"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+        </div>
+        <span class="vp-card__stat">10x</span>
+        <h3 class="vp-card__title">Reducción de costos</h3>
+        <p class="vp-card__body">Reduce hasta 10 veces el costo por contacto frente a un call center tradicional al mismo volumen.</p>
+      </div>
+      <div class="vp-card">
+        <div class="vp-card__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+        </div>
+        <span class="vp-card__stat">&lt; 7 dias</span>
+        <h3 class="vp-card__title">Configuración rápida</h3>
+        <p class="vp-card__body">Prueba de concepto en menos de 7 dias. ROI desde el primer mes.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
+  <section class="how-it-works">
+    <div class="hiw-eyebrow">
+      <span class="hiw-eyebrow__desktop">Cómo funciona</span>
+      <span class="hiw-eyebrow__mobile">Simple. Rápido. Auditado.</span>
+    </div>
+    <h2 class="how-it-works__heading">De tu cartera a pagos reales, en 3 pasos</h2>
+
+    <div class="hiw-steps">
+      <!-- Step 1 -->
+      <div class="hiw-step">
+        <div class="hiw-step__number">1</div>
+        <h3 class="hiw-step__title">Conectas tu cartera</h3>
+        <div class="hiw-step__mock">
+          <span class="hiw-mock__line1">📄 cartera_abril.csv</span>
+          <span class="hiw-mock__line2">12,430 cuentas cargadas</span>
+          <div class="hiw-mock__bar">
+            <div class="hiw-mock__bar-fill"></div>
+          </div>
+        </div>
+        <p class="hiw-step__body">Sube un CSV o integra tu CRM / core bancario vía API en minutos.</p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="hiw-step">
+        <div class="hiw-step__number">2</div>
+        <h3 class="hiw-step__title">QCobro llama y cobra</h3>
+        <div class="hiw-step__mock hiw-step__mock--chat">
+          <div class="chat-bubble chat-bubble--agent">Buenos días, le llamo de...</div>
+          <div class="chat-bubble chat-bubble--client">Sí, puedo pagar el viernes</div>
+          <div class="chat-bubble chat-bubble--agent">Perfecto, registrado ✓</div>
+        </div>
+        <p class="hiw-step__body">El agente IA contacta, identifica intención de pago y ofrece soluciones dentro de tus reglas.</p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="hiw-step">
+        <div class="hiw-step__number">3</div>
+        <h3 class="hiw-step__title">Recibes compromisos y pagos</h3>
+        <div class="hiw-step__mock hiw-step__mock--results">
+          <div class="result-row">
+            <span class="result-row__label">Promesas hoy</span>
+            <span class="result-row__value result-row__value--green">312</span>
+          </div>
+          <div class="result-row">
+            <span class="result-row__label">Recuperado</span>
+            <span class="result-row__value">$287,430</span>
+          </div>
+        </div>
+        <p class="hiw-step__body">Cada acuerdo queda registrado, auditado y listo para cobrar — con grabación completa.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ TESTIMONIALS ═══════════════ -->
+  <section class="testimonials">
+    <h2 class="testimonials__heading">Lo que dicen nuestros clientes</h2>
+    <div class="testimonials__grid">
+      <div class="testimonial-card">
+        <span class="testimonial-card__stars">★★★★★</span>
+        <p class="testimonial-card__quote">"Antes una implementación nos tomaba 3 meses. Con QCobro entregamos la primera campaña en 7 días. Cambió por completo nuestra propuesta de valor."</p>
+        <div class="testimonial-card__author">
+          <div class="author-avatar">FP</div>
+          <div class="author-info">
+            <span class="author-info__name">Fred Peña</span>
+            <span class="author-info__role">Dir. Técnico, Alphanology</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <span class="testimonial-card__stars">★★★★★</span>
+        <p class="testimonial-card__quote">"Lo que más me sorprendió fue la empatía del agente. Los clientes nos agradecen la llamada. Eso antes no pasaba."</p>
+        <div class="testimonial-card__author">
+          <div class="author-avatar">CR</div>
+          <div class="author-info">
+            <span class="author-info__name">Carlos Ruiz</span>
+            <span class="author-info__role">Dir. de Cobros, Auto Prestamos</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <span class="testimonial-card__stars">★★★★★</span>
+        <p class="testimonial-card__quote">"Integramos QCobro con nuestro software de cobros en dos días. ROI en el primer mes. Mi equipo no quiere volver atrás."</p>
+        <div class="testimonial-card__author">
+          <div class="author-avatar">MT</div>
+          <div class="author-info">
+            <span class="author-info__name">Madeline Torres</span>
+            <span class="author-info__role">Presidente, Mikro</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ INTEGRATIONS ═══════════════ -->
+  <section class="integrations">
+    <span class="integrations__label">Integraciones nativas y API abierta</span>
+    <h2 class="integrations__heading">Conecta con tus herramientas existentes</h2>
+    <div class="integrations__logos">
+      <span class="integration-pill">Salesforce</span>
+      <span class="integration-pill">HubSpot</span>
+      <span class="integration-pill">WhatsApp</span>
+      <span class="integration-pill">Zapier</span>
+      <span class="integration-pill">Twilio</span>
+      <span class="integration-pill">REST API</span>
+      <span class="integration-pill">Webhooks</span>
+    </div>
+    <p class="integrations__note">Construido sobre la plataforma de comunicaciones programables de Fonoster</p>
+  </section>
+
+  <!-- ═══════════════ FINAL CTA ═══════════════ -->
+  <section class="final-cta">
+    <h2 class="final-cta__heading">¿Listo para recuperar más cartera?</h2>
+    <p class="final-cta__sub">Agenda una demo de 20 minutos y ve a QCobro en acción con tu propia cartera.</p>
+    <div class="final-cta__buttons">
+      <a href="#" class="cta-primary">Solicitar demo gratis</a>
+      <a href="#" class="cta-secondary">Hablar con ventas →</a>
+    </div>
+  </section>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer class="footer">
+    <div class="footer__logo">
+      <span class="footer__logo-text">QCobro</span>
+      <span class="footer__logo-sub">by Fonoster</span>
+    </div>
+    <p class="footer__copy">© 2026 Fonoster, Inc. Todos los derechos reservados.</p>
+    <div class="footer__links">
+      <a href="#">Privacidad</a>
+      <a href="#">Términos</a>
+      <a href="#">Contacto</a>
+    </div>
+  </footer>
+
+  <script>
+  (function() {
+    // ─── Audio Player ───
+    var audio = document.getElementById('demo-audio');
+    var desktopPlayer = document.querySelector('.audio-player--desktop');
+    var mobilePill = document.querySelector('.audio-pill--mobile');
+
+    var playBtn = desktopPlayer.querySelector('.audio-player__play');
+    var iconPlay = desktopPlayer.querySelector('.icon-play');
+    var iconPause = desktopPlayer.querySelector('.icon-pause');
+    var timeDisplay = desktopPlayer.querySelector('.audio-player__time');
+    var track = desktopPlayer.querySelector('.audio-player__track');
+    var fill = desktopPlayer.querySelector('.audio-player__fill');
+    var dot = desktopPlayer.querySelector('.audio-player__dot');
+
+    var mobileIconPlay = mobilePill.querySelector('.icon-play');
+    var mobileIconPause = mobilePill.querySelector('.icon-pause');
+    var pillDuration = mobilePill.querySelector('.audio-pill__duration');
+
+    function formatTime(seconds) {
+      if (!isFinite(seconds)) return '0:00';
+      var m = Math.floor(seconds / 60);
+      var s = Math.floor(seconds % 60);
+      return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function syncPlayState() {
+      var playing = !audio.paused;
+      iconPlay.style.display = playing ? 'none' : '';
+      iconPause.style.display = playing ? '' : 'none';
+      mobileIconPlay.style.display = playing ? 'none' : '';
+      mobileIconPause.style.display = playing ? '' : 'none';
+      playBtn.setAttribute('aria-label', playing ? 'Pausar' : 'Reproducir');
+    }
+
+    function togglePlay() {
+      if (audio.paused) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    }
+
+    playBtn.addEventListener('click', togglePlay);
+    mobilePill.addEventListener('click', togglePlay);
+    mobilePill.style.cursor = 'pointer';
+
+    audio.addEventListener('play', syncPlayState);
+    audio.addEventListener('pause', syncPlayState);
+
+    audio.addEventListener('loadedmetadata', function() {
+      timeDisplay.textContent = '0:00 / ' + formatTime(audio.duration);
+      pillDuration.textContent = formatTime(audio.duration);
+    });
+
+    audio.addEventListener('timeupdate', function() {
+      var pct = (audio.currentTime / audio.duration) * 100 || 0;
+      fill.style.width = pct + '%';
+      dot.style.left = 'calc(' + pct + '% - 7px)';
+      timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
+    });
+
+    audio.addEventListener('ended', function() {
+      fill.style.width = '0%';
+      dot.style.left = '-3px';
+      syncPlayState();
+    });
+
+    track.addEventListener('click', function(e) {
+      var rect = track.getBoundingClientRect();
+      var pct = (e.clientX - rect.left) / rect.width;
+      audio.currentTime = pct * audio.duration;
+    });
+
+    track.style.cursor = 'pointer';
+
+    // ─── Form Validation ───
+    var form = document.querySelector('.demo-form');
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    function showError(field, message) {
+      field.classList.add('invalid');
+      var errorEl = field.parentElement.querySelector('.field-error');
+      if (errorEl) errorEl.textContent = message;
+    }
+
+    function clearError(field) {
+      field.classList.remove('invalid');
+      var errorEl = field.parentElement.querySelector('.field-error');
+      if (errorEl) errorEl.textContent = '';
+    }
+
+    form.querySelectorAll('.input-field[required]').forEach(function(field) {
+      field.addEventListener('input', function() { clearError(field); });
+    });
+
+    function validate() {
+      var valid = true;
+
+      var nombre = form.nombre;
+      if (!nombre.value.trim()) {
+        showError(nombre, 'El nombre es obligatorio');
+        valid = false;
+      } else { clearError(nombre); }
+
+      var apellido = form.apellido;
+      if (!apellido.value.trim()) {
+        showError(apellido, 'El apellido es obligatorio');
+        valid = false;
+      } else { clearError(apellido); }
+
+      var email = form.email;
+      if (!email.value.trim()) {
+        showError(email, 'El email es obligatorio');
+        valid = false;
+      } else if (!emailRegex.test(email.value.trim())) {
+        showError(email, 'Ingresa un email válido');
+        valid = false;
+      } else { clearError(email); }
+
+      var empresa = form.empresa;
+      if (!empresa.value.trim()) {
+        showError(empresa, 'El nombre de la empresa es obligatorio');
+        valid = false;
+      } else { clearError(empresa); }
+
+      return valid;
+    }
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      if (!validate()) return;
+
+      var btn = form.querySelector('.submit-btn');
+      var originalText = btn.textContent;
+      btn.textContent = 'Enviando...';
+      btn.disabled = true;
+
+      var payload = {
+        nombre: form.nombre.value.trim(),
+        apellido: form.apellido.value.trim(),
+        email: form.email.value.trim(),
+        telefono: form.telefono.value.trim(),
+        empresa: form.empresa.value.trim(),
+        tipo_empresa: form.tipo_empresa.value,
+        cuentas_en_cartera: form.cuentas_en_cartera.value
+      };
+
+      try {
+        await fetch('https://script.google.com/macros/s/AKfycbwB2WuEvbyzje0xi5JyjminYUPZJmg5mVqf4I8zE0t4QKm8cFtMAwRoLOd-DC1ow4WyHA/exec', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        btn.textContent = '¡Enviado!';
+        form.reset();
+        setTimeout(function() {
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }, 3000);
+      } catch (err) {
+        btn.textContent = 'Error — intenta de nuevo';
+        btn.disabled = false;
+      }
+    });
+  })();
+  </script>
+</body>
+</html>
