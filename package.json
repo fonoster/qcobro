@@ -1,0 +1,51 @@
+{
+  "name": "qcobro",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "mods/*",
+    "site"
+  ],
+  "scripts": {
+    "build": "lerna run build",
+    "clean": "lerna run clean",
+    "test": "lerna run test",
+    "typecheck": "lerna run typecheck",
+    "start": "npm run start --workspace=mods/apiserver",
+    "start:dev": "npm run start:dev --workspace=mods/apiserver",
+    "start:webapp": "npm run dev --workspace=mods/webapp",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "npm run db:generate --workspace=mods/apiserver",
+    "db:migrate": "npm run db:migrate --workspace=mods/apiserver",
+    "db:migrate:deploy": "npm run db:migrate:deploy --workspace=mods/apiserver",
+    "db:push": "npm run db:push --workspace=mods/apiserver",
+    "db:studio": "npm run db:studio --workspace=mods/apiserver",
+    "db:seed": "npm run db:seed --workspace=mods/apiserver",
+    "db:reset": "npm run db:reset --workspace=mods/apiserver",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
+    "husky": "^9.0.0",
+    "lerna": "^9.0.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yaml,yml}": [
+      "prettier --write"
+    ]
+  }
+}

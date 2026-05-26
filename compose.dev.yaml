@@ -1,0 +1,13 @@
+services:
+  api:
+    build: .
+    command: npm run start:dev
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: ./prisma/qcobro.db
+    volumes:
+      - .:/app
+      - /app/node_modules
+    restart: "no"
