@@ -1,6 +1,0 @@
-{
-  "extension": ["ts"],
-  "spec": "test/**/*.test.ts",
-  "require": ["tsx", "test/globalSetup.ts"],
-  "timeout": 10000
-}
