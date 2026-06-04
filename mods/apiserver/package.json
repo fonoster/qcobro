@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/trpc/index.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "prisma generate && tsc -b --force",
     "clean": "rm -rf dist *.tsbuildinfo",
@@ -15,10 +21,11 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:seed": "node prisma/seed-direct.mjs",
     "db:reset": "prisma migrate reset"
   },
   "dependencies": {
+    "@fonoster/sdk": "^0.18.2",
     "@prisma/adapter-better-sqlite3": "^7.0.0",
     "@prisma/client": "^7.0.0",
     "@qcobro/agents": "*",

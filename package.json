@@ -15,6 +15,8 @@
     "start": "npm run start --workspace=mods/apiserver",
     "start:dev": "npm run build --workspace=mods/common && npm run build --workspace=mods/agents && npm run start:dev --workspace=mods/apiserver",
     "start:webapp": "npm run dev --workspace=mods/webapp",
+    "storybook": "npm run storybook --workspace=@qcobro/webapp",
+    "storybook:build": "npm run storybook:build --workspace=@qcobro/webapp",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

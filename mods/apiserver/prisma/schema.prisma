@@ -1,6 +1,6 @@
 generator client {
-  provider        = "prisma-client-js"
-  output          = "../src/generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -10,8 +10,8 @@ datasource db {
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
-  nombre       String
-  rol          String   @default("AGENTE")
+  name         String
+  role         String   @default("AGENT")
   passwordHash String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -19,74 +19,130 @@ model User {
   @@map("users")
 }
 
-model Cartera {
-  id               String    @id @default(uuid())
-  nombre           String
-  clienteId        String
-  cuentas          Int       @default(0)
-  montoTotal       Float     @default(0)
-  montoRecuperado  Float     @default(0)
-  estado           String    @default("ACTIVA")
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  campanas         Campana[]
+model Portfolio {
+  id              String     @id @default(uuid())
+  name            String
+  clientId        String
+  accounts        Int        @default(0)
+  totalAmount     Float      @default(0)
+  recoveredAmount Float      @default(0)
+  status          String     @default("ACTIVE")
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  campaigns       Campaign[]
+  accountRecords  Account[]
 
-  @@map("carteras")
+  @@map("portfolios")
 }
 
-model Campana {
-  id        String    @id @default(uuid())
-  nombre    String
-  carteraId String
-  estado    String    @default("PROGRAMADA")
-  cuentas   Int       @default(0)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  cartera   Cartera   @relation(fields: [carteraId], references: [id])
-  gestiones Gestion[]
+model Campaign {
+  id          String     @id @default(uuid())
+  name        String
+  portfolioId String
+  agentId     String?
+  channel     String     @default("VOICE")
+  status      String     @default("SCHEDULED")
+  accounts    Int        @default(0)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  portfolio   Portfolio  @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  agent       Agent?     @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  activities  Activity[]
 
-  @@map("campanas")
+  @@map("campaigns")
 }
 
-model Gestion {
-  id        String   @id @default(uuid())
-  campanaId String
-  cuentaId  String
-  agenteId  String?
-  resultado String   @default("PENDIENTE")
-  notas     String?
-  createdAt DateTime @default(now())
-  campana   Campana  @relation(fields: [campanaId], references: [id])
-  promesas  Promesa[]
+model Activity {
+  id              String       @id @default(uuid())
+  campaignId      String
+  accountId       String
+  agentId         String?
+  channel         String       @default("CALL")
+  outcome         String       @default("PENDING")
+  notes           String?
+  debtAmount      Float        @default(0)
+  durationSeconds Int?
+  aiSummary       String?
+  aiSentiment     String?
+  aiDebtReason    String?
+  aiResult        String?
+  aiNextStep      String?
+  channelData     String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  campaign        Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  commitments     Commitment[]
 
-  @@map("gestiones")
+  @@map("activities")
 }
 
-model Promesa {
-  id           String   @id @default(uuid())
-  gestionId    String
-  cuentaId     String
-  monto        Float
-  fechaPromesa DateTime
-  estado       String   @default("PENDIENTE")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  gestion      Gestion  @relation(fields: [gestionId], references: [id])
-
-  @@map("promesas")
-}
-
-model Agente {
+model Commitment {
   id         String   @id @default(uuid())
-  nombre     String
-  estrategia String   @default("MODERADO")
-  estado     String   @default("ACTIVO")
-  llamadas   Int      @default(0)
-  promesas   Int      @default(0)
-  recuperado Float    @default(0)
-  tasaExito  Float    @default(0)
+  activityId String
+  accountId  String
+  type       String   @default("PAYMENT_PROMISE")
+  amount     Float    @default(0)
+  dueDate    DateTime
+  status     String   @default("PENDING")
+  notes      String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
 
-  @@map("agentes")
+  @@map("commitments")
+}
+
+model Account {
+  id                  String    @id @default(uuid())
+  externalId          String
+  portfolioId         String
+
+  fullName            String
+  phone               String?
+  email               String?
+  preferredLanguage   String?
+  bestTimeToCall      String?
+  customerSegment     String?
+
+  principalAmount     Float     @default(0)
+  termsAmount         Float     @default(0)
+  termsFrequency      String?
+  termsLength         Int       @default(0)
+
+  outstandingBalance  Float     @default(0)
+  daysPastDue         Int       @default(0)
+  missedInstallments  Int       @default(0)
+
+  lastPaymentDate     DateTime?
+  lastPaymentAmount   Float?
+
+  negotiationOptions  String?
+
+  status              String    @default("ACTIVE")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  portfolio           Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, externalId])
+  @@map("accounts")
+}
+
+model Agent {
+  id          String     @id @default(uuid())
+  name        String
+  email       String     @unique
+  channel     String     @default("VOICE")
+  strategy    String     @default("MODERATE")
+  status      String     @default("ACTIVE")
+  calls       Int        @default(0)
+  promises    Int        @default(0)
+  recovered   Float      @default(0)
+  successRate Float      @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  campaigns   Campaign[]
+
+  @@map("agents")
 }

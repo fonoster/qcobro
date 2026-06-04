@@ -6,12 +6,12 @@ const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET ?? "change-me
 
 export async function createContext({ req }: CreateExpressContextOptions) {
   const token = req.headers.authorization?.replace("Bearer ", "");
-  let user: { id: string; email: string; rol: string } | null = null;
+  let user: { id: string; email: string; role: string } | null = null;
 
   if (token) {
     try {
       const { payload } = await jwtVerify(token, JWT_SECRET);
-      user = payload as typeof user;
+      user = payload as { id: string; email: string; role: string };
     } catch {
       // invalid token — unauthenticated request
     }

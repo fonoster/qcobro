@@ -1,31 +1,132 @@
 import { trpc } from "@/lib/trpc.js";
-import { formatPercent } from "@qcobro/common";
+import { t } from "@/lib/i18n.js";
+import { formatMoney, formatPercent, formatRelative } from "@qcobro/common";
+import { KpiRow } from "@/components/kpi-card.js";
+import { SectionCard } from "@/components/section-card.js";
+import { ActivityItem } from "@/components/activity-item.js";
+import { PageHeader } from "@/components/page-header.js";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip
+} from "recharts";
 
 export function Dashboard() {
-  const { data, isLoading } = trpc.rendimiento.dashboard.useQuery();
+  const { data, isLoading } = trpc.performance.dashboard.useQuery();
+  const { data: trends, isLoading: trendsLoading } = trpc.performance.trends.useQuery();
 
-  if (isLoading) return <div className="text-sm text-gray-500">Cargando...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <p className="text-sm text-slate-500">{t.common.loading}</p>
+      </div>
+    );
+  }
+
+  const kpis = data?.kpis;
+  const recent = data?.recentActivity ?? [];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Panel de Control</h1>
-        <p className="text-sm text-gray-500">Resumen de indicadores en tiempo real</p>
-      </div>
-      <div className="grid grid-cols-3 gap-4">
-        <KpiCard label="Cuentas en gestión" value={String(data?.gestiones ?? 0)} />
-        <KpiCard label="Tasa de Contactabilidad" value={formatPercent(data?.tasaContactabilidad ?? 0)} />
-        <KpiCard label="Promesas vencidas" value={String(data?.promesasVencidas ?? 0)} />
-      </div>
-    </div>
-  );
-}
+    <div className="flex flex-col gap-6">
+      <PageHeader title={t.dashboard.title} description={t.dashboard.description} />
 
-function KpiCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border bg-white p-4 shadow-sm">
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="mt-1 text-3xl font-bold">{value}</p>
+      <KpiRow
+        cards={[
+          {
+            label: t.dashboard.kpi.totalActivities,
+            value: String(kpis?.totalActivities ?? 0),
+            subtext: `${kpis?.activeCampaigns ?? 0} campañas activas`
+          },
+          {
+            label: t.dashboard.kpi.contactRate,
+            value: formatPercent(kpis?.contactRate ?? 0),
+            trend: {
+              value: `${kpis?.activeAgents ?? 0} agentes activos`,
+              positive: (kpis?.contactRate ?? 0) >= 50
+            }
+          },
+          {
+            label: t.dashboard.kpi.todayPromises,
+            value: String(kpis?.todayPromises ?? 0),
+            subtext: `${kpis?.fulfilledPromises ?? 0} cumplidas en total`
+          }
+        ]}
+      />
+
+      <div className="grid grid-cols-2 gap-6">
+        <SectionCard
+          title={t.dashboard.charts.activityByDay}
+          description="Cuentas contactadas por día"
+        >
+          {trendsLoading ? (
+            <p className="text-sm text-slate-500">{t.common.loading}</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={trends ?? []} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                <YAxis tick={{ fontSize: 10 }} />
+                <Tooltip />
+                <Bar dataKey="contacted" name="Contactados" fill="#10b981" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="total" name="Total" fill="#e5e7eb" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </SectionCard>
+
+        <SectionCard
+          title={t.dashboard.charts.contactRateTrend}
+          description="Tasa de contactabilidad diaria (%)"
+        >
+          {trendsLoading ? (
+            <p className="text-sm text-slate-500">{t.common.loading}</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={trends ?? []} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                <YAxis unit="%" tick={{ fontSize: 10 }} />
+                <Tooltip formatter={(v: unknown) => `${v}%`} />
+                <Line
+                  type="monotone"
+                  dataKey="rate"
+                  name="Contactabilidad"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </SectionCard>
+      </div>
+
+      <SectionCard
+        title={t.dashboard.recentActivity}
+        description={t.dashboard.recentActivityDesc}
+      >
+        {recent.length === 0 ? (
+          <p className="text-sm text-slate-500">{t.dashboard.noActivity}</p>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {recent.map((a) => (
+              <ActivityItem
+                key={a.id}
+                actor="Agente"
+                action={t.dashboard.activityOutcomes[a.outcome as keyof typeof t.dashboard.activityOutcomes] ?? a.outcome}
+                target={a.accountId}
+                timestamp={formatRelative(a.createdAt)}
+              />
+            ))}
+          </div>
+        )}
+      </SectionCard>
     </div>
   );
 }

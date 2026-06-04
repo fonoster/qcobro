@@ -1,22 +1,24 @@
 import { router } from "./trpc.js";
 import { authRouter } from "./routers/auth.js";
-import { carterasRouter } from "./routers/carteras.js";
-import { campanasRouter } from "./routers/campanas.js";
-import { gestionesRouter } from "./routers/gestiones.js";
-import { promesasRouter } from "./routers/promesas.js";
-import { agentesRouter } from "./routers/agentes.js";
-import { rendimientoRouter } from "./routers/rendimiento.js";
+import { portfoliosRouter } from "./routers/portfolios.js";
+import { campaignsRouter } from "./routers/campaigns.js";
+import { activitiesRouter } from "./routers/activities.js";
+import { commitmentsRouter } from "./routers/commitments.js";
+import { agentsRouter } from "./routers/agents.js";
+import { performanceRouter } from "./routers/performance.js";
 import { usersRouter } from "./routers/users.js";
+import { callsRouter } from "./routers/calls.js";
 
 export const appRouter = router({
   auth: authRouter,
-  carteras: carterasRouter,
-  campanas: campanasRouter,
-  gestiones: gestionesRouter,
-  promesas: promesasRouter,
-  agentes: agentesRouter,
-  rendimiento: rendimientoRouter,
-  users: usersRouter
+  portfolios: portfoliosRouter,
+  campaigns: campaignsRouter,
+  activities: activitiesRouter,
+  commitments: commitmentsRouter,
+  agents: agentsRouter,
+  performance: performanceRouter,
+  users: usersRouter,
+  calls: callsRouter
 });
 
 export type AppRouter = typeof appRouter;

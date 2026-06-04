@@ -10,8 +10,9 @@
     "skipLibCheck": true,
     "noEmit": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@qcobro/apiserver": ["../apiserver/src/trpc/index.ts"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "../apiserver/src/trpc"]
 }
