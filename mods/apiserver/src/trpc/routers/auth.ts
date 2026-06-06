@@ -1,8 +1,14 @@
 import { signUpSchema, loginSchema, refreshTokenSchema } from "@qcobro/common";
-import { router, publicProcedure } from "../trpc.js";
+import { router, publicProcedure, protectedProcedure } from "../trpc.js";
 import { identityCall } from "../../identity/errors.js";
 
 export const authRouter = router({
+  // Current authenticated principal and the active workspace (if any).
+  me: protectedProcedure.query(({ ctx }) => ({
+    user: ctx.user,
+    workspace: ctx.workspace
+  })),
+
   // Anyone can create an account.
   signUp: publicProcedure.input(signUpSchema).mutation(({ ctx, input }) =>
     identityCall(() =>

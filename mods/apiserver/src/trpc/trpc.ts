@@ -18,13 +18,37 @@ const t = initTRPC.context<Context>().create({
 export const router = t.router;
 export const publicProcedure = t.procedure;
 
-/**
- * Procedure guard for authenticated requests. Auth resolution is deferred, so
- * this currently rejects every call — it exists to establish the seam.
- */
+/** Requires an authenticated user. */
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   if (!ctx.user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({ ctx: { ...ctx, user: ctx.user } });
+});
+
+/**
+ * Requires an authenticated user with an active workspace they belong to.
+ * Narrows `ctx.workspace` to non-null for downstream procedures.
+ */
+export const workspaceProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (!ctx.workspace) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "No active workspace; the user is not a member of the requested workspace"
+    });
+  }
+  return next({ ctx: { ...ctx, workspace: ctx.workspace } });
+});
+
+const ADMIN_ROLES = new Set(["WORKSPACE_OWNER", "WORKSPACE_ADMIN"]);
+
+/** Requires the caller to be an owner or admin of the active workspace. */
+export const adminProcedure = workspaceProcedure.use(({ ctx, next }) => {
+  if (!ADMIN_ROLES.has(ctx.workspace.role)) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Requires workspace owner or admin role"
+    });
+  }
+  return next();
 });

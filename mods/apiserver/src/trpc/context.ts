@@ -1,32 +1,59 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import { prisma } from "../db.js";
 import { createIdentityClient } from "../identity/client.js";
+import { verifyAccessToken } from "../identity/token.js";
 
 export interface AuthedUser {
-  id: string;
-  email: string;
+  ref: string;
+  accessKeyId: string;
+}
+
+export interface ActiveWorkspace {
+  accessKeyId: string;
   role: string;
 }
+
+// Header carrying the workspace the client wants to act in (an accessKeyId the
+// caller must be a member of).
+const WORKSPACE_HEADER = "x-workspace";
 
 // Shared singletons reached by procedures through the context.
 const identity = createIdentityClient();
 
+function headerValue(value: string | string[] | undefined): string | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
 /**
  * Builds the per-request tRPC context.
  *
- * The context is how procedures reach the shared services they depend on. Today
- * that is the Prisma client; telephony (Fonoster) and other third-party clients
- * will be added here too, rather than constructed inside procedures, so they
- * stay injectable and testable.
- *
- * Authentication is deferred to a later change. The bearer-token seam is read
- * here so that change can resolve `user`; until then the token is captured but
- * every request is treated as unauthenticated (`user` is null).
+ * Procedures reach shared services (Prisma, the Identity client) through here.
+ * When the request carries a valid Identity access token, the authenticated
+ * principal is resolved: the user, and — if a valid workspace header is present
+ * and the user belongs to it — the active workspace and the caller's role there.
  */
 export async function createContext(opts: CreateExpressContextOptions) {
   const token = opts.req.headers.authorization?.replace("Bearer ", "") ?? null;
-  const user: AuthedUser | null = null;
-  return { token, user, prisma, identity };
+
+  let user: AuthedUser | null = null;
+  let workspace: ActiveWorkspace | null = null;
+
+  if (token) {
+    const claims = await verifyAccessToken(identity, token);
+    if (claims) {
+      user = { ref: claims.sub, accessKeyId: claims.accessKeyId };
+      const requested = headerValue(opts.req.headers[WORKSPACE_HEADER]);
+      if (requested) {
+        const match = claims.access.find((a) => a.accessKeyId === requested);
+        if (match) {
+          workspace = { accessKeyId: match.accessKeyId, role: match.role };
+        }
+      }
+    }
+  }
+
+  return { token, user, workspace, prisma, identity };
 }
 
 export type Context = Awaited<ReturnType<typeof createContext>>;

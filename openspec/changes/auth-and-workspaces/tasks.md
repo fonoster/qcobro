@@ -22,10 +22,10 @@
 
 ## 4. Authorization & context (apiserver)
 
-- [ ] 4.1 Fetch and cache Identity's public key via `GetPublicKey`; verify the RS256 access token per request
-- [ ] 4.2 Populate the tRPC context with the verified user, active workspace (`accessKeyId`), and role (active workspace selected via request header, membership-validated)
-- [ ] 4.3 Add `protectedProcedure` (auth required) and `workspaceProcedure` (active-workspace membership required) with role checks
-- [ ] 4.4 Verify unauthenticated/non-member/insufficient-role requests are rejected with the correct error categories
+- [x] 4.1 Fetch and cache Identity's public key via `GetPublicKey`; verify the RS256 access token per request
+- [x] 4.2 Populate the tRPC context with the verified user, active workspace (`accessKeyId`), and role (active workspace selected via request header, membership-validated)
+- [x] 4.3 Add `protectedProcedure` (auth required), `workspaceProcedure` (active-workspace membership required), and `adminProcedure` (owner/admin) with role checks
+- [ ] 4.4 Verify unauthenticated/non-member/insufficient-role requests are rejected (unauthenticated verified; non-member/role verified in Group 5 once workspace endpoints exist)
 
 ## 5. Workspaces (apiserver)
 
