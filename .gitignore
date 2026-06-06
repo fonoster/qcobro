@@ -9,3 +9,6 @@ dist
 coverage
 storybook-static
 .DS_Store
+
+# Local secrets for the Identity service (RS256 keys, etc.)
+mods/identity-service/keys/

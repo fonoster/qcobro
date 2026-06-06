@@ -11,5 +11,52 @@ services:
     volumes:
       - qcobro-db:/var/lib/postgresql/data
 
+  identity-db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: qcobro
+      POSTGRES_PASSWORD: qcobro
+      POSTGRES_DB: identity
+    volumes:
+      - qcobro-identity-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qcobro -d identity"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  identity:
+    build:
+      context: .
+      dockerfile: mods/identity-service/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      identity-db:
+        condition: service_healthy
+    environment:
+      IDENTITY_DATABASE_URL: postgresql://qcobro:qcobro@identity-db:5432/identity?schema=public
+      IDENTITY_ENCRYPTION_KEY: ${IDENTITY_ENCRYPTION_KEY}
+      IDENTITY_PRIVATE_KEY_PATH: ./keys/private.pem
+      IDENTITY_PUBLIC_KEY_PATH: ./keys/public.pem
+      IDENTITY_PORT: "50051"
+      IDENTITY_ISSUER: qcobro
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_SECURE: "false"
+      SMTP_SENDER: "QCobro <no-reply@qcobro.local>"
+    volumes:
+      - ./mods/identity-service/keys:/app/mods/identity-service/keys:ro
+    ports:
+      - "50051:50051"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
 volumes:
   qcobro-db:
+  qcobro-identity-db:
