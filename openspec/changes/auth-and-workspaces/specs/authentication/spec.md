@@ -32,17 +32,17 @@ The apiserver SHALL expose a login procedure that exchanges email and password c
 
 ### Requirement: Token refresh and logout
 
-The apiserver SHALL expose procedures to exchange a refresh token for a new access token and to revoke a token, delegating both to Identity.
+The apiserver SHALL expose a procedure to exchange a refresh token for a new access token, delegating to Identity. It SHALL also expose a logout procedure; because the Identity service does not implement server-side token revocation, logout is a client concern — the client discards its stored tokens, which expire on their own — and the procedure returns a server-side acknowledgement.
 
 #### Scenario: Refresh yields a new access token
 
 - **WHEN** the refresh procedure is called with a valid refresh token
 - **THEN** a new access token is returned
 
-#### Scenario: Logout revokes the token
+#### Scenario: Logout acknowledges and the client clears its session
 
-- **WHEN** the logout procedure is called with the active token
-- **THEN** the token is revoked via Identity
+- **WHEN** the logout procedure is called
+- **THEN** it returns success and the client discards its stored tokens
 
 ### Requirement: Password reset and contact verification
 

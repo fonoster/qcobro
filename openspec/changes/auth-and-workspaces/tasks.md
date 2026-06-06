@@ -15,10 +15,10 @@
 
 ## 3. Authentication (apiserver)
 
-- [ ] 3.1 Add Zod schemas in `@qcobro/common` for sign-up, login, refresh, reset/verify
-- [ ] 3.2 Add an `auth` router: sign-up (CreateUser), login (ExchangeCredentials), refresh (ExchangeRefreshToken), logout (RevokeToken)
+- [x] 3.1 Add Zod schemas in `@qcobro/common` for sign-up, login, refresh
+- [x] 3.2 Add an `auth` router: sign-up (CreateUser), login (ExchangeCredentials), refresh (ExchangeRefreshToken), logout (client-side; Identity 0.18.2 has no RevokeToken)
 - [ ] 3.3 Add password-reset and contact-verification procedures (SendResetPasswordCode/ResetPassword, SendVerificationCode/VerifyCode)
-- [ ] 3.4 Verify login returns tokens and bad credentials return an unauthorized-category error
+- [x] 3.4 Verify login returns tokens and bad credentials return an unauthorized-category error
 
 ## 4. Authorization & context (apiserver)
 

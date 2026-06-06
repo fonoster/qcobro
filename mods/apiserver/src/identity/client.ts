@@ -84,8 +84,8 @@ export class IdentityClient {
     return this.unary("exchangeCredentials", request);
   }
 
-  exchangeRefreshToken(refreshToken: string, accessKeyId: string): Promise<ExchangeResponse> {
-    return this.unary("exchangeRefreshToken", { refreshToken }, accessKeyId);
+  exchangeRefreshToken(refreshToken: string): Promise<ExchangeResponse> {
+    return this.unary("exchangeRefreshToken", { refreshToken });
   }
 
   close() {
