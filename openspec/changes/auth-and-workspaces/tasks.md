@@ -36,11 +36,11 @@
 
 ## 6. Console auth (webapp)
 
-- [ ] 6.1 Add sign-up and login pages wired to the auth router; store tokens and attach the access token to tRPC requests
-- [ ] 6.2 Add a "create your first workspace" flow and a current-workspace indicator/switcher
-- [ ] 6.3 Add an invite-acceptance entry point (accept via emailed link)
-- [ ] 6.4 Add route guards: unauthenticated users are redirected to login; authenticated users without a workspace are prompted to create one
-- [ ] 6.5 All new copy goes through the i18n layer
+- [x] 6.1 Add sign-up and login pages wired to the auth router; store tokens and attach the access token to tRPC requests
+- [x] 6.2 Add a "create your first workspace" flow (refreshes token to pick up the new workspace) and a current-workspace switcher
+- [ ] 6.3 Add an invite-acceptance entry point (accept via emailed link) — deferred until invites land (5.2)
+- [x] 6.4 Add route guards: unauthenticated users are redirected to login; authenticated users without a workspace are prompted to create one
+- [x] 6.5 All new copy goes through the i18n layer
 
 ## 7. Verification
 
