@@ -1,0 +1,10 @@
+**/node_modules
+**/dist
+**/.env
+**/.env.local
+mods/identity-service/keys
+**/*.tsbuildinfo
+**/storybook-static
+**/coverage
+.git
+output

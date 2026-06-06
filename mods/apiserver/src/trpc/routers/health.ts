@@ -13,5 +13,11 @@ export const healthRouter = router({
   db: publicProcedure.query(async ({ ctx }) => {
     const healthChecks = await ctx.prisma.healthCheck.count();
     return { ok: true, healthChecks };
+  }),
+
+  // Reaches the Identity gRPC service to prove connectivity.
+  identity: publicProcedure.query(async ({ ctx }) => {
+    const { publicKey } = await ctx.identity.getPublicKey();
+    return { ok: true, publicKeyLength: publicKey.length };
   })
 });

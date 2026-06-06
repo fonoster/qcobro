@@ -1,11 +1,15 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import { prisma } from "../db.js";
+import { createIdentityClient } from "../identity/client.js";
 
 export interface AuthedUser {
   id: string;
   email: string;
   role: string;
 }
+
+// Shared singletons reached by procedures through the context.
+const identity = createIdentityClient();
 
 /**
  * Builds the per-request tRPC context.
@@ -22,7 +26,7 @@ export interface AuthedUser {
 export async function createContext(opts: CreateExpressContextOptions) {
   const token = opts.req.headers.authorization?.replace("Bearer ", "") ?? null;
   const user: AuthedUser | null = null;
-  return { token, user, prisma };
+  return { token, user, prisma, identity };
 }
 
 export type Context = Awaited<ReturnType<typeof createContext>>;

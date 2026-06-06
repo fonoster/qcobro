@@ -10,7 +10,7 @@
     }
   },
   "scripts": {
-    "build": "prisma generate && tsc -b --force",
+    "build": "prisma generate && tsc -b --force && mkdir -p dist/identity && cp -r src/identity/protos dist/identity/protos",
     "clean": "rm -rf dist *.tsbuildinfo",
     "start": "node dist/index.js",
     "start:dev": "tsx watch src/index.ts",
@@ -21,16 +21,20 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.10.6",
+    "@grpc/proto-loader": "^0.7.0",
     "@prisma/client": "^6.0.0",
     "@qcobro/common": "*",
     "@trpc/server": "^11.0.0",
     "cors": "^2.8.5",
     "express": "^5.0.0",
+    "jsonwebtoken": "^9.0.2",
     "zod": "^4.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.6",
     "prisma": "^6.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.9.0"

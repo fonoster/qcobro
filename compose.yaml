@@ -30,6 +30,9 @@ services:
     build:
       context: .
       dockerfile: mods/identity-service/Dockerfile
+    # @fonoster/identity bundles only the debian-openssl-3.0.x (amd64) Prisma
+    # query engine, so pin the platform to match (runs emulated on arm64 hosts).
+    platform: linux/amd64
     restart: unless-stopped
     depends_on:
       identity-db:

@@ -9,9 +9,9 @@
 
 ## 2. Identity gRPC client (the missing SDK)
 
-- [ ] 2.1 Vendor `identity.proto` and add a client-generation step (proto-loader/ts codegen) producing typed stubs
-- [ ] 2.2 Create an `identity-client` module that connects to the Identity service from config
-- [ ] 2.3 Expose the Identity client through the apiserver tRPC context as a service
+- [x] 2.1 Vendor `identity.proto` into the apiserver and load it via `@grpc/proto-loader` to produce client stubs
+- [x] 2.2 Create an `identity-client` module (typed promise wrappers) that connects to the Identity service from config
+- [x] 2.3 Expose the Identity client through the apiserver tRPC context as a service (verified: `health.identity` → `GetPublicKey`)
 
 ## 3. Authentication (apiserver)
 

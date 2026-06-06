@@ -47,5 +47,10 @@
     "*.{json,md,yaml,yml}": [
       "prettier --write"
     ]
+  },
+  "overrides": {
+    "@conventional-changelog/git-client": {
+      "conventional-commits-filter": "^5.0.0"
+    }
   }
 }
