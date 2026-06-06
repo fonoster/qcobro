@@ -18,12 +18,12 @@ const t = initTRPC.context<Context>().create({
 export const router = t.router;
 export const publicProcedure = t.procedure;
 
-/** Requires an authenticated user. */
+/** Requires an authenticated user. Narrows `user` and `token` to non-null. */
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
-  if (!ctx.user) {
+  if (!ctx.user || !ctx.token) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
-  return next({ ctx: { ...ctx, user: ctx.user } });
+  return next({ ctx: { ...ctx, user: ctx.user, token: ctx.token } });
 });
 
 /**

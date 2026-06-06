@@ -38,6 +38,15 @@ export interface ExchangeResponse {
   refreshToken: string;
 }
 
+export interface Workspace {
+  ref: string;
+  name: string;
+  ownerRef: string;
+  accessKeyId: string;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
 /**
  * Thin typed client for the Fonoster Identity gRPC service — the "SDK" Fonoster
  * does not publish. Wraps the callback-based stubs (generated from the vendored
@@ -51,10 +60,11 @@ export class IdentityClient {
     this.client = new IdentityService(endpoint, grpc.credentials.createInsecure());
   }
 
-  private unary<TRes>(method: string, request: object, accessKeyId?: string): Promise<TRes> {
+  private unary<TRes>(method: string, request: object, token?: string): Promise<TRes> {
     const metadata = new grpc.Metadata();
-    if (accessKeyId) {
-      metadata.set("accesskeyid", accessKeyId);
+    if (token) {
+      // Identity reads the caller's access token from the "token" metadata key.
+      metadata.set("token", token);
     }
 
     // Call the method on the client object so `this` stays bound to it.
@@ -86,6 +96,18 @@ export class IdentityClient {
 
   exchangeRefreshToken(refreshToken: string): Promise<ExchangeResponse> {
     return this.unary("exchangeRefreshToken", { refreshToken });
+  }
+
+  createWorkspace(name: string, token: string): Promise<{ ref: string }> {
+    return this.unary("createWorkspace", { name }, token);
+  }
+
+  listWorkspaces(token: string): Promise<{ items: Workspace[]; nextPageToken?: string }> {
+    return this.unary("listWorkspaces", {}, token);
+  }
+
+  getWorkspace(ref: string, token: string): Promise<Workspace> {
+    return this.unary("getWorkspace", { ref }, token);
   }
 
   close() {

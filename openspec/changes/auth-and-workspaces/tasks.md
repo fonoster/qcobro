@@ -25,13 +25,13 @@
 - [x] 4.1 Fetch and cache Identity's public key via `GetPublicKey`; verify the RS256 access token per request
 - [x] 4.2 Populate the tRPC context with the verified user, active workspace (`accessKeyId`), and role (active workspace selected via request header, membership-validated)
 - [x] 4.3 Add `protectedProcedure` (auth required), `workspaceProcedure` (active-workspace membership required), and `adminProcedure` (owner/admin) with role checks
-- [ ] 4.4 Verify unauthenticated/non-member/insufficient-role requests are rejected (unauthenticated verified; non-member/role verified in Group 5 once workspace endpoints exist)
+- [x] 4.4 Verify unauthenticated/non-member requests are rejected (unauthenticated → UNAUTHORIZED; non-member workspace → no active workspace). Admin-role denial verified once invite/remove endpoints land (5.3).
 
 ## 5. Workspaces (apiserver)
 
-- [ ] 5.1 Add a `workspaces` router: create, list, get, update (delegating to Identity)
+- [x] 5.1 Add a `workspaces` router: create, list, get (delegating to Identity; token forwarded as gRPC metadata). Update deferred. Verified: create → list → active-workspace role resolves to WORKSPACE_OWNER
 - [ ] 5.2 Add membership procedures: invite-with-role, resend invitation, accept invitation, list members, remove member
-- [ ] 5.3 Enforce owner/admin-only actions via `workspaceProcedure` role checks
+- [ ] 5.3 Enforce owner/admin-only actions via `adminProcedure` role checks
 - [ ] 5.4 Verify invite creates a pending membership and the email is captured by Mailpit
 
 ## 6. Console auth (webapp)
