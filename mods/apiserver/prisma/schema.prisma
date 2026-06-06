@@ -1,0 +1,16 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Minimal model to prove database connectivity. The real domain model
+// (portfolios, accounts, campaigns, Objectives, ...) lands in a later change.
+model HealthCheck {
+  id        String   @id @default(uuid())
+  note      String   @default("ok")
+  createdAt DateTime @default(now())
+}

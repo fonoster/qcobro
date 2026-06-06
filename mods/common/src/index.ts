@@ -1,0 +1,15 @@
+import { z } from "zod";
+
+/**
+ * Placeholder contract proving the shared-schema pattern.
+ *
+ * `common` is the single source of truth for domain types and Zod schemas,
+ * imported by both the apiserver (input validation) and the webapp (forms/types).
+ * Real domain schemas (portfolios, accounts, Objectives, ...) arrive in a later
+ * change; this entry exists so the contract pattern is wired end to end.
+ */
+export const PingInput = z.object({
+  message: z.string().min(1).max(280)
+});
+
+export type PingInput = z.infer<typeof PingInput>;

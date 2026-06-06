@@ -1,3 +1,5 @@
 dist
 node_modules
 *.lock
+storybook-static
+site

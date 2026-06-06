@@ -6,13 +6,12 @@ QCobro is being rebuilt from scratch (the prior implementation is archived on th
 
 - Establish a TypeScript monorepo (npm workspaces + Lerna) with clear package boundaries:
   - `common` — shared types and Zod schemas (single source of truth for domain contracts)
-  - `apiserver` — backend API and data access
+  - `apiserver` — backend API and access to shared services (database today; telephony and other integrations later)
   - `webapp` — operator web console
-  - `agents` — placeholder package for the AI voice-agent / Fonoster integration (behavior deferred to a later change)
 - Adopt **PostgreSQL** as the database via Prisma. **BREAKING** relative to the demo: SQLite is removed entirely.
-- Establish **tRPC** as the primary internal API, with the structure prepared to expose **REST/OpenAPI** for public-facing APIs later.
+- Establish **tRPC** as the primary internal API, with a typed context that exposes shared services to procedures and structure prepared to expose **REST/OpenAPI** for public-facing APIs later.
 - Stand up the **React + Vite + Tailwind** web console shell with Storybook, built **i18n-ready** (no hardcoded language; language is configurable per the project definition).
-- Wire the developer workflow: local PostgreSQL via Docker Compose, env-driven configuration, and CI checks (typecheck, lint, build) for the app packages.
+- Wire the developer workflow: local PostgreSQL via Docker Compose, env-driven configuration, CI checks (typecheck, lint, build) for the app packages, and **Conventional Commits** enforced by a Husky `commit-msg` hook.
 - Reuse the already-retained tooling baseline: Prettier, ESLint, Husky, Lerna.
 
 ## Capabilities
@@ -30,7 +29,7 @@ QCobro is being rebuilt from scratch (the prior implementation is archived on th
 
 ## Impact
 
-- **Repo:** introduces `mods/common`, `mods/apiserver`, `mods/webapp`, `mods/agents`; root `package.json`, `lerna.json`, `tsconfig.json` regain workspace references.
-- **Dependencies:** Prisma + `@prisma/client`, PostgreSQL driver, tRPC, React, Vite, Tailwind, Storybook, Zod.
+- **Repo:** introduces `mods/common`, `mods/apiserver`, `mods/webapp`; root `package.json`, `lerna.json`, `tsconfig.json` regain workspace references.
+- **Dependencies:** Prisma + `@prisma/client`, PostgreSQL driver, tRPC, React, Vite, Tailwind, Storybook, Zod, commitlint.
 - **Infrastructure:** Docker Compose for local PostgreSQL; `.env` configuration; GitHub Actions CI for app packages (the site deploy workflow is unaffected).
-- **Out of scope (deferred):** the domain model (portfolios, accounts, campaigns, Objectives), authentication, and the voice-agent/Fonoster behavior — each its own later change.
+- **Out of scope (deferred):** the domain model (portfolios, accounts, campaigns, agents, Objectives), authentication, an `agents` runtime package, and the voice-agent/Fonoster behavior — each its own later change.

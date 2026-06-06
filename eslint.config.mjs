@@ -8,10 +8,10 @@ export default tseslint.config(
   prettier,
   {
     ignores: [
-      "dist/**",
-      "node_modules/**",
+      "**/dist/**",
+      "**/node_modules/**",
       "**/*.d.ts",
-      "coverage/**",
+      "**/coverage/**",
       "**/generated/**",
       "site/**",
       "**/.storybook/**",

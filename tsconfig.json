@@ -11,5 +11,6 @@
     "composite": true,
     "incremental": true,
     "skipLibCheck": true
-  }
+  },
+  "references": [{ "path": "./mods/common" }, { "path": "./mods/apiserver" }]
 }
