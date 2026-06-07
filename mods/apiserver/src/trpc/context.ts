@@ -1,6 +1,7 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import { prisma } from "../db.js";
 import { createIdentityClient } from "../identity/client.js";
+import { config } from "../config.js";
 import { verifyAccessToken } from "../identity/token.js";
 
 export interface AuthedUser {
@@ -18,7 +19,7 @@ export interface ActiveWorkspace {
 const WORKSPACE_HEADER = "x-workspace";
 
 // Shared singletons reached by procedures through the context.
-const identity = createIdentityClient();
+const identity = createIdentityClient(config.identity.endpoint);
 
 function headerValue(value: string | string[] | undefined): string | null {
   if (Array.isArray(value)) return value[0] ?? null;

@@ -3,6 +3,7 @@ import { z } from "zod";
 export * from "./errors/index.js";
 export * from "./utils/index.js";
 export * from "./schemas/index.js";
+export * from "./config.js";
 
 /**
  * Placeholder contract proving the shared-schema pattern.

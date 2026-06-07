@@ -3,6 +3,7 @@ import { Login } from "./pages/Login.js";
 import { SignUp } from "./pages/SignUp.js";
 import { CreateWorkspace } from "./pages/CreateWorkspace.js";
 import { Home } from "./pages/Home.js";
+import { Members } from "./pages/Members.js";
 import { RequireAuth } from "./components/RequireAuth.js";
 import { AuthedLayout } from "./components/AuthedLayout.js";
 
@@ -28,6 +29,7 @@ export default function App() {
         }
       >
         <Route index element={<Home />} />
+        <Route path="members" element={<Members />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

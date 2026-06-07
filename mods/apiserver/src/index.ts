@@ -3,9 +3,10 @@ import cors from "cors";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "./trpc/index.js";
 import { createContext } from "./trpc/context.js";
+import { config } from "./config.js";
 
 const app = express();
-const port = process.env.PORT ?? 3000;
+const port = config.apiserver.port;
 
 app.use(cors());
 app.use(express.json());

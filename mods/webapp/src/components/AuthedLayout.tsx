@@ -1,65 +1,124 @@
 import { useEffect } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, NavLink, Outlet } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Folder,
+  Megaphone,
+  Bot,
+  PhoneCall,
+  Handshake,
+  TrendingUp,
+  Wallet,
+  type LucideIcon
+} from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
-import { useI18n } from "../lib/i18n.js";
-import { LanguageSwitcher } from "./LanguageSwitcher.js";
+import { Logo } from "./Logo.js";
+import { WorkspaceSwitcher } from "./WorkspaceSwitcher.js";
+import { cn } from "@/lib/utils.js";
+
+const NAV: { icon: LucideIcon; label: string; to?: string; end?: boolean }[] = [
+  { icon: LayoutDashboard, label: "Panel", to: "/", end: true },
+  { icon: Folder, label: "Carteras" },
+  { icon: Megaphone, label: "Campañas" },
+  { icon: Bot, label: "Agentes IA" },
+  { icon: PhoneCall, label: "Gestiones" },
+  { icon: Handshake, label: "Resultados" },
+  { icon: TrendingUp, label: "Rendimiento" },
+  { icon: Wallet, label: "Saldo" }
+];
 
 export function AuthedLayout() {
-  const { t } = useI18n();
-  const { workspace, setWorkspace, logout } = useAuth();
+  const { workspace, setWorkspace, logout, currentUser } = useAuth();
   const workspaces = trpc.workspaces.list.useQuery();
+  const data = workspaces.data;
+  const items = data?.items ?? [];
 
-  const items = workspaces.data?.items ?? [];
-
-  // Default the active workspace to the first one the user belongs to.
   useEffect(() => {
-    if (items.length > 0 && !items.some((w) => w.accessKeyId === workspace)) {
-      setWorkspace(items[0].accessKeyId);
+    const list = data?.items;
+    if (!list || list.length === 0) return;
+    if (!list.some((w) => w.accessKeyId === workspace)) {
+      setWorkspace(list[0].accessKeyId);
     }
-  }, [items, workspace, setWorkspace]);
+  }, [data, workspace, setWorkspace]);
 
-  if (workspaces.isLoading) {
-    return <p className="p-6 text-gray-500">{t("common.loading")}</p>;
+  useEffect(() => {
+    if (workspaces.isError) logout();
+  }, [workspaces.isError, logout]);
+
+  if (workspaces.isError) {
+    return <Navigate to="/login" replace />;
   }
-
-  // An authenticated user with no workspace is sent to create their first one.
-  if (workspaces.isSuccess && items.length === 0) {
+  if (workspaces.isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-slate-400">Cargando…</div>
+    );
+  }
+  if (!workspaces.isFetching && workspaces.isSuccess && items.length === 0) {
     return <Navigate to="/create-workspace" replace />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
-      <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
-        <div>
-          <h1 className="text-lg font-bold">{t("app.title")}</h1>
-          <p className="text-sm text-gray-500">{t("app.tagline")}</p>
+    <div className="flex min-h-screen bg-slate-50">
+      <aside className="flex w-60 shrink-0 flex-col justify-between border-r border-slate-200 bg-white px-4 py-5">
+        <div className="flex flex-col gap-6">
+          <Logo />
+          <WorkspaceSwitcher />
+          <nav className="flex flex-col gap-1">
+            {NAV.map(({ icon: Icon, label, to, end }) =>
+              to ? (
+                <NavLink
+                  key={label}
+                  to={to}
+                  end={end}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm",
+                      isActive
+                        ? "bg-emerald-50 font-semibold text-emerald-700"
+                        : "font-medium text-slate-600 hover:bg-slate-50"
+                    )
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Icon
+                        className={cn(
+                          "h-[18px] w-[18px]",
+                          isActive ? "text-emerald-700" : "text-slate-500"
+                        )}
+                      />
+                      {label}
+                    </>
+                  )}
+                </NavLink>
+              ) : (
+                <button
+                  key={label}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 opacity-50 cursor-not-allowed"
+                >
+                  <Icon className="h-[18px] w-[18px] text-slate-500" />
+                  {label}
+                </button>
+              )
+            )}
+          </nav>
         </div>
-        <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2 text-sm">
-            <span className="text-gray-600">{t("workspace.label")}</span>
-            <select
-              className="rounded border border-gray-300 px-2 py-1"
-              value={workspace ?? ""}
-              onChange={(e) => setWorkspace(e.target.value)}
-            >
-              {items.map((w) => (
-                <option key={w.accessKeyId} value={w.accessKeyId}>
-                  {w.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <LanguageSwitcher />
-          <button
-            onClick={logout}
-            className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50"
-          >
-            {t("auth.logout")}
-          </button>
+
+        <div className="flex items-center gap-2.5 px-2 py-2">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
+            {currentUser?.initials ?? "QC"}
+          </span>
+          <div className="flex min-w-0 flex-col leading-tight">
+            <span className="truncate text-[13px] font-semibold text-slate-900">
+              {currentUser?.name ?? "Usuario"}
+            </span>
+            <span className="text-[11px] text-slate-400">Propietario</span>
+          </div>
         </div>
-      </header>
-      <main className="px-6 py-8">
+      </aside>
+
+      <main className="flex-1 overflow-y-auto p-8">
         <Outlet />
       </main>
     </div>

@@ -12,3 +12,6 @@ storybook-static
 
 # Local secrets for the Identity service (RS256 keys, etc.)
 mods/identity-service/keys/
+
+# Local service config (holds dev secrets). Commit qcobro-prod.json as the example.
+qcobro.json

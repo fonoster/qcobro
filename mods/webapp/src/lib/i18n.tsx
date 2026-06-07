@@ -25,6 +25,11 @@ export const messages = {
     "auth.signupFailed": "Could not create the account. Try a different email.",
     "auth.noAccount": "Don't have an account? Sign up",
     "auth.haveAccount": "Already have an account? Sign in",
+    "auth.loginSubtitle": "Access your QCobro account",
+    "auth.signupSubtitle": "Get started with QCobro in minutes",
+    "auth.forgot": "Forgot your password?",
+    "auth.continueGoogle": "Continue with Google",
+    "auth.or": "or",
     "workspace.createTitle": "Create your workspace",
     "workspace.createSubtitle": "A workspace holds your portfolios, campaigns, and team.",
     "workspace.name": "Workspace name",
@@ -51,6 +56,11 @@ export const messages = {
     "auth.signupFailed": "No se pudo crear la cuenta. Prueba con otro correo.",
     "auth.noAccount": "¿No tienes cuenta? Regístrate",
     "auth.haveAccount": "¿Ya tienes cuenta? Inicia sesión",
+    "auth.loginSubtitle": "Accede a tu cuenta de QCobro",
+    "auth.signupSubtitle": "Empieza con QCobro en minutos",
+    "auth.forgot": "¿Olvidaste tu contraseña?",
+    "auth.continueGoogle": "Continuar con Google",
+    "auth.or": "o",
     "workspace.createTitle": "Crea tu espacio de trabajo",
     "workspace.createSubtitle": "Un espacio agrupa tus carteras, campañas y equipo.",
     "workspace.name": "Nombre del espacio",
@@ -66,7 +76,7 @@ export type Language = keyof typeof messages;
 export type MessageId = keyof (typeof messages)[Language];
 
 export const languages = Object.keys(messages) as Language[];
-export const defaultLanguage: Language = "en";
+export const defaultLanguage: Language = "es";
 
 interface I18nContextValue {
   language: Language;

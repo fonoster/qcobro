@@ -16,9 +16,9 @@
     "start:dev": "tsx watch src/index.ts",
     "typecheck": "tsc --noEmit",
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:migrate:deploy": "prisma migrate deploy",
-    "db:studio": "prisma studio"
+    "db:migrate": "node scripts/prisma.mjs migrate dev",
+    "db:migrate:deploy": "node scripts/prisma.mjs migrate deploy",
+    "db:studio": "node scripts/prisma.mjs studio"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.10.6",

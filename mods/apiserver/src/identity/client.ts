@@ -9,6 +9,7 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   longs: String,
   enums: String,
   defaults: false,
+  arrays: true,
   oneofs: true
 });
 
@@ -47,6 +48,23 @@ export interface Workspace {
   updatedAt?: number;
 }
 
+export interface WorkspaceMember {
+  ref: string;
+  userRef: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+export interface InviteMemberRequest {
+  email: string;
+  role: string;
+  name?: string;
+}
+
 /**
  * Thin typed client for the Fonoster Identity gRPC service — the "SDK" Fonoster
  * does not publish. Wraps the callback-based stubs (generated from the vendored
@@ -60,12 +78,16 @@ export class IdentityClient {
     this.client = new IdentityService(endpoint, grpc.credentials.createInsecure());
   }
 
-  private unary<TRes>(method: string, request: object, token?: string): Promise<TRes> {
+  private unary<TRes>(
+    method: string,
+    request: object,
+    meta: { token?: string; accessKeyId?: string } = {}
+  ): Promise<TRes> {
     const metadata = new grpc.Metadata();
-    if (token) {
-      // Identity reads the caller's access token from the "token" metadata key.
-      metadata.set("token", token);
-    }
+    // Identity reads the caller's access token from "token" and the active
+    // workspace from "accesskeyid".
+    if (meta.token) metadata.set("token", meta.token);
+    if (meta.accessKeyId) metadata.set("accesskeyid", meta.accessKeyId);
 
     // Call the method on the client object so `this` stays bound to it.
     const client = this.client as unknown as Record<
@@ -99,15 +121,38 @@ export class IdentityClient {
   }
 
   createWorkspace(name: string, token: string): Promise<{ ref: string }> {
-    return this.unary("createWorkspace", { name }, token);
+    return this.unary("createWorkspace", { name }, { token });
   }
 
   listWorkspaces(token: string): Promise<{ items: Workspace[]; nextPageToken?: string }> {
-    return this.unary("listWorkspaces", {}, token);
+    return this.unary("listWorkspaces", {}, { token });
   }
 
   getWorkspace(ref: string, token: string): Promise<Workspace> {
-    return this.unary("getWorkspace", { ref }, token);
+    return this.unary("getWorkspace", { ref }, { token });
+  }
+
+  listWorkspaceMembers(
+    accessKeyId: string,
+    token: string
+  ): Promise<{ items: WorkspaceMember[]; nextPageToken?: string }> {
+    return this.unary("listWorkspaceMembers", {}, { token, accessKeyId });
+  }
+
+  inviteUserToWorkspace(
+    request: InviteMemberRequest,
+    accessKeyId: string,
+    token: string
+  ): Promise<{ userRef: string }> {
+    return this.unary("inviteUserToWorkspace", request, { token, accessKeyId });
+  }
+
+  removeUserFromWorkspace(
+    userRef: string,
+    accessKeyId: string,
+    token: string
+  ): Promise<{ userRef: string }> {
+    return this.unary("removeUserFromWorkspace", { userRef }, { token, accessKeyId });
   }
 
   close() {

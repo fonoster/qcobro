@@ -7,12 +7,13 @@
   "scripts": {
     "start": "tsx src/server.ts",
     "dev": "tsx watch src/server.ts",
-    "db:push": "prisma db push --schema prisma/schema.prisma --skip-generate"
+    "db:push": "node scripts/db-push.mjs"
   },
   "dependencies": {
     "@fonoster/common": "^0.18.2",
     "@fonoster/identity": "^0.18.2",
-    "@grpc/grpc-js": "^1.10.6"
+    "@grpc/grpc-js": "^1.10.6",
+    "@qcobro/common": "*"
   },
   "devDependencies": {
     "prisma": "^6.0.0",

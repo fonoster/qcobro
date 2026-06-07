@@ -1,44 +1,44 @@
 import { readFileSync } from "node:fs";
-
-function readKey(path: string): string {
-  return readFileSync(path, "utf8");
-}
-
-const env = process.env;
+import { resolve } from "node:path";
+import { qcobroConfigSchema } from "@qcobro/common";
 
 /**
- * Configuration for the Fonoster Identity service.
- *
- * Mirrors the upstream `IdentityConfig` shape. Secrets (RS256 key pair,
- * field-encryption key) come from files/env and are never committed. The running
- * service uses the Prisma client bundled in @fonoster/identity against `dbUrl`.
+ * Loads service configuration from `qcobro.json` (Zod-validated via
+ * @qcobro/common) instead of environment variables. The file path comes from
+ * QCOBRO_CONFIG, defaulting to the repo-root qcobro.json relative to this
+ * package's working directory.
  */
+const configPath = process.env.QCOBRO_CONFIG ?? resolve(process.cwd(), "../../qcobro.json");
+const config = qcobroConfigSchema.parse(JSON.parse(readFileSync(configPath, "utf8")));
+
+const id = config.identity;
+
+export const identityPort = id.port;
+
+/** Configuration object in the shape Fonoster Identity's buildIdentityService expects. */
 export const identityConfig = {
-  dbUrl:
-    env.IDENTITY_DATABASE_URL ?? "postgresql://qcobro:qcobro@localhost:5432/identity?schema=public",
-  issuer: env.IDENTITY_ISSUER ?? "qcobro",
-  audience: env.IDENTITY_AUDIENCE ?? "qcobro",
-  privateKey: readKey(env.IDENTITY_PRIVATE_KEY_PATH ?? "./keys/private.pem"),
-  publicKey: readKey(env.IDENTITY_PUBLIC_KEY_PATH ?? "./keys/public.pem"),
-  encryptionKey: env.IDENTITY_ENCRYPTION_KEY ?? "",
-  accessTokenExpiresIn: env.IDENTITY_ACCESS_TOKEN_EXPIRES_IN ?? "15m",
-  refreshTokenExpiresIn: env.IDENTITY_REFRESH_TOKEN_EXPIRES_IN ?? "24h",
-  idTokenExpiresIn: env.IDENTITY_ID_TOKEN_EXPIRES_IN ?? "15m",
-  workspaceInviteExpiration: env.IDENTITY_WORKSPACE_INVITE_EXPIRATION ?? "1d",
-  workspaceInviteUrl: env.IDENTITY_WORKSPACE_INVITE_URL ?? "http://localhost:5173/accept-invite",
-  workspaceInviteFailUrl:
-    env.IDENTITY_WORKSPACE_INVITE_FAIL_URL ?? "http://localhost:5173/invite-failed",
-  contactVerificationRequired: (env.IDENTITY_CONTACT_VERIFICATION_REQUIRED ?? "false") === "true",
-  twoFactorAuthenticationRequired:
-    (env.IDENTITY_TWO_FACTOR_AUTHENTICATION_REQUIRED ?? "false") === "true",
+  dbUrl: id.databaseUrl,
+  issuer: id.issuer,
+  audience: id.audience,
+  privateKey: readFileSync(resolve(process.cwd(), id.privateKeyPath), "utf8"),
+  publicKey: readFileSync(resolve(process.cwd(), id.publicKeyPath), "utf8"),
+  encryptionKey: id.encryptionKey,
+  accessTokenExpiresIn: id.accessTokenExpiresIn,
+  refreshTokenExpiresIn: id.refreshTokenExpiresIn,
+  idTokenExpiresIn: id.idTokenExpiresIn,
+  workspaceInviteExpiration: id.workspaceInviteExpiration,
+  workspaceInviteUrl: id.workspaceInviteUrl,
+  workspaceInviteFailUrl: id.workspaceInviteFailUrl,
+  contactVerificationRequired: id.contactVerificationRequired,
+  twoFactorAuthenticationRequired: id.twoFactorAuthenticationRequired,
   smtpConfig: {
-    host: env.SMTP_HOST ?? "localhost",
-    port: Number(env.SMTP_PORT ?? 1025),
-    secure: (env.SMTP_SECURE ?? "false") === "true",
-    sender: env.SMTP_SENDER ?? "QCobro <no-reply@qcobro.local>",
+    host: id.smtp.host,
+    port: id.smtp.port,
+    secure: id.smtp.secure,
+    sender: id.smtp.sender,
     auth: {
-      user: env.SMTP_AUTH_USER ?? "",
-      pass: env.SMTP_AUTH_PASS ?? ""
+      user: id.smtp.auth.user,
+      pass: id.smtp.auth.pass
     }
   }
 };

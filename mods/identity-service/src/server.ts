@@ -1,11 +1,10 @@
 import * as grpc from "@grpc/grpc-js";
 import { buildIdentityService } from "@fonoster/identity";
 import { createServiceDefinition } from "@fonoster/common";
-import { identityConfig } from "./config.js";
+import { identityConfig, identityPort } from "./config.js";
 
 async function main() {
-  const port = process.env.IDENTITY_PORT ?? "50051";
-  const bindAddr = `0.0.0.0:${port}`;
+  const bindAddr = `0.0.0.0:${identityPort}`;
 
   const { definition, handlers } = buildIdentityService(identityConfig);
 
