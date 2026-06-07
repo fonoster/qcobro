@@ -20,3 +20,16 @@ export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1)
 });
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
+
+export const sendResetPasswordCodeSchema = z.object({
+  username: z.email(),
+  resetPasswordUrl: z.string().url()
+});
+export type SendResetPasswordCodeInput = z.infer<typeof sendResetPasswordCodeSchema>;
+
+export const resetPasswordSchema = z.object({
+  username: z.email(),
+  password: z.string().min(8).max(128),
+  verificationCode: z.string().min(1)
+});
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

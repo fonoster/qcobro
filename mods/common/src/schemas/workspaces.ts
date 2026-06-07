@@ -24,3 +24,8 @@ export const removeMemberSchema = z.object({
   userRef: z.string().min(1)
 });
 export type RemoveMemberInput = z.infer<typeof removeMemberSchema>;
+
+export const resendInvitationSchema = z.object({
+  userRef: z.string().min(1)
+});
+export type ResendInvitationInput = z.infer<typeof resendInvitationSchema>;

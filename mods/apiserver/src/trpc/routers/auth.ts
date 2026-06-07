@@ -1,4 +1,10 @@
-import { signUpSchema, loginSchema, refreshTokenSchema } from "@qcobro/common";
+import {
+  signUpSchema,
+  loginSchema,
+  refreshTokenSchema,
+  sendResetPasswordCodeSchema,
+  resetPasswordSchema
+} from "@qcobro/common";
 import { router, publicProcedure, protectedProcedure } from "../trpc.js";
 import { identityCall } from "../../identity/errors.js";
 
@@ -43,5 +49,21 @@ export const authRouter = router({
   // Logout. Fonoster Identity 0.18.2 does not implement server-side token
   // revocation, so logout is a client concern (discard the stored tokens);
   // tokens expire on their own. This is a server-side acknowledgement.
-  logout: publicProcedure.mutation(() => ({ ok: true }))
+  logout: publicProcedure.mutation(() => ({ ok: true })),
+
+  // Sends a reset-password email with a one-time code via Identity.
+  sendResetPasswordCode: publicProcedure
+    .input(sendResetPasswordCodeSchema)
+    .mutation(({ ctx, input }) =>
+      identityCall(() => ctx.identity.sendResetPasswordCode(input.username, input.resetPasswordUrl))
+    ),
+
+  // Exchanges the one-time code from the email for a new password.
+  resetPassword: publicProcedure
+    .input(resetPasswordSchema)
+    .mutation(({ ctx, input }) =>
+      identityCall(() =>
+        ctx.identity.resetPassword(input.username, input.password, input.verificationCode)
+      )
+    )
 });

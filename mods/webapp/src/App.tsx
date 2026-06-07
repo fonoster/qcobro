@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { Login } from "./pages/Login.js";
 import { SignUp } from "./pages/SignUp.js";
 import { CreateWorkspace } from "./pages/CreateWorkspace.js";
+import { AcceptInvitation } from "./pages/AcceptInvitation.js";
 import { Home } from "./pages/Home.js";
 import { Members } from "./pages/Members.js";
 import { RequireAuth } from "./components/RequireAuth.js";
@@ -12,6 +13,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
+      <Route path="/invite" element={<AcceptInvitation />} />
       <Route
         path="/create-workspace"
         element={

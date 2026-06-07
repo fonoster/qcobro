@@ -2,7 +2,8 @@ import {
   createWorkspaceSchema,
   getWorkspaceSchema,
   inviteMemberSchema,
-  removeMemberSchema
+  removeMemberSchema,
+  resendInvitationSchema
 } from "@qcobro/common";
 import { router, protectedProcedure, workspaceProcedure, adminProcedure } from "../trpc.js";
 import { identityCall } from "../../identity/errors.js";
@@ -36,6 +37,19 @@ export const workspacesRouter = router({
       identityCall(() =>
         ctx.identity.inviteUserToWorkspace(
           { email: input.email, role: input.role, name: input.name },
+          ctx.workspace.accessKeyId,
+          ctx.token
+        )
+      )
+    ),
+
+  // Resend a pending invitation email (owners/admins only).
+  resendInvitation: adminProcedure
+    .input(resendInvitationSchema)
+    .mutation(({ ctx, input }) =>
+      identityCall(() =>
+        ctx.identity.resendWorkspaceMembershipInvitation(
+          input.userRef,
           ctx.workspace.accessKeyId,
           ctx.token
         )

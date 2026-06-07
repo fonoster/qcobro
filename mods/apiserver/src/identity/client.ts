@@ -155,6 +155,22 @@ export class IdentityClient {
     return this.unary("removeUserFromWorkspace", { userRef }, { token, accessKeyId });
   }
 
+  resendWorkspaceMembershipInvitation(
+    userRef: string,
+    accessKeyId: string,
+    token: string
+  ): Promise<{ userRef: string }> {
+    return this.unary("resendWorkspaceMembershipInvitation", { userRef }, { token, accessKeyId });
+  }
+
+  sendResetPasswordCode(username: string, resetPasswordUrl: string): Promise<void> {
+    return this.unary("sendResetPasswordCode", { username, resetPasswordUrl });
+  }
+
+  resetPassword(username: string, password: string, verificationCode: string): Promise<void> {
+    return this.unary("resetPassword", { username, password, verificationCode });
+  }
+
   close() {
     this.client.close();
   }
