@@ -1,0 +1,109 @@
+name: e2e
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    # Backing infra as service containers. Identity itself runs on the host
+    # (below) because the Identity service reads config from qcobro.json, which
+    # the container image does not carry.
+    services:
+      db:
+        image: postgres:16
+        env:
+          POSTGRES_USER: qcobro
+          POSTGRES_PASSWORD: qcobro
+          POSTGRES_DB: qcobro
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U qcobro -d qcobro"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+      identity-db:
+        image: postgres:16
+        env:
+          POSTGRES_USER: qcobro
+          POSTGRES_PASSWORD: qcobro
+          POSTGRES_DB: identity
+        # Published on 5433 so the host-run Identity service can reach it
+        # (matches the local qcobro.json convention).
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U qcobro -d identity"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+      mailpit:
+        image: axllent/mailpit:latest
+        ports: ["1025:1025", "8025:8025"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Identity keys and qcobro.json
+        run: |
+          mkdir -p mods/identity-service/keys
+          openssl genrsa -out mods/identity-service/keys/private.pem 2048
+          openssl rsa -in mods/identity-service/keys/private.pem -pubout \
+            -out mods/identity-service/keys/public.pem
+          node -e "require('fs').writeFileSync('qcobro.json', JSON.stringify({
+            database: { url: 'postgresql://qcobro:qcobro@localhost:5432/qcobro?schema=public' },
+            identity: {
+              databaseUrl: 'postgresql://qcobro:qcobro@localhost:5433/identity?schema=public',
+              encryptionKey: 'k1.aesgcm256.cWpIPDjly8s0Y1UIKPhV2LDs-mJDkxpHQjOWnLiXK_E',
+              privateKeyPath: './keys/private.pem',
+              publicKeyPath: './keys/public.pem',
+              issuer: 'qcobro', audience: 'qcobro',
+              accessTokenExpiresIn: '12h', refreshTokenExpiresIn: '30d', idTokenExpiresIn: '12h',
+              port: 50051, endpoint: 'localhost:50051',
+              workspaceInviteUrl: 'http://localhost:5173/accept-invite',
+              smtp: { host: 'localhost', port: 1025, secure: false, sender: 'QCobro <no-reply@qcobro.local>' }
+            },
+            apiserver: { port: 3000 }
+          }, null, 2))"
+
+      - name: Build common and provision databases
+        run: |
+          npm run build --workspace=mods/common
+          npm run db:push --workspace=mods/identity-service
+          npm run db:generate --workspace=mods/apiserver
+          npm run db:migrate:deploy --workspace=mods/apiserver
+
+      - name: Start services (identity, apiserver, webapp)
+        run: |
+          npm start --workspace=mods/identity-service > /tmp/identity.log 2>&1 &
+          npm run start:dev --workspace=mods/apiserver > /tmp/apiserver.log 2>&1 &
+          npm run start:webapp > /tmp/webapp.log 2>&1 &
+          for i in $(seq 1 60); do
+            if (echo > /dev/tcp/localhost/50051) 2>/dev/null \
+               && curl -sf localhost:3000/health >/dev/null \
+               && curl -sf localhost:5173 >/dev/null; then
+              echo "stack ready"; exit 0
+            fi
+            sleep 2
+          done
+          echo "stack failed to start"; tail -n 50 /tmp/identity.log /tmp/apiserver.log /tmp/webapp.log; exit 1
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run e2e
+        run: npm run test:e2e
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

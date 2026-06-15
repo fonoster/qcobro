@@ -15,3 +15,9 @@ mods/identity-service/keys/
 
 # Local service config (holds dev secrets). Commit qcobro-prod.json as the example.
 qcobro.json
+
+# Playwright
+node_modules/.cache
+test-results/
+playwright-report/
+playwright/.cache/

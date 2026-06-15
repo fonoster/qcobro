@@ -18,6 +18,10 @@ services:
       POSTGRES_USER: qcobro
       POSTGRES_PASSWORD: qcobro
       POSTGRES_DB: identity
+    # Published so the Identity service can run on the host (reads qcobro.json,
+    # which points at localhost:5433) during local verification.
+    ports:
+      - "5433:5432"
     volumes:
       - qcobro-identity-db:/var/lib/postgresql/data
     healthcheck:
