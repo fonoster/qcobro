@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Navigate, NavLink, Outlet } from "react-router-dom";
+import { Link, Navigate, NavLink, Outlet } from "react-router-dom";
 import {
   LayoutDashboard,
   Folder,
@@ -15,6 +15,7 @@ import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { Logo } from "./Logo.js";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher.js";
+import { UserMenu } from "./UserMenu.js";
 import { cn } from "@/lib/utils.js";
 
 const NAV: { icon: LucideIcon; label: string; to?: string; end?: boolean }[] = [
@@ -29,7 +30,7 @@ const NAV: { icon: LucideIcon; label: string; to?: string; end?: boolean }[] = [
 ];
 
 export function AuthedLayout() {
-  const { workspace, setWorkspace, logout, currentUser } = useAuth();
+  const { workspace, setWorkspace, logout } = useAuth();
   const workspaces = trpc.workspaces.list.useQuery();
   const data = workspaces.data;
   const items = data?.items ?? [];
@@ -62,7 +63,9 @@ export function AuthedLayout() {
     <div className="flex min-h-screen bg-slate-50">
       <aside className="flex w-60 shrink-0 flex-col justify-between border-r border-slate-200 bg-white px-4 py-5">
         <div className="flex flex-col gap-6">
-          <Logo />
+          <Link to="/create-workspace" aria-label="Ir a la lista de espacios">
+            <Logo />
+          </Link>
           <WorkspaceSwitcher />
           <nav className="flex flex-col gap-1">
             {NAV.map(({ icon: Icon, label, to, end }) =>
@@ -105,17 +108,7 @@ export function AuthedLayout() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-2.5 px-2 py-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
-            {currentUser?.initials ?? "QC"}
-          </span>
-          <div className="flex min-w-0 flex-col leading-tight">
-            <span className="truncate text-[13px] font-semibold text-slate-900">
-              {currentUser?.name ?? "Usuario"}
-            </span>
-            <span className="text-[11px] text-slate-400">Propietario</span>
-          </div>
-        </div>
+        <UserMenu />
       </aside>
 
       <main className="flex-1 overflow-y-auto p-8">

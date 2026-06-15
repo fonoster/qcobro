@@ -1,6 +1,7 @@
 import {
   createWorkspaceSchema,
   getWorkspaceSchema,
+  updateWorkspaceSchema,
   inviteMemberSchema,
   removeMemberSchema,
   resendInvitationSchema
@@ -24,6 +25,13 @@ export const workspacesRouter = router({
   get: protectedProcedure
     .input(getWorkspaceSchema)
     .query(({ ctx, input }) => identityCall(() => ctx.identity.getWorkspace(input.ref, ctx.token))),
+
+  // Rename the active workspace (owners/admins only).
+  update: adminProcedure
+    .input(updateWorkspaceSchema)
+    .mutation(({ ctx, input }) =>
+      identityCall(() => ctx.identity.updateWorkspace(input.ref, input.name, ctx.token))
+    ),
 
   // Members of the active workspace.
   listMembers: workspaceProcedure.query(({ ctx }) =>

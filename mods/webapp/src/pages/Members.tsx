@@ -40,6 +40,7 @@ export function Members() {
   const remove = trpc.workspaces.removeMember.useMutation();
 
   const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("WORKSPACE_MEMBER");
   const [error, setError] = useState<string | null>(null);
@@ -74,9 +75,14 @@ export function Members() {
     event.preventDefault();
     setError(null);
     try {
-      await invite.mutateAsync({ email, role: role as "WORKSPACE_ADMIN" | "WORKSPACE_MEMBER" });
+      await invite.mutateAsync({
+        name,
+        email,
+        role: role as "WORKSPACE_ADMIN" | "WORKSPACE_MEMBER"
+      });
       await utils.workspaces.listMembers.invalidate();
       setOpen(false);
+      setName("");
       setEmail("");
       setRole("WORKSPACE_MEMBER");
     } catch {
@@ -170,6 +176,13 @@ export function Members() {
                   <X className="h-5 w-5" />
                 </button>
               </div>
+              <InputGroup
+                label="Nombre"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Nombre de la persona"
+              />
               <InputGroup
                 label="Correo electrónico"
                 type="email"

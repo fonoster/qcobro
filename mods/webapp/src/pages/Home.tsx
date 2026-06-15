@@ -25,48 +25,16 @@ const ACTIVITY: {
   name: string;
   desc: string;
   time: string;
-  bg: string;
-  fg: string;
 }[] = [
-  {
-    icon: PhoneCall,
-    name: "María González",
-    desc: "Promesa de pago · $1,200",
-    time: "Hace 5 min",
-    bg: "bg-emerald-50",
-    fg: "text-emerald-700"
-  },
-  {
-    icon: MessageSquare,
-    name: "Carlos Ruiz",
-    desc: "Información confirmada",
-    time: "Hace 22 min",
-    bg: "bg-blue-50",
-    fg: "text-blue-600"
-  },
-  {
-    icon: PhoneMissed,
-    name: "Ana Torres",
-    desc: "Sin respuesta",
-    time: "Hace 1 h",
-    bg: "bg-red-50",
-    fg: "text-red-600"
-  },
-  {
-    icon: Handshake,
-    name: "Luis Pérez",
-    desc: "Cambio de términos",
-    time: "Hace 2 h",
-    bg: "bg-emerald-50",
-    fg: "text-emerald-700"
-  },
+  { icon: PhoneCall, name: "María González", desc: "Promesa de pago · $1,200", time: "Hace 5 min" },
+  { icon: MessageSquare, name: "Carlos Ruiz", desc: "Información confirmada", time: "Hace 22 min" },
+  { icon: PhoneMissed, name: "Ana Torres", desc: "Sin respuesta", time: "Hace 1 h" },
+  { icon: Handshake, name: "Luis Pérez", desc: "Cambio de términos", time: "Hace 2 h" },
   {
     icon: CalendarClock,
     name: "Sofía Méndez",
     desc: "Reagendado para el viernes",
-    time: "Hace 3 h",
-    bg: "bg-orange-50",
-    fg: "text-orange-600"
+    time: "Hace 3 h"
   }
 ];
 
@@ -125,10 +93,8 @@ export function Home() {
                     i < ACTIVITY.length - 1 && "border-b border-slate-100"
                   )}
                 >
-                  <span
-                    className={cn("flex h-9 w-9 items-center justify-center rounded-full", a.bg)}
-                  >
-                    <Icon className={cn("h-[18px] w-[18px]", a.fg)} />
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
+                    <Icon className="h-[18px] w-[18px] text-slate-500" />
                   </span>
                   <div className="flex-1">
                     <p className="text-[13px] font-semibold text-slate-900">{a.name}</p>

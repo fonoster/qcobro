@@ -5,6 +5,7 @@ import { CreateWorkspace } from "./pages/CreateWorkspace.js";
 import { AcceptInvitation } from "./pages/AcceptInvitation.js";
 import { Home } from "./pages/Home.js";
 import { Members } from "./pages/Members.js";
+import { WorkspaceSettings } from "./pages/WorkspaceSettings.js";
 import { RequireAuth } from "./components/RequireAuth.js";
 import { AuthedLayout } from "./components/AuthedLayout.js";
 
@@ -32,6 +33,7 @@ export default function App() {
       >
         <Route index element={<Home />} />
         <Route path="members" element={<Members />} />
+        <Route path="settings" element={<WorkspaceSettings />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

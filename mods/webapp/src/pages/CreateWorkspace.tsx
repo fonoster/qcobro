@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Settings } from "lucide-react";
 import { trpc, REFRESH_TOKEN_KEY } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { Logo } from "../components/Logo.js";
@@ -37,6 +37,7 @@ export function CreateWorkspace() {
       setTokens(res.accessToken, res.refreshToken, res.idToken);
     }
 
+    await utils.workspaces.list.invalidate();
     const list = await utils.workspaces.list.fetch();
     const created = list.items.find((w) => w.ref === ref) ?? list.items[0];
     if (created) setWorkspace(created.accessKeyId);
@@ -63,17 +64,26 @@ export function CreateWorkspace() {
         </div>
 
         <div className="flex flex-wrap justify-center gap-6">
-          {items.map((ws) => (
-            <button
+          {items.slice(0, 3).map((ws) => (
+            <div
               key={ws.accessKeyId}
               onClick={() => onSelect(ws.accessKeyId)}
-              className="flex h-[200px] w-[280px] flex-col justify-between rounded-[10px] border border-slate-200 bg-white p-6 text-left transition hover:border-emerald-300 hover:shadow-sm"
+              className="relative flex h-[200px] w-[280px] cursor-pointer flex-col justify-between rounded-[10px] border border-slate-200 bg-white p-6 text-left transition hover:border-emerald-300 hover:shadow-sm"
             >
-              <span className="w-fit rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-emerald-700">
-                Activo
-              </span>
               <p className="text-[17px] font-bold text-slate-900">{ws.name}</p>
-            </button>
+              <button
+                type="button"
+                aria-label="Configuración del espacio"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setWorkspace(ws.accessKeyId);
+                  navigate("/settings");
+                }}
+                className="absolute bottom-5 right-5 text-slate-400 transition hover:text-slate-700"
+              >
+                <Settings className="h-[18px] w-[18px]" />
+              </button>
+            </div>
           ))}
 
           <button

@@ -10,13 +10,22 @@ export const getWorkspaceSchema = z.object({
 });
 export type GetWorkspaceInput = z.infer<typeof getWorkspaceSchema>;
 
+export const updateWorkspaceSchema = z.object({
+  ref: z.string().min(1),
+  name: z.string().min(1).max(60)
+});
+export type UpdateWorkspaceInput = z.infer<typeof updateWorkspaceSchema>;
+
 export const workspaceRoleEnum = z.enum(["WORKSPACE_ADMIN", "WORKSPACE_MEMBER"]);
 export type WorkspaceRole = z.infer<typeof workspaceRoleEnum>;
 
 export const inviteMemberSchema = z.object({
   email: z.email(),
   role: workspaceRoleEnum.default("WORKSPACE_MEMBER"),
-  name: z.string().max(60).optional()
+  // Identity's inviteUserToWorkspace requires a name; keep the apiserver
+  // contract in sync so a missing name fails validation with a clear message
+  // instead of an opaque gRPC error.
+  name: z.string().min(1).max(60)
 });
 export type InviteMemberInput = z.infer<typeof inviteMemberSchema>;
 

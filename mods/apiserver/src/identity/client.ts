@@ -132,6 +132,10 @@ export class IdentityClient {
     return this.unary("getWorkspace", { ref }, { token });
   }
 
+  updateWorkspace(ref: string, name: string, token: string): Promise<{ ref: string }> {
+    return this.unary("updateWorkspace", { ref, name }, { token });
+  }
+
   listWorkspaceMembers(
     accessKeyId: string,
     token: string
