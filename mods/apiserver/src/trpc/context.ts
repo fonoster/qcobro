@@ -1,8 +1,7 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import { prisma } from "../db.js";
-import { createIdentityClient } from "../identity/client.js";
+import { createIdentityClient } from "@fonoster/identity-client";
 import { config } from "../config.js";
-import { verifyAccessToken } from "../identity/token.js";
 
 export interface AuthedUser {
   ref: string;
@@ -41,7 +40,7 @@ export async function createContext(opts: CreateExpressContextOptions) {
   let workspace: ActiveWorkspace | null = null;
 
   if (token) {
-    const claims = await verifyAccessToken(identity, token);
+    const claims = await identity.verifyToken(token);
     if (claims) {
       user = { ref: claims.sub, accessKeyId: claims.accessKeyId };
       const requested = headerValue(opts.req.headers[WORKSPACE_HEADER]);

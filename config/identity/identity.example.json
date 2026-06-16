@@ -1,0 +1,31 @@
+{
+  "server": {
+    "bindAddr": "0.0.0.0:50051",
+    "httpBridgePort": 9110
+  },
+  "database": {
+    "url": "postgresql://USER:PASSWORD@identity-db:5432/identity?schema=public"
+  },
+  "encryptionKey": "k1.aesgcm256.REPLACE_WITH_GENERATED_CLOAK_KEY",
+  "issuer": "qcobro",
+  "audience": "qcobro",
+  "keys": {
+    "privateKeyPath": "/service/config/keys/private.pem",
+    "publicKeyPath": "/service/config/keys/public.pem"
+  },
+  "appUrl": "https://app.qcobro.com",
+  "invite": {
+    "url": "https://app.qcobro.com/accept-invite",
+    "failUrl": "https://app.qcobro.com/invite-failed"
+  },
+  "smtp": {
+    "host": "smtp.your-provider.com",
+    "port": 587,
+    "secure": true,
+    "sender": "QCobro <no-reply@qcobro.com>",
+    "auth": {
+      "user": "apikey",
+      "pass": "REPLACE_WITH_SMTP_PASSWORD"
+    }
+  }
+}

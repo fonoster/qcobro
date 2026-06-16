@@ -7,7 +7,7 @@ import {
   resendInvitationSchema
 } from "@qcobro/common";
 import { router, protectedProcedure, workspaceProcedure, adminProcedure } from "../trpc.js";
-import { identityCall } from "../../identity/errors.js";
+import { identityCall } from "../identityCall.js";
 
 export const workspacesRouter = router({
   // Any authenticated user can create a workspace and becomes its owner.

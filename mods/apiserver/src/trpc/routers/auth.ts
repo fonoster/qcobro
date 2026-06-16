@@ -6,7 +6,7 @@ import {
   resetPasswordSchema
 } from "@qcobro/common";
 import { router, publicProcedure, protectedProcedure } from "../trpc.js";
-import { identityCall } from "../../identity/errors.js";
+import { identityCall } from "../identityCall.js";
 
 export const authRouter = router({
   // Current authenticated principal and the active workspace (if any).

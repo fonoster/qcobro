@@ -10,11 +10,13 @@ coverage
 storybook-static
 .DS_Store
 
-# Local secrets for the Identity service (RS256 keys, etc.)
-mods/identity-service/keys/
-
 # Local service config (holds dev secrets). Commit qcobro-prod.json as the example.
 qcobro.json
+
+# Local Identity service config + keys (holds dev secrets).
+# Commit config/identity/identity.example.json as the example.
+config/identity/identity.json
+config/identity/keys/
 
 # Playwright
 node_modules/.cache

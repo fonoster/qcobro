@@ -11,6 +11,7 @@ services:
     volumes:
       - qcobro-db:/var/lib/postgresql/data
 
+  # Database for the external Fonoster Identity service.
   identity-db:
     image: postgres:16
     restart: unless-stopped
@@ -18,10 +19,6 @@ services:
       POSTGRES_USER: qcobro
       POSTGRES_PASSWORD: qcobro
       POSTGRES_DB: identity
-    # Published so the Identity service can run on the host (reads qcobro.json,
-    # which points at localhost:5433) during local verification.
-    ports:
-      - "5433:5432"
     volumes:
       - qcobro-identity-db:/var/lib/postgresql/data
     healthcheck:
@@ -30,30 +27,18 @@ services:
       timeout: 3s
       retries: 20
 
+  # Fonoster Identity, run from the published image and configured entirely by a
+  # mounted file (no environment variables). It provisions its own database on
+  # start. QCobro reaches it as a client at identity:50051 (or localhost:50051
+  # when the apiserver runs on the host).
   identity:
-    build:
-      context: .
-      dockerfile: mods/identity-service/Dockerfile
-    # @fonoster/identity bundles only the debian-openssl-3.0.x (amd64) Prisma
-    # query engine, so pin the platform to match (runs emulated on arm64 hosts).
-    platform: linux/amd64
+    image: fonoster/identity:0.18.2
     restart: unless-stopped
     depends_on:
       identity-db:
         condition: service_healthy
-    environment:
-      IDENTITY_DATABASE_URL: postgresql://qcobro:qcobro@identity-db:5432/identity?schema=public
-      IDENTITY_ENCRYPTION_KEY: ${IDENTITY_ENCRYPTION_KEY}
-      IDENTITY_PRIVATE_KEY_PATH: ./keys/private.pem
-      IDENTITY_PUBLIC_KEY_PATH: ./keys/public.pem
-      IDENTITY_PORT: "50051"
-      IDENTITY_ISSUER: qcobro
-      SMTP_HOST: mailpit
-      SMTP_PORT: "1025"
-      SMTP_SECURE: "false"
-      SMTP_SENDER: "QCobro <no-reply@qcobro.local>"
     volumes:
-      - ./mods/identity-service/keys:/app/mods/identity-service/keys:ro
+      - ./config/identity:/service/config:ro
     ports:
       - "50051:50051"
 
