@@ -43,3 +43,8 @@ export const resendInvitationSchema = z.object({
   userRef: z.string().min(1)
 });
 export type ResendInvitationInput = z.infer<typeof resendInvitationSchema>;
+
+export const acceptInvitationSchema = z.object({
+  token: z.string().min(1)
+});
+export type AcceptInvitationInput = z.infer<typeof acceptInvitationSchema>;

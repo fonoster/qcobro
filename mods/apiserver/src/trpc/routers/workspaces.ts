@@ -5,18 +5,39 @@ import {
   inviteMemberSchema,
   removeMemberSchema,
   resendInvitationSchema,
-  deleteWorkspaceSchema
+  deleteWorkspaceSchema,
+  acceptInvitationSchema
 } from "@qcobro/common";
 import {
   router,
+  publicProcedure,
   protectedProcedure,
   workspaceProcedure,
   adminProcedure,
   ownerProcedure
 } from "../trpc.js";
 import { identityCall } from "../identityCall.js";
+import { config } from "../../config.js";
+import { TRPCError } from "@trpc/server";
 
 export const workspacesRouter = router({
+  // Accept a workspace invitation by forwarding the signed token to the
+  // Identity HTTP bridge, which marks the membership ACTIVE. The bridge always
+  // responds with a 302 — to appUrl on success, to failUrl on failure — so we
+  // distinguish the two by checking the Location header.
+  acceptInvitation: publicProcedure.input(acceptInvitationSchema).mutation(async ({ input }) => {
+    const url = `${config.identity.httpBridgeUrl}/api/identity/accept-invite?token=${encodeURIComponent(input.token)}`;
+    const res = await fetch(url, { redirect: "manual" });
+    if (res.status !== 302) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Identity bridge error" });
+    }
+    const location = res.headers.get("location") ?? "";
+    if (location.includes("invite-failed")) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid or expired invitation token" });
+    }
+    return { success: true };
+  }),
+
   // Any authenticated user can create a workspace and becomes its owner.
   create: protectedProcedure
     .input(createWorkspaceSchema)

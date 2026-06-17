@@ -12,8 +12,10 @@ import { z } from "zod";
  * issuer, SMTP, …) lives with that service, not here.
  */
 export const identityConfigSchema = z.object({
-  /** host:port the apiserver uses to reach the external Identity service. */
-  endpoint: z.string().default("localhost:50051")
+  /** host:port the apiserver uses to reach the external Identity gRPC service. */
+  endpoint: z.string().default("localhost:50051"),
+  /** Base URL of the Identity HTTP bridge (accepts invite tokens). */
+  httpBridgeUrl: z.string().default("http://localhost:9110")
 });
 
 export const qcobroConfigSchema = z.object({
