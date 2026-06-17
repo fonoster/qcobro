@@ -32,7 +32,7 @@ services:
   # start. QCobro reaches it as a client at identity:50051 (or localhost:50051
   # when the apiserver runs on the host).
   identity:
-    image: fonoster/identity:0.18.2
+    image: fonoster/identity:0.20.0
     restart: unless-stopped
     depends_on:
       identity-db:
