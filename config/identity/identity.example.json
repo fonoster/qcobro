@@ -4,7 +4,7 @@
     "httpBridgePort": 9110
   },
   "database": {
-    "url": "postgresql://USER:PASSWORD@identity-db:5432/identity?schema=public"
+    "url": "postgresql://USER:PASSWORD@db:5432/identity?schema=public"
   },
   "encryptionKey": "k1.aesgcm256.REPLACE_WITH_GENERATED_CLOAK_KEY",
   "issuer": "qcobro",
