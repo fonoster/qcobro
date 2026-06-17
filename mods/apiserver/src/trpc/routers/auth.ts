@@ -3,7 +3,11 @@ import {
   loginSchema,
   refreshTokenSchema,
   sendResetPasswordCodeSchema,
-  resetPasswordSchema
+  resetPasswordSchema,
+  sendVerificationCodeSchema,
+  verifyCodeSchema,
+  oauthSignInSchema,
+  oauthSignUpSchema
 } from "@qcobro/common";
 import { router, publicProcedure, protectedProcedure } from "../trpc.js";
 import { identityCall } from "../identityCall.js";
@@ -65,5 +69,40 @@ export const authRouter = router({
       identityCall(() =>
         ctx.identity.resetPassword(input.username, input.password, input.verificationCode)
       )
+    ),
+
+  // Sends a one-time verification code to a contact (email or phone) via Identity.
+  sendVerificationCode: publicProcedure
+    .input(sendVerificationCodeSchema)
+    .mutation(({ ctx, input }) =>
+      identityCall(() => ctx.identity.sendVerificationCode(input.contactType, input.value))
+    ),
+
+  // Confirms a contact by checking the one-time code sent to it.
+  verifyCode: publicProcedure
+    .input(verifyCodeSchema)
+    .mutation(({ ctx, input }) =>
+      identityCall(() =>
+        ctx.identity.verifyCode(
+          input.username,
+          input.contactType,
+          input.value,
+          input.verificationCode
+        )
+      )
+    ),
+
+  // Exchange an OAuth2 authorization code for tokens (sign in with a provider).
+  oauthSignIn: publicProcedure
+    .input(oauthSignInSchema)
+    .mutation(({ ctx, input }) =>
+      identityCall(() => ctx.identity.exchangeOauth2Code(input.provider, input.code))
+    ),
+
+  // Create an account from an OAuth2 authorization code, returning tokens (sign up).
+  oauthSignUp: publicProcedure
+    .input(oauthSignUpSchema)
+    .mutation(({ ctx, input }) =>
+      identityCall(() => ctx.identity.createUserWithOauth2Code(input.code))
     )
 });

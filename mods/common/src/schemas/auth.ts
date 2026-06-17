@@ -33,3 +33,35 @@ export const resetPasswordSchema = z.object({
   verificationCode: z.string().min(1)
 });
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+export const contactTypeEnum = z.enum(["EMAIL", "PHONE"]);
+export type ContactType = z.infer<typeof contactTypeEnum>;
+
+export const sendVerificationCodeSchema = z.object({
+  contactType: contactTypeEnum,
+  value: z.string().min(1)
+});
+export type SendVerificationCodeInput = z.infer<typeof sendVerificationCodeSchema>;
+
+export const verifyCodeSchema = z.object({
+  username: z.email(),
+  contactType: contactTypeEnum,
+  value: z.string().min(1),
+  verificationCode: z.string().min(1)
+});
+export type VerifyCodeInput = z.infer<typeof verifyCodeSchema>;
+
+// Identity currently supports a single OAuth2 provider.
+export const oauthProviderEnum = z.enum(["GITHUB"]);
+export type OauthProvider = z.infer<typeof oauthProviderEnum>;
+
+export const oauthSignInSchema = z.object({
+  provider: oauthProviderEnum,
+  code: z.string().min(1)
+});
+export type OauthSignInInput = z.infer<typeof oauthSignInSchema>;
+
+export const oauthSignUpSchema = z.object({
+  code: z.string().min(1)
+});
+export type OauthSignUpInput = z.infer<typeof oauthSignUpSchema>;
