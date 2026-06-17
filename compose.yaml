@@ -39,6 +39,10 @@ services:
         condition: service_healthy
     volumes:
       - ./config/identity:/service/config:ro
+      # Patches a bug in the published image: createSendSmsTwilioImpl crashes when
+      # Twilio is not configured. Fix is committed in the fonoster repo; mount the
+      # compiled output until a new image is published.
+      - /Users/psanders/Projects/fonoster/mods/common/dist/notifications/createSendSmsTwilioImpl.js:/service/mods/common/dist/notifications/createSendSmsTwilioImpl.js:ro
     ports:
       - "50051:50051"
 
