@@ -2,10 +2,12 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { Login } from "./pages/Login.js";
 import { SignUp } from "./pages/SignUp.js";
 import { CreateWorkspace } from "./pages/CreateWorkspace.js";
+import { VerifyContact } from "./pages/VerifyContact.js";
 import { AcceptInvitation } from "./pages/AcceptInvitation.js";
 import { Home } from "./pages/Home.js";
 import { Members } from "./pages/Members.js";
 import { WorkspaceSettings } from "./pages/WorkspaceSettings.js";
+import { Profile } from "./pages/Profile.js";
 import { RequireAuth } from "./components/RequireAuth.js";
 import { AuthedLayout } from "./components/AuthedLayout.js";
 
@@ -24,6 +26,14 @@ export default function App() {
         }
       />
       <Route
+        path="/verify-contact"
+        element={
+          <RequireAuth>
+            <VerifyContact />
+          </RequireAuth>
+        }
+      />
+      <Route
         path="/"
         element={
           <RequireAuth>
@@ -34,6 +44,7 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="members" element={<Members />} />
         <Route path="settings" element={<WorkspaceSettings />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

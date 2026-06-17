@@ -27,7 +27,8 @@ export function SignUp() {
       await signUp.mutateAsync({ name, email, password });
       const res = await login.mutateAsync({ email, password });
       setTokens(res.accessToken, res.refreshToken, res.idToken);
-      navigate("/");
+      // New accounts land on contact verification before entering the console.
+      navigate("/verify-contact");
     } catch {
       setError(t("auth.signupFailed"));
     }
