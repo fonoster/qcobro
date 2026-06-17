@@ -4,9 +4,16 @@ import {
   updateWorkspaceSchema,
   inviteMemberSchema,
   removeMemberSchema,
-  resendInvitationSchema
+  resendInvitationSchema,
+  deleteWorkspaceSchema
 } from "@qcobro/common";
-import { router, protectedProcedure, workspaceProcedure, adminProcedure } from "../trpc.js";
+import {
+  router,
+  protectedProcedure,
+  workspaceProcedure,
+  adminProcedure,
+  ownerProcedure
+} from "../trpc.js";
 import { identityCall } from "../identityCall.js";
 
 export const workspacesRouter = router({
@@ -31,6 +38,13 @@ export const workspacesRouter = router({
     .input(updateWorkspaceSchema)
     .mutation(({ ctx, input }) =>
       identityCall(() => ctx.identity.updateWorkspace(input.ref, input.name, ctx.token))
+    ),
+
+  // Permanently delete a workspace (owner only). Irreversible.
+  delete: ownerProcedure
+    .input(deleteWorkspaceSchema)
+    .mutation(({ ctx, input }) =>
+      identityCall(() => ctx.identity.deleteWorkspace(input.ref, ctx.token))
     ),
 
   // Members of the active workspace.

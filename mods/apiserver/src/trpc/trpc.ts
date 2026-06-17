@@ -52,3 +52,17 @@ export const adminProcedure = workspaceProcedure.use(({ ctx, next }) => {
   }
   return next();
 });
+
+/**
+ * Requires the caller to be the owner of the active workspace. Reserved for
+ * irreversible actions (e.g. deleting the workspace) that an admin must not perform.
+ */
+export const ownerProcedure = workspaceProcedure.use(({ ctx, next }) => {
+  if (ctx.workspace.role !== "WORKSPACE_OWNER") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Requires workspace owner role"
+    });
+  }
+  return next();
+});

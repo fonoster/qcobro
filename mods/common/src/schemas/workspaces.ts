@@ -16,6 +16,11 @@ export const updateWorkspaceSchema = z.object({
 });
 export type UpdateWorkspaceInput = z.infer<typeof updateWorkspaceSchema>;
 
+export const deleteWorkspaceSchema = z.object({
+  ref: z.string().min(1)
+});
+export type DeleteWorkspaceInput = z.infer<typeof deleteWorkspaceSchema>;
+
 export const workspaceRoleEnum = z.enum(["WORKSPACE_ADMIN", "WORKSPACE_MEMBER"]);
 export type WorkspaceRole = z.infer<typeof workspaceRoleEnum>;
 
