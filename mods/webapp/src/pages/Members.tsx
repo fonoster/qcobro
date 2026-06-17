@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react";
-import { Plus, X, MoreHorizontal } from "lucide-react";
+import { useState, type ComponentType, type FormEvent } from "react";
+import { Plus, X, MoreHorizontal, Mail, Ban, UserMinus } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { Card } from "../components/ui/card.js";
@@ -8,20 +8,52 @@ import { InputGroup } from "../components/ui/input.js";
 import { SelectGroup } from "../components/ui/select.js";
 import { cn } from "@/lib/utils.js";
 
-const ROLE_LABEL: Record<string, { label: string; cls: string }> = {
-  WORKSPACE_OWNER: { label: "Propietario", cls: "bg-emerald-50 text-emerald-700" },
-  WORKSPACE_ADMIN: { label: "Admin", cls: "bg-blue-50 text-blue-600" },
-  WORKSPACE_MEMBER: { label: "Miembro", cls: "bg-slate-100 text-slate-600" }
+const ROLE_LABEL: Record<string, string> = {
+  WORKSPACE_OWNER: "Propietario",
+  WORKSPACE_ADMIN: "Admin",
+  WORKSPACE_MEMBER: "Miembro"
 };
-const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
-  ACTIVE: { label: "Activo", cls: "bg-emerald-50 text-emerald-700" },
-  PENDING: { label: "Pendiente", cls: "bg-orange-50 text-orange-600" }
+const STATUS_LABEL: Record<string, string> = { ACTIVE: "Activo", PENDING: "Pendiente" };
+
+type Row = {
+  ref: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  removable: boolean;
 };
 
-function Badge({ map, value }: { map: typeof ROLE_LABEL; value: string }) {
-  const m = map[value] ?? { label: value, cls: "bg-slate-100 text-slate-600" };
+function StatusBadge({ status }: { status: string }) {
+  const active = status === "ACTIVE";
   return (
-    <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", m.cls)}>{m.label}</span>
+    <span className="flex items-center gap-1.5 text-[13px] font-medium">
+      <span className={cn("h-1.5 w-1.5 rounded-full", active ? "bg-slate-500" : "bg-slate-300")} />
+      <span className={active ? "text-slate-600" : "text-slate-400"}>
+        {STATUS_LABEL[status] ?? status}
+      </span>
+    </span>
+  );
+}
+
+function MenuItem({
+  icon: Icon,
+  label,
+  onClick
+}: {
+  icon: ComponentType<{ className?: string }>;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium text-slate-700 hover:bg-slate-50"
+    >
+      <Icon className="h-4 w-4 text-slate-500" />
+      {label}
+    </button>
   );
 }
 
@@ -38,18 +70,26 @@ export function Members() {
   const members = trpc.workspaces.listMembers.useQuery();
   const invite = trpc.workspaces.invite.useMutation();
   const remove = trpc.workspaces.removeMember.useMutation();
+  const resend = trpc.workspaces.resendInvitation.useMutation();
 
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("WORKSPACE_MEMBER");
   const [error, setError] = useState<string | null>(null);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<null | {
+    title: string;
+    message: string;
+    confirmLabel: string;
+    run: () => Promise<void>;
+  }>(null);
 
   const wsName =
     workspaces.data?.items.find((w) => w.accessKeyId === workspace)?.name ?? "este espacio";
 
   // The owner isn't a member row in Identity — show the current user as owner first.
-  const ownerRow = currentUser
+  const ownerRow: Row | null = currentUser
     ? {
         ref: "owner",
         name: currentUser.name,
@@ -59,7 +99,7 @@ export function Members() {
         removable: false
       }
     : null;
-  const rows = [
+  const rows: Row[] = [
     ...(ownerRow ? [ownerRow] : []),
     ...(members.data?.items ?? []).map((m) => ({
       ref: m.userRef,
@@ -95,6 +135,28 @@ export function Members() {
     await utils.workspaces.listMembers.invalidate();
   }
 
+  async function onResend(userRef: string) {
+    await resend.mutateAsync({ userRef });
+  }
+
+  function askRemove(r: Row) {
+    setConfirm({
+      title: "¿Quitar a este miembro?",
+      message: `${r.name} perderá acceso a ${wsName}. Esta acción no se puede deshacer.`,
+      confirmLabel: "Quitar",
+      run: () => onRemove(r.ref)
+    });
+  }
+
+  function askCancel(r: Row) {
+    setConfirm({
+      title: "¿Cancelar invitación?",
+      message: `Se cancelará la invitación de ${r.name}.`,
+      confirmLabel: "Cancelar invitación",
+      run: () => onRemove(r.ref)
+    });
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -108,8 +170,8 @@ export function Members() {
         </Button>
       </div>
 
-      <Card className="overflow-hidden rounded-xl border-slate-200 shadow-none">
-        <div className="flex items-center border-b border-slate-200 bg-slate-50 px-5 py-3 text-[11px] font-semibold tracking-wide text-slate-400">
+      <Card className="rounded-xl border-slate-200 shadow-none">
+        <div className="flex items-center rounded-t-xl border-b border-slate-200 bg-slate-50 px-5 py-3 text-[11px] font-semibold tracking-wide text-slate-400">
           <span className="flex-1">MIEMBRO</span>
           <span className="w-40">ROL</span>
           <span className="w-32">ESTADO</span>
@@ -136,20 +198,61 @@ export function Members() {
                 </div>
               </div>
               <div className="w-40">
-                <Badge map={ROLE_LABEL} value={r.role} />
+                <span className="text-sm font-medium text-slate-600">
+                  {ROLE_LABEL[r.role] ?? r.role}
+                </span>
               </div>
               <div className="w-32">
-                <Badge map={STATUS_LABEL} value={r.status} />
+                <StatusBadge status={r.status} />
               </div>
-              <div className="flex w-10 justify-center">
+              <div className="relative flex w-10 justify-center">
                 {r.removable && (
-                  <button
-                    onClick={() => onRemove(r.ref)}
-                    className="text-slate-400 hover:text-red-600"
-                    title="Quitar"
-                  >
-                    <MoreHorizontal className="h-[18px] w-[18px]" />
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setOpenMenu(openMenu === r.ref ? null : r.ref)}
+                      className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                      title="Acciones"
+                    >
+                      <MoreHorizontal className="h-[18px] w-[18px]" />
+                    </button>
+                    {openMenu === r.ref && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setOpenMenu(null)} />
+                        <div className="absolute right-0 top-9 z-20 w-52 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
+                          {r.status === "PENDING" ? (
+                            <>
+                              <MenuItem
+                                icon={Mail}
+                                label="Reenviar invitación"
+                                onClick={() => {
+                                  setOpenMenu(null);
+                                  onResend(r.ref);
+                                }}
+                              />
+                              <MenuItem
+                                icon={Ban}
+                                label="Cancelar invitación"
+                                onClick={() => {
+                                  setOpenMenu(null);
+                                  askCancel(r);
+                                }}
+                              />
+                            </>
+                          ) : (
+                            <MenuItem
+                              icon={UserMinus}
+                              label="Quitar miembro"
+                              onClick={() => {
+                                setOpenMenu(null);
+                                askRemove(r);
+                              }}
+                            />
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -205,6 +308,34 @@ export function Members() {
                 </Button>
               </div>
             </form>
+          </Card>
+        </div>
+      )}
+
+      {confirm && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/60 p-4">
+          <Card className="w-full max-w-[440px] rounded-2xl border-slate-200 shadow-xl">
+            <div className="flex flex-col gap-5 p-6">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">{confirm.title}</h2>
+                <p className="mt-1 text-[13px] text-slate-500">{confirm.message}</p>
+              </div>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setConfirm(null)}>
+                  Cancelar
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={remove.isPending}
+                  onClick={async () => {
+                    await confirm.run();
+                    setConfirm(null);
+                  }}
+                >
+                  {confirm.confirmLabel}
+                </Button>
+              </div>
+            </div>
           </Card>
         </div>
       )}
