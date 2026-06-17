@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils.js";
 
 const NAV: { icon: LucideIcon; label: string; to?: string; end?: boolean }[] = [
   { icon: LayoutDashboard, label: "Panel", to: "/", end: true },
-  { icon: Folder, label: "Carteras" },
+  { icon: Folder, label: "Carteras", to: "/portfolios" },
   { icon: Megaphone, label: "Campañas" },
   { icon: Bot, label: "Agentes IA" },
   { icon: PhoneCall, label: "Gestiones" },

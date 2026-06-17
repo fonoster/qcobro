@@ -36955,8 +36955,8 @@
     {
       "type": "note",
       "id": "nrY34",
-      "x": 5,
-      "y": 5,
+      "x": 12531,
+      "y": 124,
       "name": "Nota · Confirmación acciones peligrosas",
       "width": 360,
       "height": 120,
@@ -36965,8 +36965,8 @@
     {
       "type": "note",
       "id": "usyyM",
-      "x": 5,
-      "y": 140,
+      "x": 12531,
+      "y": 746,
       "name": "Nota · Invitar falta Nombre",
       "width": 360,
       "height": 96,
@@ -36975,8 +36975,8 @@
     {
       "type": "note",
       "id": "i8clj",
-      "x": 5,
-      "y": 135,
+      "x": 12531,
+      "y": 413,
       "name": "Nota · OAuth Google",
       "width": 360,
       "height": 120,
@@ -38433,7 +38433,7 @@
                                   "id": "o1HLCg",
                                   "name": "V",
                                   "fill": "#0F172A",
-                                  "content": "República Dominicana",
+                                  "content": "NYC01",
                                   "fontFamily": "Inter",
                                   "fontSize": 14,
                                   "fontWeight": "normal"
@@ -40887,11 +40887,11 @@
                                   "id": "j5oTCL",
                                   "type": "ref",
                                   "ref": "maMKO",
-                                  "name": "Recuperado",
+                                  "name": "Recuperado (est.)",
                                   "width": "fill_container",
                                   "descendants": {
                                     "7Qc5Y": {
-                                      "content": "Recuperado"
+                                      "content": "Recuperado (est.)"
                                     },
                                     "G00Ls": {
                                       "content": "$287,430"
@@ -40905,17 +40905,17 @@
                                   "id": "VWVoP",
                                   "type": "ref",
                                   "ref": "maMKO",
-                                  "name": "Promesas de pago",
+                                  "name": "Objetivos alcanzados",
                                   "width": "fill_container",
                                   "descendants": {
                                     "7Qc5Y": {
-                                      "content": "Promesas de pago"
+                                      "content": "Objetivos alcanzados"
                                     },
                                     "G00Ls": {
                                       "content": "312"
                                     },
                                     "0UFOW": {
-                                      "content": "registradas hoy"
+                                      "content": "registrados hoy"
                                     }
                                   }
                                 },
@@ -41061,7 +41061,7 @@
                                                   "id": "t5hlR4",
                                                   "name": "D",
                                                   "fill": "#64748B",
-                                                  "content": "Promesa de pago · $1,200",
+                                                  "content": "Objetivo: compromiso de pago · $1,200",
                                                   "fontFamily": "Inter",
                                                   "fontSize": 12,
                                                   "fontWeight": "normal"
@@ -42135,6 +42135,3810 @@
                   "width": 360,
                   "height": 120,
                   "content": "Mi perfil / cuenta ✓\nPantalla 'Mi perfil · Página' + entrada de menú activa (/profile). apiserver profile.get/update/delete (GetUser/UpdateUser/DeleteUser). Eliminar cuenta con escribe ELIMINAR."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "l2fAk",
+          "name": "Carteras Flow",
+          "layout": "vertical",
+          "gap": 60,
+          "children": [
+            {
+              "type": "text",
+              "id": "ZMyzT",
+              "name": "Row Label · CARTERAS",
+              "fill": "#ffffff",
+              "content": "CARTERAS",
+              "fontFamily": "Roboto Mono",
+              "fontSize": 32,
+              "fontWeight": "700",
+              "letterSpacing": 2
+            },
+            {
+              "type": "frame",
+              "id": "WeAxG",
+              "name": "Row 1",
+              "gap": 80,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "wcl2T",
+                  "name": "Carteras · Lista",
+                  "clip": true,
+                  "width": 1440,
+                  "height": 900,
+                  "fill": "#F8FAFC",
+                  "children": [
+                    {
+                      "id": "I57ON",
+                      "type": "ref",
+                      "ref": "KIQZZ",
+                      "name": "Sidebar",
+                      "width": 240,
+                      "height": "fill_container"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "hpqbT",
+                      "name": "Main",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "t7gLCp",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 24,
+                          "padding": 32,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "cbmZe",
+                              "name": "PageHeader",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "tIKDh",
+                                  "name": "Titles",
+                                  "layout": "vertical",
+                                  "gap": 2,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "WbQoF",
+                                      "name": "Title",
+                                      "fill": "#0F172A",
+                                      "content": "Carteras",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 22,
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "rgMos",
+                                      "name": "Sub",
+                                      "fill": "#64748B",
+                                      "content": "Gestiona las carteras de clientes para tus campañas.",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 14,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "DUWyf",
+                              "name": "Portfolio Table",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 368,
+                              "fill": "$--card",
+                              "cornerRadius": 12,
+                              "stroke": "$--border",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "layout": "vertical",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "f6ms1",
+                                  "name": "Toolbar",
+                                  "width": "fill_container",
+                                  "padding": [
+                                    12,
+                                    16
+                                  ],
+                                  "justifyContent": "space_between",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "U5qqn",
+                                      "name": "StatusFilter",
+                                      "height": 36,
+                                      "fill": "$--card",
+                                      "cornerRadius": "$--radius-pill",
+                                      "stroke": "$--border",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "gap": 8,
+                                      "padding": [
+                                        0,
+                                        12
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "s4lMLr",
+                                          "name": "Label",
+                                          "fill": "$--foreground",
+                                          "content": "Todos los estados",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "normal"
+                                        },
+                                        {
+                                          "type": "icon",
+                                          "id": "fa1Zw",
+                                          "name": "Chev",
+                                          "width": 16,
+                                          "height": 16,
+                                          "icon": "chevron-down",
+                                          "library": "lucide",
+                                          "fill": "$--muted-foreground"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "id": "RJI2D",
+                                      "type": "ref",
+                                      "ref": "tiMW3",
+                                      "name": "CreateBtn",
+                                      "descendants": {
+                                        "GTAmU": {
+                                          "content": "+ Nueva cartera"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "iK1Bk",
+                                  "name": "Header Row",
+                                  "width": "fill_container",
+                                  "height": 44,
+                                  "fill": "$--card",
+                                  "stroke": "$--border",
+                                  "strokeWidth": {
+                                    "top": 1,
+                                    "bottom": 1
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "le7hZ",
+                                      "name": "H Nombre",
+                                      "width": "fill_container",
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "HbPVu",
+                                          "name": "Hdr",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Nombre",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "xhw3Q",
+                                      "name": "H Cliente",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "Tldlr",
+                                          "name": "Hdr",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Cliente",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "xF0LE",
+                                      "name": "H Cuentas",
+                                      "width": 85,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "uBtrz",
+                                          "name": "Hdr",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Cuentas",
+                                          "textAlign": "right",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "OPHiJ",
+                                      "name": "H Saldo pendiente",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "sr0C0",
+                                          "name": "Hdr",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Saldo pendiente",
+                                          "textAlign": "right",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "ElK8l",
+                                      "name": "H Estado",
+                                      "width": 100,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "EwnWv",
+                                          "name": "Hdr",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Estado",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "yEIgh",
+                                      "name": "H Acciones",
+                                      "width": 110,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "CtzeY",
+                                          "name": "Hdr",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Acciones",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "jHMkv",
+                                  "name": "Bancolombia Q2 2026",
+                                  "width": "fill_container",
+                                  "height": 52,
+                                  "stroke": "$--border",
+                                  "strokeWidth": {
+                                    "bottom": 1
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "r80dk",
+                                      "name": "Nombre Cell",
+                                      "width": "fill_container",
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "J1WEOm",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Bancolombia Q2 2026",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "I1T77",
+                                      "name": "Cliente Cell",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "v5Oxc",
+                                          "name": "V",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "bancolombia",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "Ev3PY",
+                                      "name": "Cuentas Cell",
+                                      "width": 85,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "Bp0gb",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "2,340",
+                                          "textAlign": "right",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "vbqL9",
+                                      "name": "Saldo Cell",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "MVvTy",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "$4.2M",
+                                          "textAlign": "right",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "uV5kU",
+                                      "name": "Estado Cell",
+                                      "width": 100,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "o0VKg",
+                                          "type": "ref",
+                                          "ref": "s3aKe",
+                                          "name": "Badge",
+                                          "descendants": {
+                                            "jlKWj": {
+                                              "content": "Activa"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "k8M6Lw",
+                                      "name": "Actions Cell",
+                                      "width": 110,
+                                      "height": "fill_container",
+                                      "gap": 6,
+                                      "padding": [
+                                        0,
+                                        12
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "i44SIV",
+                                          "name": "CSV",
+                                          "fill": "$--card",
+                                          "cornerRadius": 6,
+                                          "stroke": "$--border",
+                                          "strokeWidth": 1,
+                                          "strokeAlignment": "inner",
+                                          "padding": [
+                                            4,
+                                            10
+                                          ],
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "Txu5U",
+                                              "name": "L",
+                                              "fill": "$--foreground",
+                                              "content": "CSV",
+                                              "fontFamily": "$--font-primary",
+                                              "fontSize": 12,
+                                              "fontWeight": "500"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "tLusL",
+                                          "name": "Edit",
+                                          "fill": "$--secondary",
+                                          "cornerRadius": 6,
+                                          "padding": [
+                                            4,
+                                            10
+                                          ],
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "J3Ltl",
+                                              "name": "L",
+                                              "fill": "$--foreground",
+                                              "content": "Editar",
+                                              "fontFamily": "$--font-primary",
+                                              "fontSize": 12,
+                                              "fontWeight": "500"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "u94hk8",
+                                  "name": "Fintech S.A.",
+                                  "width": "fill_container",
+                                  "height": 52,
+                                  "stroke": "$--border",
+                                  "strokeWidth": {
+                                    "bottom": 1
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "nWIvi",
+                                      "name": "Nombre Cell",
+                                      "width": "fill_container",
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "WClK0",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Fintech S.A.",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "ceJVl",
+                                      "name": "Cliente Cell",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "ObAYY",
+                                          "name": "V",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "fintechsa",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "je1EV",
+                                      "name": "Cuentas Cell",
+                                      "width": 85,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "ylQ4f",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "891",
+                                          "textAlign": "right",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "bzUEw",
+                                      "name": "Saldo Cell",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "pL0Ee",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "$1.8M",
+                                          "textAlign": "right",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "gXpXj",
+                                      "name": "Estado Cell",
+                                      "width": 100,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "TnpZo",
+                                          "type": "ref",
+                                          "ref": "s3aKe",
+                                          "name": "Badge",
+                                          "descendants": {
+                                            "jlKWj": {
+                                              "content": "Activa"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "XWWnY",
+                                      "name": "Actions Cell",
+                                      "width": 110,
+                                      "height": "fill_container",
+                                      "gap": 6,
+                                      "padding": [
+                                        0,
+                                        12
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "T4dgqU",
+                                          "name": "CSV",
+                                          "fill": "$--card",
+                                          "cornerRadius": 6,
+                                          "stroke": "$--border",
+                                          "strokeWidth": 1,
+                                          "strokeAlignment": "inner",
+                                          "padding": [
+                                            4,
+                                            10
+                                          ],
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "h68b8",
+                                              "name": "L",
+                                              "fill": "$--foreground",
+                                              "content": "CSV",
+                                              "fontFamily": "$--font-primary",
+                                              "fontSize": 12,
+                                              "fontWeight": "500"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "gpu6H",
+                                          "name": "Edit",
+                                          "fill": "$--secondary",
+                                          "cornerRadius": 6,
+                                          "padding": [
+                                            4,
+                                            10
+                                          ],
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "K2nYGS",
+                                              "name": "L",
+                                              "fill": "$--foreground",
+                                              "content": "Editar",
+                                              "fontFamily": "$--font-primary",
+                                              "fontSize": 12,
+                                              "fontWeight": "500"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "IFKur",
+                                  "name": "Cooperativa Norte",
+                                  "width": "fill_container",
+                                  "height": 52,
+                                  "stroke": "$--border",
+                                  "strokeWidth": {
+                                    "bottom": 1
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "b4Nmm2",
+                                      "name": "Nombre Cell",
+                                      "width": "fill_container",
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "iBZ30",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Cooperativa Norte",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "GeTnU",
+                                      "name": "Cliente Cell",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "n4ujj",
+                                          "name": "V",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "coopnorte",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "lvNty",
+                                      "name": "Cuentas Cell",
+                                      "width": 85,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "b0DDQv",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "1,205",
+                                          "textAlign": "right",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "TtRcA",
+                                      "name": "Saldo Cell",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "o8Tmt",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "$3.1M",
+                                          "textAlign": "right",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "yipaO",
+                                      "name": "Estado Cell",
+                                      "width": 100,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "EmbuG",
+                                          "type": "ref",
+                                          "ref": "s3aKe",
+                                          "name": "Badge",
+                                          "descendants": {
+                                            "jlKWj": {
+                                              "content": "Activa"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "oRKs5",
+                                      "name": "Actions Cell",
+                                      "width": 110,
+                                      "height": "fill_container",
+                                      "gap": 6,
+                                      "padding": [
+                                        0,
+                                        12
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "V5Rg6B",
+                                          "name": "CSV",
+                                          "fill": "$--card",
+                                          "cornerRadius": 6,
+                                          "stroke": "$--border",
+                                          "strokeWidth": 1,
+                                          "strokeAlignment": "inner",
+                                          "padding": [
+                                            4,
+                                            10
+                                          ],
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "d6eup5",
+                                              "name": "L",
+                                              "fill": "$--foreground",
+                                              "content": "CSV",
+                                              "fontFamily": "$--font-primary",
+                                              "fontSize": 12,
+                                              "fontWeight": "500"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "uUVb6",
+                                          "name": "Edit",
+                                          "fill": "$--secondary",
+                                          "cornerRadius": 6,
+                                          "padding": [
+                                            4,
+                                            10
+                                          ],
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "BM3gl",
+                                              "name": "L",
+                                              "fill": "$--foreground",
+                                              "content": "Editar",
+                                              "fontFamily": "$--font-primary",
+                                              "fontSize": 12,
+                                              "fontWeight": "500"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "X7ynAn",
+                                  "name": "Cartera Marzo",
+                                  "width": "fill_container",
+                                  "height": 52,
+                                  "stroke": "$--border",
+                                  "strokeWidth": {
+                                    "bottom": 1
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "IdtMG",
+                                      "name": "Nombre Cell",
+                                      "width": "fill_container",
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "v7R2w",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Cartera Marzo",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "ui7rw",
+                                      "name": "Cliente Cell",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "sPQTr",
+                                          "name": "V",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "bancomex",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "y4ilU3",
+                                      "name": "Cuentas Cell",
+                                      "width": 85,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "ldfPn",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "678",
+                                          "textAlign": "right",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "oOyC0",
+                                      "name": "Saldo Cell",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "jEcN4",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "$987K",
+                                          "textAlign": "right",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "r90FQN",
+                                      "name": "Estado Cell",
+                                      "width": 100,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "aedtM",
+                                          "type": "ref",
+                                          "ref": "YdbQT",
+                                          "name": "Badge",
+                                          "descendants": {
+                                            "eimgZ": {
+                                              "content": "Cerrada"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "mkBI2",
+                                      "name": "Actions Cell",
+                                      "width": 110,
+                                      "height": "fill_container",
+                                      "gap": 6,
+                                      "padding": [
+                                        0,
+                                        12
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "a0yWC",
+                                          "name": "CSV",
+                                          "fill": "$--card",
+                                          "cornerRadius": 6,
+                                          "stroke": "$--border",
+                                          "strokeWidth": 1,
+                                          "strokeAlignment": "inner",
+                                          "padding": [
+                                            4,
+                                            10
+                                          ],
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "dFO3V",
+                                              "name": "L",
+                                              "fill": "$--foreground",
+                                              "content": "CSV",
+                                              "fontFamily": "$--font-primary",
+                                              "fontSize": 12,
+                                              "fontWeight": "500"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "JGGsd",
+                                          "name": "Edit",
+                                          "fill": "$--secondary",
+                                          "cornerRadius": 6,
+                                          "padding": [
+                                            4,
+                                            10
+                                          ],
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "rlRfc",
+                                              "name": "L",
+                                              "fill": "$--foreground",
+                                              "content": "Editar",
+                                              "fontFamily": "$--font-primary",
+                                              "fontSize": 12,
+                                              "fontWeight": "500"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "zYC6L",
+                                  "name": "Footer",
+                                  "width": "fill_container",
+                                  "height": 44,
+                                  "stroke": "$--border",
+                                  "strokeWidth": {
+                                    "top": 1
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "padding": [
+                                    0,
+                                    16
+                                  ],
+                                  "justifyContent": "space_between",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "RUm3I",
+                                      "name": "Count",
+                                      "fill": "$--muted-foreground",
+                                      "content": "Mostrando 1–4 de 4 carteras",
+                                      "fontFamily": "$--font-primary",
+                                      "fontSize": 13,
+                                      "fontWeight": "normal"
+                                    },
+                                    {
+                                      "id": "Gdcap",
+                                      "type": "ref",
+                                      "ref": "ADmKy",
+                                      "name": "Pagination"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "C8LbT",
+                  "name": "Arrow Container",
+                  "width": 80,
+                  "height": 80,
+                  "fill": "#1E293B",
+                  "cornerRadius": 40,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "vUfsC",
+                      "name": "Arrow",
+                      "width": 40,
+                      "height": 40,
+                      "icon": "arrow-right",
+                      "library": "lucide",
+                      "fill": "#94A3B8"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "dTc6L",
+                  "name": "Crear cartera · Modal",
+                  "clip": true,
+                  "width": 760,
+                  "height": 640,
+                  "fill": "#0F172A99",
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "wtBgZ",
+                      "name": "Card",
+                      "width": 440,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 16,
+                      "layout": "vertical",
+                      "gap": 20,
+                      "padding": 24,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Xd9ZY",
+                          "name": "Header",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "H91eyR",
+                              "name": "HText",
+                              "layout": "vertical",
+                              "gap": 2,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "tYxiJ",
+                                  "name": "Title",
+                                  "fill": "#0F172A",
+                                  "content": "Nueva cartera",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 18,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "lKr5Q",
+                                  "name": "Sub",
+                                  "fill": "#64748B",
+                                  "content": "Completa los datos para crear la cartera.",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "icon",
+                              "id": "m9agqZ",
+                              "name": "Close",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "x",
+                              "library": "lucide",
+                              "fill": "#94A3B8"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "SUHtA",
+                          "type": "ref",
+                          "ref": "BoM07",
+                          "name": "Name Field",
+                          "width": "fill_container",
+                          "descendants": {
+                            "hTkn4": {
+                              "content": "Nombre de la cartera"
+                            },
+                            "KmeTM": {
+                              "content": "ej. Bancolombia Q2 2025"
+                            }
+                          }
+                        },
+                        {
+                          "id": "H2KIk2",
+                          "type": "ref",
+                          "ref": "BoM07",
+                          "name": "ClientId Field",
+                          "width": "fill_container",
+                          "descendants": {
+                            "hTkn4": {
+                              "content": "ID del cliente"
+                            },
+                            "KmeTM": {
+                              "content": "ej. bancolombia"
+                            }
+                          }
+                        },
+                        {
+                          "type": "text",
+                          "id": "v2TNJ",
+                          "name": "Note",
+                          "fill": "#94A3B8",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "El saldo y el conteo de cuentas se calculan automáticamente al importar el CSV.",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "zqjwA",
+                          "name": "Footer",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "justifyContent": "end",
+                          "children": [
+                            {
+                              "id": "eSDqt",
+                              "type": "ref",
+                              "ref": "VJCaF",
+                              "name": "Cancel",
+                              "descendants": {
+                                "XyMlx": {
+                                  "enabled": false
+                                },
+                                "NkZAZ": {
+                                  "content": "Cancelar"
+                                }
+                              }
+                            },
+                            {
+                              "id": "i0hV9",
+                              "type": "ref",
+                              "ref": "ws2MA",
+                              "name": "Create",
+                              "descendants": {
+                                "kGizg": {
+                                  "enabled": false
+                                },
+                                "MQ2HP": {
+                                  "content": "Crear cartera"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Ygh6n",
+              "name": "Row 2",
+              "gap": 80,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "F5CG54",
+                  "name": "Cartera · Detalle",
+                  "clip": true,
+                  "width": 1440,
+                  "height": 900,
+                  "fill": "#F8FAFC",
+                  "children": [
+                    {
+                      "id": "TYiuK",
+                      "type": "ref",
+                      "ref": "KIQZZ",
+                      "name": "Sidebar",
+                      "width": 240,
+                      "height": "fill_container"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "f5DuDn",
+                      "name": "Main",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "lKrtX",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 24,
+                          "padding": 32,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "IAruH",
+                              "name": "PageHeader",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "vmZ8J",
+                                  "name": "Left",
+                                  "gap": 12,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "n9vXmj",
+                                      "name": "Back Btn",
+                                      "fill": "#FFFFFF",
+                                      "cornerRadius": 8,
+                                      "stroke": "#E2E8F0",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "gap": 6,
+                                      "padding": [
+                                        7,
+                                        12
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "H2mS43",
+                                          "name": "Ico",
+                                          "width": 16,
+                                          "height": 16,
+                                          "icon": "arrow-left",
+                                          "library": "lucide",
+                                          "fill": "#64748B"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "YvHFx",
+                                          "name": "L",
+                                          "fill": "#374151",
+                                          "content": "Volver a carteras",
+                                          "fontFamily": "Inter",
+                                          "fontSize": 13,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "ZI58D",
+                                      "name": "Titles",
+                                      "layout": "vertical",
+                                      "gap": 1,
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "h1cBx",
+                                          "name": "Title",
+                                          "fill": "#0F172A",
+                                          "content": "Fintech S.A.",
+                                          "fontFamily": "Inter",
+                                          "fontSize": 22,
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "cwql4",
+                                          "name": "Sub",
+                                          "fill": "#64748B",
+                                          "content": "891 cuentas activas · fintechsa",
+                                          "fontFamily": "Inter",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "e5nOR",
+                              "name": "Accounts Table",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 419,
+                              "fill": "$--card",
+                              "cornerRadius": 12,
+                              "stroke": "$--border",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "layout": "vertical",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "S85psr",
+                                  "name": "Toolbar",
+                                  "width": "fill_container",
+                                  "padding": [
+                                    12,
+                                    16
+                                  ],
+                                  "justifyContent": "space_between",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "id": "DbIpI",
+                                      "type": "ref",
+                                      "ref": "KoP5V",
+                                      "name": "Search"
+                                    },
+                                    {
+                                      "id": "uNqmL",
+                                      "type": "ref",
+                                      "ref": "tiMW3",
+                                      "name": "SyncBtn",
+                                      "descendants": {
+                                        "GTAmU": {
+                                          "content": "Sincronizar CSV"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "oqI7S",
+                                  "name": "Header Row",
+                                  "width": "fill_container",
+                                  "height": 44,
+                                  "fill": "$--card",
+                                  "stroke": "$--border",
+                                  "strokeWidth": {
+                                    "top": 1,
+                                    "bottom": 1
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "EKdU0",
+                                      "name": "H Nombre",
+                                      "width": "fill_container",
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "S3jBp",
+                                          "name": "Hdr",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Nombre",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "hRsX1",
+                                      "name": "H ID Préstamo",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "mFcFs",
+                                          "name": "Hdr",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "ID Préstamo",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "DOLDx",
+                                      "name": "H Teléfono",
+                                      "width": 158,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "OrJyo",
+                                          "name": "Hdr",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Teléfono",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "N3kLQ",
+                                      "name": "H Saldo",
+                                      "width": 110,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "WRb82",
+                                          "name": "Hdr",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Saldo",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "exPOr",
+                                      "name": "H DPD",
+                                      "width": 72,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "nSpyd",
+                                          "name": "Hdr",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "DPD",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "LOEb4",
+                                      "name": "H Idioma",
+                                      "width": 84,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "KEW9F",
+                                          "name": "Hdr",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Idioma",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "m4g1R",
+                                  "name": "María González",
+                                  "width": "fill_container",
+                                  "height": 52,
+                                  "stroke": "$--border",
+                                  "strokeWidth": {
+                                    "bottom": 1
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "H9LSg",
+                                      "name": "Nombre Cell",
+                                      "width": "fill_container",
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "YiQpj",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "María González",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "CAq1n",
+                                      "name": "ID Cell",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "hbCSx",
+                                          "name": "V",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "FT-00412",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "o1FkZ",
+                                      "name": "Tel Cell",
+                                      "width": 158,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "FXSZu",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "+57 310 555 0102",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "WJjHy",
+                                      "name": "Saldo Cell",
+                                      "width": 110,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "EnSOq",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "$4,800",
+                                          "textAlign": "right",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "tp8P7",
+                                      "name": "DPD Cell",
+                                      "width": 72,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "WbMvc",
+                                          "name": "V",
+                                          "fill": "#DC2626",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "32",
+                                          "textAlign": "center",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "CxvwT",
+                                      "name": "Idioma Cell",
+                                      "width": 84,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "fVYJ6",
+                                          "type": "ref",
+                                          "ref": "s3aKe",
+                                          "name": "LangBadge",
+                                          "descendants": {
+                                            "jlKWj": {
+                                              "content": "ES"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "XtSgE",
+                                  "name": "Carlos Ruiz",
+                                  "width": "fill_container",
+                                  "height": 52,
+                                  "stroke": "$--border",
+                                  "strokeWidth": {
+                                    "bottom": 1
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "JF4nS",
+                                      "name": "Nombre Cell",
+                                      "width": "fill_container",
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "CEnSj",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Carlos Ruiz",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "Kpxrj",
+                                      "name": "ID Cell",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "PQKp6",
+                                          "name": "V",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "FT-00318",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "pQpdX",
+                                      "name": "Tel Cell",
+                                      "width": 158,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "tkkVL",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "+57 321 555 0198",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "WMhVu",
+                                      "name": "Saldo Cell",
+                                      "width": 110,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "d6NnO",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "$12,200",
+                                          "textAlign": "right",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "G08xGf",
+                                      "name": "DPD Cell",
+                                      "width": 72,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "RLR1G",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "15",
+                                          "textAlign": "center",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "w451n",
+                                      "name": "Idioma Cell",
+                                      "width": 84,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "J5ohby",
+                                          "type": "ref",
+                                          "ref": "s3aKe",
+                                          "name": "LangBadge",
+                                          "descendants": {
+                                            "jlKWj": {
+                                              "content": "ES"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "G5GcY7",
+                                  "name": "Ana Torres",
+                                  "width": "fill_container",
+                                  "height": 52,
+                                  "stroke": "$--border",
+                                  "strokeWidth": {
+                                    "bottom": 1
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "btOL8",
+                                      "name": "Nombre Cell",
+                                      "width": "fill_container",
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "Ix4JI",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Ana Torres",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "etNA7",
+                                      "name": "ID Cell",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "oyodA",
+                                          "name": "V",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "FT-00567",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "S6KVh",
+                                      "name": "Tel Cell",
+                                      "width": 158,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "I2Q5yi",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "+57 300 555 0041",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "Vf4fU",
+                                      "name": "Saldo Cell",
+                                      "width": 110,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "mhEgX",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "$6,750",
+                                          "textAlign": "right",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "Kp5rC",
+                                      "name": "DPD Cell",
+                                      "width": 72,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "WDPkj",
+                                          "name": "V",
+                                          "fill": "#DC2626",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "61",
+                                          "textAlign": "center",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "X7Y30s",
+                                      "name": "Idioma Cell",
+                                      "width": 84,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "Swt2b",
+                                          "type": "ref",
+                                          "ref": "YdbQT",
+                                          "name": "LangBadge",
+                                          "descendants": {
+                                            "eimgZ": {
+                                              "content": "EN"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "VjacU",
+                                  "name": "Luis Pérez",
+                                  "width": "fill_container",
+                                  "height": 52,
+                                  "stroke": "$--border",
+                                  "strokeWidth": {
+                                    "bottom": 1
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "nVCfb",
+                                      "name": "Nombre Cell",
+                                      "width": "fill_container",
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "C3MLQH",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Luis Pérez",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "wJlla",
+                                      "name": "ID Cell",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "V7w04V",
+                                          "name": "V",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "FT-00201",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "whEc1",
+                                      "name": "Tel Cell",
+                                      "width": 158,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "e7XmS",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "+57 315 555 0077",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "uhr9U",
+                                      "name": "Saldo Cell",
+                                      "width": 110,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "VDjsv",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "$9,300",
+                                          "textAlign": "right",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "CrSKt",
+                                      "name": "DPD Cell",
+                                      "width": 72,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "TcC7v",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "8",
+                                          "textAlign": "center",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "otzWQ",
+                                      "name": "Idioma Cell",
+                                      "width": 84,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "CgLxU",
+                                          "type": "ref",
+                                          "ref": "s3aKe",
+                                          "name": "LangBadge",
+                                          "descendants": {
+                                            "jlKWj": {
+                                              "content": "ES"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "t8Vsgw",
+                                  "name": "Sofía Méndez",
+                                  "width": "fill_container",
+                                  "height": 52,
+                                  "stroke": "$--border",
+                                  "strokeWidth": {
+                                    "bottom": 1
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "OlnQ6",
+                                      "name": "Nombre Cell",
+                                      "width": "fill_container",
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "qkRJu",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Sofía Méndez",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "yPAh9",
+                                      "name": "ID Cell",
+                                      "width": 130,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "bu6OF",
+                                          "name": "V",
+                                          "fill": "$--muted-foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "FT-00892",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 13,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "NzDkH",
+                                      "name": "Tel Cell",
+                                      "width": 158,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "t5lSX",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "+57 312 555 0153",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "asIUU",
+                                      "name": "Saldo Cell",
+                                      "width": 110,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "JFIBb",
+                                          "name": "V",
+                                          "fill": "$--foreground",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "$3,400",
+                                          "textAlign": "right",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "YnJdv",
+                                      "name": "DPD Cell",
+                                      "width": 72,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "qCo9t",
+                                          "name": "V",
+                                          "fill": "#DC2626",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "45",
+                                          "textAlign": "center",
+                                          "fontFamily": "$--font-primary",
+                                          "fontSize": 14,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "R8735P",
+                                      "name": "Idioma Cell",
+                                      "width": 84,
+                                      "height": "fill_container",
+                                      "padding": [
+                                        0,
+                                        16
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "gNe1i",
+                                          "type": "ref",
+                                          "ref": "YdbQT",
+                                          "name": "LangBadge",
+                                          "descendants": {
+                                            "eimgZ": {
+                                              "content": "EN"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "tJKXJ",
+                                  "name": "Footer",
+                                  "width": "fill_container",
+                                  "height": 44,
+                                  "stroke": "$--border",
+                                  "strokeWidth": {
+                                    "top": 1
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "padding": [
+                                    0,
+                                    16
+                                  ],
+                                  "justifyContent": "space_between",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "YomZI",
+                                      "name": "Count",
+                                      "fill": "$--muted-foreground",
+                                      "content": "Mostrando 1–5 de 891 cuentas",
+                                      "fontFamily": "$--font-primary",
+                                      "fontSize": 13,
+                                      "fontWeight": "normal"
+                                    },
+                                    {
+                                      "id": "MqS62",
+                                      "type": "ref",
+                                      "ref": "ADmKy",
+                                      "name": "Pagination"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "yJsY1",
+                  "name": "Arrow Container",
+                  "width": 80,
+                  "height": 80,
+                  "fill": "#1E293B",
+                  "cornerRadius": 40,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "zjowh",
+                      "name": "Arrow",
+                      "width": 40,
+                      "height": 40,
+                      "icon": "arrow-right",
+                      "library": "lucide",
+                      "fill": "#94A3B8"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "O1RjGw",
+                  "name": "Sincronizar · Seleccionar archivo",
+                  "clip": true,
+                  "width": 760,
+                  "height": 680,
+                  "fill": "#0F172A99",
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "LEHgF",
+                      "name": "Card",
+                      "width": 480,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 16,
+                      "layout": "vertical",
+                      "gap": 18,
+                      "padding": 24,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "mr82T",
+                          "name": "Header",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "ICR2O",
+                              "name": "HText",
+                              "layout": "vertical",
+                              "gap": 2,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "b03ENu",
+                                  "name": "Title",
+                                  "fill": "#0F172A",
+                                  "content": "Importar cuentas — Fintech S.A.",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 17,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "y9xPca",
+                                  "name": "Sub",
+                                  "fill": "#64748B",
+                                  "content": "Sincronizar cuentas de clientes desde un archivo CSV.",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "icon",
+                              "id": "rqHd4",
+                              "name": "Close",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "x",
+                              "library": "lucide",
+                              "fill": "#94A3B8"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ibwfi",
+                          "name": "FileRow",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "wllrc",
+                              "name": "FileBtn",
+                              "fill": "#FFFFFF",
+                              "cornerRadius": 8,
+                              "stroke": "#E2E8F0",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "gap": 6,
+                              "padding": [
+                                8,
+                                14
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "a2hJWI",
+                                  "name": "Ico",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "upload",
+                                  "library": "lucide",
+                                  "fill": "#64748B"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "flARU",
+                                  "name": "L",
+                                  "fill": "#374151",
+                                  "content": "Seleccionar archivo",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "fTzDj",
+                              "name": "FileName",
+                              "fill": "#94A3B8",
+                              "content": "Ningún archivo seleccionado",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "L4ZzmX",
+                          "name": "ModeLabel",
+                          "fill": "#374151",
+                          "content": "Modo de sincronización",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "oqWJk",
+                          "name": "Modes",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "ZB1Ay",
+                              "name": "Solo agregar nuevas",
+                              "width": "fill_container",
+                              "fill": "#ECFDF5",
+                              "cornerRadius": 8,
+                              "stroke": "#10B981",
+                              "strokeWidth": 2,
+                              "strokeAlignment": "inner",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "padding": 12,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "oQD2j",
+                                  "name": "Row",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "GsVJb",
+                                      "name": "Radio",
+                                      "fill": "#10B981",
+                                      "width": 16,
+                                      "height": 16,
+                                      "stroke": "#10B981",
+                                      "strokeWidth": 2,
+                                      "strokeAlignment": "inner"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "X4AzqS",
+                                      "name": "Lbl",
+                                      "fill": "#0F172A",
+                                      "content": "Solo agregar nuevas",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "a1hzcK",
+                                  "name": "Desc",
+                                  "fill": "#64748B",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Agrega cuentas nuevas. No modifica ni elimina las existentes.",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "X3Wjb",
+                              "name": "Agregar y actualizar",
+                              "width": "fill_container",
+                              "fill": "#FFFFFF",
+                              "cornerRadius": 8,
+                              "stroke": "#E2E8F0",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "padding": 12,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "eCZUI",
+                                  "name": "Row",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "le7X6",
+                                      "name": "Radio",
+                                      "fill": "#FFFFFF",
+                                      "width": 16,
+                                      "height": 16,
+                                      "stroke": "#CBD5E1",
+                                      "strokeWidth": 2,
+                                      "strokeAlignment": "inner"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "pKImc",
+                                      "name": "Lbl",
+                                      "fill": "#0F172A",
+                                      "content": "Agregar y actualizar",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "QClP2",
+                                  "name": "Desc",
+                                  "fill": "#64748B",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Agrega cuentas nuevas y actualiza los campos de las existentes. No elimina.",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "IecVz",
+                              "name": "Reemplazar todo",
+                              "width": "fill_container",
+                              "fill": "#FFFFFF",
+                              "cornerRadius": 8,
+                              "stroke": "#E2E8F0",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "padding": 12,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "WP1ah",
+                                  "name": "Row",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "M529n",
+                                      "name": "Radio",
+                                      "fill": "#FFFFFF",
+                                      "width": 16,
+                                      "height": 16,
+                                      "stroke": "#CBD5E1",
+                                      "strokeWidth": 2,
+                                      "strokeAlignment": "inner"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "Gk26v",
+                                      "name": "Lbl",
+                                      "fill": "#0F172A",
+                                      "content": "Reemplazar todo",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "lTeXC",
+                                  "name": "Desc",
+                                  "fill": "#64748B",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Agrega nuevas, actualiza existentes y archiva las que no estén en el CSV.",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "wAI7G",
+                          "name": "Footer",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "justifyContent": "end",
+                          "children": [
+                            {
+                              "id": "W1sNw",
+                              "type": "ref",
+                              "ref": "VJCaF",
+                              "name": "Cancel",
+                              "descendants": {
+                                "XyMlx": {
+                                  "enabled": false
+                                },
+                                "NkZAZ": {
+                                  "content": "Cancelar"
+                                }
+                              }
+                            },
+                            {
+                              "type": "frame",
+                              "id": "QzBmM",
+                              "name": "DisabledBtn",
+                              "fill": "#E2E8F0",
+                              "cornerRadius": 8,
+                              "padding": [
+                                10,
+                                20
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "o6nWZ",
+                                  "name": "L",
+                                  "fill": "#94A3B8",
+                                  "content": "Importar 0 cuentas",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 14,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "x0EWbG",
+                  "name": "Arrow Container",
+                  "width": 80,
+                  "height": 80,
+                  "fill": "#1E293B",
+                  "cornerRadius": 40,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "Rvcb3",
+                      "name": "Arrow",
+                      "width": 40,
+                      "height": 40,
+                      "icon": "arrow-right",
+                      "library": "lucide",
+                      "fill": "#94A3B8"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xhZrp",
+                  "name": "Sincronizar · Listo para importar",
+                  "clip": true,
+                  "width": 760,
+                  "height": 680,
+                  "fill": "#0F172A99",
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "XeP06",
+                      "name": "Card",
+                      "width": 480,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 16,
+                      "layout": "vertical",
+                      "gap": 18,
+                      "padding": 24,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "n1l6P",
+                          "name": "Header",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "XQbyj",
+                              "name": "HText",
+                              "layout": "vertical",
+                              "gap": 2,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "M6O5ET",
+                                  "name": "Title",
+                                  "fill": "#0F172A",
+                                  "content": "Importar cuentas — Fintech S.A.",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 17,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "uEh2T",
+                                  "name": "Sub",
+                                  "fill": "#64748B",
+                                  "content": "Sincronizar cuentas de clientes desde un archivo CSV.",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "icon",
+                              "id": "r0uwU",
+                              "name": "Close",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "x",
+                              "library": "lucide",
+                              "fill": "#94A3B8"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Giivp",
+                          "name": "FileRow",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "LTAeU",
+                              "name": "FileBtn",
+                              "fill": "#FFFFFF",
+                              "cornerRadius": 8,
+                              "stroke": "#E2E8F0",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "gap": 6,
+                              "padding": [
+                                8,
+                                14
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "z80P0C",
+                                  "name": "Ico",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "upload",
+                                  "library": "lucide",
+                                  "fill": "#64748B"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "U7Hdsm",
+                                  "name": "L",
+                                  "fill": "#374151",
+                                  "content": "Seleccionar archivo",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "a93vn",
+                              "name": "FileName",
+                              "fill": "#0F172A",
+                              "content": "clientes_junio_2026.csv",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "SY9R0",
+                          "name": "ReadyMsg",
+                          "width": "fill_container",
+                          "gap": 6,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "S8K3L",
+                              "name": "Ico",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "circle-check",
+                              "library": "lucide",
+                              "fill": "#10B981"
+                            },
+                            {
+                              "type": "text",
+                              "id": "HmAz5",
+                              "name": "L",
+                              "fill": "#059669",
+                              "content": "12 cuentas listas para importar.",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "tosM3",
+                          "name": "ModeLabel",
+                          "fill": "#374151",
+                          "content": "Modo de sincronización",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "rKl49",
+                          "name": "Modes",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "MXZJu",
+                              "name": "Solo agregar nuevas",
+                              "width": "fill_container",
+                              "fill": "#ECFDF5",
+                              "cornerRadius": 8,
+                              "stroke": "#10B981",
+                              "strokeWidth": 2,
+                              "strokeAlignment": "inner",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "padding": 12,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "O0WDk",
+                                  "name": "Row",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "RgYbV",
+                                      "name": "Radio",
+                                      "fill": "#10B981",
+                                      "width": 16,
+                                      "height": 16,
+                                      "stroke": "#10B981",
+                                      "strokeWidth": 2,
+                                      "strokeAlignment": "inner"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "OnvK9",
+                                      "name": "Lbl",
+                                      "fill": "#0F172A",
+                                      "content": "Solo agregar nuevas",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "uUpCM",
+                                  "name": "Desc",
+                                  "fill": "#64748B",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Agrega cuentas nuevas. No modifica ni elimina las existentes.",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "n7iXg",
+                              "name": "Agregar y actualizar",
+                              "width": "fill_container",
+                              "fill": "#FFFFFF",
+                              "cornerRadius": 8,
+                              "stroke": "#E2E8F0",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "padding": 12,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "lLcZo",
+                                  "name": "Row",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "GOHgI",
+                                      "name": "Radio",
+                                      "fill": "#FFFFFF",
+                                      "width": 16,
+                                      "height": 16,
+                                      "stroke": "#CBD5E1",
+                                      "strokeWidth": 2,
+                                      "strokeAlignment": "inner"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "uGKXt",
+                                      "name": "Lbl",
+                                      "fill": "#0F172A",
+                                      "content": "Agregar y actualizar",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "pxpEf",
+                                  "name": "Desc",
+                                  "fill": "#64748B",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Agrega cuentas nuevas y actualiza los campos de las existentes. No elimina.",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "bfRCK",
+                              "name": "Reemplazar todo",
+                              "width": "fill_container",
+                              "fill": "#FFFFFF",
+                              "cornerRadius": 8,
+                              "stroke": "#E2E8F0",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "padding": 12,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "akJBB",
+                                  "name": "Row",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "BO2Ss",
+                                      "name": "Radio",
+                                      "fill": "#FFFFFF",
+                                      "width": 16,
+                                      "height": 16,
+                                      "stroke": "#CBD5E1",
+                                      "strokeWidth": 2,
+                                      "strokeAlignment": "inner"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "Kh7QE",
+                                      "name": "Lbl",
+                                      "fill": "#0F172A",
+                                      "content": "Reemplazar todo",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "jPS2o",
+                                  "name": "Desc",
+                                  "fill": "#64748B",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Agrega nuevas, actualiza existentes y archiva las que no estén en el CSV.",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "rTllD",
+                          "name": "Footer",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "justifyContent": "end",
+                          "children": [
+                            {
+                              "id": "DMwEF",
+                              "type": "ref",
+                              "ref": "VJCaF",
+                              "name": "Cancel",
+                              "descendants": {
+                                "XyMlx": {
+                                  "enabled": false
+                                },
+                                "NkZAZ": {
+                                  "content": "Cancelar"
+                                }
+                              }
+                            },
+                            {
+                              "id": "Pm7rG",
+                              "type": "ref",
+                              "ref": "ws2MA",
+                              "name": "Import",
+                              "descendants": {
+                                "kGizg": {
+                                  "enabled": false
+                                },
+                                "MQ2HP": {
+                                  "content": "Importar 12 cuentas"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xGZKt",
+                  "name": "Arrow Container",
+                  "width": 80,
+                  "height": 80,
+                  "fill": "#1E293B",
+                  "cornerRadius": 40,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "aJ2l5",
+                      "name": "Arrow",
+                      "width": 40,
+                      "height": 40,
+                      "icon": "arrow-right",
+                      "library": "lucide",
+                      "fill": "#94A3B8"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "O9tcs",
+                  "name": "Sincronizar · Resultado",
+                  "clip": true,
+                  "width": 760,
+                  "height": 680,
+                  "fill": "#0F172A99",
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "EPfIu",
+                      "name": "Card",
+                      "width": 480,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 16,
+                      "layout": "vertical",
+                      "gap": 18,
+                      "padding": 24,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "zmSKi",
+                          "name": "Header",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "I45tF2",
+                              "name": "HText",
+                              "layout": "vertical",
+                              "gap": 2,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "iZvV6",
+                                  "name": "Title",
+                                  "fill": "#0F172A",
+                                  "content": "Importar cuentas — Fintech S.A.",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 17,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "EyFOJ",
+                                  "name": "Sub",
+                                  "fill": "#64748B",
+                                  "content": "Sincronizar cuentas de clientes desde un archivo CSV.",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "icon",
+                              "id": "Co0fX",
+                              "name": "Close",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "x",
+                              "library": "lucide",
+                              "fill": "#94A3B8"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "RIrHU",
+                          "name": "SuccessBox",
+                          "width": "fill_container",
+                          "fill": "#ECFDF5",
+                          "cornerRadius": 12,
+                          "stroke": "#A7F3D0",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 16,
+                          "padding": 16,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "o67RP",
+                              "name": "Title",
+                              "fill": "#065F46",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Importación completada",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Am0Eo",
+                              "name": "Stats",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "lrQvc",
+                                  "name": "Agregadas",
+                                  "layout": "vertical",
+                                  "gap": 4,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "kJ4vS",
+                                      "name": "Val",
+                                      "fill": "#047857",
+                                      "content": "12",
+                                      "textAlign": "center",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 24,
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "HDqgk",
+                                      "name": "Lbl",
+                                      "fill": "#047857",
+                                      "content": "Agregadas",
+                                      "textAlign": "center",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "u2Lp61",
+                                  "name": "Actualizadas",
+                                  "layout": "vertical",
+                                  "gap": 4,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "z2ukNu",
+                                      "name": "Val",
+                                      "fill": "#1D4ED8",
+                                      "content": "0",
+                                      "textAlign": "center",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 24,
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "iE0Vb",
+                                      "name": "Lbl",
+                                      "fill": "#1D4ED8",
+                                      "content": "Actualizadas",
+                                      "textAlign": "center",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "z3oy5x",
+                                  "name": "Archivadas",
+                                  "layout": "vertical",
+                                  "gap": 4,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "ZEAVB",
+                                      "name": "Val",
+                                      "fill": "#92400E",
+                                      "content": "0",
+                                      "textAlign": "center",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 24,
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "sA7sD",
+                                      "name": "Lbl",
+                                      "fill": "#92400E",
+                                      "content": "Archivadas",
+                                      "textAlign": "center",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "kNiqu",
+                                  "name": "Total activas",
+                                  "layout": "vertical",
+                                  "gap": 4,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "RFcil",
+                                      "name": "Val",
+                                      "fill": "#374151",
+                                      "content": "891",
+                                      "textAlign": "center",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 24,
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "DDxuL",
+                                      "name": "Lbl",
+                                      "fill": "#374151",
+                                      "content": "Total activas",
+                                      "textAlign": "center",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "TTF7b",
+                          "name": "Footer",
+                          "width": "fill_container",
+                          "justifyContent": "end",
+                          "children": [
+                            {
+                              "id": "c9HvoD",
+                              "type": "ref",
+                              "ref": "ws2MA",
+                              "name": "Close",
+                              "descendants": {
+                                "kGizg": {
+                                  "enabled": false
+                                },
+                                "MQ2HP": {
+                                  "content": "Cerrar"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "FbLlz",
+              "name": "Notes",
+              "gap": 40,
+              "children": [
+                {
+                  "type": "note",
+                  "id": "jd776",
+                  "name": "Nota · Modos CSV",
+                  "width": 400,
+                  "height": 120,
+                  "content": "Modos de sincronización:\nAPPEND_ONLY — solo nuevas.\nUPDATE_EXISTING — nuevas + actualizar existentes.\nREPLACE — nuevas + actualizar + archivar ausentes (archivedAt). Re-importar externalId archivado lo reactiva."
                 }
               ]
             }

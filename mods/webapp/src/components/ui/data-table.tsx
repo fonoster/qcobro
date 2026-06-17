@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils.js";
 import { SearchBox } from "./input.js";
 import { Button } from "./button.js";
@@ -17,6 +18,7 @@ export interface DataTableProps<T> {
   keyField?: keyof T;
   searchable?: boolean;
   searchPlaceholder?: string;
+  filterElement?: React.ReactNode;
   actionLabel?: string;
   onAction?: () => void;
   onRowClick?: (row: T) => void;
@@ -33,6 +35,7 @@ export function DataTable<T extends Record<string, unknown>>({
   keyField,
   searchable = true,
   searchPlaceholder = "Buscar...",
+  filterElement,
   actionLabel,
   onAction,
   onRowClick,
@@ -42,19 +45,41 @@ export function DataTable<T extends Record<string, unknown>>({
   totalRecords,
   className
 }: DataTableProps<T>) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const displayData =
+    searchable && searchQuery
+      ? data.filter((row) =>
+          Object.values(row).some((val) =>
+            String(val ?? "")
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase())
+          )
+        )
+      : data;
+
   const pageStart =
     totalRecords !== undefined ? (page - 1) * Math.ceil(totalRecords / totalPages || 1) + 1 : 1;
   const pageEnd =
     totalRecords !== undefined
       ? Math.min(page * Math.ceil(totalRecords / totalPages || 1), totalRecords)
-      : data.length;
+      : displayData.length;
 
   return (
-    <div className={cn("overflow-hidden border border-slate-200 bg-white", className)}>
-      {(searchable || actionLabel) && (
-        <div className="flex items-center justify-between px-4 py-3">
-          {searchable && <SearchBox placeholder={searchPlaceholder} className="w-60" />}
-          {!searchable && <div />}
+    <div className={cn("overflow-hidden rounded-xl border border-slate-200 bg-white", className)}>
+      {(searchable || actionLabel || filterElement) && (
+        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+          {filterElement ??
+            (searchable ? (
+              <SearchBox
+                placeholder={searchPlaceholder}
+                className="w-60"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            ) : (
+              <div />
+            ))}
           {actionLabel && <Button onClick={onAction}>+ {actionLabel}</Button>}
         </div>
       )}
@@ -78,7 +103,7 @@ export function DataTable<T extends Record<string, unknown>>({
           </tr>
         </thead>
         <tbody>
-          {data.length === 0 ? (
+          {displayData.length === 0 ? (
             <tr>
               <td
                 colSpan={columns.length}
@@ -88,10 +113,13 @@ export function DataTable<T extends Record<string, unknown>>({
               </td>
             </tr>
           ) : (
-            data.map((row, i) => (
+            displayData.map((row, i) => (
               <tr
                 key={String(keyField ? row[keyField] : i)}
-                className="h-[52px] border-b border-slate-200 last:border-b-0 transition-colors hover:bg-slate-50 cursor-pointer"
+                className={cn(
+                  "h-[52px] border-b border-slate-200 last:border-b-0 transition-colors hover:bg-slate-50",
+                  onRowClick && "cursor-pointer"
+                )}
                 onClick={() => onRowClick?.(row)}
               >
                 {columns.map((col, colIdx) => (

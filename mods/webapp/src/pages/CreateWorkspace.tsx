@@ -7,6 +7,7 @@ import { Logo } from "../components/Logo.js";
 import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
+import { SelectGroup } from "../components/ui/select.js";
 
 export function CreateWorkspace() {
   const { setTokens, setWorkspace, currentUser } = useAuth();
@@ -91,7 +92,7 @@ export function CreateWorkspace() {
 
           <button
             onClick={() => setOpen(true)}
-            className="flex h-[200px] w-[280px] flex-col items-center justify-center gap-3 rounded-[10px] border border-dashed border-slate-300 bg-white text-slate-400 transition hover:border-emerald-400 hover:text-emerald-600"
+            className="flex h-[200px] w-[280px] cursor-pointer flex-col items-center justify-center gap-3 rounded-[10px] border border-dashed border-slate-300 bg-white text-slate-400 transition hover:border-emerald-400 hover:text-emerald-600"
           >
             <Plus className="h-7 w-7" />
             <span className="text-[15px] font-semibold">Nuevo espacio</span>
@@ -127,15 +128,10 @@ export function CreateWorkspace() {
                 placeholder="Ej. Cartera Abril"
               />
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-slate-700">Región</label>
-                <select className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none">
-                  <option value="do">República Dominicana</option>
-                  <option value="mx">México</option>
-                  <option value="co">Colombia</option>
-                  <option value="us">Estados Unidos</option>
-                </select>
-              </div>
+              <SelectGroup label="Región">
+                <option value="do01">DO01</option>
+                <option value="nyc01">NYC01</option>
+              </SelectGroup>
 
               <div className="flex justify-end gap-3">
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>

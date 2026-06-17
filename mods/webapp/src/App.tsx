@@ -8,6 +8,8 @@ import { Home } from "./pages/Home.js";
 import { Members } from "./pages/Members.js";
 import { WorkspaceSettings } from "./pages/WorkspaceSettings.js";
 import { Profile } from "./pages/Profile.js";
+import { Portfolios } from "./pages/Portfolios.js";
+import { PortfolioDetail } from "./pages/PortfolioDetail.js";
 import { RequireAuth } from "./components/RequireAuth.js";
 import { AuthedLayout } from "./components/AuthedLayout.js";
 
@@ -45,6 +47,8 @@ export default function App() {
         <Route path="members" element={<Members />} />
         <Route path="settings" element={<WorkspaceSettings />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="portfolios" element={<Portfolios />} />
+        <Route path="portfolios/:id" element={<PortfolioDetail />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

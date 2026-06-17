@@ -7,10 +7,66 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Minimal model to prove database connectivity. The real domain model
-// (portfolios, accounts, campaigns, Objectives, ...) lands in a later change.
 model HealthCheck {
   id        String   @id @default(uuid())
   note      String   @default("ok")
   createdAt DateTime @default(now())
+}
+
+enum PortfolioStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum Currency {
+  USD
+  DOP
+}
+
+model Portfolio {
+  id                     String             @id @default(uuid())
+  workspaceRef           String
+  name                   String
+  clientId               String
+  accountCount           Int                @default(0)
+  totalOutstandingBalance Float             @default(0)
+  recoveredAmount        Float              @default(0)
+  currency               Currency           @default(USD)
+  status                 PortfolioStatus    @default(ACTIVE)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  accounts               PortfolioAccount[]
+
+  @@index([workspaceRef])
+  @@map("portfolios")
+}
+
+model PortfolioAccount {
+  id                 String    @id @default(uuid())
+  portfolioId        String
+  externalId         String
+  fullName           String
+  phone              String?
+  preferredLanguage  String?
+  bestTimeToCall     String?
+  customerSegment    String?
+  principalAmount    Float     @default(0)
+  termsAmount        Float     @default(0)
+  termsFrequency     String?
+  termsLength        Int       @default(0)
+  outstandingBalance Float     @default(0)
+  daysPastDue        Int       @default(0)
+  missedInstallments Int       @default(0)
+  lastPaymentDate    DateTime?
+  lastPaymentAmount  Float?
+  negotiationOptions String?
+  archivedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  portfolio          Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, externalId])
+  @@index([portfolioId, archivedAt])
+  @@map("portfolio_accounts")
 }

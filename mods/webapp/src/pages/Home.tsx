@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils.js";
 
 const KPIS = [
   { label: "Recuperado", value: "$287,430", meta: "+12% vs. mes anterior" },
-  { label: "Promesas de pago", value: "312", meta: "registradas hoy" },
+  { label: "Objetivos alcanzados", value: "312", meta: "registrados hoy" },
   { label: "Tasa de contacto", value: "68%", meta: "+4 pts vs. semana" },
   { label: "Cuentas en gestión", value: "12,430", meta: "activas" }
 ];
@@ -26,7 +26,12 @@ const ACTIVITY: {
   desc: string;
   time: string;
 }[] = [
-  { icon: PhoneCall, name: "María González", desc: "Promesa de pago · $1,200", time: "Hace 5 min" },
+  {
+    icon: PhoneCall,
+    name: "María González",
+    desc: "Objetivo: compromiso de pago · $1,200",
+    time: "Hace 5 min"
+  },
   { icon: MessageSquare, name: "Carlos Ruiz", desc: "Información confirmada", time: "Hace 22 min" },
   { icon: PhoneMissed, name: "Ana Torres", desc: "Sin respuesta", time: "Hace 1 h" },
   { icon: Handshake, name: "Luis Pérez", desc: "Cambio de términos", time: "Hace 2 h" },
