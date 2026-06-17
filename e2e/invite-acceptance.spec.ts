@@ -42,8 +42,12 @@ test.describe("invite acceptance", () => {
     // Redirects to home (already authenticated).
     await expect(memberPage).toHaveURL(/localhost:5173\/$/);
 
-    // The invited workspace appears in the member's workspace switcher.
+    // The invited workspace appears in the member's workspace switcher dropdown.
     await memberPage.reload();
+    await memberPage
+      .getByRole("button", { name: /Espacio|Workspace/ })
+      .first()
+      .click();
     await expect(memberPage.getByText(`Owner Workspace ${unique}`)).toBeVisible();
 
     // Owner's members list shows the member as Activo.
@@ -89,8 +93,8 @@ test.describe("invite acceptance", () => {
     await logIn(newMemberPage, newMemberEmail, oneTimePassword!);
     await expect(newMemberPage).toHaveURL(/localhost:5173\/$/);
 
-    // The invited workspace appears in the workspace switcher.
-    await expect(newMemberPage.getByText(`Owner Workspace ${unique}`)).toBeVisible();
+    // The invited workspace appears in the workspace switcher button.
+    await expect(newMemberPage.getByText(`Owner Workspace ${unique}`).first()).toBeVisible();
 
     await ownerCtx.close();
     await newMemberCtx.close();

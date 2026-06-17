@@ -55,21 +55,37 @@ export function extractCode(body: string): string | null {
   return body.match(/\b(\d{6})\b/)?.[1] ?? null;
 }
 
-/** Extract the accept-invite URL from an invitation email body. */
+/** Extract the accept-invite URL from an invitation email body.
+ *
+ * The HTML part encodes '=' as '&#x3D;' so we prefer the plain-text part,
+ * which renders the URL bare inside parentheses: "( http://...?token=... )".
+ */
 export function extractInviteLink(body: string): string | null {
-  return body.match(/href="(http:\/\/localhost:\d+\/accept-invite\?token=[^"]+)"/)?.[1] ?? null;
+  // Plain-text format: URL appears without encoding
+  const fromText = body.match(/(http:\/\/localhost:\d+\/accept-invite\?token=[^\s)]+)/)?.[1];
+  if (fromText) return fromText;
+  // HTML fallback: decode &#x3D; (=) and &amp; (&) entities
+  const fromHtml = body.match(/href="([^"]*accept-invite[^"]*)"/)?.[1];
+  return fromHtml ? fromHtml.replace(/&#x3D;/g, "=").replace(/&amp;/g, "&") : null;
 }
 
-/** Extract the one-time password from a new-user invitation email body. */
+/** Extract the one-time password from a new-user invitation email body.
+ *
+ * HTML body wraps it in <b>…</b>; plain-text wraps it in *…*.
+ */
 export function extractOneTimePassword(body: string): string | null {
-  return body.match(/one-time password:\s*<b>([^<]+)<\/b>/i)?.[1]?.trim() ?? null;
+  return (
+    body.match(/one-time password:\s*<b>([^<]+)<\/b>/i)?.[1]?.trim() ??
+    body.match(/one-time password:\s*\*([^*]+)\*/i)?.[1]?.trim() ??
+    null
+  );
 }
 
-/** Log in with email and password, landing on the dashboard or verify-contact screen. */
+/** Log in with email and password; navigates to the dashboard on success. */
 export async function logIn(page: Page, email: string, password: string) {
   await page.goto("/login");
   await page.getByPlaceholder("tú@empresa.com").fill(email);
-  await page.getByPlaceholder("Mínimo 8 caracteres").fill(password);
+  await page.getByPlaceholder("••••••••").fill(password);
   await page.locator('form button[type="submit"]').click();
 }
 
