@@ -27,11 +27,8 @@ type Row = {
 function StatusBadge({ status }: { status: string }) {
   const active = status === "ACTIVE";
   return (
-    <span className="flex items-center gap-1.5 text-[13px] font-medium">
-      <span className={cn("h-1.5 w-1.5 rounded-full", active ? "bg-slate-500" : "bg-slate-300")} />
-      <span className={active ? "text-slate-600" : "text-slate-400"}>
-        {STATUS_LABEL[status] ?? status}
-      </span>
+    <span className={cn("text-[13px] font-medium", active ? "text-slate-600" : "text-slate-400")}>
+      {STATUS_LABEL[status] ?? status}
     </span>
   );
 }

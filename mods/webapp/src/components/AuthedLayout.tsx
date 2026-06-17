@@ -8,7 +8,6 @@ import {
   PhoneCall,
   Handshake,
   TrendingUp,
-  Wallet,
   type LucideIcon
 } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
@@ -25,8 +24,7 @@ const NAV: { icon: LucideIcon; label: string; to?: string; end?: boolean }[] = [
   { icon: Bot, label: "Agentes IA" },
   { icon: PhoneCall, label: "Gestiones" },
   { icon: Handshake, label: "Resultados" },
-  { icon: TrendingUp, label: "Rendimiento" },
-  { icon: Wallet, label: "Saldo" }
+  { icon: TrendingUp, label: "Rendimiento" }
 ];
 
 export function AuthedLayout() {

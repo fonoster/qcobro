@@ -11971,41 +11971,6 @@
                           "fontWeight": "500"
                         }
                       ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "bFFAV",
-                      "name": "Saldo",
-                      "width": "fill_container",
-                      "cornerRadius": 8,
-                      "gap": 12,
-                      "padding": [
-                        10,
-                        12
-                      ],
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "j0lqk",
-                          "name": "Icon",
-                          "width": 18,
-                          "height": 18,
-                          "icon": "wallet",
-                          "library": "lucide",
-                          "fill": "#64748B"
-                        },
-                        {
-                          "type": "text",
-                          "id": "lPIVg",
-                          "name": "Label",
-                          "fill": "#475569",
-                          "content": "Saldo",
-                          "fontFamily": "Inter",
-                          "fontSize": 14,
-                          "fontWeight": "500"
-                        }
-                      ]
                     }
                   ]
                 }
@@ -37008,407 +36973,6 @@
       "content": "Invitar miembro · Modal: falta el campo 'Nombre' (requerido por inviteUserToWorkspace). Agregar Nombre al modal de invitación."
     },
     {
-      "type": "frame",
-      "id": "K5dyFn",
-      "x": 16733,
-      "y": 1128,
-      "name": "Mi perfil · Página",
-      "clip": true,
-      "width": 1440,
-      "height": 900,
-      "fill": "#F8FAFC",
-      "children": [
-        {
-          "id": "BXSQ9",
-          "type": "ref",
-          "ref": "KIQZZ",
-          "name": "Sidebar",
-          "width": 240,
-          "height": "fill_container"
-        },
-        {
-          "type": "frame",
-          "id": "KGRRq",
-          "name": "Main",
-          "width": "fill_container",
-          "height": "fill_container",
-          "layout": "vertical",
-          "children": [
-            {
-              "type": "frame",
-              "id": "aNoQW",
-              "name": "Content",
-              "width": "fill_container",
-              "height": "fill_container",
-              "layout": "vertical",
-              "gap": 24,
-              "padding": 32,
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "J0oilu",
-                  "name": "PageHeader",
-                  "width": "fill_container",
-                  "justifyContent": "space_between",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "MgCoL",
-                      "name": "Titles",
-                      "layout": "vertical",
-                      "gap": 2,
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "E2eW6S",
-                          "name": "Title",
-                          "fill": "#0F172A",
-                          "content": "Mi perfil",
-                          "fontFamily": "Inter",
-                          "fontSize": 22,
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "CrUMr",
-                          "name": "Sub",
-                          "fill": "#64748B",
-                          "content": "Actualiza tu información personal.",
-                          "fontFamily": "Inter",
-                          "fontSize": 14,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "dwP5G",
-                      "x": 974,
-                      "y": 4.5,
-                      "name": "InviteBtn",
-                      "enabled": false,
-                      "fill": "#047857",
-                      "cornerRadius": "$--radius-pill",
-                      "gap": 8,
-                      "padding": [
-                        10,
-                        16
-                      ],
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "ytRNa",
-                          "name": "Plus",
-                          "width": 16,
-                          "height": 16,
-                          "icon": "plus",
-                          "library": "lucide",
-                          "fill": "#FFFFFF"
-                        },
-                        {
-                          "type": "text",
-                          "id": "b6BgSQ",
-                          "name": "T",
-                          "fill": "#FFFFFF",
-                          "content": "Invitar miembro",
-                          "fontFamily": "Inter",
-                          "fontSize": 14,
-                          "fontWeight": "600"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "E4aO9",
-                  "name": "Card",
-                  "width": 680,
-                  "fill": "#FFFFFF",
-                  "cornerRadius": 16,
-                  "layout": "vertical",
-                  "gap": 20,
-                  "padding": 24,
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "NKlOr",
-                      "name": "Header",
-                      "width": "fill_container",
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "l6Rk3q",
-                          "name": "HText",
-                          "layout": "vertical",
-                          "gap": 2,
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "bhFB1",
-                              "name": "Title",
-                              "fill": "#0F172A",
-                              "content": "General",
-                              "fontFamily": "Inter",
-                              "fontSize": 15,
-                              "fontWeight": "700"
-                            },
-                            {
-                              "type": "text",
-                              "id": "casKu",
-                              "x": 0,
-                              "y": 24,
-                              "name": "Sub",
-                              "enabled": false,
-                              "fill": "#64748B",
-                              "content": "Un espacio agrupa tus carteras, campañas y equipo.",
-                              "fontFamily": "Inter",
-                              "fontSize": 13,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "icon",
-                          "id": "ksbP4",
-                          "x": 372,
-                          "y": 10,
-                          "name": "Close",
-                          "enabled": false,
-                          "width": 20,
-                          "height": 20,
-                          "icon": "x",
-                          "library": "lucide",
-                          "fill": "#94A3B8"
-                        }
-                      ]
-                    },
-                    {
-                      "id": "zNAFC",
-                      "type": "ref",
-                      "ref": "BoM07",
-                      "name": "Name",
-                      "width": "fill_container",
-                      "descendants": {
-                        "hTkn4": {
-                          "content": "Nombre"
-                        },
-                        "KmeTM": {
-                          "content": "Ada Lovelace"
-                        }
-                      }
-                    },
-                    {
-                      "type": "frame",
-                      "id": "EEvX3",
-                      "name": "RegionField",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "gap": 6,
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "wXNmp",
-                          "name": "L",
-                          "fill": "#0F172A",
-                          "content": "Correo",
-                          "fontFamily": "Inter",
-                          "fontSize": 14,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "OEZfi",
-                          "name": "Select",
-                          "width": "fill_container",
-                          "height": 40,
-                          "fill": "#F8FAFC",
-                          "cornerRadius": "$--radius-pill",
-                          "stroke": "#E2E8F0",
-                          "strokeWidth": 1,
-                          "strokeAlignment": "inner",
-                          "padding": [
-                            8,
-                            16
-                          ],
-                          "justifyContent": "space_between",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "t0eBle",
-                              "name": "V",
-                              "fill": "#94A3B8",
-                              "content": "ada@empresa.com",
-                              "fontFamily": "Inter",
-                              "fontSize": 14,
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "icon",
-                              "id": "wiamf",
-                              "x": 360,
-                              "y": 12,
-                              "name": "Chev",
-                              "enabled": false,
-                              "width": 16,
-                              "height": 16,
-                              "icon": "chevron-down",
-                              "library": "lucide",
-                              "fill": "#64748B"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "d9p8SF",
-                      "name": "Footer",
-                      "width": "fill_container",
-                      "gap": 12,
-                      "justifyContent": "end",
-                      "children": [
-                        {
-                          "id": "uB3ft",
-                          "type": "ref",
-                          "ref": "VJCaF",
-                          "enabled": false,
-                          "name": "Cancel",
-                          "descendants": {
-                            "XyMlx": {
-                              "enabled": false
-                            },
-                            "NkZAZ": {
-                              "content": "Cancelar"
-                            }
-                          }
-                        },
-                        {
-                          "id": "vCHGA",
-                          "type": "ref",
-                          "ref": "ws2MA",
-                          "name": "Create",
-                          "descendants": {
-                            "kGizg": {
-                              "enabled": false
-                            },
-                            "MQ2HP": {
-                              "content": "Guardar cambios"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "AMvpw",
-                  "name": "Danger Card",
-                  "width": 680,
-                  "fill": "#FFFFFF",
-                  "cornerRadius": 16,
-                  "stroke": "#FECACA",
-                  "layout": "vertical",
-                  "gap": 20,
-                  "padding": 24,
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "wR3FV",
-                      "name": "Header",
-                      "width": "fill_container",
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "L6DSRF",
-                          "name": "HText",
-                          "layout": "vertical",
-                          "gap": 2,
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "YT7ze",
-                              "name": "Title",
-                              "fill": "#0F172A",
-                              "content": "Eliminar cuenta",
-                              "fontFamily": "Inter",
-                              "fontSize": 15,
-                              "fontWeight": "600"
-                            },
-                            {
-                              "type": "text",
-                              "id": "DJyu8",
-                              "name": "Sub",
-                              "fill": "#64748B",
-                              "content": "Esta acción es permanente. Se eliminará tu cuenta y perderás el acceso.",
-                              "fontFamily": "Inter",
-                              "fontSize": 13,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "icon",
-                          "id": "ODeQ0",
-                          "x": 372,
-                          "y": 10,
-                          "name": "Close",
-                          "enabled": false,
-                          "width": 20,
-                          "height": 20,
-                          "icon": "x",
-                          "library": "lucide",
-                          "fill": "#94A3B8"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "tNB3u",
-                      "name": "Footer",
-                      "width": "fill_container",
-                      "gap": 12,
-                      "justifyContent": "end",
-                      "children": [
-                        {
-                          "id": "maAPa",
-                          "type": "ref",
-                          "ref": "ws2MA",
-                          "name": "Create",
-                          "fill": "#FFFFFF",
-                          "stroke": "#EF4444",
-                          "strokeWidth": 1,
-                          "strokeAlignment": "inner",
-                          "descendants": {
-                            "kGizg": {
-                              "enabled": false
-                            },
-                            "MQ2HP": {
-                              "content": "Eliminar cuenta",
-                              "fill": "#EF4444"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
       "type": "note",
       "id": "i8clj",
       "x": 5,
@@ -37421,8 +36985,8 @@
     {
       "type": "frame",
       "id": "s5140",
-      "x": 18373,
-      "y": -8864,
+      "x": 6446,
+      "y": 124,
       "name": "Application Flow",
       "fill": "#0F172A",
       "cornerRadius": 64,
@@ -39252,17 +38816,8 @@
                                           "type": "frame",
                                           "id": "AiNAc",
                                           "name": "Estado",
-                                          "gap": 6,
                                           "alignItems": "center",
                                           "children": [
-                                            {
-                                              "type": "ellipse",
-                                              "id": "MeZhc",
-                                              "name": "dot",
-                                              "fill": "#64748B",
-                                              "width": 6,
-                                              "height": 6
-                                            },
                                             {
                                               "type": "text",
                                               "id": "A6Hm2",
@@ -39405,17 +38960,8 @@
                                           "type": "frame",
                                           "id": "CAF5a",
                                           "name": "Estado",
-                                          "gap": 6,
                                           "alignItems": "center",
                                           "children": [
-                                            {
-                                              "type": "ellipse",
-                                              "id": "wa95Z",
-                                              "name": "dot",
-                                              "fill": "#64748B",
-                                              "width": 6,
-                                              "height": 6
-                                            },
                                             {
                                               "type": "text",
                                               "id": "lwhTh",
@@ -39558,17 +39104,8 @@
                                           "type": "frame",
                                           "id": "YpJxe",
                                           "name": "Estado",
-                                          "gap": 6,
                                           "alignItems": "center",
                                           "children": [
-                                            {
-                                              "type": "ellipse",
-                                              "id": "lQRPN",
-                                              "name": "dot",
-                                              "fill": "#64748B",
-                                              "width": 6,
-                                              "height": 6
-                                            },
                                             {
                                               "type": "text",
                                               "id": "XtDTp",
@@ -39706,17 +39243,8 @@
                                           "type": "frame",
                                           "id": "lbW10",
                                           "name": "Estado",
-                                          "gap": 6,
                                           "alignItems": "center",
                                           "children": [
-                                            {
-                                              "type": "ellipse",
-                                              "id": "Lydgc",
-                                              "name": "dot",
-                                              "fill": "#CBD5E1",
-                                              "width": 6,
-                                              "height": 6
-                                            },
                                             {
                                               "type": "text",
                                               "id": "EFw1i",
@@ -42148,6 +41676,429 @@
                                           ]
                                         }
                                       ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "sZ9jl",
+                  "name": "Arrow Container",
+                  "width": 80,
+                  "height": 80,
+                  "fill": "#1E293B",
+                  "cornerRadius": 40,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "ntFUC",
+                      "name": "Arrow",
+                      "width": 40,
+                      "height": 40,
+                      "icon": "arrow-right",
+                      "library": "lucide",
+                      "fill": "#94A3B8"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "K5dyFn",
+                  "name": "Mi perfil · Página",
+                  "clip": true,
+                  "width": 1440,
+                  "height": 900,
+                  "fill": "#F8FAFC",
+                  "children": [
+                    {
+                      "id": "BXSQ9",
+                      "type": "ref",
+                      "ref": "KIQZZ",
+                      "name": "Sidebar",
+                      "width": 240,
+                      "height": "fill_container"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "KGRRq",
+                      "name": "Main",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "aNoQW",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "gap": 24,
+                          "padding": 32,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "J0oilu",
+                              "name": "PageHeader",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "MgCoL",
+                                  "name": "Titles",
+                                  "layout": "vertical",
+                                  "gap": 2,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "E2eW6S",
+                                      "name": "Title",
+                                      "fill": "#0F172A",
+                                      "content": "Mi perfil",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 22,
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "CrUMr",
+                                      "name": "Sub",
+                                      "fill": "#64748B",
+                                      "content": "Actualiza tu información personal.",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 14,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "dwP5G",
+                                  "x": 974,
+                                  "y": 4.5,
+                                  "name": "InviteBtn",
+                                  "enabled": false,
+                                  "fill": "#047857",
+                                  "cornerRadius": "$--radius-pill",
+                                  "gap": 8,
+                                  "padding": [
+                                    10,
+                                    16
+                                  ],
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "ytRNa",
+                                      "name": "Plus",
+                                      "width": 16,
+                                      "height": 16,
+                                      "icon": "plus",
+                                      "library": "lucide",
+                                      "fill": "#FFFFFF"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "b6BgSQ",
+                                      "name": "T",
+                                      "fill": "#FFFFFF",
+                                      "content": "Invitar miembro",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 14,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "E4aO9",
+                              "name": "Card",
+                              "width": 680,
+                              "fill": "#FFFFFF",
+                              "cornerRadius": 16,
+                              "layout": "vertical",
+                              "gap": 20,
+                              "padding": 24,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "NKlOr",
+                                  "name": "Header",
+                                  "width": "fill_container",
+                                  "justifyContent": "space_between",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "l6Rk3q",
+                                      "name": "HText",
+                                      "layout": "vertical",
+                                      "gap": 2,
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "bhFB1",
+                                          "name": "Title",
+                                          "fill": "#0F172A",
+                                          "content": "General",
+                                          "fontFamily": "Inter",
+                                          "fontSize": 15,
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "casKu",
+                                          "x": 0,
+                                          "y": 24,
+                                          "name": "Sub",
+                                          "enabled": false,
+                                          "fill": "#64748B",
+                                          "content": "Un espacio agrupa tus carteras, campañas y equipo.",
+                                          "fontFamily": "Inter",
+                                          "fontSize": 13,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "icon",
+                                      "id": "ksbP4",
+                                      "x": 372,
+                                      "y": 10,
+                                      "name": "Close",
+                                      "enabled": false,
+                                      "width": 20,
+                                      "height": 20,
+                                      "icon": "x",
+                                      "library": "lucide",
+                                      "fill": "#94A3B8"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "zNAFC",
+                                  "type": "ref",
+                                  "ref": "BoM07",
+                                  "name": "Name",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "hTkn4": {
+                                      "content": "Nombre"
+                                    },
+                                    "KmeTM": {
+                                      "content": "Ada Lovelace"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "EEvX3",
+                                  "name": "RegionField",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 6,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "wXNmp",
+                                      "name": "L",
+                                      "fill": "#0F172A",
+                                      "content": "Correo",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 14,
+                                      "fontWeight": "500"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "OEZfi",
+                                      "name": "Select",
+                                      "width": "fill_container",
+                                      "height": 40,
+                                      "fill": "#F8FAFC",
+                                      "cornerRadius": "$--radius-pill",
+                                      "stroke": "#E2E8F0",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "padding": [
+                                        8,
+                                        16
+                                      ],
+                                      "justifyContent": "space_between",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "t0eBle",
+                                          "name": "V",
+                                          "fill": "#94A3B8",
+                                          "content": "ada@empresa.com",
+                                          "fontFamily": "Inter",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        },
+                                        {
+                                          "type": "icon",
+                                          "id": "wiamf",
+                                          "x": 360,
+                                          "y": 12,
+                                          "name": "Chev",
+                                          "enabled": false,
+                                          "width": 16,
+                                          "height": 16,
+                                          "icon": "chevron-down",
+                                          "library": "lucide",
+                                          "fill": "#64748B"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "d9p8SF",
+                                  "name": "Footer",
+                                  "width": "fill_container",
+                                  "gap": 12,
+                                  "justifyContent": "end",
+                                  "children": [
+                                    {
+                                      "id": "uB3ft",
+                                      "type": "ref",
+                                      "ref": "VJCaF",
+                                      "enabled": false,
+                                      "name": "Cancel",
+                                      "descendants": {
+                                        "XyMlx": {
+                                          "enabled": false
+                                        },
+                                        "NkZAZ": {
+                                          "content": "Cancelar"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "vCHGA",
+                                      "type": "ref",
+                                      "ref": "ws2MA",
+                                      "name": "Create",
+                                      "descendants": {
+                                        "kGizg": {
+                                          "enabled": false
+                                        },
+                                        "MQ2HP": {
+                                          "content": "Guardar cambios"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "AMvpw",
+                              "name": "Danger Card",
+                              "width": 680,
+                              "fill": "#FFFFFF",
+                              "cornerRadius": 16,
+                              "stroke": "#FECACA",
+                              "layout": "vertical",
+                              "gap": 20,
+                              "padding": 24,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "wR3FV",
+                                  "name": "Header",
+                                  "width": "fill_container",
+                                  "justifyContent": "space_between",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "L6DSRF",
+                                      "name": "HText",
+                                      "layout": "vertical",
+                                      "gap": 2,
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "YT7ze",
+                                          "name": "Title",
+                                          "fill": "#0F172A",
+                                          "content": "Eliminar cuenta",
+                                          "fontFamily": "Inter",
+                                          "fontSize": 15,
+                                          "fontWeight": "600"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "DJyu8",
+                                          "name": "Sub",
+                                          "fill": "#64748B",
+                                          "content": "Esta acción es permanente. Se eliminará tu cuenta y perderás el acceso.",
+                                          "fontFamily": "Inter",
+                                          "fontSize": 13,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "icon",
+                                      "id": "ODeQ0",
+                                      "x": 372,
+                                      "y": 10,
+                                      "name": "Close",
+                                      "enabled": false,
+                                      "width": 20,
+                                      "height": 20,
+                                      "icon": "x",
+                                      "library": "lucide",
+                                      "fill": "#94A3B8"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "tNB3u",
+                                  "name": "Footer",
+                                  "width": "fill_container",
+                                  "gap": 12,
+                                  "justifyContent": "end",
+                                  "children": [
+                                    {
+                                      "id": "maAPa",
+                                      "type": "ref",
+                                      "ref": "ws2MA",
+                                      "name": "Create",
+                                      "fill": "#FFFFFF",
+                                      "stroke": "#EF4444",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "descendants": {
+                                        "kGizg": {
+                                          "enabled": false
+                                        },
+                                        "MQ2HP": {
+                                          "content": "Eliminar cuenta",
+                                          "fill": "#EF4444"
+                                        }
+                                      }
                                     }
                                   ]
                                 }
