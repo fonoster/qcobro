@@ -21,7 +21,7 @@
     "db:studio": "node scripts/prisma.mjs studio"
   },
   "dependencies": {
-    "@fonoster/identity-client": "^0.19.1",
+    "@fonoster/identity-client": "file:../../../fonoster/mods/identity-client",
     "@grpc/grpc-js": "^1.10.6",
     "@prisma/client": "^6.0.0",
     "@qcobro/common": "*",

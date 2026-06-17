@@ -60,7 +60,7 @@ export function UserMenu() {
             </div>
           </div>
           <div className="my-1 h-px bg-slate-100" />
-          <MenuItem icon={User} label="Mi perfil" onClick={() => setOpen(false)} />
+          <MenuItem icon={User} label="Mi perfil" onClick={() => go("/profile")} />
           <MenuItem
             icon={SlidersHorizontal}
             label="Configuración del espacio"
