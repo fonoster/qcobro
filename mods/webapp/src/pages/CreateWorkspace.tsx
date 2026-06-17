@@ -70,7 +70,10 @@ export function CreateWorkspace() {
               onClick={() => onSelect(ws.accessKeyId)}
               className="relative flex h-[200px] w-[280px] cursor-pointer flex-col justify-between rounded-[10px] border border-slate-200 bg-white p-6 text-left transition hover:border-emerald-300 hover:shadow-sm"
             >
-              <p className="text-[17px] font-bold text-slate-900">{ws.name}</p>
+              <div className="flex flex-col gap-1">
+                <p className="text-[17px] font-bold text-slate-900">{ws.name}</p>
+                <p className="text-[13px] text-slate-400">0 carteras · 0 miembros</p>
+              </div>
               <button
                 type="button"
                 aria-label="Configuración del espacio"

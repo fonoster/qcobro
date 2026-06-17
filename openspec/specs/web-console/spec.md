@@ -181,6 +181,19 @@ the user returned to login.
 - **THEN** the account is deleted
 - **AND** the session is cleared and the user is returned to login
 
+### Requirement: Workspace card shows cartera and member counts
+
+Each workspace card on the workspace landing screen SHALL show a meta line with the
+number of carteras and members in that workspace, below the workspace name.
+Until those counts are available from the API, the card SHALL render placeholder
+values (0) so the layout matches the design.
+
+#### Scenario: Card renders name and meta line
+
+- **WHEN** a user views the workspace landing screen
+- **THEN** each workspace card shows the workspace name
+- **AND** a meta line of the form "N carteras · N miembros" is shown below it
+
 ### Requirement: Component development in Storybook
 
 The console SHALL include Storybook so reusable components can be developed and reviewed in isolation.
