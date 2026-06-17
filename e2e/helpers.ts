@@ -55,6 +55,24 @@ export function extractCode(body: string): string | null {
   return body.match(/\b(\d{6})\b/)?.[1] ?? null;
 }
 
+/** Extract the accept-invite URL from an invitation email body. */
+export function extractInviteLink(body: string): string | null {
+  return body.match(/href="(http:\/\/localhost:\d+\/accept-invite\?token=[^"]+)"/)?.[1] ?? null;
+}
+
+/** Extract the one-time password from a new-user invitation email body. */
+export function extractOneTimePassword(body: string): string | null {
+  return body.match(/one-time password:\s*<b>([^<]+)<\/b>/i)?.[1]?.trim() ?? null;
+}
+
+/** Log in with email and password, landing on the dashboard or verify-contact screen. */
+export async function logIn(page: Page, email: string, password: string) {
+  await page.goto("/login");
+  await page.getByPlaceholder("tú@empresa.com").fill(email);
+  await page.getByPlaceholder("Mínimo 8 caracteres").fill(password);
+  await page.locator('form button[type="submit"]').click();
+}
+
 /** Sign up a new account. Leaves the page on the contact-verification screen. */
 export async function signUp(page: Page, creds: Credentials) {
   await page.goto("/signup");
