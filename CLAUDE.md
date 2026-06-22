@@ -8,6 +8,9 @@ rebuilt spec-first with OpenSpec. The previous implementation is archived on the
 - **Product behavior (the WHAT)** lives in OpenSpec specs under `openspec/specs/`, and is changed
   through proposals in `openspec/changes/`. Use `/opsx:propose`, `/opsx:apply`, `/opsx:archive`.
   Specs describe observable, testable behavior — not coding style.
+- **Shipping a change (the LOOP)** drives one change from design to archive with
+  `/ps:ship <change>`: design (Pencil) → spec reconcile → build (Storybook-first) → tests
+  (unit + e2e) → sync → archive, resumable via a per-change checkpoint.
 - **Coding conventions (the HOW)** live in this file. They apply to every change.
 
 ## Repository layout
@@ -23,36 +26,15 @@ rebuilt spec-first with OpenSpec. The previous implementation is archived on the
 
 ### Validated functions (preferred pattern for service/data functions)
 
-When defining a function that takes external input and performs an operation (DB writes,
-service calls, business logic), use the **validated-function** pattern: a builder that injects
-dependencies and wraps the logic with Zod validation.
+Business logic uses the **validated-function** pattern: a factory that injects dependencies
+and wraps an inner `fn` with `withErrorHandlingAndValidation(fn, schema)`, so invalid input
+throws a structured `ValidationError` before the operation runs and tests inject stubs with
+no live services. In this repo, schemas and client interfaces live in `@qcobro/common`
+(`src/schemas/`, `src/types/`). Apply it to input-validating operations — not trivial pure
+helpers or framework glue.
 
-```typescript
-import {
-  withErrorHandlingAndValidation,
-  createCustomerSchema,
-  type CreateCustomerInput,
-  type CustomerClient
-} from "@qcobro/common";
-
-export function createCreateCustomer(client: CustomerClient) {
-  const fn = async (params: CreateCustomerInput) => {
-    return client.customer.create({ data: params });
-  };
-
-  return withErrorHandlingAndValidation(fn, createCustomerSchema);
-}
-```
-
-- Schemas and client interfaces live in `@qcobro/common` (`src/schemas/`, `src/types/`).
-- Dependencies are injected (the outer `create…` takes the client), so tests swap real clients
-  for mocks — no live services needed.
-- Invalid input throws `ValidationError` (field-level errors, `toJSON()` for API responses)
-  before the inner function runs.
-- Full guide and scaffolding: run `/create-validated-function`.
-
-> Apply this pattern when it fits (input-validating operations). Trivial pure helpers or
-> framework glue don't need it.
+Full guide, rationale, and scaffolding: `/ps:create-validated-function`
+(source: github.com/psanders/psstack).
 
 ### General
 
