@@ -1,4 +1,10 @@
-## ADDED Requirements
+# campaigns Specification
+
+## Purpose
+
+TBD — created by syncing change campaigns-core. Update Purpose after archive.
+
+## Requirements
 
 ### Requirement: Campaign entity with lifecycle status
 
@@ -23,18 +29,18 @@ A campaign in `ARCHIVED` status is hidden from default list views.
 - **THEN** the campaign is created with status `ACTIVE`
 - **AND** the campaign is visible in the campaign list
 
-#### Scenario: Campaign transitions to ACTIVE
-
-- **WHEN** an operator sets a PAUSED campaign to ACTIVE
-- **THEN** the campaign status is saved as ACTIVE
-- **AND** the engine may begin dispatching to eligible accounts within the schedule window
-
-#### Scenario: Campaign can be paused
+#### Scenario: Campaign transitions to PAUSED
 
 - **WHEN** an operator sets an ACTIVE campaign to PAUSED
 - **THEN** no new dispatches are initiated
 - **AND** attempt counts and suppression state are preserved
 - **AND** the campaign can be returned to ACTIVE
+
+#### Scenario: Campaign transitions to ACTIVE
+
+- **WHEN** an operator sets a PAUSED campaign to ACTIVE
+- **THEN** the campaign status is saved as ACTIVE
+- **AND** the engine may begin dispatching to eligible accounts within the schedule window
 
 #### Scenario: ARCHIVED campaigns hidden by default
 

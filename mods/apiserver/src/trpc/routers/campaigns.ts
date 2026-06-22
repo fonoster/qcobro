@@ -5,6 +5,7 @@ import {
   contactOutcomeSchema,
   createCampaignSchema,
   updateCampaignSchema,
+  updateCampaignStatusSchema,
   deleteCampaignSchema,
   createContactLogSchema,
   updateObjectiveSchema
@@ -12,6 +13,7 @@ import {
 import { router, workspaceProcedure } from "../trpc.js";
 import { createCreateCampaign } from "../../functions/campaigns/createCampaign.js";
 import { createUpdateCampaign } from "../../functions/campaigns/updateCampaign.js";
+import { createUpdateCampaignStatus } from "../../functions/campaigns/updateCampaignStatus.js";
 import { createDeleteCampaign } from "../../functions/campaigns/deleteCampaign.js";
 import { createCreateContactLog } from "../../functions/campaigns/createContactLog.js";
 
@@ -163,6 +165,12 @@ export const campaignsRouter = router({
     .input(updateCampaignSchema)
     .mutation(({ input, ctx }) =>
       createUpdateCampaign(ctx.prisma as never, ctx.workspace.accessKeyId)(input)
+    ),
+
+  updateStatus: workspaceProcedure
+    .input(updateCampaignStatusSchema)
+    .mutation(({ input, ctx }) =>
+      createUpdateCampaignStatus(ctx.prisma as never, ctx.workspace.accessKeyId)(input)
     ),
 
   delete: workspaceProcedure

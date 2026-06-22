@@ -56557,7 +56557,8 @@
                                                 },
                                                 "KmeTM": {
                                                   "content": "—",
-                                                  "fill": "$--muted-foreground"
+                                                  "fill": "$--muted-foreground",
+                                                  "enabled": false
                                                 }
                                               }
                                             }
@@ -58384,6 +58385,1442 @@
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "⋯ ofrece Ver detalle, Editar, Activar/Pausar y Eliminar (solo en estado DRAFT).",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "kdY0h",
+          "name": "Cluster · AGENTES",
+          "width": 3400,
+          "fill": "#34D39914",
+          "cornerRadius": 24,
+          "stroke": "#34D399",
+          "strokeWidth": 1,
+          "layout": "vertical",
+          "gap": 24,
+          "padding": 32,
+          "children": [
+            {
+              "type": "frame",
+              "id": "jPZ4d",
+              "name": "Header",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "DMBIp",
+                  "name": "Chip",
+                  "fill": "#0F172A",
+                  "cornerRadius": 999,
+                  "stroke": "#34D399",
+                  "strokeWidth": 1,
+                  "padding": [
+                    6,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "BlNcL",
+                      "name": "txt",
+                      "fill": "#34D399",
+                      "content": "AGENTES",
+                      "fontFamily": "Roboto Mono",
+                      "fontSize": 13,
+                      "fontWeight": "700",
+                      "letterSpacing": 2
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "XY5Qc",
+                  "name": "sub",
+                  "fill": "#CBD5E1",
+                  "content": "Plantillas de agente: tabla, crear y detalle",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "XYa7N",
+              "name": "Body",
+              "width": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "SCQUy",
+                  "name": "Screens",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 24,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "LHx3E",
+                      "name": "Row",
+                      "width": "fill_container",
+                      "gap": 24,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "pbtC9",
+                          "name": "Agentes · Lista",
+                          "clip": true,
+                          "width": 1440,
+                          "height": 900,
+                          "fill": "#F8FAFC",
+                          "children": [
+                            {
+                              "id": "dOoEx",
+                              "type": "ref",
+                              "ref": "KIQZZ",
+                              "name": "Sidebar",
+                              "width": 240,
+                              "height": "fill_container"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "i0xm0",
+                              "name": "Main",
+                              "width": "fill_container",
+                              "height": "fill_container",
+                              "layout": "vertical",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "XLXbB",
+                                  "name": "Content",
+                                  "width": "fill_container",
+                                  "height": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 24,
+                                  "padding": 32,
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "PGRpt",
+                                      "name": "PageHeader",
+                                      "width": "fill_container",
+                                      "justifyContent": "space_between",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "ailmx",
+                                          "name": "Titles",
+                                          "layout": "vertical",
+                                          "gap": 2,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "Ce16u",
+                                              "name": "Title",
+                                              "fill": "#0F172A",
+                                              "content": "Agentes IA",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 22,
+                                              "fontWeight": "700"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "lyyp1",
+                                              "name": "Sub",
+                                              "fill": "#64748B",
+                                              "content": "Plantillas de agente reutilizables por canal de contacto.",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 14,
+                                              "fontWeight": "normal"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "g0vmp",
+                                      "name": "Agent Table",
+                                      "clip": true,
+                                      "width": "fill_container",
+                                      "height": 368,
+                                      "fill": "$--card",
+                                      "cornerRadius": 12,
+                                      "stroke": "$--border",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "layout": "vertical",
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "VaUFK",
+                                          "name": "Toolbar",
+                                          "width": "fill_container",
+                                          "padding": [
+                                            12,
+                                            16
+                                          ],
+                                          "justifyContent": "space_between",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "frame",
+                                              "id": "w8FkzW",
+                                              "name": "StatusFilter",
+                                              "height": 36,
+                                              "fill": "$--card",
+                                              "cornerRadius": "$--radius-pill",
+                                              "stroke": "$--border",
+                                              "strokeWidth": 1,
+                                              "strokeAlignment": "inner",
+                                              "gap": 8,
+                                              "padding": [
+                                                0,
+                                                12
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "NOff8",
+                                                  "name": "Label",
+                                                  "fill": "$--foreground",
+                                                  "content": "Todos los canales",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 13,
+                                                  "fontWeight": "normal"
+                                                },
+                                                {
+                                                  "type": "icon",
+                                                  "id": "dFkZH",
+                                                  "name": "Chev",
+                                                  "width": 16,
+                                                  "height": 16,
+                                                  "icon": "chevron-down",
+                                                  "library": "lucide",
+                                                  "fill": "$--muted-foreground"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "id": "g4lHic",
+                                              "type": "ref",
+                                              "ref": "tiMW3",
+                                              "name": "CreateBtn",
+                                              "descendants": {
+                                                "GTAmU": {
+                                                  "content": "Nuevo agente"
+                                                }
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "jeAbB",
+                                          "name": "Header Row",
+                                          "width": "fill_container",
+                                          "height": 44,
+                                          "fill": "$--card",
+                                          "stroke": "$--border",
+                                          "strokeWidth": {
+                                            "top": 1,
+                                            "bottom": 1
+                                          },
+                                          "strokeAlignment": "inner",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "frame",
+                                              "id": "PctEK",
+                                              "name": "H Nombre",
+                                              "width": "fill_container",
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "MMCaH",
+                                                  "name": "Hdr",
+                                                  "fill": "$--muted-foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Nombre",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 13,
+                                                  "fontWeight": "600"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "k3lne",
+                                              "name": "H Canal",
+                                              "width": 200,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "vyrkk",
+                                                  "name": "Hdr",
+                                                  "fill": "$--muted-foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Canal",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 13,
+                                                  "fontWeight": "600"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "W2ZlCO",
+                                              "name": "H Llamadas",
+                                              "width": 90,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "dc3cr",
+                                                  "name": "Hdr",
+                                                  "fill": "$--muted-foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Llamadas",
+                                                  "textAlign": "right",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 13,
+                                                  "fontWeight": "600"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "y9UGgW",
+                                              "name": "H Estrategia",
+                                              "width": 170,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "OFnoS",
+                                                  "name": "Hdr",
+                                                  "fill": "$--muted-foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Estrategia",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 13,
+                                                  "fontWeight": "600"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "GTyEa",
+                                              "name": "H Estado",
+                                              "width": 100,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "oWLog",
+                                                  "name": "Hdr",
+                                                  "fill": "$--muted-foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Estado",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 13,
+                                                  "fontWeight": "600"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "kDkpe",
+                                              "name": "H Acciones",
+                                              "width": 110,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "bphA0",
+                                                  "name": "Hdr",
+                                                  "fill": "$--muted-foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Acciones",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 13,
+                                                  "fontWeight": "600"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "doGlu",
+                                          "name": "Carla · Cobro cordial",
+                                          "width": "fill_container",
+                                          "height": 52,
+                                          "stroke": "$--border",
+                                          "strokeWidth": {
+                                            "bottom": 1
+                                          },
+                                          "strokeAlignment": "inner",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "frame",
+                                              "id": "Gh8mN",
+                                              "name": "Nombre Cell",
+                                              "width": "fill_container",
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "LatTP",
+                                                  "name": "V",
+                                                  "fill": "$--foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Carla · Cobro cordial",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 14,
+                                                  "fontWeight": "500"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "AIEKI",
+                                              "name": "Cliente Cell",
+                                              "width": 200,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "A3SuP",
+                                                  "name": "V",
+                                                  "fill": "$--muted-foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Voz IA",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 13,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "Vjuqe",
+                                              "name": "Cuentas Cell",
+                                              "width": 90,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "NLzg1",
+                                                  "name": "V",
+                                                  "fill": "$--foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "1.284",
+                                                  "textAlign": "right",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 14,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "N0vag4",
+                                              "name": "Saldo Cell",
+                                              "width": 170,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "G6HmF",
+                                                  "name": "V",
+                                                  "fill": "$--foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Moderada",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 14,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "uEepV",
+                                              "name": "Estado Cell",
+                                              "width": 100,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "id": "ZAXQI",
+                                                  "type": "ref",
+                                                  "ref": "s3aKe",
+                                                  "name": "Badge",
+                                                  "descendants": {
+                                                    "jlKWj": {
+                                                      "content": "Sincronizado"
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "fOAfB",
+                                              "name": "Actions Cell",
+                                              "width": 110,
+                                              "height": "fill_container",
+                                              "gap": 6,
+                                              "padding": [
+                                                0,
+                                                12
+                                              ],
+                                              "justifyContent": "center",
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "ru90k",
+                                                  "name": "EllipsisBtn",
+                                                  "width": 32,
+                                                  "height": 32,
+                                                  "fill": "$--card",
+                                                  "cornerRadius": 6,
+                                                  "stroke": "$--border",
+                                                  "strokeWidth": 1,
+                                                  "strokeAlignment": "inner",
+                                                  "justifyContent": "center",
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "dqPjC",
+                                                      "name": "Icon",
+                                                      "width": 16,
+                                                      "height": 16,
+                                                      "icon": "ellipsis",
+                                                      "library": "lucide",
+                                                      "fill": "$--muted-foreground"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "tZLwf",
+                                          "name": "Recordatorio SMS",
+                                          "width": "fill_container",
+                                          "height": 52,
+                                          "stroke": "$--border",
+                                          "strokeWidth": {
+                                            "bottom": 1
+                                          },
+                                          "strokeAlignment": "inner",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "frame",
+                                              "id": "JcNQC",
+                                              "name": "Nombre Cell",
+                                              "width": "fill_container",
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "xOhrJ",
+                                                  "name": "V",
+                                                  "fill": "$--foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Recordatorio SMS",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 14,
+                                                  "fontWeight": "500"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "ItZHG",
+                                              "name": "Cliente Cell",
+                                              "width": 200,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "D1UAs",
+                                                  "name": "V",
+                                                  "fill": "$--muted-foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "SMS",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 13,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "CTRyN",
+                                              "name": "Cuentas Cell",
+                                              "width": 90,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "c7qcVL",
+                                                  "name": "V",
+                                                  "fill": "$--foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "842",
+                                                  "textAlign": "right",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 14,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "ClZWX",
+                                              "name": "Saldo Cell",
+                                              "width": 170,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "h9otLl",
+                                                  "name": "V",
+                                                  "fill": "$--foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Suave",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 14,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "uNMIG",
+                                              "name": "Estado Cell",
+                                              "width": 100,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "id": "Q0fo2R",
+                                                  "type": "ref",
+                                                  "ref": "YdbQT",
+                                                  "name": "Badge",
+                                                  "descendants": {
+                                                    "eimgZ": {
+                                                      "content": "—"
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "Bp0Sh",
+                                              "name": "Actions Cell",
+                                              "width": 110,
+                                              "height": "fill_container",
+                                              "gap": 6,
+                                              "padding": [
+                                                0,
+                                                12
+                                              ],
+                                              "justifyContent": "center",
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "LypdR",
+                                                  "name": "EllipsisBtn",
+                                                  "width": 32,
+                                                  "height": 32,
+                                                  "fill": "$--card",
+                                                  "cornerRadius": 6,
+                                                  "stroke": "$--border",
+                                                  "strokeWidth": 1,
+                                                  "strokeAlignment": "inner",
+                                                  "justifyContent": "center",
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "GuLR3",
+                                                      "name": "Icon",
+                                                      "width": 16,
+                                                      "height": 16,
+                                                      "icon": "ellipsis",
+                                                      "library": "lucide",
+                                                      "fill": "$--muted-foreground"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "PwJGP",
+                                          "name": "Plantilla WhatsApp",
+                                          "width": "fill_container",
+                                          "height": 52,
+                                          "stroke": "$--border",
+                                          "strokeWidth": {
+                                            "bottom": 1
+                                          },
+                                          "strokeAlignment": "inner",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "frame",
+                                              "id": "Y3vQJ",
+                                              "name": "Nombre Cell",
+                                              "width": "fill_container",
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "JWzdg",
+                                                  "name": "V",
+                                                  "fill": "$--foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Plantilla WhatsApp",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 14,
+                                                  "fontWeight": "500"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "Y5YZj",
+                                              "name": "Cliente Cell",
+                                              "width": 200,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "x6saK",
+                                                  "name": "V",
+                                                  "fill": "$--muted-foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "WhatsApp",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 13,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "dr2xt",
+                                              "name": "Cuentas Cell",
+                                              "width": 90,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "Nan9P",
+                                                  "name": "V",
+                                                  "fill": "$--foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "—",
+                                                  "textAlign": "right",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 14,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "kJDhq",
+                                              "name": "Saldo Cell",
+                                              "width": 170,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "ShH6F",
+                                                  "name": "V",
+                                                  "fill": "$--foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Firme",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 14,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "Q1Y8p",
+                                              "name": "Estado Cell",
+                                              "width": 100,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "id": "mZwSo",
+                                                  "type": "ref",
+                                                  "ref": "Rf9EY",
+                                                  "name": "Badge",
+                                                  "descendants": {
+                                                    "AyR5I": {
+                                                      "content": "Próximamente"
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "XhEE6",
+                                              "name": "Actions Cell",
+                                              "width": 110,
+                                              "height": "fill_container",
+                                              "gap": 6,
+                                              "padding": [
+                                                0,
+                                                12
+                                              ],
+                                              "justifyContent": "center",
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "v4S0v",
+                                                  "name": "EllipsisBtn",
+                                                  "width": 32,
+                                                  "height": 32,
+                                                  "fill": "$--card",
+                                                  "cornerRadius": 6,
+                                                  "stroke": "$--border",
+                                                  "strokeWidth": 1,
+                                                  "strokeAlignment": "inner",
+                                                  "justifyContent": "center",
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "Z1hP0M",
+                                                      "name": "Icon",
+                                                      "width": 16,
+                                                      "height": 16,
+                                                      "icon": "ellipsis",
+                                                      "library": "lucide",
+                                                      "fill": "$--muted-foreground"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "JU6X1",
+                                          "name": "Aviso pregrabado",
+                                          "width": "fill_container",
+                                          "height": 52,
+                                          "stroke": "$--border",
+                                          "strokeWidth": {
+                                            "bottom": 1
+                                          },
+                                          "strokeAlignment": "inner",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "frame",
+                                              "id": "SAtit",
+                                              "name": "Nombre Cell",
+                                              "width": "fill_container",
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "mO3rM",
+                                                  "name": "V",
+                                                  "fill": "$--foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Aviso pregrabado",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 14,
+                                                  "fontWeight": "500"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "auuH5",
+                                              "name": "Cliente Cell",
+                                              "width": 200,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "J4raF",
+                                                  "name": "V",
+                                                  "fill": "$--muted-foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Voz pregrabada",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 13,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "U6Ff4O",
+                                              "name": "Cuentas Cell",
+                                              "width": 90,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "nRNrG",
+                                                  "name": "V",
+                                                  "fill": "$--foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "410",
+                                                  "textAlign": "right",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 14,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "H1rrE",
+                                              "name": "Saldo Cell",
+                                              "width": 170,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "N0mXgt",
+                                                  "name": "V",
+                                                  "fill": "$--foreground",
+                                                  "textGrowth": "fixed-width",
+                                                  "width": "fill_container",
+                                                  "content": "Firme",
+                                                  "fontFamily": "$--font-primary",
+                                                  "fontSize": 14,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "n41Kie",
+                                              "name": "Estado Cell",
+                                              "width": 100,
+                                              "height": "fill_container",
+                                              "padding": [
+                                                0,
+                                                16
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "id": "z4z0ms",
+                                                  "type": "ref",
+                                                  "ref": "lK804",
+                                                  "name": "Badge",
+                                                  "descendants": {
+                                                    "euhVD": {
+                                                      "content": "Pendiente"
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "VNNdW",
+                                              "name": "Actions Cell",
+                                              "width": 110,
+                                              "height": "fill_container",
+                                              "gap": 6,
+                                              "padding": [
+                                                0,
+                                                12
+                                              ],
+                                              "justifyContent": "center",
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "jbFon",
+                                                  "name": "EllipsisBtn",
+                                                  "width": 32,
+                                                  "height": 32,
+                                                  "fill": "$--card",
+                                                  "cornerRadius": 6,
+                                                  "stroke": "$--border",
+                                                  "strokeWidth": 1,
+                                                  "strokeAlignment": "inner",
+                                                  "justifyContent": "center",
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "HNDht",
+                                                      "name": "Icon",
+                                                      "width": 16,
+                                                      "height": 16,
+                                                      "icon": "ellipsis",
+                                                      "library": "lucide",
+                                                      "fill": "$--muted-foreground"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "aQDaO",
+                                          "name": "Footer",
+                                          "width": "fill_container",
+                                          "height": 44,
+                                          "stroke": "$--border",
+                                          "strokeWidth": {
+                                            "top": 1
+                                          },
+                                          "strokeAlignment": "inner",
+                                          "padding": [
+                                            0,
+                                            16
+                                          ],
+                                          "justifyContent": "space_between",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "g8Onhu",
+                                              "name": "Count",
+                                              "fill": "$--muted-foreground",
+                                              "content": "Mostrando 1–4 de 4 agentes",
+                                              "fontFamily": "$--font-primary",
+                                              "fontSize": 13,
+                                              "fontWeight": "normal"
+                                            },
+                                            {
+                                              "id": "UyWP8",
+                                              "type": "ref",
+                                              "ref": "ADmKy",
+                                              "name": "Pagination"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "zloa7",
+                  "name": "Notes",
+                  "width": 380,
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "apjD6",
+                      "name": "CICLO DE ESTADO",
+                      "width": "fill_container",
+                      "fill": "#34D3991F",
+                      "cornerRadius": 10,
+                      "stroke": "#34D39966",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": 4,
+                      "padding": [
+                        12,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "A3fnNV",
+                          "name": "t",
+                          "fill": "#34D399",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "TIPO INMUTABLE",
+                          "fontFamily": "Roboto Mono",
+                          "fontSize": 13,
+                          "fontWeight": "700",
+                          "letterSpacing": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "Z6dif",
+                          "name": "b",
+                          "fill": "#E2E8F0",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "El tipo de canal se fija al crear. Editar cambia nombre, estrategia y configuración — nunca el tipo.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "wZDLo",
+                      "name": "AGENTE INMUTABLE",
+                      "width": "fill_container",
+                      "fill": "#34D3991F",
+                      "cornerRadius": 10,
+                      "stroke": "#34D39966",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": 4,
+                      "padding": [
+                        12,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "fAlwv",
+                          "name": "t",
+                          "fill": "#34D399",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "CONFIG POR CANAL",
+                          "fontFamily": "Roboto Mono",
+                          "fontSize": 13,
+                          "fontWeight": "700",
+                          "letterSpacing": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "olBuE",
+                          "name": "b",
+                          "fill": "#E2E8F0",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Cada tipo guarda su configuración en su propia tabla hija: voz IA, voz pregrabada, SMS, email, WhatsApp.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "aXsVb",
+                      "name": "VENTANA DIARIA",
+                      "width": "fill_container",
+                      "fill": "#34D3991F",
+                      "cornerRadius": 10,
+                      "stroke": "#34D39966",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": 4,
+                      "padding": [
+                        12,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "RdLOH",
+                          "name": "t",
+                          "fill": "#34D399",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "SINCRONIZACIÓN",
+                          "fontFamily": "Roboto Mono",
+                          "fontSize": 13,
+                          "fontWeight": "700",
+                          "letterSpacing": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "I5TPg",
+                          "name": "b",
+                          "fill": "#E2E8F0",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Las plantillas de voz se sincronizan con Fonoster al guardar. Estado: Sincronizado / Error / Pendiente.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XbKL7",
+                      "name": "TOPES Y SUPRESIÓN",
+                      "width": "fill_container",
+                      "fill": "#34D3991F",
+                      "cornerRadius": 10,
+                      "stroke": "#34D39966",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": 4,
+                      "padding": [
+                        12,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "tElKr",
+                          "name": "t",
+                          "fill": "#34D399",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "ESTRATEGIA DE COBRO",
+                          "fontFamily": "Roboto Mono",
+                          "fontSize": 13,
+                          "fontWeight": "700",
+                          "letterSpacing": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "P21HYE",
+                          "name": "b",
+                          "fill": "#E2E8F0",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "SOFT, MODERATE o FIRM — ajusta el tono del agente y el encuadre de los mensajes de texto.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "wEhSZ",
+                      "name": "ACCIONES POR FILA",
+                      "width": "fill_container",
+                      "fill": "#34D3991F",
+                      "cornerRadius": 10,
+                      "stroke": "#34D39966",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": 4,
+                      "padding": [
+                        12,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "yOdMN",
+                          "name": "t",
+                          "fill": "#34D399",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "ACCIONES POR FILA",
+                          "fontFamily": "Roboto Mono",
+                          "fontSize": 13,
+                          "fontWeight": "700",
+                          "letterSpacing": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "r1sD05",
+                          "name": "b",
+                          "fill": "#E2E8F0",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "⋯ ofrece Ver detalle, Editar y Eliminar. No se puede eliminar si una campaña no archivada la usa.",
                           "lineHeight": 1.4,
                           "fontFamily": "Inter",
                           "fontSize": 14,

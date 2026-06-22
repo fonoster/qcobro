@@ -3,6 +3,7 @@ import type {
   CampaignStatus,
   CreateCampaignInput,
   UpdateCampaignInput,
+  UpdateCampaignStatusInput,
   DeleteCampaignInput
 } from "../schemas/campaigns.js";
 import type {
@@ -21,6 +22,7 @@ export interface CampaignRecord {
   status: CampaignStatus;
   startDate: Date;
   endDate: Date | null;
+  daysOfWeek: number[];
   startTime: string;
   endTime: string;
   maxAttemptsPerAccount: number;
@@ -137,6 +139,8 @@ export interface CampaignClient {
       create: Record<string, unknown>;
       update: Record<string, unknown>;
     }): Promise<CampaignAccountStateRecord>;
+
+    count(args: { where: { campaignId: string; attemptCount?: { gt: number } } }): Promise<number>;
   };
 
   accountContactLog: {
@@ -175,6 +179,7 @@ export interface CampaignClient {
 export type {
   CreateCampaignInput,
   UpdateCampaignInput,
+  UpdateCampaignStatusInput,
   DeleteCampaignInput,
   CreateContactLogInput,
   UpdateObjectiveInput

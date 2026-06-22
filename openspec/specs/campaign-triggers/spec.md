@@ -1,4 +1,10 @@
-## ADDED Requirements
+# campaign-triggers Specification
+
+## Purpose
+
+TBD — created by syncing change campaigns-core. Update Purpose after archive.
+
+## Requirements
 
 ### Requirement: Static contact triggers
 

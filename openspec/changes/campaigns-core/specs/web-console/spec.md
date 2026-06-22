@@ -4,9 +4,9 @@
 
 The operator console SHALL have a "Campañas" page accessible from the sidebar. It
 SHALL display all campaigns for the active workspace (excluding ARCHIVED by default)
-in a sortable table. Each row SHALL show: name, portfolios (count), agent template
-name, schedule (start – end or "sin fecha límite"), status badge, and a row-actions
-menu (⋯).
+in a sortable table. Each row SHALL show: name, agent template name, portfolios (count),
+days of week (a human-readable, localized label such as "Entre semana" or "Lun a Vie"),
+daily time window (`startTime`–`endTime`), status badge, and a row-actions menu (⋯).
 
 #### Scenario: Default view excludes ARCHIVED campaigns
 
@@ -18,42 +18,45 @@ menu (⋯).
 
 - **WHEN** the operator clicks ⋯ on a campaign row
 - **THEN** a dropdown appears with: Ver detalle, Editar, and Eliminar (destructive)
-- **AND** if the campaign is DRAFT or PAUSED, an "Activar" option appears
+- **AND** if the campaign is PAUSED, an "Activar" option appears
 - **AND** if the campaign is ACTIVE, a "Pausar" option appears instead
 
 ### Requirement: Create campaign modal
 
-The "Nueva campaña" button opens a modal collecting:
+The "Nueva campaña" button SHALL open a modal collecting:
 
 - Campaign name (required)
 - Portfolio selection: multi-select from workspace portfolios (at least one required)
 - Agent template: single select from workspace agent templates (shows name + type badge)
 - Start date (required), end date (optional, must be after start date)
+- Days of week (required, at least one): presented as seven individually selectable
+  toggles (L M X J V S D) so any combination — e.g. Monday and Friday only — is possible
 - Start time and end time (both required, HH:MM 24h)
 - Max attempts per account (required), max attempts per day (required)
 
-#### Scenario: Campaign created in DRAFT
+#### Scenario: Campaign created in PAUSED
 
 - **WHEN** an operator submits the create form with valid inputs
-- **THEN** the campaign appears in the list with status DRAFT
+- **THEN** the campaign appears in the list with status PAUSED
 - **AND** the modal closes
 
 ### Requirement: Campaign detail page
 
-Each campaign SHALL have a detail page with:
+Each campaign SHALL have a read-only detail page that shows the same configuration captured
+at creation — no analytics or KPI strip. It SHALL include:
 
-- Header: name, status badge, agent template name + channel type, schedule
-- KPI strip: total accounts targeted, total gestiones, objectives created,
-  fulfilment rate
-- Associated portfolios card (name, account count per portfolio)
+- Header: name, status badge, and status-change controls (a primary Activar/Pausar action
+  plus an overflow menu offering Completar and Archivar)
+- Campaign detail card: agent template (name + channel type), associated portfolios, days of
+  week (human-readable), daily time window, start/end dates, and attempt caps
 - Trigger configuration summary (list of configured triggers)
-- Recent gestiones table (last 50, paginated): account name, result badge, agent,
-  amount, contacted at
 
-#### Scenario: Recent gestiones table links to gestión detail
+#### Scenario: Operator changes campaign status from the detail page
 
-- **WHEN** an operator clicks a row in the gestiones table on the campaign detail page
-- **THEN** the gestión detail panel or page opens for that interaction
+- **WHEN** an operator uses the status control on a campaign's detail page to activate or
+  pause it
+- **THEN** the new status is saved and reflected in the status badge
+- **AND** only transitions valid for the current status are offered
 
 ### Requirement: Agent Templates section
 

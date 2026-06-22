@@ -5,7 +5,7 @@ CREATE TYPE "AgentType" AS ENUM ('SMS', 'VOICE_PRERECORDED', 'VOICE_AI', 'EMAIL'
 CREATE TYPE "CollectionStrategy" AS ENUM ('SOFT', 'MODERATE', 'FIRM');
 
 -- CreateEnum
-CREATE TYPE "CampaignStatus" AS ENUM ('DRAFT', 'ACTIVE', 'PAUSED', 'COMPLETED', 'ARCHIVED');
+CREATE TYPE "CampaignStatus" AS ENUM ('PAUSED', 'ACTIVE', 'COMPLETED', 'ARCHIVED');
 
 -- CreateEnum
 CREATE TYPE "TriggerType" AS ENUM ('MAX_ATTEMPTS_PER_DAY', 'DNC_CHECK', 'WRONG_NUMBER', 'OPT_OUT', 'PAYMENT_PROMISE', 'INTENT_MET', 'CALLBACK_REQUESTED');
@@ -107,11 +107,12 @@ CREATE TABLE "campaigns" (
     "workspaceRef" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "agentTemplateId" TEXT NOT NULL,
-    "status" "CampaignStatus" NOT NULL DEFAULT 'DRAFT',
+    "status" "CampaignStatus" NOT NULL DEFAULT 'ACTIVE',
     "startDate" TIMESTAMP(3) NOT NULL,
     "endDate" TIMESTAMP(3),
     "startTime" TEXT NOT NULL,
     "endTime" TEXT NOT NULL,
+    "daysOfWeek" INTEGER[] DEFAULT ARRAY[]::INTEGER[],
     "maxAttemptsPerAccount" INTEGER NOT NULL,
     "maxAttemptsPerDay" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

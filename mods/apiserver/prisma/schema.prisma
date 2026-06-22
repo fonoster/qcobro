@@ -39,9 +39,8 @@ enum CollectionStrategy {
 }
 
 enum CampaignStatus {
-  DRAFT
-  ACTIVE
   PAUSED
+  ACTIVE
   COMPLETED
   ARCHIVED
 }
@@ -229,11 +228,12 @@ model Campaign {
   workspaceRef          String
   name                  String
   agentTemplateId       String
-  status                CampaignStatus         @default(DRAFT)
+  status                CampaignStatus         @default(ACTIVE)
   startDate             DateTime
   endDate               DateTime?
   startTime             String
   endTime               String
+  daysOfWeek            Int[]
   maxAttemptsPerAccount Int
   maxAttemptsPerDay     Int
   createdAt             DateTime               @default(now())

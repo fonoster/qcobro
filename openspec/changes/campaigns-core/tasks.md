@@ -85,9 +85,9 @@
 - [ ] 10.2 Design "Nuevo agente" modal (type selector + conditional type-specific fields)
 - [ ] 10.3 Design agent template detail screen (config summary + sync status badge for voice + campaigns list)
 - [ ] 10.4 Add `CAMPAÑAS`, `GESTIONES`, `OBJETIVOS` flow sections to Application Flow
-- [ ] 10.5 Design campaign list screen (table with status filter + "Nueva campaña" button)
-- [ ] 10.6 Design "Nueva campaña" modal (all form fields)
-- [ ] 10.7 Design campaign detail screen (header KPIs, portfolios card, gestiones table)
+- [x] 10.5 Design campaign list screen (table with status filter + "Nueva campaña" button; split Días + Horario columns)
+- [x] 10.6 Design "Nueva campaña" modal (all form fields + 7-day toggle for days of week)
+- [x] 10.7 Design campaign detail screen (simple — mirrors campaign fields + triggers; status-change controls; no KPIs)
 - [ ] 10.8 Design Gestiones list screen (referencing old Gestiones screen from pencil-old.pen)
 - [ ] 10.9 Design Detalle de gestión screen (audio player, transcript, AI analysis, objectives — referencing old Detalle de gestión screen from pencil-old.pen)
 - [ ] 10.10 Design Objetivos list screen (KPI strip + table; replaces old "Promesas de Pago" screen from pencil-old.pen)
@@ -99,3 +99,17 @@
 - [x] 11.2 Write e2e test: create a DRAFT campaign referencing the template, verify it appears in list
 - [x] 11.3 Write e2e test: activate a campaign, verify status badge changes
 - [x] 11.4 Write e2e test: navigate to campaign detail page, verify portfolio and schedule info
+
+## 12. Campaigns refinement (design-driven — this /ps:ship pass)
+
+- [x] 12.1 Remove `DRAFT` from `CampaignStatus` enum (schema.prisma + migration); new campaigns default to `PAUSED`
+- [x] 12.2 Add `daysOfWeek Int[]` to `Campaign` model (ISO 1=Mon…7=Sun), mandatory non-empty (schema.prisma + migration)
+- [x] 12.3 `createCampaignSchema`/`updateCampaignSchema`: add `daysOfWeek` (array of ints 1–7, min 1, unique)
+- [x] 12.4 `createCampaign`: set status `PAUSED`; persist `daysOfWeek`
+- [x] 12.5 `deleteCampaign`: allow deletion only when the campaign has no recorded attempts (replace DRAFT-only rule)
+- [x] 12.6 Add `updateCampaignStatus` function + tRPC procedure with a valid-transition guard (PAUSED⇄ACTIVE→COMPLETED→ARCHIVED)
+- [x] 12.7 Webapp: day-of-week humanizer via i18n (Entre semana / Fines de semana / Lun a Vie / single day / list / Todos los días)
+- [x] 12.8 Webapp Campaigns: 7-day toggle in create/edit modals; Días + Horario columns; remove Borrador; PAUSED default
+- [x] 12.9 Webapp CampaignDetail: status-change controls (Activar/Pausar + Completar/Archivar); show days + schedule
+- [x] 12.10 Update unit tests: createCampaign (PAUSED + daysOfWeek), deleteCampaign (attempts rule), updateCampaignStatus transitions
+- [x] 12.11 Update e2e: campaign starts PAUSED, activate flips badge, individual-day toggle persists

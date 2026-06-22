@@ -9,7 +9,7 @@ import { businessError } from "../businessError.js";
 /**
  * Creates a campaign plus its portfolio associations in one transaction. The
  * referenced agent template must belong to the active workspace. New campaigns
- * always start in DRAFT.
+ * start ACTIVE — ready to dispatch immediately within their scheduled window.
  */
 export function createCreateCampaign(client: CampaignClient, workspaceRef: string) {
   const fn = async (params: CreateCampaignInput) => {
@@ -26,9 +26,10 @@ export function createCreateCampaign(client: CampaignClient, workspaceRef: strin
           workspaceRef,
           name: params.name,
           agentTemplateId: params.agentTemplateId,
-          status: "DRAFT",
+          status: "ACTIVE",
           startDate: new Date(params.startDate),
           endDate: params.endDate ? new Date(params.endDate) : null,
+          daysOfWeek: params.daysOfWeek,
           startTime: params.startTime,
           endTime: params.endTime,
           maxAttemptsPerAccount: params.maxAttemptsPerAccount,

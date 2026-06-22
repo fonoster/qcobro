@@ -9,6 +9,7 @@ const VALID = {
   portfolioIds: ["p1", "p2"],
   startDate: "2026-07-01",
   endDate: "2026-08-01",
+  daysOfWeek: [1, 2, 3, 4, 5],
   startTime: "09:00",
   endTime: "18:00",
   maxAttemptsPerAccount: 5,
@@ -45,14 +46,15 @@ function makeClient(templateWorkspace: string | null = "ws-1") {
 }
 
 describe("createCampaign", () => {
-  it("creates a DRAFT campaign and links portfolios", async () => {
+  it("creates an ACTIVE campaign with its days and links portfolios", async () => {
     const { client, stats } = makeClient("ws-1");
     const fn = createCreateCampaign(client as never, "ws-1");
 
     const result = await fn(VALID);
 
     assert.equal((result as { id: string }).id, "camp-1");
-    assert.equal(stats().createdCampaign?.status, "DRAFT");
+    assert.equal(stats().createdCampaign?.status, "ACTIVE");
+    assert.deepEqual(stats().createdCampaign?.daysOfWeek, [1, 2, 3, 4, 5]);
     assert.equal(stats().portfolioLinks.length, 2);
     assert.deepEqual(
       stats().portfolioLinks.map((l) => l.portfolioId),
@@ -65,6 +67,13 @@ describe("createCampaign", () => {
     const fn = createCreateCampaign(client as never, "ws-1");
 
     await assert.rejects(() => fn({ ...VALID, portfolioIds: [] }), ValidationError);
+  });
+
+  it("rejects an empty days-of-week set", async () => {
+    const { client } = makeClient("ws-1");
+    const fn = createCreateCampaign(client as never, "ws-1");
+
+    await assert.rejects(() => fn({ ...VALID, daysOfWeek: [] }), ValidationError);
   });
 
   it("rejects a template from another workspace", async () => {

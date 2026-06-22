@@ -13,7 +13,7 @@ function makeClient() {
           workspaceRef: "ws-1",
           startDate: new Date("2026-07-01"),
           endDate: new Date("2026-08-01"),
-          status: "DRAFT"
+          status: "PAUSED"
         }) as never,
       update: async (args: { where: { id: string }; data: Record<string, unknown> }) => {
         updateData = args.data;
@@ -32,14 +32,21 @@ describe("updateCampaign", () => {
     await assert.rejects(() => fn({ id: "camp-1", agentTemplateId: "other" }), ValidationError);
   });
 
-  it("accepts status and schedule updates", async () => {
+  it("accepts schedule and days-of-week updates", async () => {
     const { client, stats } = makeClient();
     const fn = createUpdateCampaign(client as never, "ws-1");
 
-    await fn({ id: "camp-1", status: "ACTIVE", endTime: "20:00" });
+    await fn({ id: "camp-1", daysOfWeek: [1, 5], endTime: "20:00" });
 
-    assert.equal(stats().updateData?.status, "ACTIVE");
+    assert.deepEqual(stats().updateData?.daysOfWeek, [1, 5]);
     assert.equal(stats().updateData?.endTime, "20:00");
+  });
+
+  it("rejects a status change (status is changed via updateStatus)", async () => {
+    const { client } = makeClient();
+    const fn = createUpdateCampaign(client as never, "ws-1");
+
+    await assert.rejects(() => fn({ id: "camp-1", status: "ACTIVE" } as never), ValidationError);
   });
 
   it("rejects an end date before the (existing) start date", async () => {

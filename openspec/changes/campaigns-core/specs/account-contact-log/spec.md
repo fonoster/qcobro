@@ -2,7 +2,7 @@
 
 ### Requirement: Gestión — contact log records every outreach attempt
 
-A **Gestión** is the system record of a single outreach attempt against a
+A **Gestión** SHALL be the system record of a single outreach attempt against a
 `PortfolioAccount`. The gestión log is append-only and is the authoritative record of
 all contact history, AI conversation analysis, channel metadata, and resulting
 Objectives.
@@ -94,7 +94,7 @@ Each `AccountContactLog` entry SHALL capture:
 
 ### Requirement: Objective entity — actionable outcome of a gestión
 
-An **Objective** is an actionable commitment or goal that results from a gestión.
+An **Objective** SHALL be an actionable commitment or goal that results from a gestión.
 Objectives generalize what was previously called "payment promises" or "commitments" —
 they capture any outcome where the account holder agreed to a specific action by a
 specific date.
@@ -183,11 +183,10 @@ corresponding `PortfolioAccount` hot-path fields and `CampaignAccountState`.
 
 ### Requirement: External contact-log ingress with workspace-scoped basic auth
 
-In addition to the tRPC `accountContactLog.create` procedure (used by the operator
-console), the API server SHALL expose a REST endpoint `POST /api/contact-logs` for
-external callers — notably the Fonoster voice service posting call outcomes via
-callback. The endpoint accepts the same payload as the tRPC procedure and runs the
-same hot-path updates and Objective creation.
+The API server SHALL expose a REST endpoint `POST /api/contact-logs` for external callers —
+notably the Fonoster voice service posting call outcomes via callback — in addition to the
+tRPC `accountContactLog.create` procedure used by the operator console. The endpoint accepts
+the same payload as the tRPC procedure and runs the same hot-path updates and Objective creation.
 
 Authentication is **workspace-scoped HTTP Basic auth**: the credential identifies and
 authorizes writes for exactly one workspace, matching the system's tenancy boundary
