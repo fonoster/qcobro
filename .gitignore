@@ -23,3 +23,6 @@ node_modules/.cache
 test-results/
 playwright-report/
 playwright/.cache/
+
+# Pencil design backups (active file is pencil.pen)
+*-old.pen

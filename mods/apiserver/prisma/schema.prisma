@@ -24,26 +24,94 @@ enum Currency {
   DOP
 }
 
+enum AgentType {
+  SMS
+  VOICE_PRERECORDED
+  VOICE_AI
+  EMAIL
+  WHATSAPP
+}
+
+enum CollectionStrategy {
+  SOFT
+  MODERATE
+  FIRM
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum TriggerType {
+  MAX_ATTEMPTS_PER_DAY
+  DNC_CHECK
+  WRONG_NUMBER
+  OPT_OUT
+  PAYMENT_PROMISE
+  INTENT_MET
+  CALLBACK_REQUESTED
+}
+
+enum ContactOutcome {
+  NO_ANSWER
+  PAYMENT_PROMISE
+  PARTIAL_PAYMENT_AGREED
+  CALLBACK_REQUESTED
+  RESOLVED
+  PAID
+  WRONG_NUMBER
+  OPT_OUT
+  REFUSED
+  OTHER
+}
+
+enum IntentStatus {
+  INTENT_MET
+  WRONG_NUMBER
+  OPT_OUT
+}
+
+enum ObjectiveType {
+  PAYMENT_PROMISE
+  PARTIAL_PAYMENT
+  CALLBACK_SCHEDULED
+  INFORMATION_REQUEST
+  DISPUTE_RAISED
+  OTHER
+}
+
+enum ObjectiveStatus {
+  PENDING
+  MET
+  BROKEN
+  CANCELLED
+}
+
 model Portfolio {
-  id                     String             @id @default(uuid())
-  workspaceRef           String
-  name                   String
-  clientId               String
-  accountCount           Int                @default(0)
-  totalOutstandingBalance Float             @default(0)
-  recoveredAmount        Float              @default(0)
-  currency               Currency           @default(USD)
-  status                 PortfolioStatus    @default(ACTIVE)
-  createdAt              DateTime           @default(now())
-  updatedAt              DateTime           @updatedAt
-  accounts               PortfolioAccount[]
+  id                      String              @id @default(uuid())
+  workspaceRef            String
+  name                    String
+  clientId                String
+  accountCount            Int                 @default(0)
+  totalOutstandingBalance Float               @default(0)
+  recoveredAmount         Float               @default(0)
+  currency                Currency            @default(USD)
+  status                  PortfolioStatus     @default(ACTIVE)
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  accounts                PortfolioAccount[]
+  campaignLinks           CampaignPortfolio[]
 
   @@index([workspaceRef])
   @@map("portfolios")
 }
 
 model PortfolioAccount {
-  id                 String    @id @default(uuid())
+  id                 String                 @id @default(uuid())
   portfolioId        String
   externalId         String
   fullName           String
@@ -51,22 +119,213 @@ model PortfolioAccount {
   preferredLanguage  String?
   bestTimeToCall     String?
   customerSegment    String?
-  principalAmount    Float     @default(0)
-  termsAmount        Float     @default(0)
+  principalAmount    Float                  @default(0)
+  termsAmount        Float                  @default(0)
   termsFrequency     String?
-  termsLength        Int       @default(0)
-  outstandingBalance Float     @default(0)
-  daysPastDue        Int       @default(0)
-  missedInstallments Int       @default(0)
+  termsLength        Int                    @default(0)
+  outstandingBalance Float                  @default(0)
+  daysPastDue        Int                    @default(0)
+  missedInstallments Int                    @default(0)
   lastPaymentDate    DateTime?
   lastPaymentAmount  Float?
   negotiationOptions String?
   archivedAt         DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  portfolio          Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  lastContactedAt    DateTime?
+  suppressUntil      DateTime?
+  intentStatus       IntentStatus?
+  totalAttempts      Int                    @default(0)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  portfolio          Portfolio              @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  campaignStates     CampaignAccountState[]
+  contactLogs        AccountContactLog[]
+  objectives         Objective[]
 
   @@unique([portfolioId, externalId])
   @@index([portfolioId, archivedAt])
   @@map("portfolio_accounts")
+}
+
+model AgentTemplate {
+  id                     String                  @id @default(uuid())
+  workspaceRef           String
+  name                   String
+  type                   AgentType
+  collectionStrategy     CollectionStrategy      @default(MODERATE)
+  totalCalls             Int                     @default(0)
+  totalPromises          Int                     @default(0)
+  totalRecovered         Float                   @default(0)
+  successRate            Float                   @default(0)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  voiceAiConfig          VoiceAiConfig?
+  voicePrerecordedConfig VoicePrerecordedConfig?
+  smsConfig              SmsConfig?
+  emailConfig            EmailConfig?
+  whatsAppConfig         WhatsAppConfig?
+  campaigns              Campaign[]
+
+  @@index([workspaceRef])
+  @@map("agent_templates")
+}
+
+model VoiceAiConfig {
+  templateId      String        @id
+  fonosterAppName String
+  fonosterAppRef  String?
+  voice           String
+  systemPrompt    String
+  firstMessage    String
+  language        String
+  template        AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("voice_ai_configs")
+}
+
+model VoicePrerecordedConfig {
+  templateId      String        @id
+  fonosterAppName String
+  fonosterAppRef  String?
+  voice           String
+  script          String
+  firstMessage    String
+  language        String
+  template        AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("voice_prerecorded_configs")
+}
+
+model SmsConfig {
+  templateId  String        @id
+  messageBody String
+  senderId    String?
+  template    AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("sms_configs")
+}
+
+model EmailConfig {
+  templateId  String        @id
+  subject     String
+  messageBody String
+  fromName    String
+  fromEmail   String
+  template    AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("email_configs")
+}
+
+model WhatsAppConfig {
+  templateId   String        @id
+  templateName String
+  messageBody  String
+  template     AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("whatsapp_configs")
+}
+
+model Campaign {
+  id                    String                 @id @default(uuid())
+  workspaceRef          String
+  name                  String
+  agentTemplateId       String
+  status                CampaignStatus         @default(DRAFT)
+  startDate             DateTime
+  endDate               DateTime?
+  startTime             String
+  endTime               String
+  maxAttemptsPerAccount Int
+  maxAttemptsPerDay     Int
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  agentTemplate         AgentTemplate          @relation(fields: [agentTemplateId], references: [id])
+  portfolios            CampaignPortfolio[]
+  triggers              CampaignTrigger[]
+  accountStates         CampaignAccountState[]
+  contactLogs           AccountContactLog[]
+
+  @@index([workspaceRef])
+  @@map("campaigns")
+}
+
+model CampaignPortfolio {
+  campaignId  String
+  portfolioId String
+  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@id([campaignId, portfolioId])
+  @@index([portfolioId])
+  @@map("campaign_portfolios")
+}
+
+model CampaignTrigger {
+  id         String      @id @default(uuid())
+  campaignId String
+  type       TriggerType
+  config     Json
+  campaign   Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@map("campaign_triggers")
+}
+
+model CampaignAccountState {
+  campaignId         String
+  portfolioAccountId String
+  attemptCount       Int              @default(0)
+  attemptsToday      Int              @default(0)
+  lastAttemptAt      DateTime?
+  suppressUntil      DateTime?
+  campaign           Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  portfolioAccount   PortfolioAccount @relation(fields: [portfolioAccountId], references: [id], onDelete: Cascade)
+
+  @@id([campaignId, portfolioAccountId])
+  @@index([portfolioAccountId])
+  @@map("campaign_account_states")
+}
+
+model AccountContactLog {
+  id                 String           @id @default(uuid())
+  portfolioAccountId String
+  campaignId         String?
+  agentType          AgentType
+  contactedAt        DateTime
+  durationSeconds    Int?
+  outcome            ContactOutcome
+  notes              String?
+  debtAmountSnapshot Float?
+  aiSummary          String?
+  aiSentiment        String?
+  aiDebtReason       String?
+  aiResult           String?
+  aiNextStep         String?
+  intentMetadata     Json?
+  channelData        Json?
+  correctedEntryId   String?
+  createdAt          DateTime         @default(now())
+  portfolioAccount   PortfolioAccount @relation(fields: [portfolioAccountId], references: [id], onDelete: Cascade)
+  campaign           Campaign?        @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  objectives         Objective[]
+
+  @@index([portfolioAccountId, createdAt])
+  @@map("account_contact_logs")
+}
+
+model Objective {
+  id                 String            @id @default(uuid())
+  contactLogId       String
+  portfolioAccountId String
+  type               ObjectiveType
+  amount             Float?
+  dueDate            DateTime
+  status             ObjectiveStatus   @default(PENDING)
+  notes              String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  contactLog         AccountContactLog @relation(fields: [contactLogId], references: [id], onDelete: Cascade)
+  portfolioAccount   PortfolioAccount  @relation(fields: [portfolioAccountId], references: [id], onDelete: Cascade)
+
+  @@index([portfolioAccountId, dueDate])
+  @@map("objectives")
 }

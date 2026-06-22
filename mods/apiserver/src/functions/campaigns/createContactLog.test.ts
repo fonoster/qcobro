@@ -1,0 +1,137 @@
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { createCreateContactLog } from "./createContactLog.js";
+
+interface Captured {
+  log?: Record<string, unknown>;
+  accountUpdate?: Record<string, unknown>;
+  objective?: Record<string, unknown>;
+  stateCreate?: Record<string, unknown>;
+  stateUpdate?: Record<string, unknown>;
+  templateUpdate?: Record<string, unknown>;
+}
+
+function makeClient(opts: { existingState?: boolean } = {}) {
+  const cap: Captured = {};
+  const client = {
+    accountContactLog: {
+      create: async (args: { data: Record<string, unknown> }) => {
+        cap.log = args.data;
+        return { id: "log-1", ...args.data } as never;
+      }
+    },
+    portfolioAccount: {
+      update: async (args: { where: { id: string }; data: Record<string, unknown> }) => {
+        cap.accountUpdate = args.data;
+        return { id: args.where.id } as never;
+      }
+    },
+    objective: {
+      create: async (args: { data: Record<string, unknown> }) => {
+        cap.objective = args.data;
+        return { id: "obj-1", ...args.data } as never;
+      }
+    },
+    campaign: {
+      findFirst: async () => ({ id: "camp-1", agentTemplateId: "tmpl-1" }) as never
+    },
+    campaignTrigger: {
+      findMany: async () => []
+    },
+    campaignAccountState: {
+      upsert: async (args: {
+        create: Record<string, unknown>;
+        update: Record<string, unknown>;
+      }) => {
+        cap.stateCreate = args.create;
+        cap.stateUpdate = args.update;
+        return {} as never;
+      }
+    },
+    agentTemplate: {
+      update: async (args: { where: { id: string }; data: Record<string, unknown> }) => {
+        cap.templateUpdate = args.data;
+        return { id: args.where.id } as never;
+      }
+    },
+    $transaction: async <T>(fn: (tx: unknown) => Promise<T>) => fn(client)
+  };
+  void opts;
+  return { client, cap };
+}
+
+const BASE = {
+  portfolioAccountId: "acc-1",
+  campaignId: "camp-1",
+  agentType: "VOICE_AI" as const,
+  contactedAt: "2026-06-22T10:00:00.000Z"
+};
+
+describe("createContactLog", () => {
+  it("always updates lastContactedAt and increments totalAttempts", async () => {
+    const { client, cap } = makeClient();
+    const fn = createCreateContactLog(client as never);
+
+    await fn({ ...BASE, outcome: "NO_ANSWER" });
+
+    assert.equal(cap.accountUpdate?.lastContactedAt instanceof Date, true);
+    assert.deepEqual(cap.accountUpdate?.totalAttempts, { increment: 1 });
+    // No hard outcome → no global intentStatus, no global suppressUntil.
+    assert.equal("intentStatus" in (cap.accountUpdate ?? {}), false);
+    assert.equal("suppressUntil" in (cap.accountUpdate ?? {}), false);
+  });
+
+  it("sets campaign-local suppressUntil on PAYMENT_PROMISE and leaves global suppression untouched", async () => {
+    const { client, cap } = makeClient();
+    const fn = createCreateContactLog(client as never);
+
+    await fn({
+      ...BASE,
+      outcome: "PAYMENT_PROMISE",
+      intentMetadata: { promisedAmount: 500, promisedDate: "2026-07-01T00:00:00.000Z" }
+    });
+
+    // Campaign-local suppression carries the promise date.
+    const suppress = cap.stateCreate?.suppressUntil as Date;
+    assert.equal(suppress instanceof Date, true);
+    assert.equal(suppress.toISOString(), "2026-07-01T00:00:00.000Z");
+    // Global account suppression is NOT set by a payment promise.
+    assert.equal("suppressUntil" in (cap.accountUpdate ?? {}), false);
+    // Objective created with the promised amount + due date.
+    assert.equal(cap.objective?.type, "PAYMENT_PROMISE");
+    assert.equal(cap.objective?.amount, 500);
+    // Agent template counters bumped (call + promise).
+    assert.deepEqual(cap.templateUpdate?.totalCalls, { increment: 1 });
+    assert.deepEqual(cap.templateUpdate?.totalPromises, { increment: 1 });
+  });
+
+  it("increments CampaignAccountState counts", async () => {
+    const { client, cap } = makeClient();
+    const fn = createCreateContactLog(client as never);
+
+    await fn({ ...BASE, outcome: "NO_ANSWER" });
+
+    assert.deepEqual(cap.stateUpdate?.attemptCount, { increment: 1 });
+    assert.deepEqual(cap.stateUpdate?.attemptsToday, { increment: 1 });
+    assert.equal(cap.stateCreate?.attemptCount, 1);
+    assert.equal(cap.stateCreate?.attemptsToday, 1);
+  });
+
+  it("sets global intentStatus = INTENT_MET on RESOLVED and PAID", async () => {
+    for (const outcome of ["RESOLVED", "PAID"] as const) {
+      const { client, cap } = makeClient();
+      const fn = createCreateContactLog(client as never);
+      await fn({ ...BASE, outcome });
+      assert.equal(cap.accountUpdate?.intentStatus, "INTENT_MET");
+    }
+  });
+
+  it("maps WRONG_NUMBER and OPT_OUT to matching intentStatus", async () => {
+    for (const outcome of ["WRONG_NUMBER", "OPT_OUT"] as const) {
+      const { client, cap } = makeClient();
+      const fn = createCreateContactLog(client as never);
+      await fn({ ...BASE, outcome });
+      assert.equal(cap.accountUpdate?.intentStatus, outcome);
+    }
+  });
+});

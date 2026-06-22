@@ -22,7 +22,18 @@ export const qcobroConfigSchema = z.object({
   /** Application (apiserver) database. */
   database: z.object({ url: z.string().min(1) }),
   identity: identityConfigSchema,
-  apiserver: z.object({ port: z.number().default(3000) }).default({ port: 3000 })
+  apiserver: z
+    .object({
+      port: z.number().default(3000),
+      /**
+       * Deployment-wide IANA timezone for interpreting campaign wall-clock
+       * outreach windows (`startTime`/`endTime`). Per-workspace zones deferred.
+       */
+      timezone: z.string().default("America/Costa_Rica"),
+      /** External contact-log ingress (`POST /api/contact-logs`) auth gate. */
+      contactLogAuth: z.object({ enabled: z.boolean().default(false) }).default({ enabled: false })
+    })
+    .default({ port: 3000, timezone: "America/Costa_Rica", contactLogAuth: { enabled: false } })
 });
 
 export type IdentityConfig = z.infer<typeof identityConfigSchema>;

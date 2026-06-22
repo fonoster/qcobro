@@ -35,23 +35,27 @@ contact log entry is written with an AI-detected outcome.
 Supported AI trigger types:
 
 - `PAYMENT_PROMISE`: config `{ suppressDays: number }` — when an account contact log
-  records a `PAYMENT_PROMISE` outcome, set `suppressUntil` on the account to
-  `contactedAt + suppressDays`. Default `suppressDays` is 7.
+  records a `PAYMENT_PROMISE` outcome, set the **campaign-local**
+  `CampaignAccountState.suppressUntil` to the promise date (falling back to
+  `contactedAt + suppressDays`). Default `suppressDays` is 7. This suppresses the
+  account for this campaign only; other campaigns remain eligible.
 - `INTENT_MET`: when a contact log records a `RESOLVED` or `PAID` outcome, set
-  `intentStatus = INTENT_MET` on the account, suppressing all future dispatches unless
-  an operator explicitly clears it.
+  `intentStatus = INTENT_MET` on the account (global), suppressing all future
+  dispatches across every campaign unless an operator explicitly clears it.
 - `CALLBACK_REQUESTED`: config `{ suppressHours: number }` — when a contact log records
-  a `CALLBACK_REQUESTED` outcome with a specific date/time extracted by the AI, set
-  `suppressUntil` to that date/time. Falls back to `now + suppressHours` if no
-  specific time was captured.
+  a `CALLBACK_REQUESTED` outcome with a specific date/time extracted by the AI, set the
+  **campaign-local** `CampaignAccountState.suppressUntil` to that date/time. Falls back
+  to `now + suppressHours` if no specific time was captured.
 
 #### Scenario: Payment promise suppresses account until promise date
 
 - **WHEN** a contact log entry is written for account A with outcome `PAYMENT_PROMISE`
 - **AND** the campaign has a `PAYMENT_PROMISE` trigger configured
-- **THEN** the API server updates `PortfolioAccount.suppressUntil` to
-  `contactedAt + suppressDays`
-- **AND** the engine will not dispatch to account A until after `suppressUntil`
+- **THEN** the API server updates the campaign-local `CampaignAccountState.suppressUntil`
+  to the promise date (falling back to `contactedAt + suppressDays`)
+- **AND** the engine will not dispatch to account A under this campaign until after
+  `suppressUntil`
+- **AND** account A remains eligible for dispatch under other campaigns
 
 #### Scenario: Resolved intent permanently suppresses account
 

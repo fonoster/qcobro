@@ -10,6 +10,13 @@ import { WorkspaceSettings } from "./pages/WorkspaceSettings.js";
 import { Profile } from "./pages/Profile.js";
 import { Portfolios } from "./pages/Portfolios.js";
 import { PortfolioDetail } from "./pages/PortfolioDetail.js";
+import { AgentTemplates } from "./pages/AgentTemplates.js";
+import { AgentTemplateDetail } from "./pages/AgentTemplateDetail.js";
+import { Campaigns } from "./pages/Campaigns.js";
+import { CampaignDetail } from "./pages/CampaignDetail.js";
+import { Gestiones } from "./pages/Gestiones.js";
+import { GestionDetail } from "./pages/GestionDetail.js";
+import { Objetivos } from "./pages/Objetivos.js";
 import { RequireAuth } from "./components/RequireAuth.js";
 import { AuthedLayout } from "./components/AuthedLayout.js";
 
@@ -49,6 +56,13 @@ export default function App() {
         <Route path="profile" element={<Profile />} />
         <Route path="portfolios" element={<Portfolios />} />
         <Route path="portfolios/:id" element={<PortfolioDetail />} />
+        <Route path="agent-templates" element={<AgentTemplates />} />
+        <Route path="agent-templates/:id" element={<AgentTemplateDetail />} />
+        <Route path="campaigns" element={<Campaigns />} />
+        <Route path="campaigns/:id" element={<CampaignDetail />} />
+        <Route path="gestiones" element={<Gestiones />} />
+        <Route path="gestiones/:id" element={<GestionDetail />} />
+        <Route path="objetivos" element={<Objetivos />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

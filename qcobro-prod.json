@@ -1,0 +1,16 @@
+{
+  "database": {
+    "url": "postgresql://qcobro:CHANGE_ME@db:5432/qcobro?schema=public"
+  },
+  "identity": {
+    "endpoint": "identity:50051",
+    "httpBridgeUrl": "https://identity.example.com"
+  },
+  "apiserver": {
+    "port": 3000,
+    "timezone": "America/Costa_Rica",
+    "contactLogAuth": {
+      "enabled": true
+    }
+  }
+}
