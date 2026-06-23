@@ -15,6 +15,7 @@ import { qcobroConfigSchema } from "@qcobro/common";
 import { createDispatchOutreach } from "../mods/apiserver/src/functions/outreach/dispatchOutreach.ts";
 import { FonosterOutboundCallClient } from "../mods/apiserver/src/services/fonosterOutboundCallClient.ts";
 import { TwilioSmsClient } from "../mods/apiserver/src/services/twilioSmsClient.ts";
+import { FonosterVoiceApplicationClient } from "../mods/apiserver/src/services/fonosterVoiceApplicationClient.ts";
 
 const config = qcobroConfigSchema.parse(
   JSON.parse(readFileSync(resolve(process.cwd(), "qcobro.json"), "utf8"))
@@ -58,6 +59,22 @@ async function main() {
         "Eres un agente de cobranza amable. El cliente {{firstName}} tiene {{daysPastDue}} días de mora."
     });
     console.log("✅ Voz IA dispatch result:", result);
+    process.exit(0);
+  }
+
+  if (channel === "createapp") {
+    if (!config.fonoster) throw new Error("qcobro.json has no fonoster config");
+    const voice = config.fonoster.voices[0];
+    if (!voice) throw new Error("no voices configured");
+    const client = new FonosterVoiceApplicationClient(config.fonoster);
+    const result = await client.createApplication({
+      name: `Smoke Voz IA ${Date.now()}`,
+      voice: voice.id,
+      systemPrompt: "Eres un agente de cobranza amable y profesional.",
+      firstMessage: "Hola, le llamo de QCobro.",
+      language: "es"
+    });
+    console.log("✅ createApplication result:", result);
     process.exit(0);
   }
 

@@ -98,8 +98,10 @@ export const fonosterConfigSchema = z
       }
     ]),
     /**
-     * Caller-ID numbers (E.164) outbound voice dispatch rotates through. Empty by
-     * default — voice dispatch fails clearly until at least one number is configured.
+     * Caller-ID numbers outbound voice dispatch rotates through. Use the format the
+     * carrier expects — Fonoster passes the number through as given, so whether a
+     * leading "+" is required depends on the carrier (here, no "+", e.g.
+     * `18297340812`). Empty by default — voice dispatch fails clearly until set.
      */
     numbers: z.array(z.string().min(1)).default([]),
     /**

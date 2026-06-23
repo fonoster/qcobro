@@ -28,6 +28,17 @@ Dispatch fns are pure triggers (no DB); the manual procedure records a gestión 
 
 ## Decision log
 
+- 2026-06-23 — Voz IA AUTOPILOT creation fixed + verified live (app 44be86f4…). Fonoster
+  `conversationSettings` requires goodbyeMessage/systemErrorMessage/idleOptions — we only sent
+  firstMessage+systemPrompt, so createApplication threw INVALID_ARGUMENT and agents saved with
+  null appRef (→ dashboard "Voice dispatch requires appRef"). Added
+  `services/autopilotTemplate.json` (static conversation defaults from autopilot.yaml) spread
+  into buildRequest; enabled resolveJsonModule + json in apiserver tsconfig include. Existing
+  Voz IA agents need a manual "Sincronizar" to backfill appRef.
+- 2026-06-23 — Manual-trigger voice calls didn't ring: caller-ID `from` format is
+  carrier-dependent; this carrier needs NO leading "+". Set `fonoster.numbers` to
+  `18297340812` (no +) in config (per user; adapter left untouched). Voz IA + pre-recorded
+  manual triggers confirmed working from the dashboard.
 - 2026-06-22 — LIVE smoke tests passed (scripts/smoke-dispatch.ts, TEMPORARY): Voz IA call
   to +17853178070 rang (Fonoster ref 35d4eec6…); SMS delivered via Twilio (SID SM900c07…).
   Both through the real dispatchOutreach path with Handlebars personalization. Pre-recorded

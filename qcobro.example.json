@@ -45,7 +45,7 @@
         "provider": "elevenlabs"
       }
     ],
-    "numbers": ["+50670000000"]
+    "numbers": ["50670000000"]
   },
   "twilio": {
     "accountSid": "CHANGE_ME",

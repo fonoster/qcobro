@@ -5,6 +5,7 @@ import {
   type VoiceApplicationClient,
   type VoiceApplicationInput
 } from "@qcobro/common";
+import autopilotTemplate from "./autopilotTemplate.json";
 
 type FonosterSettings = NonNullable<FonosterConfig>;
 
@@ -70,6 +71,11 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
         credentials: {},
         config: {
           conversationSettings: {
+            // Static conversation defaults (goodbyeMessage, systemErrorMessage,
+            // idleOptions, allowUserBargeIn) come from the autopilot template
+            // (derived from autopilot.yaml; required by Fonoster). Per-agent
+            // firstMessage + systemPrompt override on top.
+            ...autopilotTemplate.conversationSettings,
             firstMessage: input.firstMessage,
             systemPrompt: input.systemPrompt
           },

@@ -1,0 +1,10 @@
+{
+  "conversationSettings": {
+    "allowUserBargeIn": false,
+    "goodbyeMessage": "Que tenga buen día.",
+    "systemErrorMessage": "Ha ocurrido un error. Por favor contacte directamente a nuestra empresa.",
+    "idleOptions": {
+      "message": "¿Se encuentra en la línea? Necesito confirmar una fecha de pago para su cuenta."
+    }
+  }
+}

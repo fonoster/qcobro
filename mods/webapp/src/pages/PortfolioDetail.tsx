@@ -89,7 +89,7 @@ export function PortfolioDetail() {
           },
           {
             key: "id",
-            header: t("portfolios.detail.col.actions"),
+            header: "",
             align: "center",
             render: (r) => {
               const items: RowAction[] = [
