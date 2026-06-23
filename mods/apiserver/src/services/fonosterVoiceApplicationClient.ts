@@ -54,7 +54,17 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
 
   /** Build the AUTOPILOT application request from the template + Autopilot defaults. */
   private buildRequest(input: VoiceApplicationInput) {
-    const { autopilot } = this.settings;
+    const { autopilot, webhookBaseUrl } = this.settings;
+    // When a public base URL is configured, register the events-hook so the autopilot
+    // posts conversation events back to QCobro (correlated into the gestión). Subscribe
+    // to "all" so both conversation.started (partial capture) and conversation.ended
+    // (transcript + recording) arrive.
+    const eventsHook = webhookBaseUrl
+      ? {
+          url: `${webhookBaseUrl.replace(/\/+$/, "")}/api/voice/events`,
+          events: ["all"]
+        }
+      : undefined;
     return {
       name: input.name,
       type: "AUTOPILOT",
@@ -86,7 +96,8 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
             model: autopilot.llmModel,
             maxTokens: autopilot.maxTokens,
             temperature: autopilot.temperature
-          }
+          },
+          ...(eventsHook ? { eventsHook } : {})
         }
       }
     };

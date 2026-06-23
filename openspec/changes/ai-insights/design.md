@@ -45,10 +45,14 @@ This change is **proposal/spec only**; no code is written here.
 A validated function `generateGestionInsight` takes an injected `InsightGenerator` port
 (`analyze(transcript, context) -> structured analysis`) plus Prisma, following the repo's
 validated-function + DI pattern (testable with a stub, no live LLM in unit tests). The
-production adapter wraps a LangChain chat model built from the `ai` config, exactly like
-Mikro's `createChatModel`. **Why:** consistency with the existing framework, vendor
-portability, and unit-testability. **Alternative considered:** call a provider SDK directly
-— rejected (locks to one vendor, diverges from the autopilot/Mikro pattern).
+production adapter builds a request from the `ai` config and calls the vendor over its
+**REST API** (no SDK dependency), keeping the multi-vendor shape Mikro/the autopilot use
+without adding heavy LangChain packages. A built-in **`mock` provider** synthesizes a
+deterministic analysis offline for dev/demos/tests. **Why:** vendor portability +
+unit-testability with the lightest dependency footprint and a free offline path.
+**Implemented now:** `mock` and `google` (Gemini REST); `openai`/`anthropic` are config-valid
+but their REST adapters are a follow-up. **Alternative considered:** LangChain multi-vendor
+SDKs (as in Mikro) — deferred to avoid three heavy provider packages for one call site.
 
 ### 2. `qcobro.json` `ai` section (optional, fails closed)
 

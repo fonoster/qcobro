@@ -1,42 +1,54 @@
 ## 1. Config
 
-- [ ] 1.1 Add optional `ai` section to `qcobroConfigSchema` (`@qcobro/common/config`):
-      `enabled`, `provider` (google|openai|anthropic), `apiKey`, `model` (default
-      gemini-2.5-flash-class), `temperature`, `maxTokens`, `generation` (onDemand|onIngestion)
-- [ ] 1.2 Add a per-provider model validation (reject invalid model for provider) at load
-- [ ] 1.3 Document the `ai` section in `qcobro.example.json` (disabled by default)
+- [x] 1.1 Add optional `ai` section to `qcobroConfigSchema` (`@qcobro/common/config`):
+      `enabled`, `provider` (mock|google|openai|anthropic), `apiKey`, `model` (default
+      gemini-2.5-flash), `temperature`, `maxTokens`, `generation` (onDemand|onIngestion)
+- [x] 1.2 Add per-provider model validation (reject invalid model for provider) at load
+- [x] 1.3 Document the `ai` section in `qcobro.example.json` (disabled by default)
 
-## 2. LLM port + adapter (mirror Mikro/autopilot)
+## 2. LLM port + adapter
 
-- [ ] 2.1 Define the `InsightGenerator` port + structured-analysis types/schema in
-      `@qcobro/common` (Zod: aiSummary, aiSentiment enum, aiDebtReason, aiResult, aiNextStep)
-- [ ] 2.2 Implement a LangChain multi-vendor adapter (`createChatModel`-style) built from the
-      `ai` config; prompt for JSON in the call's language; Zod-validate the response
-- [ ] 2.3 Wire the adapter into the tRPC context (DI), gated on `ai.enabled`
+- [x] 2.1 Define the `InsightGenerator` port (types/insight) + structured-analysis schema
+      (schemas/insight: aiSummary, aiSentiment enum, aiDebtReason, aiResult, aiNextStep)
+- [x] 2.2 Implement the adapter via REST (lighter than LangChain SDKs): `mock` (offline,
+      deterministic) + `google` (Gemini REST); JSON prompt in the call's language, Zod-validated.
+      `openai`/`anthropic` REST adapters are a follow-up (config-valid, runtime "not implemented")
+- [x] 2.3 Wire the generator into the tRPC context (DI), gated on `ai.enabled`
 
 ## 3. Generation function + transport
 
-- [ ] 3.1 Validated function `generateGestionInsight` (inject `InsightGenerator` + Prisma):
-      transcript-only gating, generate, persist `ai*` fields, idempotent (skip if present)
-- [ ] 3.2 Unit tests incl. a validation-failure case and the "no transcript → no call" case
-- [ ] 3.3 Workspace-scoped tRPC mutation `campaigns.contactLog.generateInsight`
-- [ ] 3.4 `onIngestion` mode: call `generateGestionInsight` from the voice webhook path
+- [x] 3.1 Validated function `generateGestionInsight` (inject generator + Prisma):
+      transcript-only gating, generate, persist `ai*`, idempotent (skip if already analyzed)
+- [x] 3.2 Unit tests (5): generates+persists, cached-skip, no-transcript, disabled, and a
+      validation-failure case
+- [x] 3.3 Workspace-scoped tRPC mutation `campaigns.contactLog.generateInsight`
+- [x] 3.4 `onIngestion` mode: generate from the voice webhook path (best-effort, post-response)
 
 ## 4. Console (web-console delta)
 
-- [ ] 4.1 On opening a Voz IA gestión with a transcript and no analysis (and `onDemand`),
-      call `generateInsight`, show a generating state, then render the analysis
-- [ ] 4.2 Keep the "Análisis IA pendiente" state when disabled or before generation
-- [ ] 4.3 i18n keys for the generating state (en + es)
+- [x] 4.1 On opening a Voz IA gestión with a transcript and no analysis, call `generateInsight`,
+      then refetch so the analysis renders
+- [x] 4.2 Generating / "Análisis IA pendiente" states in the analysis section
+- [x] 4.3 i18n keys for the generating state (en + es)
 
 ## 5. Tests + verification
 
-- [ ] 5.1 E2E: enabled `onDemand` — open a Voz IA gestión with a transcript, assert the
-      analysis renders and is cached on reopen (LLM stubbed in the dev/test config)
-- [ ] 5.2 E2E: disabled — analysis stays pending, no request made
-- [ ] 5.3 Confirm one-way channels (SMS/Pre-grabada/Email) are unaffected (generic insight)
+- [x] 5.1 Generation/cache/gate/disabled behavior covered by the unit tests (3.2)
+- [ ] 5.2 e2e `ai-insights.spec.ts` (on-open analysis section) — WRITTEN but currently
+      BLOCKED: every e2e signs up + creates a workspace, and `createFirstWorkspace` is
+      regressed on `main` (the merged `workspaces.summaries`/CreateWorkspace change no longer
+      redirects after creating the first workspace). Unblock that, then this e2e runs.
+- [x] 5.3 One-way channels (SMS/Pre-grabada/Email) unaffected — they have no transcript so
+      analysis never runs; their generic insight is unchanged
 
 ## 6. Follow-ups (track, not in this change)
 
 - [ ] 6.1 Secure the `POST /api/voice/events` webhook (auth/signing + workspace scoping)
-- [ ] 6.2 Optional: `aiAnalyzedAt` marker, fallback vendor, batch backfill, eval harness
+- [ ] 6.2 `openai` + `anthropic` REST adapters
+- [ ] 6.3 Optional: `aiAnalyzedAt` marker, fallback vendor, batch backfill, eval harness
+
+## Status
+
+Implementation complete and static-green: typecheck, lint, build, and unit tests (74
+apiserver + 10 common) all pass. Live e2e is blocked by an unrelated `createFirstWorkspace`
+regression on `main` (see 5.2) — flagged for the user; not caused by this change.

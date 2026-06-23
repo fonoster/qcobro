@@ -8,7 +8,8 @@ import {
   updateCampaignStatusSchema,
   deleteCampaignSchema,
   createContactLogSchema,
-  updateObjectiveSchema
+  updateObjectiveSchema,
+  generateInsightInputSchema
 } from "@qcobro/common";
 import { router, workspaceProcedure } from "../trpc.js";
 import { createCreateCampaign } from "../../functions/campaigns/createCampaign.js";
@@ -16,6 +17,7 @@ import { createUpdateCampaign } from "../../functions/campaigns/updateCampaign.j
 import { createUpdateCampaignStatus } from "../../functions/campaigns/updateCampaignStatus.js";
 import { createDeleteCampaign } from "../../functions/campaigns/deleteCampaign.js";
 import { createCreateContactLog } from "../../functions/campaigns/createContactLog.js";
+import { createGenerateGestionInsight } from "../../functions/voice/generateGestionInsight.js";
 
 /** Gestión (contact-log) procedures scoped to the active workspace. */
 const contactLogRouter = router({
@@ -82,7 +84,25 @@ const contactLogRouter = router({
 
   create: workspaceProcedure
     .input(createContactLogSchema)
-    .mutation(({ input, ctx }) => createCreateContactLog(ctx.prisma as never)(input))
+    .mutation(({ input, ctx }) => createCreateContactLog(ctx.prisma as never)(input)),
+
+  // Generate (and persist) the AI analysis for a gestión from its transcript. The
+  // gestión is workspace-scoped first; generation no-ops when insights are disabled,
+  // the gestión has no transcript, or it was already analyzed.
+  generateInsight: workspaceProcedure
+    .input(generateInsightInputSchema)
+    .mutation(async ({ input, ctx }) => {
+      await ctx.prisma.accountContactLog.findFirstOrThrow({
+        where: {
+          id: input.id,
+          portfolioAccount: { portfolio: { workspaceRef: ctx.workspace.accessKeyId } }
+        }
+      });
+      return createGenerateGestionInsight({
+        prisma: ctx.prisma as never,
+        generator: ctx.insightGenerator
+      })(input);
+    })
 });
 
 /** Objective procedures scoped to the active workspace. */

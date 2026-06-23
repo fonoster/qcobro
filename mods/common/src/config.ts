@@ -110,7 +110,13 @@ export const fonosterConfigSchema = z
      * per-customer script is passed as call metadata; this ref is deployment-wide,
      * not per agent. Voz IA uses each template's own AUTOPILOT app ref instead.
      */
-    prerecordedAppRef: z.string().min(1).optional()
+    prerecordedAppRef: z.string().min(1).optional(),
+    /**
+     * Externally reachable base URL of the apiserver for Fonoster callbacks (e.g. an
+     * ngrok URL). When set, syncing a Voz IA agent registers the autopilot events-hook
+     * at `${webhookBaseUrl}/api/voice/events` so conversation events return as gestiones.
+     */
+    webhookBaseUrl: z.string().url().optional()
   })
   .optional();
 
@@ -140,6 +146,55 @@ export const twilioConfigSchema = z
 
 export type TwilioConfig = z.infer<typeof twilioConfigSchema>;
 
+/**
+ * AI-insight generation. Produces a gestión's structured analysis from its
+ * conversation transcript. Optional — when absent or `enabled:false`, no LLM is
+ * called and gestiones keep their unanalyzed / generic-insight state.
+ *
+ * Providers mirror the Fonoster autopilot / Mikro vendor set, reached over each
+ * vendor's REST API (no SDK dependency). `mock` is an offline provider that
+ * synthesizes a deterministic analysis from the transcript — for local dev,
+ * demos, and tests, with no key and no network/cost.
+ */
+export const aiProviderSchema = z.enum(["mock", "google", "openai", "anthropic"]);
+export type AiProvider = z.infer<typeof aiProviderSchema>;
+
+/** Valid models per provider; used to reject misconfiguration at load. */
+export const AI_MODELS: Record<AiProvider, string[]> = {
+  mock: ["mock"],
+  google: ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro", "gemini-2.0-flash"],
+  openai: ["gpt-4o", "gpt-4o-mini", "gpt-4.1"],
+  anthropic: ["claude-3-5-sonnet-latest", "claude-3-5-haiku-latest"]
+};
+
+export const aiConfigSchema = z
+  .object({
+    enabled: z.boolean().default(false),
+    provider: aiProviderSchema.default("mock"),
+    apiKey: z.string().optional(),
+    model: z.string().default("gemini-2.5-flash"),
+    temperature: z.number().min(0).max(2).default(0),
+    maxTokens: z.number().int().positive().default(600),
+    /** When the analysis is produced. `onDemand` = on first detail open (then
+     * cached); `onIngestion` = when the transcript is first stored. */
+    generation: z.enum(["onDemand", "onIngestion"]).default("onDemand")
+  })
+  .superRefine((cfg, ctx) => {
+    if (!AI_MODELS[cfg.provider].includes(cfg.model)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["model"],
+        message: `Invalid model "${cfg.model}" for provider "${cfg.provider}". Valid: ${AI_MODELS[cfg.provider].join(", ")}`
+      });
+    }
+    // apiKey is optional here: it may be omitted and sourced from the Fonoster
+    // integrations file by provider (the adapter resolves it and errors clearly if
+    // none is found at call time).
+  })
+  .optional();
+
+export type AiConfig = z.infer<typeof aiConfigSchema>;
+
 export const qcobroConfigSchema = z.object({
   /** Application (apiserver) database. */
   database: z.object({ url: z.string().min(1) }),
@@ -168,7 +223,8 @@ export const qcobroConfigSchema = z.object({
       contactLogAuth: { enabled: false }
     }),
   fonoster: fonosterConfigSchema,
-  twilio: twilioConfigSchema
+  twilio: twilioConfigSchema,
+  ai: aiConfigSchema
 });
 
 export type IdentityConfig = z.infer<typeof identityConfigSchema>;

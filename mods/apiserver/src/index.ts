@@ -7,6 +7,8 @@ import { config } from "./config.js";
 import { prisma } from "./db.js";
 import { createContactLogHandler } from "./rest/contactLogs.js";
 import { createVoiceEventsHandler } from "./rest/voiceEvents.js";
+import { createInsightGenerator } from "./services/insightGenerator.js";
+import { synthesizeSpeech } from "./services/elevenLabsTts.js";
 import { startVoiceServer } from "./voice/voiceServer.js";
 
 const app = express();
@@ -25,7 +27,39 @@ app.post("/api/contact-logs", createContactLogHandler(prisma, config));
 
 // Fonoster autopilot events-hook for Voz IA calls (conversation.started / .ended).
 // FIXME(security): UNAUTHENTICATED — must be secured very soon (see handler note).
-app.post("/api/voice/events", createVoiceEventsHandler(prisma as never));
+app.post(
+  "/api/voice/events",
+  createVoiceEventsHandler(prisma as never, {
+    generator: createInsightGenerator(config.ai),
+    generation: config.ai?.generation ?? "onDemand"
+  })
+);
+
+// TEMPORARY (demo): synthesize a pre-recorded script to audio via ElevenLabs so the
+// Pre-grabada detail can play a real recording. Cached in-memory per voice+text.
+const ttsCache = new Map<string, Buffer>();
+const DEMO_TTS_VOICE = config.fonoster?.voices?.[0]?.id ?? "86V9x9hrQds83qf7zaGn";
+app.get("/api/voice/tts", async (req, res) => {
+  const text = typeof req.query.text === "string" ? req.query.text : "";
+  const voiceId = (typeof req.query.voiceId === "string" && req.query.voiceId) || DEMO_TTS_VOICE;
+  if (!text) {
+    res.status(400).json({ error: "text is required" });
+    return;
+  }
+  const key = `${voiceId}:${text}`;
+  try {
+    let audio = ttsCache.get(key);
+    if (!audio) {
+      audio = await synthesizeSpeech(text, voiceId);
+      ttsCache.set(key, audio);
+    }
+    res.setHeader("content-type", "audio/mpeg");
+    res.setHeader("cache-control", "public, max-age=86400");
+    res.send(audio);
+  } catch {
+    res.status(503).json({ error: "TTS unavailable" });
+  }
+});
 
 // Internal API. A future change can mount a public REST/OpenAPI router on a
 // separate path (e.g. /api) alongside this one.

@@ -1,6 +1,7 @@
 import type { ComponentType, ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { X, Sparkles, CheckCheck, Play, PhoneCall, MessagesSquare, Target } from "lucide-react";
+import { X, Sparkles, CheckCheck, PhoneCall, MessagesSquare, Target } from "lucide-react";
 import type { TranscriptLine } from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
@@ -95,6 +96,22 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
   const oneWay = !!g && ONE_WAY.includes(g.agentType);
   const isVoiceAi = g?.agentType === "VOICE_AI";
   const ChannelIcon = g ? channelIcon(g.agentType) : channelIcon("SMS");
+
+  // On-demand AI analysis: when a Voz IA gestión has a transcript but no analysis yet,
+  // request generation once. The server no-ops if insights are disabled or already
+  // analyzed; on success we refetch so the analysis renders.
+  const utils = trpc.useUtils();
+  const generateInsight = trpc.campaigns.contactLog.generateInsight.useMutation({
+    onSuccess: () => utils.campaigns.contactLog.get.invalidate({ id })
+  });
+  const requestedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!g || g.agentType !== "VOICE_AI") return;
+    if (transcript.length === 0 || g.aiSummary) return;
+    if (requestedFor.current === id) return;
+    requestedFor.current = id;
+    generateInsight.mutate({ id });
+  }, [g, id, transcript.length, generateInsight]);
 
   const hasAnalysis = !!(
     g &&
@@ -242,7 +259,11 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                 )}
               </div>
             ) : (
-              <p className="text-sm text-slate-500">{t("gestiones.detail.analysisPending")}</p>
+              <p className="text-sm text-slate-500">
+                {generateInsight.isPending
+                  ? t("gestiones.detail.analysisGenerating")
+                  : t("gestiones.detail.analysisPending")}
+              </p>
             )}
           </Section>
         )}
@@ -296,15 +317,11 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
               </div>
             ) : g!.agentType === "VOICE_PRERECORDED" ? (
               <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white">
-                    <Play className="h-4 w-4" />
-                  </span>
-                  <div className="h-1 flex-1 rounded-full bg-slate-200">
-                    <div className="h-1 w-2/3 rounded-full bg-emerald-500" />
-                  </div>
-                  {durationStr && <span className="text-xs text-slate-500">{durationStr}</span>}
-                </div>
+                <audio
+                  controls
+                  className="w-full"
+                  src={`/api/voice/tts?text=${encodeURIComponent(messageBody ?? "")}`}
+                />
                 <div className="rounded-lg border border-slate-200 px-4 py-3">
                   <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
                     {t("gestiones.detail.script")}

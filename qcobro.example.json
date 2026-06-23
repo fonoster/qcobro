@@ -1,4 +1,5 @@
 {
+  "timezone": "America/Costa_Rica",
   "database": {
     "url": "postgresql://qcobro:CHANGE_ME@db:5432/qcobro?schema=public"
   },
@@ -9,7 +10,6 @@
   "apiserver": {
     "port": 3000,
     "voicePort": 50061,
-    "timezone": "America/Costa_Rica",
     "contactLogAuth": {
       "enabled": true
     }
@@ -19,6 +19,7 @@
     "apiKey": "CHANGE_ME",
     "apiSecret": "CHANGE_ME",
     "prerecordedAppRef": "CHANGE_ME",
+    "webhookBaseUrl": "https://your-tunnel.ngrok-free.dev",
     "autopilot": {
       "llmModel": "gemini-2.5-flash"
     },
@@ -51,5 +52,14 @@
     "accountSid": "CHANGE_ME",
     "authToken": "CHANGE_ME",
     "fromNumbers": ["+15550000000"]
+  },
+  "ai": {
+    "enabled": false,
+    "provider": "google",
+    "apiKey": "CHANGE_ME",
+    "model": "gemini-2.5-flash",
+    "temperature": 0,
+    "maxTokens": 600,
+    "generation": "onDemand"
   }
 }

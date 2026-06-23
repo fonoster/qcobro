@@ -41,10 +41,13 @@ regardless of language.
 ### Requirement: AI insights are configured in qcobro.json
 
 The deployment SHALL configure AI insights through an optional `ai` section in `qcobro.json`
-with: `enabled`, `provider` (`google` | `openai` | `anthropic`), `apiKey`, `model` (default
-a Google `gemini-2.5-flash`-class model), `temperature`, `maxTokens`, and `generation`
-(`onDemand` | `onIngestion`). When the `ai` section is absent or `enabled` is false, the
-system SHALL NOT call any LLM and SHALL leave AI fields unset.
+with: `enabled`, `provider` (`mock` | `google` | `openai` | `anthropic`), `apiKey`, `model`
+(default a Google `gemini-2.5-flash`-class model), `temperature`, `maxTokens`, and
+`generation` (`onDemand` | `onIngestion`). Providers are reached over their REST APIs (no
+SDK dependency); `mock` is an offline provider that synthesizes a deterministic analysis
+from the transcript (no key, network, or cost) for local dev, demos, and tests. When the
+`ai` section is absent or `enabled` is false, the system SHALL NOT call any LLM and SHALL
+leave AI fields unset.
 
 #### Scenario: AI insights disabled by default
 

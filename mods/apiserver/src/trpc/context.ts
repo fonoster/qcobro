@@ -5,6 +5,7 @@ import { createIdentityClient } from "@fonoster/identity-client";
 import { FonosterVoiceApplicationClient } from "../services/fonosterVoiceApplicationClient.js";
 import { FonosterOutboundCallClient } from "../services/fonosterOutboundCallClient.js";
 import { TwilioSmsClient } from "../services/twilioSmsClient.js";
+import { createInsightGenerator } from "../services/insightGenerator.js";
 import { config } from "../config.js";
 
 export interface AuthedUser {
@@ -42,6 +43,10 @@ const twilioFromNumbers = config.twilio?.fromNumbers ?? [];
 // Shared EXTERNAL app ref for all pre-recorded voice dispatch (points at the
 // embedded VoiceServer). Voz IA uses each template's own AUTOPILOT ref instead.
 const fonosterPrerecordedAppRef = config.fonoster?.prerecordedAppRef ?? null;
+
+// AI-insight generator, gated on the `ai` config. Null when absent/disabled — the
+// generate-insight path then no-ops (gestiones stay unanalyzed).
+const insightGenerator = createInsightGenerator(config.ai);
 
 function headerValue(value: string | string[] | undefined): string | null {
   if (Array.isArray(value)) return value[0] ?? null;
@@ -87,7 +92,9 @@ export async function createContext(opts: CreateExpressContextOptions) {
     smsClient,
     fonosterNumbers,
     twilioFromNumbers,
-    fonosterPrerecordedAppRef
+    fonosterPrerecordedAppRef,
+    insightGenerator,
+    aiGeneration: config.ai?.generation ?? "onDemand"
   };
 }
 
