@@ -412,7 +412,11 @@ a conversation transcript. The AI insight describes what was done (e.g. reminder
 rather than the absence of a response.
 
 For Voz IA it SHALL additionally show the recording, the transcript, the full AI analysis
-(sentiment, debt reason, result, next step), and any linked objectives.
+(sentiment, debt reason, result, next step), and any linked objectives. When AI insights are
+enabled, generation is `onDemand`, and a Voz IA gestión has a transcript but no analysis yet,
+opening the detail SHALL request analysis, show a generating state, and then display the
+persisted analysis; when AI insights are disabled the analysis section SHALL show a pending
+state and no analysis is requested.
 
 #### Scenario: SMS gestión shows the sent message and delivery, no transcript
 
@@ -426,3 +430,17 @@ For Voz IA it SHALL additionally show the recording, the transcript, the full AI
 - **WHEN** the operator opens a Voz IA gestión that has a recording and transcript
 - **THEN** the audio player and transcript are shown alongside the full AI analysis and any
   linked objectives
+
+#### Scenario: Voz IA analysis is generated on first open when missing
+
+- **WHEN** AI insights are enabled (generation `onDemand`) and the operator opens a Voz IA
+  gestión that has a transcript but no analysis yet
+- **THEN** the panel shows a generating state, the analysis is produced from the transcript
+  and persisted, and the analysis is then displayed
+- **AND** opening the same gestión again shows the persisted analysis without regenerating
+
+#### Scenario: Analysis stays pending when AI insights are disabled
+
+- **WHEN** the operator opens a Voz IA gestión with a transcript but no analysis and AI
+  insights are disabled
+- **THEN** the analysis section shows a pending state and no LLM request is made
