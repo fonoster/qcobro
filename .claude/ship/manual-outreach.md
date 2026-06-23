@@ -28,6 +28,13 @@ Dispatch fns are pure triggers (no DB); the manual procedure records a gestión 
 
 ## Decision log
 
+- 2026-06-22 — LIVE smoke tests passed (scripts/smoke-dispatch.ts, TEMPORARY): Voz IA call
+  to +17853178070 rang (Fonoster ref 35d4eec6…); SMS delivered via Twilio (SID SM900c07…).
+  Both through the real dispatchOutreach path with Handlebars personalization. Pre-recorded
+  still needs a pre-recorded Fonoster app (sync not built — deferred).
+- 2026-06-22 — Config tweaks (commit 1f2438b): moved voices under `fonoster.voices`; removed
+  `autopilot.ttsProductRef`, now derived per voice via `ttsProductRefForVoice` → `tts.<provider>`
+  (shared Voz IA + pre-recorded). Normalized qcobro.json voice providers to bare names.
 - 2026-06-22 — Backend trigger layer shipped (commit 56a4b9e): channel-dispatch capability
   fully built + unit-tested + pushed. Next: human-gated Pencil modal design → webapp → e2e.
 - 2026-06-22 — Proposed manual-outreach (split from campaigns-core dispatch deferral).
