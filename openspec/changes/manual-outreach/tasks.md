@@ -19,6 +19,7 @@
 - [x] 3.3 `dispatchOutreach` validated function (routes voice via Fonoster + SMS via Twilio)
 - [x] 3.4 Wire clients + number pools into the tRPC context
 - [x] 3.5 `outreach.dispatch` tRPC procedure (load account/template/portfolio, dispatch, record gestión)
+- [x] 3.6 Embedded Fonoster VoiceServer for pre-recorded (EXTERNAL app) on `apiserver.voicePort`; reads metadata + Say verb (logs play-ready string for now)
 
 ## 4. Webapp — manual outreach modal
 

@@ -139,6 +139,12 @@ export const qcobroConfigSchema = z.object({
     .object({
       port: z.number().default(3000),
       /**
+       * Port for the embedded Fonoster VoiceServer (external voice application).
+       * Pre-recorded voice agents are EXTERNAL Fonoster apps that call back into
+       * this server; it answers and plays the rendered script via the Say verb.
+       */
+      voicePort: z.number().default(50061),
+      /**
        * Deployment-wide IANA timezone for interpreting campaign wall-clock
        * outreach windows (`startTime`/`endTime`). Per-workspace zones deferred.
        */
@@ -146,7 +152,12 @@ export const qcobroConfigSchema = z.object({
       /** External contact-log ingress (`POST /api/contact-logs`) auth gate. */
       contactLogAuth: z.object({ enabled: z.boolean().default(false) }).default({ enabled: false })
     })
-    .default({ port: 3000, timezone: "America/Costa_Rica", contactLogAuth: { enabled: false } }),
+    .default({
+      port: 3000,
+      voicePort: 50061,
+      timezone: "America/Costa_Rica",
+      contactLogAuth: { enabled: false }
+    }),
   fonoster: fonosterConfigSchema,
   twilio: twilioConfigSchema
 });

@@ -6,6 +6,7 @@ import { createContext } from "./trpc/context.js";
 import { config } from "./config.js";
 import { prisma } from "./db.js";
 import { createContactLogHandler } from "./rest/contactLogs.js";
+import { startVoiceServer } from "./voice/voiceServer.js";
 
 const app = express();
 const port = config.apiserver.port;
@@ -34,3 +35,6 @@ app.use(
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
+// External voice application for pre-recorded agents (own port).
+startVoiceServer();
