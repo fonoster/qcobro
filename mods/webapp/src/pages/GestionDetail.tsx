@@ -1,11 +1,19 @@
 import type { ComponentType, ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { X, Sparkles, CheckCheck, Play } from "lucide-react";
+import { X, Sparkles, CheckCheck, Play, PhoneCall, MessagesSquare, Target } from "lucide-react";
+import type { TranscriptLine } from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { channelIcon, type Channel } from "../lib/channelIcon.js";
 
 const ONE_WAY: Channel[] = ["SMS", "VOICE_PRERECORDED", "EMAIL"];
+
+const currency = (n: number) =>
+  new Intl.NumberFormat("es", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0
+  }).format(n);
 
 function Section({
   icon: Icon,
@@ -58,24 +66,55 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         contactedAt: string;
         durationSeconds: number | null;
         aiSummary: string | null;
+        aiSentiment: string | null;
+        aiDebtReason: string | null;
+        aiResult: string | null;
+        aiNextStep: string | null;
         channelData: Record<string, unknown> | null;
         portfolioAccount: { fullName: string; externalId: string; phone: string | null };
         campaign: { name: string } | null;
+        objectives: {
+          id: string;
+          type: string;
+          amount: number | null;
+          dueDate: string;
+          status: string;
+        }[];
       }
     | undefined;
 
   const messageBody = g?.channelData?.messageBody as string | undefined;
   const subject = g?.channelData?.subject as string | undefined;
+  const recordingUrl = g?.channelData?.recordingUrl as string | undefined;
+  const transcript = (g?.channelData?.transcript as TranscriptLine[] | undefined) ?? [];
   const toNumber = (g?.channelData?.to as string | undefined) ?? g?.portfolioAccount.phone ?? null;
   const timeStr = g
     ? new Date(g.contactedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : "";
   const durationStr = formatDuration(g?.durationSeconds);
   const oneWay = !!g && ONE_WAY.includes(g.agentType);
+  const isVoiceAi = g?.agentType === "VOICE_AI";
   const ChannelIcon = g ? channelIcon(g.agentType) : channelIcon("SMS");
 
-  // Insight: real AI summary when present (Voz IA); otherwise a generic per-channel line
-  // for one-way channels (no conversation to analyse — see gestiones.insight.*).
+  const hasAnalysis = !!(
+    g &&
+    (g.aiSummary || g.aiSentiment || g.aiDebtReason || g.aiResult || g.aiNextStep)
+  );
+  const analysisCells: [string, string][] = g
+    ? ([
+        g.aiSentiment
+          ? [
+              t("gestiones.detail.sentiment"),
+              t(`gestiones.sentiment.${g.aiSentiment}` as Parameters<typeof t>[0])
+            ]
+          : null,
+        g.aiDebtReason ? [t("gestiones.detail.debtReason"), g.aiDebtReason] : null,
+        g.aiResult ? [t("gestiones.detail.result"), g.aiResult] : null,
+        g.aiNextStep ? [t("gestiones.detail.nextStep"), g.aiNextStep] : null
+      ].filter(Boolean) as [string, string][])
+    : [];
+
+  // One-way insight: real AI summary when present, otherwise a generic per-channel line.
   const insight = g
     ? (g.aiSummary ??
       (oneWay ? t(`gestiones.insight.${g.agentType}` as Parameters<typeof t>[0]) : null))
@@ -119,7 +158,128 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
 
       {/* Body */}
       <div className="flex flex-col gap-6 p-6">
-        {/* Sent content (one-way channels) */}
+        {/* Voz IA: call player */}
+        {isVoiceAi && (
+          <Section icon={PhoneCall} iconClass="text-emerald-700" title={t("gestiones.detail.call")}>
+            <div className="rounded-xl bg-emerald-700 p-4 text-white">
+              <div className="mb-3 flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+                  <PhoneCall className="h-4 w-4" />
+                </span>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold">{t("gestiones.detail.call")}</span>
+                  <span className="text-xs text-emerald-100">
+                    {t("agents.type.VOICE_AI")}
+                    {g?.campaign?.name ? ` · ${g.campaign.name}` : ""}
+                  </span>
+                </div>
+              </div>
+              {recordingUrl ? (
+                <audio controls src={recordingUrl} className="w-full" />
+              ) : (
+                <p className="text-xs text-emerald-100">
+                  {t("gestiones.detail.recordingUnavailable")}
+                </p>
+              )}
+            </div>
+          </Section>
+        )}
+
+        {/* Voz IA: transcript */}
+        {isVoiceAi && transcript.length > 0 && (
+          <Section
+            icon={MessagesSquare}
+            iconClass="text-emerald-700"
+            title={t("gestiones.detail.transcript")}
+          >
+            <div className="flex flex-col gap-2">
+              {transcript.map((line, i) =>
+                line.role === "agent" ? (
+                  <div key={i} className="flex justify-end">
+                    <div className="max-w-[85%] rounded-2xl rounded-br-sm border border-emerald-100 bg-emerald-50 px-3.5 py-2.5">
+                      <span className="text-[11px] font-semibold text-emerald-700">
+                        {t("gestiones.detail.agentSpeaker")}
+                      </span>
+                      <p className="text-sm leading-relaxed text-emerald-900">{line.text}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div key={i} className="flex justify-start">
+                    <div className="max-w-[85%] rounded-2xl rounded-bl-sm border border-slate-200 bg-slate-100 px-3.5 py-2.5">
+                      <span className="text-[11px] font-semibold text-slate-400">
+                        {t("gestiones.detail.customerSpeaker")}
+                      </span>
+                      <p className="text-sm leading-relaxed text-slate-700">{line.text}</p>
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          </Section>
+        )}
+
+        {/* Voz IA: full AI analysis */}
+        {isVoiceAi && (
+          <Section
+            icon={Sparkles}
+            iconClass="text-violet-600"
+            title={t("gestiones.detail.analysis")}
+          >
+            {hasAnalysis ? (
+              <div className="flex flex-col gap-3">
+                {g?.aiSummary && (
+                  <p className="text-sm leading-relaxed text-slate-600">{g.aiSummary}</p>
+                )}
+                {analysisCells.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {analysisCells.map(([label, value]) => (
+                      <div key={label} className="flex flex-col gap-0.5 rounded-lg bg-slate-50 p-3">
+                        <span className="text-xs text-slate-400">{label}</span>
+                        <span className="text-sm font-medium text-slate-700">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">{t("gestiones.detail.analysisPending")}</p>
+            )}
+          </Section>
+        )}
+
+        {/* Voz IA: linked objectives */}
+        {isVoiceAi && g && g.objectives.length > 0 && (
+          <Section
+            icon={Target}
+            iconClass="text-emerald-700"
+            title={t("gestiones.detail.objectives")}
+          >
+            <div className="flex flex-col gap-2">
+              {g.objectives.map((o) => (
+                <div
+                  key={o.id}
+                  className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3"
+                >
+                  <Target className="h-5 w-5 shrink-0 text-emerald-700" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-emerald-900">
+                      {t(`objetivos.type.${o.type}` as Parameters<typeof t>[0])}
+                    </span>
+                    <span className="text-sm text-emerald-700">
+                      {o.amount != null ? `${currency(o.amount)} · ` : ""}
+                      {new Date(o.dueDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <span className="ml-auto rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">
+                    {t(`objetivos.status.${o.status}` as Parameters<typeof t>[0])}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* One-way channels: sent content */}
         {oneWay && (
           <Section icon={ChannelIcon} iconClass="text-emerald-700" title={sentTitle}>
             {!messageBody ? (
@@ -168,8 +328,8 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
           </Section>
         )}
 
-        {/* AI insight */}
-        {g && insight && (
+        {/* One-way channels: AI insight */}
+        {oneWay && g && insight && (
           <Section
             icon={Sparkles}
             iconClass="text-violet-600"

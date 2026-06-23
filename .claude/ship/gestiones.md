@@ -1,7 +1,7 @@
 # Ship checkpoint — gestiones
 
 Started: 2026-06-23
-Current stage: 5 — Sync (gate)
+Current stage: 5 done (synced + committed) — next: Voz IA + webhook, then Objetivos
 
 **Scope:** Operator console gets the **Gestiones** (outreach history: list + Detalle de
 gestión) and **Objetivos** (KPI strip + table, replaces Promesas de Pago) sections, plus
@@ -13,15 +13,15 @@ gestión. SMS/Pre-recorded are one-way (no callback); their AI insight reflects 
 
 **Detected surfaces:** OpenSpec: yes · Pencil: yes (active `pencil.pen`, reference `pencil-old.pen`) · Storybook: yes · E2E: yes (Playwright)
 
-| #   | Stage           | Status      | Notes                                                                                                                         |
-| :-- | :-------------- | :---------- | :---------------------------------------------------------------------------------------------------------------------------- |
-| 0   | Frame           | done        | Scope expanded to include Voz IA webhook (user-approved).                                                                     |
-| 1   | Design (Pencil) | done        | 6 blocks built + approved: Gestiones list, 4 channel detail panels, Objetivos. Partial-blocks + notes approach.               |
-| 2   | Spec reconcile  | done        | Narrowed to Gestiones (list + channel-aware detail), SMS first; Objetivos/webhook/sidebar-Objetivos deferred. openspec valid. |
-| 3   | Build           | done        | SMS slice: list refined (Canal + Resumen IA, monochrome); channel-aware detail w/ SMS branch; persist SMS body; i18n en+es.   |
-| 4   | Test            | done        | New e2e `gestiones-sms.spec.ts` passing; unit 65 pass; lint + typecheck green.                                                |
-| 5   | Sync            | in-progress | GATE — awaiting approval to promote delta into main specs.                                                                    |
-| 6   | Archive         | pending     | Hold: change stays open for the remaining channels (Pre-grabada, Email, Voz IA + webhook) and Objetivos.                      |
+| #   | Stage           | Status  | Notes                                                                                                                               |
+| :-- | :-------------- | :------ | :---------------------------------------------------------------------------------------------------------------------------------- |
+| 0   | Frame           | done    | Scope expanded to include Voz IA webhook (user-approved).                                                                           |
+| 1   | Design (Pencil) | done    | 6 blocks built + approved: Gestiones list, 4 channel detail panels, Objetivos. Partial-blocks + notes approach.                     |
+| 2   | Spec reconcile  | done    | Narrowed to Gestiones (list + channel-aware detail), SMS first; Objetivos/webhook/sidebar-Objetivos deferred. openspec valid.       |
+| 3   | Build           | done    | SMS slice: list refined (Canal + Resumen IA, monochrome); channel-aware detail w/ SMS branch; persist SMS body; i18n en+es.         |
+| 4   | Test            | done    | New e2e `gestiones-sms.spec.ts` passing; unit 65 pass; lint + typecheck green.                                                      |
+| 5   | Sync            | done    | Promoted Gestiones list + channel-aware detail into `openspec/specs/web-console`. Committed on `feat/gestiones-channels` (063d337). |
+| 6   | Archive         | pending | Hold: change stays open for the remaining channels (Voz IA + webhook) and Objetivos.                                                |
 
 Status values: `pending` · `in-progress` · `done` · `skipped` (with reason).
 
@@ -64,6 +64,15 @@ Status values: `pending` · `in-progress` · `done` · `skipped` (with reason).
 
 Newest first. One line per meaningful decision or stage transition.
 
+- 2026-06-23 — Voz IA channel done: `/api/voice/events` webhook (started+ended) + validated
+  `ingestVoiceEvent` (correlate by callRef; partial-on-start guaranteed by the dispatch
+  record) + 4 unit tests; rich detail panel (working audio player, transcript bubbles, full
+  analysis grid, linked objetivo). e2e covers all 4 channels. `scripts/seed-voz-gestiones.ts`
+  seeds via the real endpoints. Webhook UNAUTH (FIXME) + real LLM analysis still deferred.
+  69 unit + 10 common pass, lint/typecheck/e2e green. Remaining: Objetivos.
+- 2026-06-23 — Synced web-console delta → main specs (2 requirements added) and committed
+  the one-way-channels work on branch `feat/gestiones-channels` (063d337). Not pushed.
+  Unrelated working-tree change `UserMenu.tsx` (removes user-menu email line) left unstaged.
 - 2026-06-23 — Pre-grabada + Email channels done: channel-aware one-way detail (player+guion
   for pre-grabada, email card for email), generic per-channel AI insight via i18n (no LLM,
   the agreed money-saving approach), shared `lib/channelIcon`. e2e covers all 3 one-way

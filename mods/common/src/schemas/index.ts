@@ -6,3 +6,4 @@ export * from "./agentTemplates.js";
 export * from "./campaigns.js";
 export * from "./contactLog.js";
 export * from "./dispatch.js";
+export * from "./voiceEvent.js";

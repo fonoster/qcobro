@@ -38,9 +38,21 @@
 - [x] 5.3 Generic per-channel AI insight via i18n (no LLM) for one-way channels
 - [x] 5.4 e2e `gestiones-channels.spec.ts` seeds + verifies all three one-way panels. Green.
 
+## 6. Build — Voz IA channel + webhook — DONE
+
+- [x] 6.1 `@qcobro/common` voice-event schema + `normalizeChatHistory`
+- [x] 6.2 Validated function `ingestVoiceEvent` (correlate by callRef; started → partial
+      marker, ended → transcript + recording + duration) + 4 unit tests incl. validation-failure
+- [x] 6.3 `POST /api/voice/events` webhook (handles started + ended; UNAUTHENTICATED with
+      loud FIXME(security)); mounted in index.ts
+- [x] 6.4 Voz IA detail branch: working audio player + transcript bubbles + full AI analysis
+      grid + linked objetivo callout + metadata
+- [x] 6.5 e2e seeds a Voz IA gestión and verifies player/transcript/analysis/objetivo
+- [x] 6.6 `scripts/seed-voz-gestiones.ts` — seeds via the real endpoints for manual review
+
 ## Deferred (follow-ups, not this pass)
 
 - [ ] Objetivos list implementation (page + sidebar nav item)
-- [ ] Voz IA detail branch (player + transcript + full analysis + objetivo) +
-      `CONVERSATION_ENDED` webhook ingestion (with auth follow-up); real LLM insight
-      (generate-once-at-ingestion, or lazy-on-open + cache if cost matters)
+- [ ] Real LLM analysis for Voz IA (generate-once-at-ingestion, or lazy-on-open + cache);
+      currently the webhook attaches transcript + recording, AI fields are produced separately
+- [ ] **Secure `/api/voice/events`** (signed/authenticated + workspace-scoped correlation)

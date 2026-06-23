@@ -13,8 +13,10 @@ const API = "http://localhost:3000";
  * slide-over panel for each (sent content shown; no audio/transcript). Live dispatch
  * is intentionally not exercised. Assumes the dev stack is running.
  */
-test.describe("gestiones — one-way channels", () => {
-  test("list + channel-aware detail panel for SMS, Pre-grabada, Email", async ({ page }) => {
+test.describe("gestiones — channels", () => {
+  test("list + channel-aware detail panel for SMS, Pre-grabada, Email, Voz IA", async ({
+    page
+  }) => {
     const owner = newOwner("gestiones-ch");
     const stamp = Date.now();
     const portfolioName = `Cartera ${stamp}`;
@@ -54,15 +56,27 @@ test.describe("gestiones — one-way channels", () => {
     const listData = (await listRes.json())[0].result.data;
     const accountId = (listData.json ?? listData).items[0].id as string;
 
-    const seeds = [
+    const vozTranscript = [
+      { role: "agent", text: "Buenas tardes, le llamo de QCobro respecto a su cuenta." },
+      { role: "customer", text: "Sí, dígame." },
+      { role: "agent", text: "¿Le gustaría regularizar su saldo el viernes?" }
+    ];
+    const seeds: {
+      agentType: string;
+      outcome?: string;
+      extra?: Record<string, unknown>;
+      channelData: Record<string, unknown>;
+    }[] = [
       {
         agentType: "SMS",
-        aiSummary: "Recordatorio de pago enviado al cliente con enlace de pago en línea.",
+        extra: {
+          aiSummary: "Recordatorio de pago enviado al cliente con enlace de pago en línea."
+        },
         channelData: { to: "+525500000000", messageBody: smsBody }
       },
       {
         agentType: "VOICE_PRERECORDED",
-        durationSeconds: 38,
+        extra: { durationSeconds: 38 },
         channelData: { to: "+525500000001", messageBody: script }
       },
       {
@@ -72,6 +86,25 @@ test.describe("gestiones — one-way channels", () => {
           subject: "Recordatorio de pago",
           messageBody: emailBody
         }
+      },
+      {
+        agentType: "VOICE_AI",
+        outcome: "PAYMENT_PROMISE",
+        extra: {
+          intentMetadata: { promisedAmount: 4820, promisedDate: "2026-06-27T00:00:00.000Z" },
+          aiSummary: "El cliente reconoce la deuda y se compromete a pagar el saldo el viernes.",
+          aiSentiment: "POSITIVE",
+          aiDebtReason: "Falta de liquidez temporal",
+          aiResult: "Promesa de pago",
+          aiNextStep: "Enviar enlace de pago por SMS",
+          durationSeconds: 134
+        },
+        channelData: {
+          to: "+525500000099",
+          providerRef: "call-voz-1",
+          recordingUrl: "https://rec.example/voz.wav",
+          transcript: vozTranscript
+        }
       }
     ];
     for (const s of seeds) {
@@ -80,10 +113,9 @@ test.describe("gestiones — one-way channels", () => {
           portfolioAccountId: accountId,
           agentType: s.agentType,
           contactedAt: new Date().toISOString(),
-          outcome: "OTHER",
+          outcome: s.outcome ?? "OTHER",
           notes: "Contacto manual",
-          ...(s.aiSummary ? { aiSummary: s.aiSummary } : {}),
-          ...(s.durationSeconds ? { durationSeconds: s.durationSeconds } : {}),
+          ...(s.extra ?? {}),
           channelData: s.channelData
         }
       });
@@ -99,7 +131,6 @@ test.describe("gestiones — one-way channels", () => {
       await page.locator("tr", { hasText: channelLabel }).first().click();
       const panel = page.getByRole("dialog");
       await expect(panel).toBeVisible();
-      await expect(panel.getByText("Transcripción")).toHaveCount(0);
       return panel;
     };
     const closePanel = async () => {
@@ -107,23 +138,40 @@ test.describe("gestiones — one-way channels", () => {
       await expect(page.getByRole("dialog")).toHaveCount(0);
     };
 
-    // SMS — sent message bubble + real AI summary
+    // SMS — sent message bubble + real AI summary; no transcript
     let panel = await openPanel("SMS");
     await expect(panel.getByText("Mensaje enviado")).toBeVisible();
     await expect(panel.getByText(smsBody)).toBeVisible();
+    await expect(panel.getByText("Transcripción")).toHaveCount(0);
     await closePanel();
 
-    // Pre-grabada — played message + script + generic insight
+    // Pre-grabada — played message + script + generic insight; no transcript
     panel = await openPanel("Voz pregrabada");
     await expect(panel.getByText("Mensaje reproducido")).toBeVisible();
     await expect(panel.getByText(script)).toBeVisible();
     await expect(panel.getByText(/reproducido al cliente/i)).toBeVisible();
+    await expect(panel.getByText("Transcripción")).toHaveCount(0);
     await closePanel();
 
-    // Email — communication card + body + generic insight
+    // Email — communication card + body + generic insight; no transcript
     panel = await openPanel("Correo");
     await expect(panel.getByText("Comunicación Email")).toBeVisible();
     await expect(panel.getByText(emailBody)).toBeVisible();
     await expect(panel.getByText(/correo de recordatorio/i)).toBeVisible();
+    await expect(panel.getByText("Transcripción")).toHaveCount(0);
+    await closePanel();
+
+    // Voz IA — audio player + transcript + full analysis + linked objetivo
+    panel = await openPanel("Voz IA");
+    await expect(panel.locator("audio")).toHaveCount(1);
+    await expect(panel.locator("audio")).toHaveAttribute("src", /voz\.wav/);
+    await expect(panel.getByText("Transcripción")).toBeVisible();
+    await expect(
+      panel.getByText("Buenas tardes, le llamo de QCobro respecto a su cuenta.")
+    ).toBeVisible();
+    await expect(panel.getByText(/reconoce la deuda/)).toBeVisible();
+    await expect(panel.getByText("Positivo")).toBeVisible();
+    await expect(panel.getByText("Objetivos")).toBeVisible();
+    await expect(panel.getByText("Pendiente")).toBeVisible();
   });
 });
