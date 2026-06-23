@@ -5,7 +5,6 @@ import {
   type InsightGenerator,
   type InsightRequest
 } from "@qcobro/common";
-import { readIntegrationApiKey } from "./fonosterIntegrations.js";
 
 /** Render the transcript + light context into the user prompt. */
 function buildPrompt(req: InsightRequest): string {
@@ -61,9 +60,8 @@ function mockAnalyze(req: InsightRequest): GestionInsight {
 }
 
 async function googleAnalyze(cfg: NonNullable<AiConfig>, prompt: string): Promise<GestionInsight> {
-  const apiKey = cfg.apiKey ?? readIntegrationApiKey("llm.google");
-  if (!apiKey)
-    throw new Error("Google LLM API key not found (config.ai.apiKey or integrations.json)");
+  const apiKey = cfg.apiKey ?? process.env.GOOGLE_API_KEY;
+  if (!apiKey) throw new Error("Google LLM API key not configured (ai.apiKey or GOOGLE_API_KEY)");
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:generateContent?key=${apiKey}`;
   const res = await fetch(url, {
     method: "POST",

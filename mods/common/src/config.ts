@@ -187,9 +187,9 @@ export const aiConfigSchema = z
         message: `Invalid model "${cfg.model}" for provider "${cfg.provider}". Valid: ${AI_MODELS[cfg.provider].join(", ")}`
       });
     }
-    // apiKey is optional here: it may be omitted and sourced from the Fonoster
-    // integrations file by provider (the adapter resolves it and errors clearly if
-    // none is found at call time).
+    // apiKey is optional here: it may be omitted and supplied via an environment
+    // variable instead (the adapter resolves it and errors clearly if none is found
+    // at call time).
   })
   .optional();
 
@@ -198,8 +198,8 @@ export type AiConfig = z.infer<typeof aiConfigSchema>;
 /**
  * Text-to-speech for previewing pre-recorded agent scripts in the console (the
  * Pre-grabada gestión detail plays the script as audio). Optional — when absent, the
- * apiKey falls back to `ELEVENLABS_API_KEY` / the Fonoster integrations file, and if no
- * key resolves the player is simply unavailable. Voices come from `fonoster.voices`.
+ * apiKey falls back to `ELEVENLABS_API_KEY`, and if no key resolves the player is simply
+ * unavailable. Voices come from `fonoster.voices`.
  */
 export const ttsConfigSchema = z
   .object({

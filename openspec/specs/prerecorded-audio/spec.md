@@ -28,10 +28,10 @@ audio) without error.
 ### Requirement: TTS provider is configured in qcobro.json
 
 The deployment SHALL configure text-to-speech through an optional `tts` section in
-`qcobro.json` (`provider` `elevenlabs`, `apiKey`, `model`). The API key MAY be omitted and
-resolved from `ELEVENLABS_API_KEY` or the Fonoster integrations file; the voice is taken from
-the deployment's `fonoster.voices` catalog. When the `tts` section and all fallbacks are
-absent, synthesis is unavailable.
+`qcobro.json` (`provider` `elevenlabs`, `apiKey`, `model`). The API key MAY be supplied via
+the `ELEVENLABS_API_KEY` environment variable instead of `tts.apiKey`; the voice is taken
+from the deployment's `fonoster.voices` catalog. When neither the `tts` key nor the
+environment fallback resolves, synthesis is unavailable.
 
 #### Scenario: Synthesis uses the configured provider and key
 

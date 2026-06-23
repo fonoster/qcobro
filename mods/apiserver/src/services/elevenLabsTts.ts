@@ -1,18 +1,15 @@
 import { config } from "../config.js";
-import { readIntegrationApiKey } from "./fonosterIntegrations.js";
 
 /**
  * Synthesize speech from text via ElevenLabs, used to preview a pre-recorded agent's
  * script as audio in the console (one-way pre-recorded gestiones have no captured
- * recording to play). The API key comes from `tts.apiKey`, else `ELEVENLABS_API_KEY`,
- * else the Fonoster integrations file (`tts.elevenlabs`); the model from `tts.model`.
+ * recording to play). The API key comes from `tts.apiKey` (else `ELEVENLABS_API_KEY`);
+ * the model from `tts.model`.
  */
 const ELEVEN_BASE = "https://api.elevenlabs.io/v1";
 
 function getApiKey(): string | null {
-  return (
-    config.tts?.apiKey ?? process.env.ELEVENLABS_API_KEY ?? readIntegrationApiKey("tts.elevenlabs")
-  );
+  return config.tts?.apiKey ?? process.env.ELEVENLABS_API_KEY ?? null;
 }
 
 export function isTtsConfigured(): boolean {
