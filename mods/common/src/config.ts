@@ -67,11 +67,30 @@ export const fonosterConfigSchema = z
         llmModel: "gemini-2.0-flash",
         maxTokens: 300,
         temperature: 0
-      })
+      }),
+    /**
+     * Caller-ID numbers (E.164) outbound voice dispatch rotates through. Empty by
+     * default — voice dispatch fails clearly until at least one number is configured.
+     */
+    numbers: z.array(z.string().min(1)).default([])
   })
   .optional();
 
 export type FonosterConfig = z.infer<typeof fonosterConfigSchema>;
+
+/**
+ * Twilio connection for SMS dispatch. Optional — when absent, SMS dispatch fails
+ * with a clear error. `fromNumbers` (E.164) are rotated through per message.
+ */
+export const twilioConfigSchema = z
+  .object({
+    accountSid: z.string().min(1),
+    authToken: z.string().min(1),
+    fromNumbers: z.array(z.string().min(1)).default([])
+  })
+  .optional();
+
+export type TwilioConfig = z.infer<typeof twilioConfigSchema>;
 
 export const qcobroConfigSchema = z.object({
   /**
@@ -116,7 +135,8 @@ export const qcobroConfigSchema = z.object({
       contactLogAuth: z.object({ enabled: z.boolean().default(false) }).default({ enabled: false })
     })
     .default({ port: 3000, timezone: "America/Costa_Rica", contactLogAuth: { enabled: false } }),
-  fonoster: fonosterConfigSchema
+  fonoster: fonosterConfigSchema,
+  twilio: twilioConfigSchema
 });
 
 export type IdentityConfig = z.infer<typeof identityConfigSchema>;

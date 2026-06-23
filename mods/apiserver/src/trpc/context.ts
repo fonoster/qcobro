@@ -1,8 +1,10 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
-import type { VoiceApplicationClient } from "@qcobro/common";
+import type { OutboundCallClient, SmsClient, VoiceApplicationClient } from "@qcobro/common";
 import { prisma } from "../db.js";
 import { createIdentityClient } from "@fonoster/identity-client";
 import { FonosterVoiceApplicationClient } from "../services/fonosterVoiceApplicationClient.js";
+import { FonosterOutboundCallClient } from "../services/fonosterOutboundCallClient.js";
+import { TwilioSmsClient } from "../services/twilioSmsClient.js";
 import { config } from "../config.js";
 
 export interface AuthedUser {
@@ -27,6 +29,16 @@ const identity = createIdentityClient(config.identity.endpoint);
 const voiceApplications: VoiceApplicationClient | null = config.fonoster
   ? new FonosterVoiceApplicationClient(config.fonoster)
   : null;
+
+// Outreach dispatch clients + sending-number pools, each gated on their provider
+// config. When a provider is absent, dispatch for that channel fails with a clear
+// error (mirroring the voice-template "saves locally when Fonoster absent" posture).
+const outboundCallClient: OutboundCallClient | null = config.fonoster
+  ? new FonosterOutboundCallClient(config.fonoster)
+  : null;
+const smsClient: SmsClient | null = config.twilio ? new TwilioSmsClient(config.twilio) : null;
+const fonosterNumbers = config.fonoster?.numbers ?? [];
+const twilioFromNumbers = config.twilio?.fromNumbers ?? [];
 
 function headerValue(value: string | string[] | undefined): string | null {
   if (Array.isArray(value)) return value[0] ?? null;
@@ -61,7 +73,18 @@ export async function createContext(opts: CreateExpressContextOptions) {
     }
   }
 
-  return { token, user, workspace, prisma, identity, voiceApplications };
+  return {
+    token,
+    user,
+    workspace,
+    prisma,
+    identity,
+    voiceApplications,
+    outboundCallClient,
+    smsClient,
+    fonosterNumbers,
+    twilioFromNumbers
+  };
 }
 
 export type Context = Awaited<ReturnType<typeof createContext>>;

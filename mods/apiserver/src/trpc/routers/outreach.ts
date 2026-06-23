@@ -1,0 +1,111 @@
+import { TRPCError } from "@trpc/server";
+import {
+  buildOutreachContext,
+  manualOutreachSchema,
+  type DispatchOutreachInput
+} from "@qcobro/common";
+import { router, workspaceProcedure } from "../trpc.js";
+import { createDispatchOutreach } from "../../functions/outreach/dispatchOutreach.js";
+import { createCreateContactLog } from "../../functions/campaigns/createContactLog.js";
+
+/** An agent template with its three dispatchable channel configs loaded. */
+type TemplateWithConfigs = {
+  type: string;
+  voiceAiConfig: {
+    fonosterAppRef: string | null;
+    systemPrompt: string;
+    firstMessage: string;
+  } | null;
+  voicePrerecordedConfig: { fonosterAppRef: string | null; script: string } | null;
+  smsConfig: { messageBody: string } | null;
+};
+
+/** Map a resolved template + destination + context into a normalized dispatch request. */
+function buildDispatchRequest(
+  template: TemplateWithConfigs,
+  to: string,
+  context: Record<string, unknown>
+): DispatchOutreachInput {
+  switch (template.type) {
+    case "SMS":
+      if (!template.smsConfig)
+        throw new TRPCError({ code: "BAD_REQUEST", message: "SMS config missing" });
+      return { channel: "SMS", to, context, body: template.smsConfig.messageBody };
+    case "VOICE_AI":
+      if (!template.voiceAiConfig)
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Voice config missing" });
+      return {
+        channel: "VOICE_AI",
+        to,
+        context,
+        appRef: template.voiceAiConfig.fonosterAppRef ?? undefined,
+        firstMessage: template.voiceAiConfig.firstMessage,
+        systemPrompt: template.voiceAiConfig.systemPrompt
+      };
+    case "VOICE_PRERECORDED":
+      if (!template.voicePrerecordedConfig)
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Voice config missing" });
+      return {
+        channel: "VOICE_PRERECORDED",
+        to,
+        context,
+        appRef: template.voicePrerecordedConfig.fonosterAppRef ?? undefined,
+        firstMessage: template.voicePrerecordedConfig.script
+      };
+    default:
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: `Channel ${template.type} is not supported for manual outreach`
+      });
+  }
+}
+
+export const outreachRouter = router({
+  /**
+   * Manual one-off outreach to a single customer. Loads the account + template
+   * (workspace-scoped), dispatches via the channel-dispatch trigger, and records
+   * the attempt as a gestión so it appears in the account's history.
+   */
+  dispatch: workspaceProcedure.input(manualOutreachSchema).mutation(async ({ input, ctx }) => {
+    const workspaceRef = ctx.workspace.accessKeyId;
+
+    const account = await ctx.prisma.portfolioAccount.findFirst({
+      where: { id: input.portfolioAccountId, portfolio: { workspaceRef } },
+      include: { portfolio: true }
+    });
+    if (!account) throw new TRPCError({ code: "NOT_FOUND", message: "Account not found" });
+    if (!account.phone)
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Account has no phone number" });
+
+    const template = await ctx.prisma.agentTemplate.findFirst({
+      where: { id: input.agentTemplateId, workspaceRef },
+      include: { voiceAiConfig: true, voicePrerecordedConfig: true, smsConfig: true }
+    });
+    if (!template) throw new TRPCError({ code: "NOT_FOUND", message: "Agent template not found" });
+
+    const context = buildOutreachContext(account, account.portfolio);
+    const request = buildDispatchRequest(template, account.phone, context);
+
+    const dispatch = createDispatchOutreach({
+      outboundCallClient: ctx.outboundCallClient,
+      smsClient: ctx.smsClient,
+      fonosterNumbers: ctx.fonosterNumbers,
+      twilioFromNumbers: ctx.twilioFromNumbers
+    });
+    const result = await dispatch(request);
+
+    // Record the manual attempt (outcome OTHER; richer outcomes arrive via callbacks).
+    await createCreateContactLog(ctx.prisma as never)({
+      portfolioAccountId: account.id,
+      campaignId: input.campaignId,
+      agentType: template.type as DispatchOutreachInput["channel"],
+      contactedAt: new Date().toISOString(),
+      outcome: "OTHER",
+      notes: "Contacto manual",
+      debtAmountSnapshot: account.outstandingBalance,
+      channelData: { providerRef: result.providerRef, from: result.from, to: result.to }
+    });
+
+    return result;
+  })
+});

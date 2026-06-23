@@ -43,6 +43,12 @@
     "autopilot": {
       "ttsProductRef": "tts.elevenlabs",
       "llmModel": "gemini-2.0-flash"
-    }
+    },
+    "numbers": ["+50670000000"]
+  },
+  "twilio": {
+    "accountSid": "CHANGE_ME",
+    "authToken": "CHANGE_ME",
+    "fromNumbers": ["+15550000000"]
   }
 }

@@ -13,6 +13,7 @@
     "test": "node --import tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
+    "handlebars": "^4.7.9",
     "zod": "^4.0.0"
   },
   "devDependencies": {
