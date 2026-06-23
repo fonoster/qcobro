@@ -12,8 +12,9 @@ export interface VoiceApplicationInput {
   voice: string;
   /** The AI agent's persona/instructions. */
   systemPrompt: string;
-  /** The opening line spoken to the contact. */
-  firstMessage: string;
+  /** The opening line spoken to the contact; optional — falls back to the autopilot
+   * template's default greeting when the agent has no scripted first message. */
+  firstMessage?: string;
   /** Language code (e.g. `es`, `en`). */
   language: string;
 }

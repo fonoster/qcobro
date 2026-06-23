@@ -76,7 +76,9 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
             // (derived from autopilot.yaml; required by Fonoster). Per-agent
             // firstMessage + systemPrompt override on top.
             ...autopilotTemplate.conversationSettings,
-            firstMessage: input.firstMessage,
+            // Only override the template's default greeting when the agent has a
+            // scripted first message; otherwise the autopilot default stands.
+            ...(input.firstMessage ? { firstMessage: input.firstMessage } : {}),
             systemPrompt: input.systemPrompt
           },
           languageModel: {

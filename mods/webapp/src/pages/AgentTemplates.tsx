@@ -123,7 +123,19 @@ export function AgentTemplates() {
         onAction={() => setShowCreate(true)}
         onRowClick={(row) => navigate(`/agent-templates/${row.id}`)}
         columns={[
-          { key: "name", header: t("agents.col.name") },
+          {
+            key: "name",
+            header: t("agents.col.name"),
+            render: (r) =>
+              r.archivedAt ? (
+                <span className="inline-flex items-center gap-2">
+                  {r.name}
+                  <Badge variant="secondary">{t("agents.archivedBadge")}</Badge>
+                </span>
+              ) : (
+                r.name
+              )
+          },
           {
             key: "type",
             header: t("agents.col.type"),
@@ -132,19 +144,6 @@ export function AgentTemplates() {
                 {t(`agents.type.${r.type}` as Parameters<typeof t>[0])}
               </Badge>
             )
-          },
-          {
-            key: "createdAt",
-            header: t("agents.col.created"),
-            render: (r) =>
-              r.archivedAt ? (
-                <span className="inline-flex items-center gap-2">
-                  {new Date(r.createdAt).toLocaleDateString()}
-                  <Badge variant="secondary">{t("agents.archivedBadge")}</Badge>
-                </span>
-              ) : (
-                new Date(r.createdAt).toLocaleDateString()
-              )
           },
           {
             key: "id",
@@ -349,7 +348,7 @@ function CreateAgentTemplateModal({
 
         {type === "VOICE_AI" && (
           <>
-            <TextareaGroup
+            <InputGroup
               label={t("agents.form.firstMessage")}
               id="a-first"
               value={fields.firstMessage ?? ""}

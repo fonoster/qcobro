@@ -20,7 +20,7 @@ export async function syncVoiceAiApplication(
     name: cfg.fonosterAppName,
     voice: cfg.voice,
     systemPrompt: cfg.systemPrompt,
-    firstMessage: cfg.firstMessage,
+    firstMessage: cfg.firstMessage ?? undefined,
     language: cfg.language
   };
 

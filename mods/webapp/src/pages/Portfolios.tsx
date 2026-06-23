@@ -84,7 +84,19 @@ export function Portfolios() {
         onAction={() => setShowCreate(true)}
         onRowClick={(row) => navigate(`/portfolios/${row.id}`)}
         columns={[
-          { key: "name", header: t("portfolios.col.name") },
+          {
+            key: "name",
+            header: t("portfolios.col.name"),
+            render: (r) =>
+              r.archivedAt ? (
+                <span className="inline-flex items-center gap-2">
+                  {r.name}
+                  <Badge variant="secondary">{t("portfolios.archivedBadge")}</Badge>
+                </span>
+              ) : (
+                r.name
+              )
+          },
           { key: "clientId", header: t("portfolios.col.clientId") },
           {
             key: "accountCount",
@@ -100,19 +112,6 @@ export function Portfolios() {
             key: "recoveredAmount",
             header: t("portfolios.col.recovered"),
             render: (r) => money(r.recoveredAmount as number, r.currency as string)
-          },
-          {
-            key: "createdAt",
-            header: t("portfolios.col.created"),
-            render: (r) =>
-              r.archivedAt ? (
-                <span className="inline-flex items-center gap-2">
-                  {new Date(r.createdAt).toLocaleDateString()}
-                  <Badge variant="secondary">{t("portfolios.archivedBadge")}</Badge>
-                </span>
-              ) : (
-                new Date(r.createdAt).toLocaleDateString()
-              )
           },
           {
             key: "id",

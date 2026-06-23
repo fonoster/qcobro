@@ -158,7 +158,7 @@ model VoiceAiConfig {
   fonosterAppRef  String?
   voice           String
   systemPrompt    String
-  firstMessage    String
+  firstMessage    String?
   language        String
   template        AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 

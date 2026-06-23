@@ -10,13 +10,13 @@
     }
   },
   "scripts": {
-    "build": "prisma generate && tsc -b --force",
+    "build": "node scripts/prisma.mjs generate && tsc -b --force",
     "clean": "rm -rf dist *.tsbuildinfo",
     "start": "node dist/index.js",
     "start:dev": "tsx watch src/index.ts",
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
-    "db:generate": "prisma generate",
+    "db:generate": "node scripts/prisma.mjs generate",
     "db:migrate": "node scripts/prisma.mjs migrate dev",
     "db:migrate:deploy": "node scripts/prisma.mjs migrate deploy",
     "db:studio": "node scripts/prisma.mjs studio"

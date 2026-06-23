@@ -76,7 +76,8 @@ their respective child tables:
 - `fonosterAppRef String?` — the Fonoster application ID, populated after sync
 - `voice String` — voice identifier (provider-specific, e.g. ElevenLabs voice ID)
 - `systemPrompt String` — the AI agent's persona and instructions
-- `firstMessage String` — the opening line spoken to the contact
+- `firstMessage String?` — the opening line spoken to the contact; optional, an agent may
+  rely on the system prompt alone with no scripted opening line
 - `language String` — default language code (e.g. `es`, `en`)
 
 **VoicePrerecordedConfig** (for `VOICE_PRERECORDED`):
@@ -96,6 +97,12 @@ complete spoken content.
 - **THEN** the system attempts to create or update the corresponding Fonoster application
 - **AND** on success, `fonosterAppRef` is populated with the Fonoster application ID
 - **AND** the template UI shows a "Sincronizado" status indicator
+
+#### Scenario: VOICE_AI template saved without a first message
+
+- **WHEN** an operator saves a VOICE_AI template leaving the first message empty
+- **THEN** the template is saved with no first message
+- **AND** the agent relies on its system prompt for the opening of the conversation
 
 #### Scenario: Template saves locally even if Fonoster sync fails
 

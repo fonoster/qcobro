@@ -116,11 +116,6 @@ export function Campaigns() {
             )
           },
           {
-            key: "createdAt",
-            header: t("campaigns.col.created"),
-            render: (r) => new Date(r.createdAt).toLocaleDateString()
-          },
-          {
             key: "id",
             header: "",
             align: "center",
@@ -146,7 +141,16 @@ export function Campaigns() {
                   onClick: () => updateStatus.mutate({ id: r.id, status: "ACTIVE" })
                 });
               }
-              if (r.status !== "ARCHIVED") {
+              if (r.status === "ARCHIVED") {
+                items.push({
+                  label: t("campaigns.actions.restore"),
+                  onClick: () => updateStatus.mutate({ id: r.id, status: "PAUSED" })
+                });
+              } else {
+                items.push({
+                  label: t("campaigns.actions.archive"),
+                  onClick: () => updateStatus.mutate({ id: r.id, status: "ARCHIVED" })
+                });
                 items.push({
                   label: t("campaigns.actions.delete"),
                   onClick: () => setDeleting(r),

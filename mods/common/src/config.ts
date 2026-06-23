@@ -143,6 +143,12 @@ export type TwilioConfig = z.infer<typeof twilioConfigSchema>;
 export const qcobroConfigSchema = z.object({
   /** Application (apiserver) database. */
   database: z.object({ url: z.string().min(1) }),
+  /**
+   * Deployment-wide IANA timezone for interpreting campaign wall-clock outreach
+   * windows (`startTime`/`endTime`). A general, top-level setting (not apiserver-
+   * specific). Reserved: declared here for deployments, not yet consumed by code.
+   */
+  timezone: z.string().default("America/Costa_Rica"),
   identity: identityConfigSchema,
   apiserver: z
     .object({
@@ -153,18 +159,12 @@ export const qcobroConfigSchema = z.object({
        * this server; it answers and plays the rendered script via the Say verb.
        */
       voicePort: z.number().default(50061),
-      /**
-       * Deployment-wide IANA timezone for interpreting campaign wall-clock
-       * outreach windows (`startTime`/`endTime`). Per-workspace zones deferred.
-       */
-      timezone: z.string().default("America/Costa_Rica"),
       /** External contact-log ingress (`POST /api/contact-logs`) auth gate. */
       contactLogAuth: z.object({ enabled: z.boolean().default(false) }).default({ enabled: false })
     })
     .default({
       port: 3000,
       voicePort: 50061,
-      timezone: "America/Costa_Rica",
       contactLogAuth: { enabled: false }
     }),
   fonoster: fonosterConfigSchema,

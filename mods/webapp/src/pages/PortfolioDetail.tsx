@@ -82,11 +82,8 @@ export function PortfolioDetail() {
             render: (r) => String(r.daysPastDue),
             align: "right"
           },
-          {
-            key: "preferredLanguage",
-            header: t("portfolios.detail.col.language"),
-            render: (r) => String(r.preferredLanguage ?? "—")
-          },
+          // `preferredLanguage` is kept on the record as a reserved field for future
+          // language-aware routing, but intentionally not shown in the console table.
           {
             key: "id",
             header: "",

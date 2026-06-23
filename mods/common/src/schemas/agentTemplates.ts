@@ -24,7 +24,8 @@ export const createAgentTemplateSchema = z.discriminatedUnion("type", [
     type: z.literal("VOICE_AI"),
     voice: z.string().min(1),
     systemPrompt: z.string().min(1),
-    firstMessage: z.string().min(1),
+    // Optional: a VOICE_AI agent may rely on its system prompt with no scripted opening line.
+    firstMessage: z.string().optional(),
     language: z.string().min(1),
     fonosterAppName: z.string().min(1).optional()
   }),

@@ -21,7 +21,7 @@ export interface VoiceAiConfigRecord {
   fonosterAppRef: string | null;
   voice: string;
   systemPrompt: string;
-  firstMessage: string;
+  firstMessage: string | null;
   language: string;
 }
 

@@ -14,7 +14,7 @@ type TemplateWithConfigs = {
   voiceAiConfig: {
     fonosterAppRef: string | null;
     systemPrompt: string;
-    firstMessage: string;
+    firstMessage: string | null;
   } | null;
   voicePrerecordedConfig: { fonosterAppRef: string | null; script: string } | null;
   smsConfig: { messageBody: string } | null;
@@ -40,7 +40,7 @@ function buildDispatchRequest(
         to,
         context,
         appRef: template.voiceAiConfig.fonosterAppRef ?? undefined,
-        firstMessage: template.voiceAiConfig.firstMessage,
+        firstMessage: template.voiceAiConfig.firstMessage ?? undefined,
         systemPrompt: template.voiceAiConfig.systemPrompt
       };
     case "VOICE_PRERECORDED":

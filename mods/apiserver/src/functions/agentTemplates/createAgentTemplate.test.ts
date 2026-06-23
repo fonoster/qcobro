@@ -121,8 +121,25 @@ describe("createAgentTemplate", () => {
     const { client } = makeClient();
     const fn = createCreateAgentTemplate(client as never, "ws-1");
 
-    // VOICE_AI requires systemPrompt/firstMessage/voice/language.
+    // VOICE_AI requires systemPrompt/voice/language (firstMessage is optional).
     await assert.rejects(() => fn({ name: "X", type: "VOICE_AI", voice: "v" }), ValidationError);
+  });
+
+  it("creates a VOICE_AI template without a first message (optional)", async () => {
+    const { client, created } = makeClient();
+    const fn = createCreateAgentTemplate(client as never, "ws-1");
+
+    await fn({
+      name: "Sin saludo",
+      type: "VOICE_AI",
+      voice: "voice-x",
+      systemPrompt: "Be polite",
+      language: "es"
+    });
+
+    assert.ok(created.voiceAi, "child VoiceAiConfig row created");
+    // Omitted first message persists as null rather than failing validation.
+    assert.equal(created.voiceAi?.firstMessage, null);
   });
 
   it("syncs VOICE_AI to Fonoster and stores the returned app ref", async () => {

@@ -39,7 +39,7 @@ export function createCreateAgentTemplate(
               fonosterAppName: params.fonosterAppName ?? params.name,
               voice: params.voice,
               systemPrompt: params.systemPrompt,
-              firstMessage: params.firstMessage,
+              firstMessage: params.firstMessage ?? null,
               language: params.language
             }
           });

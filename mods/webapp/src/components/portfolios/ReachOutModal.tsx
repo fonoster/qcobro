@@ -63,17 +63,18 @@ export function ReachOutModal({
     return type ? t(`agents.type.${type}` as Parameters<typeof t>[0]) : "";
   }
 
-  let preview: { label: string; body: string } | null = null;
+  let preview: { label: string; body: string; muted?: boolean } | null = null;
   if (selected && agentType && (PREVIEW_TYPES as readonly string[]).includes(agentType)) {
     const raw = bodyFor(agentType, templateQuery.data as Record<string, unknown> | undefined);
+    const label = t(
+      `portfolios.reachOut.preview.${agentType as PreviewType}` as Parameters<typeof t>[0]
+    );
     if (raw) {
       const ctx = buildOutreachContext(account as unknown as PortfolioAccountRecord, portfolio);
-      preview = {
-        label: t(
-          `portfolios.reachOut.preview.${agentType as PreviewType}` as Parameters<typeof t>[0]
-        ),
-        body: renderTemplate(raw, ctx)
-      };
+      preview = { label, body: renderTemplate(raw, ctx) };
+    } else if (agentType === "VOICE_AI") {
+      // VOICE_AI has no scripted first message — the agent waits for the customer.
+      preview = { label, body: t("portfolios.reachOut.firstMessageNotSet"), muted: true };
     }
   }
 
@@ -121,7 +122,13 @@ export function ReachOutModal({
         {preview && (
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold text-slate-500">{preview.label}</span>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm leading-relaxed text-slate-700">
+            <div
+              className={
+                preview.muted
+                  ? "rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm italic leading-relaxed text-slate-400"
+                  : "rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm leading-relaxed text-slate-700"
+              }
+            >
               {preview.body}
             </div>
           </div>

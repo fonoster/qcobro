@@ -36,6 +36,23 @@ describe("updateCampaignStatus", () => {
     assert.equal(stats().updateData, null);
   });
 
+  it("restores an ARCHIVED campaign to PAUSED", async () => {
+    const { client, stats } = makeClient("ARCHIVED");
+    const fn = createUpdateCampaignStatus(client as never, "ws-1");
+
+    await fn({ id: "camp-1", status: "PAUSED" });
+
+    assert.equal(stats().updateData?.status, "PAUSED");
+  });
+
+  it("rejects restoring an ARCHIVED campaign straight to ACTIVE", async () => {
+    const { client, stats } = makeClient("ARCHIVED");
+    const fn = createUpdateCampaignStatus(client as never, "ws-1");
+
+    await assert.rejects(() => fn({ id: "camp-1", status: "ACTIVE" }), ValidationError);
+    assert.equal(stats().updateData, null);
+  });
+
   it("is a no-op when the status is unchanged", async () => {
     const { client, stats } = makeClient("ACTIVE");
     const fn = createUpdateCampaignStatus(client as never, "ws-1");

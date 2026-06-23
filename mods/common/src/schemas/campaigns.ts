@@ -5,14 +5,15 @@ export type CampaignStatus = z.infer<typeof campaignStatusSchema>;
 
 /**
  * Valid status transitions. A new campaign starts ACTIVE (dispatching immediately).
- * COMPLETED is read-only and ARCHIVED is terminal. The UI offers only the transitions
- * valid for the current status; the API enforces the same map.
+ * COMPLETED is read-only. An ARCHIVED campaign can be restored to PAUSED — it never
+ * resumes dispatch without an explicit later activation. The UI offers only the
+ * transitions valid for the current status; the API enforces the same map.
  */
 export const campaignStatusTransitions: Record<CampaignStatus, CampaignStatus[]> = {
   PAUSED: ["ACTIVE", "ARCHIVED"],
   ACTIVE: ["PAUSED", "COMPLETED", "ARCHIVED"],
   COMPLETED: ["ARCHIVED"],
-  ARCHIVED: []
+  ARCHIVED: ["PAUSED"]
 };
 
 const timeOfDay = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "must be HH:MM 24h time");

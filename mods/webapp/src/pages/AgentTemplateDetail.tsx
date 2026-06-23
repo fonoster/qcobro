@@ -47,16 +47,22 @@ export function AgentTemplateDetail() {
     onError: () => setSyncError(true)
   });
 
-  const isVoice = tmpl?.type === "VOICE_AI" || tmpl?.type === "VOICE_PRERECORDED";
   const voiceCfg = tmpl?.voiceAiConfig ?? tmpl?.voicePrerecordedConfig ?? null;
   const synced = voiceCfg?.fonosterAppRef != null;
-  const canResync = tmpl?.type === "VOICE_AI";
+  // Only VOICE_AI agents sync to Fonoster (as AUTOPILOT apps). Pre-recorded and the
+  // text channels are managed locally and have no per-agent sync.
+  const syncsWithFonoster = tmpl?.type === "VOICE_AI";
 
   // Resolve the stored voice id to its catalog label (name, language, gender).
   const voiceEntry = voices?.find((v) => v.id === voiceCfg?.voice);
   const voiceLabel = voiceEntry
     ? `${voiceEntry.name} (${voiceEntry.language}, ${t(`agents.gender.${voiceEntry.gender}` as Parameters<typeof t>[0])})`
     : (voiceCfg?.voice ?? null);
+
+  // Map the stored language code (e.g. "es") to its human-friendly label.
+  const languageLabel = voiceCfg?.language
+    ? (t(`agents.lang.${voiceCfg.language}` as Parameters<typeof t>[0]) ?? voiceCfg.language)
+    : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -71,7 +77,7 @@ export function AgentTemplateDetail() {
         title={tmpl?.name ?? "…"}
         description={tmpl ? t(`agents.type.${tmpl.type}` as Parameters<typeof t>[0]) : undefined}
         action={
-          isVoice ? (
+          syncsWithFonoster && tmpl ? (
             <div className="flex items-center gap-3">
               <Badge variant={syncError ? "destructive" : synced ? "success" : "orange"}>
                 {syncError
@@ -80,17 +86,15 @@ export function AgentTemplateDetail() {
                     ? t("agents.sync.synced")
                     : t("agents.sync.pending")}
               </Badge>
-              {canResync && tmpl && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={sync.isPending}
-                  onClick={() => sync.mutate({ id: tmpl.id })}
-                >
-                  <RefreshCw className="mr-1 h-4 w-4" />
-                  {t("agents.sync.action")}
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={sync.isPending}
+                onClick={() => sync.mutate({ id: tmpl.id })}
+              >
+                <RefreshCw className="mr-1 h-4 w-4" />
+                {t("agents.sync.action")}
+              </Button>
             </div>
           ) : undefined
         }
@@ -100,7 +104,7 @@ export function AgentTemplateDetail() {
         <div className="flex flex-col">
           {voiceCfg && (
             <>
-              <ConfigRow label={t("agents.form.language")} value={voiceCfg.language} />
+              <ConfigRow label={t("agents.form.language")} value={languageLabel} />
               <ConfigRow label={t("agents.form.voice")} value={voiceLabel} />
               <ConfigRow label={t("agents.form.firstMessage")} value={voiceCfg.firstMessage} />
               <ConfigRow label={t("agents.form.systemPrompt")} value={voiceCfg.systemPrompt} />
