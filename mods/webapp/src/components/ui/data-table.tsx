@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils.js";
 import { SearchBox } from "./input.js";
 import { Button } from "./button.js";
@@ -80,7 +81,12 @@ export function DataTable<T extends Record<string, unknown>>({
             ) : (
               <div />
             ))}
-          {actionLabel && <Button onClick={onAction}>+ {actionLabel}</Button>}
+          {actionLabel && (
+            <Button onClick={onAction}>
+              <Plus className="h-4 w-4" />
+              {actionLabel}
+            </Button>
+          )}
         </div>
       )}
 

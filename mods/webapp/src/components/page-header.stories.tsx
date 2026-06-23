@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { Plus } from "lucide-react";
 import { PageHeader } from "./page-header.js";
 import { Button } from "./ui/button.js";
 
@@ -20,7 +21,12 @@ export const WithAction: StoryObj = {
     <PageHeader
       title="Campañas"
       description="Campañas de cobranza activas e históricas"
-      action={<Button>+ Nueva campaña</Button>}
+      action={
+        <Button>
+          <Plus className="h-4 w-4" />
+          Nueva campaña
+        </Button>
+      }
     />
   )
 };
