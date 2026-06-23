@@ -1,39 +1,19 @@
-import {
-  Calendar,
-  ChevronDown,
-  PhoneCall,
-  PhoneMissed,
-  Handshake,
-  CalendarClock,
-  type LucideIcon
-} from "lucide-react";
+import { Calendar, ChevronDown } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n, type Language } from "../lib/i18n.js";
 import { Card } from "../components/ui/card.js";
+import { channelIcon } from "../lib/channelIcon.js";
 import { cn } from "@/lib/utils.js";
 
 /** Minimal shape of a recent gestión row used by the dashboard widget. */
 type RecentGestion = {
   id: string;
+  agentType: string;
   outcome: string;
   contactedAt: string | Date;
   portfolioAccount: { fullName: string } | null;
 };
-
-/** Icon shown next to a recent gestión, chosen by its recorded outcome. */
-const OUTCOME_ICON: Record<string, LucideIcon> = {
-  PAYMENT_PROMISE: Handshake,
-  PARTIAL_PAYMENT_AGREED: Handshake,
-  CALLBACK_REQUESTED: CalendarClock,
-  NO_ANSWER: PhoneMissed,
-  OPT_OUT: PhoneMissed,
-  WRONG_NUMBER: PhoneMissed
-};
-
-function outcomeIcon(outcome: string): LucideIcon {
-  return OUTCOME_ICON[outcome] ?? PhoneCall;
-}
 
 /** Relative timestamp ("Hace 5 min" / "5 min ago") localized to the active language. */
 function formatRelative(date: Date | string, language: Language): string {
@@ -119,7 +99,7 @@ export function Home() {
           ) : (
             <div className="flex flex-col">
               {activity.map((a, i) => {
-                const Icon = outcomeIcon(a.outcome);
+                const Icon = channelIcon(a.agentType);
                 return (
                   <div
                     key={a.id}
