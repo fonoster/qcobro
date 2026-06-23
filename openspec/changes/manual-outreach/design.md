@@ -49,11 +49,12 @@ pickNumber }`. `pickNumber(numbers)` defaults to a random selector; injectable s
   as the existing voice client. If `fonosterAppRef` is missing, dispatch fails with a
   structured error.
   - **Voz IA = AUTOPILOT app (internal to Fonoster):** synced at template create/update.
-  - **Pre-recorded = EXTERNAL app:** Fonoster calls back into an embedded **VoiceServer**
-    hosted by the apiserver on its own port (`apiserver.voicePort`, default 50061). The
-    server reads the rendered script from the call `metadata` and plays it via the Say
-    verb. (Current stub logs the play-ready string; playback/voice selection wired later.
-    Provisioning the EXTERNAL Fonoster app pointing at this endpoint is a separate step.)
+  - **Pre-recorded = EXTERNAL app:** all pre-recorded agents share ONE deployment-wide
+    external app ref (`fonoster.prerecordedAppRef`) that points at the embedded
+    **VoiceServer** hosted by the apiserver on its own port (`apiserver.voicePort`, default
+    50061). Dispatch passes only the ready script as `metadata.message`; the VoiceServer
+    answers, plays it with the Say verb, and hangs up (no templating at that level — the
+    string arrives rendered).
 - **SMS (Twilio).** Renders `messageBody`, sends via Twilio `messages.create({ from, to,
 body })`; `from` rotated from `twilio.fromNumbers`. Returns the message SID as
   `providerRef`.

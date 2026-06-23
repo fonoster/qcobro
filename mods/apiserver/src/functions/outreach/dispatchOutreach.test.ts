@@ -67,6 +67,27 @@ describe("dispatchOutreach", () => {
     assert.equal(result.renderedBody, "Hola Luis");
   });
 
+  it("pre-recorded passes only the ready message as metadata (no systemPrompt)", async () => {
+    const { deps, calls } = makeDeps();
+    const result = await createDispatchOutreach(deps)({
+      channel: "VOICE_PRERECORDED",
+      to: "+50670000000",
+      context: { firstName: "Eva" },
+      appRef: "ext-app-1",
+      firstMessage: "Hola {{firstName}}, este es un recordatorio de pago."
+    });
+
+    assert.equal(calls.voice.length, 1);
+    assert.deepEqual(calls.voice[0], {
+      from: "+50611111111",
+      to: "+50670000000",
+      appRef: "ext-app-1",
+      metadata: { message: "Hola Eva, este es un recordatorio de pago." }
+    });
+    assert.equal(result.channel, "VOICE_PRERECORDED");
+    assert.equal(result.renderedBody, "Hola Eva, este es un recordatorio de pago.");
+  });
+
   it("rejects an SMS with no body and never calls the provider (validation)", async () => {
     const { deps, calls } = makeDeps();
     await assert.rejects(() =>

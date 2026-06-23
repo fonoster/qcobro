@@ -8,6 +8,7 @@
   },
   "apiserver": {
     "port": 3000,
+    "voicePort": 50061,
     "timezone": "America/Costa_Rica",
     "contactLogAuth": {
       "enabled": true
@@ -17,6 +18,7 @@
     "accessKeyId": "CHANGE_ME",
     "apiKey": "CHANGE_ME",
     "apiSecret": "CHANGE_ME",
+    "prerecordedAppRef": "CHANGE_ME",
     "autopilot": {
       "llmModel": "gemini-2.5-flash"
     },

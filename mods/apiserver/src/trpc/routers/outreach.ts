@@ -24,7 +24,8 @@ type TemplateWithConfigs = {
 function buildDispatchRequest(
   template: TemplateWithConfigs,
   to: string,
-  context: Record<string, unknown>
+  context: Record<string, unknown>,
+  prerecordedAppRef: string | null
 ): DispatchOutreachInput {
   switch (template.type) {
     case "SMS":
@@ -45,11 +46,13 @@ function buildDispatchRequest(
     case "VOICE_PRERECORDED":
       if (!template.voicePrerecordedConfig)
         throw new TRPCError({ code: "BAD_REQUEST", message: "Voice config missing" });
+      // Pre-recorded uses the deployment's shared EXTERNAL app (VoiceServer); the
+      // per-customer script rides as metadata.
       return {
         channel: "VOICE_PRERECORDED",
         to,
         context,
-        appRef: template.voicePrerecordedConfig.fonosterAppRef ?? undefined,
+        appRef: prerecordedAppRef ?? undefined,
         firstMessage: template.voicePrerecordedConfig.script
       };
     default:
@@ -84,7 +87,12 @@ export const outreachRouter = router({
     if (!template) throw new TRPCError({ code: "NOT_FOUND", message: "Agent template not found" });
 
     const context = buildOutreachContext(account, account.portfolio);
-    const request = buildDispatchRequest(template, account.phone, context);
+    const request = buildDispatchRequest(
+      template,
+      account.phone,
+      context,
+      ctx.fonosterPrerecordedAppRef
+    );
 
     const dispatch = createDispatchOutreach({
       outboundCallClient: ctx.outboundCallClient,

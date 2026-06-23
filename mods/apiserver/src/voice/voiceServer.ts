@@ -26,15 +26,15 @@ export function startVoiceServer(): void {
 
   new VoiceServer({ port, skipIdentity: true }).listen(
     async (req: VoiceRequest, res: VoiceResponse) => {
-      const message = req.metadata?.firstMessage ?? req.metadata?.script ?? "";
+      const message = req.metadata?.message ?? "";
 
       console.log(
-        `[voice] pre-recorded message ready to play (appRef=${req.appRef}, callRef=${req.callRef}):`,
+        `[voice] pre-recorded message (appRef=${req.appRef}, callRef=${req.callRef}):`,
         message
       );
 
       await res.answer();
-      // TODO(playback): await res.say(message) — actual audio playback wired later.
+      await res.say(message);
       await res.hangup();
     }
   );

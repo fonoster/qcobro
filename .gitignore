@@ -10,8 +10,9 @@ coverage
 storybook-static
 .DS_Store
 
-# Local service config (holds dev secrets). Commit qcobro-prod.json as the example.
+# Local service config (holds dev secrets). Commit qcobro.example.json as the example.
 qcobro.json
+!qcobro.example.json
 
 # Local Identity service config + keys (holds dev secrets).
 # Commit config/identity/identity.example.json as the example.

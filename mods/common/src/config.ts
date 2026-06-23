@@ -101,7 +101,14 @@ export const fonosterConfigSchema = z
      * Caller-ID numbers (E.164) outbound voice dispatch rotates through. Empty by
      * default — voice dispatch fails clearly until at least one number is configured.
      */
-    numbers: z.array(z.string().min(1)).default([])
+    numbers: z.array(z.string().min(1)).default([]),
+    /**
+     * The Fonoster EXTERNAL application ref used for ALL pre-recorded voice
+     * dispatch (one shared app pointing at the embedded VoiceServer). The
+     * per-customer script is passed as call metadata; this ref is deployment-wide,
+     * not per agent. Voz IA uses each template's own AUTOPILOT app ref instead.
+     */
+    prerecordedAppRef: z.string().min(1).optional()
   })
   .optional();
 

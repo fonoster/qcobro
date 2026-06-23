@@ -3,8 +3,9 @@
  * code path (dispatchOutreach -> Fonoster/Twilio adapters) against live providers,
  * loading credentials from qcobro.json. One channel per run.
  *
- *   node --import tsx scripts/smoke-dispatch.ts voice <toNumber> <appRef> [fromNumber]
- *   node --import tsx scripts/smoke-dispatch.ts sms   <toNumber> [fromNumber]
+ *   node --import tsx scripts/smoke-dispatch.ts voice       <toNumber> <appRef> [fromNumber]
+ *   node --import tsx scripts/smoke-dispatch.ts prerecorded <toNumber> [fromNumber]
+ *   node --import tsx scripts/smoke-dispatch.ts sms         <toNumber> [fromNumber]
  *
  * Delete this file once dispatch is verified.
  */
@@ -60,6 +61,33 @@ async function main() {
     process.exit(0);
   }
 
+  if (channel === "prerecorded") {
+    const from = arg3 ?? "18297340812";
+    if (!to) throw new Error("Usage: prerecorded <toNumber> [fromNumber]");
+    if (!config.fonoster) throw new Error("qcobro.json has no fonoster config");
+    const appRef = config.fonoster.prerecordedAppRef;
+    if (!appRef) throw new Error("qcobro.json has no fonoster.prerecordedAppRef");
+
+    const dispatch = createDispatchOutreach({
+      outboundCallClient: new FonosterOutboundCallClient(config.fonoster),
+      smsClient: null,
+      fonosterNumbers: [from],
+      twilioFromNumbers: [],
+      pickNumber: (n) => n[0]
+    });
+
+    const result = await dispatch({
+      channel: "VOICE_PRERECORDED",
+      to,
+      context,
+      appRef,
+      firstMessage:
+        "Hola {{firstName}}, este es un recordatorio de QCobro sobre su saldo de {{outstandingBalance}} {{currency}}."
+    });
+    console.log("✅ Pre-recorded dispatch result:", result);
+    process.exit(0);
+  }
+
   if (channel === "sms") {
     const from = arg3;
     if (!to) throw new Error("Usage: sms <toNumber> [fromNumber]");
@@ -84,7 +112,7 @@ async function main() {
     process.exit(0);
   }
 
-  throw new Error("First arg must be 'voice' or 'sms'");
+  throw new Error("First arg must be 'voice', 'prerecorded', or 'sms'");
 }
 
 main().catch((e) => {

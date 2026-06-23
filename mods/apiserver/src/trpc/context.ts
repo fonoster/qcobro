@@ -39,6 +39,9 @@ const outboundCallClient: OutboundCallClient | null = config.fonoster
 const smsClient: SmsClient | null = config.twilio ? new TwilioSmsClient(config.twilio) : null;
 const fonosterNumbers = config.fonoster?.numbers ?? [];
 const twilioFromNumbers = config.twilio?.fromNumbers ?? [];
+// Shared EXTERNAL app ref for all pre-recorded voice dispatch (points at the
+// embedded VoiceServer). Voz IA uses each template's own AUTOPILOT ref instead.
+const fonosterPrerecordedAppRef = config.fonoster?.prerecordedAppRef ?? null;
 
 function headerValue(value: string | string[] | undefined): string | null {
   if (Array.isArray(value)) return value[0] ?? null;
@@ -83,7 +86,8 @@ export async function createContext(opts: CreateExpressContextOptions) {
     outboundCallClient,
     smsClient,
     fonosterNumbers,
-    twilioFromNumbers
+    twilioFromNumbers,
+    fonosterPrerecordedAppRef
   };
 }
 

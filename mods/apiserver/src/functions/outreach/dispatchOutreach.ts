@@ -47,9 +47,17 @@ export function createDispatchOutreach(deps: DispatchDeps) {
 
     const from = params.from ?? pick(deps.fonosterNumbers);
     const renderedBody = renderTemplate(params.firstMessage ?? "", params.context);
-    const metadata: Record<string, string> = { firstMessage: renderedBody };
-    if (params.systemPrompt) {
-      metadata.systemPrompt = renderTemplate(params.systemPrompt, params.context);
+
+    // Pre-recorded → EXTERNAL VoiceServer: the only metadata is the ready message.
+    // Voz IA → AUTOPILOT: pass the conversation settings (first message + prompt).
+    let metadata: Record<string, string>;
+    if (params.channel === "VOICE_PRERECORDED") {
+      metadata = { message: renderedBody };
+    } else {
+      metadata = { firstMessage: renderedBody };
+      if (params.systemPrompt) {
+        metadata.systemPrompt = renderTemplate(params.systemPrompt, params.context);
+      }
     }
 
     const { ref } = await deps.outboundCallClient.createCall({
