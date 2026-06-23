@@ -1,6 +1,7 @@
 import { useState, type ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, SlidersHorizontal, Users, LogOut } from "lucide-react";
+import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { cn } from "@/lib/utils.js";
 
@@ -40,9 +41,12 @@ export function UserMenu() {
     navigate(path);
   }
 
+  // The id token carries no `name` claim, so currentUser.name falls back to the email.
+  // Prefer the real name from the identity profile for the display label.
+  const profile = trpc.profile.get.useQuery();
   const initials = currentUser?.initials ?? "QC";
-  const name = currentUser?.name ?? "Usuario";
   const email = currentUser?.email ?? "";
+  const name = profile.data?.name?.trim() || currentUser?.name || "Usuario";
 
   return (
     <div className="relative">
