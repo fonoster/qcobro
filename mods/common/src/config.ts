@@ -195,6 +195,22 @@ export const aiConfigSchema = z
 
 export type AiConfig = z.infer<typeof aiConfigSchema>;
 
+/**
+ * Text-to-speech for previewing pre-recorded agent scripts in the console (the
+ * Pre-grabada gestión detail plays the script as audio). Optional — when absent, the
+ * apiKey falls back to `ELEVENLABS_API_KEY` / the Fonoster integrations file, and if no
+ * key resolves the player is simply unavailable. Voices come from `fonoster.voices`.
+ */
+export const ttsConfigSchema = z
+  .object({
+    provider: z.literal("elevenlabs").default("elevenlabs"),
+    apiKey: z.string().optional(),
+    model: z.string().default("eleven_multilingual_v2")
+  })
+  .optional();
+
+export type TtsConfig = z.infer<typeof ttsConfigSchema>;
+
 export const qcobroConfigSchema = z.object({
   /** Application (apiserver) database. */
   database: z.object({ url: z.string().min(1) }),
@@ -224,7 +240,8 @@ export const qcobroConfigSchema = z.object({
     }),
   fonoster: fonosterConfigSchema,
   twilio: twilioConfigSchema,
-  ai: aiConfigSchema
+  ai: aiConfigSchema,
+  tts: ttsConfigSchema
 });
 
 export type IdentityConfig = z.infer<typeof identityConfigSchema>;

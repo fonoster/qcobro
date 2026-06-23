@@ -35,8 +35,9 @@ app.post(
   })
 );
 
-// TEMPORARY (demo): synthesize a pre-recorded script to audio via ElevenLabs so the
-// Pre-grabada detail can play a real recording. Cached in-memory per voice+text.
+// Synthesize a pre-recorded agent's script to audio (ElevenLabs) so the Pre-grabada
+// gestión detail can play it. Cached in-memory per voice+text; 503 when TTS isn't
+// configured (the player then has nothing to play).
 const ttsCache = new Map<string, Buffer>();
 const DEMO_TTS_VOICE = config.fonoster?.voices?.[0]?.id ?? "86V9x9hrQds83qf7zaGn";
 app.get("/api/voice/tts", async (req, res) => {

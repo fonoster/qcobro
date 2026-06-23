@@ -61,5 +61,10 @@
     "temperature": 0,
     "maxTokens": 600,
     "generation": "onDemand"
+  },
+  "tts": {
+    "provider": "elevenlabs",
+    "apiKey": "CHANGE_ME",
+    "model": "eleven_multilingual_v2"
   }
 }
