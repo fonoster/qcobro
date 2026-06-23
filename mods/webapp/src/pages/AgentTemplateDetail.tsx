@@ -1,12 +1,12 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { Button } from "../components/ui/button.js";
 import { Badge } from "../components/ui/badge.js";
 import { PageHeader } from "../components/page-header.js";
 import { SectionCard } from "../components/section-card.js";
-import { KpiRow } from "../components/kpi-card.js";
 
 function ConfigRow({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null;
@@ -29,11 +29,6 @@ export function AgentTemplateDetail() {
         id: string;
         name: string;
         type: string;
-        collectionStrategy: string;
-        totalCalls: number;
-        totalPromises: number;
-        totalRecovered: number;
-        successRate: number;
         voiceAiConfig: Record<string, string | null> | null;
         voicePrerecordedConfig: Record<string, string | null> | null;
         smsConfig: Record<string, string | null> | null;
@@ -43,9 +38,25 @@ export function AgentTemplateDetail() {
       }
     | undefined;
 
+  const { data: voices } = trpc.config.voices.useQuery();
+
+  const [syncError, setSyncError] = useState(false);
+  const sync = trpc.agentTemplates.sync.useMutation({
+    onMutate: () => setSyncError(false),
+    onSuccess: () => query.refetch(),
+    onError: () => setSyncError(true)
+  });
+
   const isVoice = tmpl?.type === "VOICE_AI" || tmpl?.type === "VOICE_PRERECORDED";
   const voiceCfg = tmpl?.voiceAiConfig ?? tmpl?.voicePrerecordedConfig ?? null;
   const synced = voiceCfg?.fonosterAppRef != null;
+  const canResync = tmpl?.type === "VOICE_AI";
+
+  // Resolve the stored voice id to its catalog label (name, language, gender).
+  const voiceEntry = voices?.find((v) => v.id === voiceCfg?.voice);
+  const voiceLabel = voiceEntry
+    ? `${voiceEntry.name} (${voiceEntry.language}, ${t(`agents.gender.${voiceEntry.gender}` as Parameters<typeof t>[0])})`
+    : (voiceCfg?.voice ?? null);
 
   return (
     <div className="flex flex-col gap-6">
@@ -61,63 +72,56 @@ export function AgentTemplateDetail() {
         description={tmpl ? t(`agents.type.${tmpl.type}` as Parameters<typeof t>[0]) : undefined}
         action={
           isVoice ? (
-            <Badge variant={synced ? "success" : "orange"}>
-              {synced ? t("agents.sync.synced") : t("agents.sync.pending")}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Badge variant={syncError ? "destructive" : synced ? "success" : "orange"}>
+                {syncError
+                  ? t("agents.sync.error")
+                  : synced
+                    ? t("agents.sync.synced")
+                    : t("agents.sync.pending")}
+              </Badge>
+              {canResync && tmpl && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={sync.isPending}
+                  onClick={() => sync.mutate({ id: tmpl.id })}
+                >
+                  <RefreshCw className="mr-1 h-4 w-4" />
+                  {t("agents.sync.action")}
+                </Button>
+              )}
+            </div>
           ) : undefined
         }
       />
 
-      {tmpl && (
-        <KpiRow
-          cards={[
-            { label: t("agents.kpi.calls"), value: tmpl.totalCalls.toLocaleString() },
-            { label: t("agents.kpi.promises"), value: tmpl.totalPromises.toLocaleString() },
-            {
-              label: t("agents.kpi.recovered"),
-              value: new Intl.NumberFormat("es", {
-                style: "currency",
-                currency: "USD",
-                minimumFractionDigits: 0
-              }).format(tmpl.totalRecovered)
-            },
-            {
-              label: t("agents.kpi.successRate"),
-              value: `${Math.round(tmpl.successRate * 100)}%`
-            }
-          ]}
-        />
-      )}
-
       <SectionCard title={t("agents.detail.config")}>
         <div className="flex flex-col">
-          <ConfigRow
-            label={t("agents.form.strategy")}
-            value={
-              tmpl && t(`agents.strategy.${tmpl.collectionStrategy}` as Parameters<typeof t>[0])
-            }
-          />
           {voiceCfg && (
             <>
-              <ConfigRow label={t("agents.form.voice")} value={voiceCfg.voice} />
               <ConfigRow label={t("agents.form.language")} value={voiceCfg.language} />
+              <ConfigRow label={t("agents.form.voice")} value={voiceLabel} />
+              <ConfigRow label={t("agents.form.firstMessage")} value={voiceCfg.firstMessage} />
               <ConfigRow label={t("agents.form.systemPrompt")} value={voiceCfg.systemPrompt} />
               <ConfigRow label={t("agents.form.script")} value={voiceCfg.script} />
-              <ConfigRow label={t("agents.form.firstMessage")} value={voiceCfg.firstMessage} />
             </>
           )}
           {tmpl?.smsConfig && (
-            <ConfigRow label={t("agents.form.messageBody")} value={tmpl.smsConfig.messageBody} />
+            <>
+              <ConfigRow label={t("agents.form.messageBody")} value={tmpl.smsConfig.messageBody} />
+              <ConfigRow label={t("agents.form.senderId")} value={tmpl.smsConfig.senderId} />
+            </>
           )}
           {tmpl?.emailConfig && (
             <>
+              <ConfigRow label={t("agents.form.fromName")} value={tmpl.emailConfig.fromName} />
+              <ConfigRow label={t("agents.form.fromEmail")} value={tmpl.emailConfig.fromEmail} />
               <ConfigRow label={t("agents.form.subject")} value={tmpl.emailConfig.subject} />
               <ConfigRow
                 label={t("agents.form.messageBody")}
                 value={tmpl.emailConfig.messageBody}
               />
-              <ConfigRow label={t("agents.form.fromName")} value={tmpl.emailConfig.fromName} />
-              <ConfigRow label={t("agents.form.fromEmail")} value={tmpl.emailConfig.fromEmail} />
             </>
           )}
           {tmpl?.whatsAppConfig && (

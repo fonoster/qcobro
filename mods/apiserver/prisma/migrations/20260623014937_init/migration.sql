@@ -1,8 +1,8 @@
 -- CreateEnum
-CREATE TYPE "AgentType" AS ENUM ('SMS', 'VOICE_PRERECORDED', 'VOICE_AI', 'EMAIL', 'WHATSAPP');
+CREATE TYPE "Currency" AS ENUM ('USD', 'DOP');
 
 -- CreateEnum
-CREATE TYPE "CollectionStrategy" AS ENUM ('SOFT', 'MODERATE', 'FIRM');
+CREATE TYPE "AgentType" AS ENUM ('SMS', 'VOICE_PRERECORDED', 'VOICE_AI', 'EMAIL', 'WHATSAPP');
 
 -- CreateEnum
 CREATE TYPE "CampaignStatus" AS ENUM ('PAUSED', 'ACTIVE', 'COMPLETED', 'ARCHIVED');
@@ -22,12 +22,62 @@ CREATE TYPE "ObjectiveType" AS ENUM ('PAYMENT_PROMISE', 'PARTIAL_PAYMENT', 'CALL
 -- CreateEnum
 CREATE TYPE "ObjectiveStatus" AS ENUM ('PENDING', 'MET', 'BROKEN', 'CANCELLED');
 
--- AlterTable: PortfolioAccount hot-path suppression fields
-ALTER TABLE "portfolio_accounts"
-  ADD COLUMN "lastContactedAt" TIMESTAMP(3),
-  ADD COLUMN "suppressUntil" TIMESTAMP(3),
-  ADD COLUMN "intentStatus" "IntentStatus",
-  ADD COLUMN "totalAttempts" INTEGER NOT NULL DEFAULT 0;
+-- CreateTable
+CREATE TABLE "HealthCheck" (
+    "id" TEXT NOT NULL,
+    "note" TEXT NOT NULL DEFAULT 'ok',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "HealthCheck_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "portfolios" (
+    "id" TEXT NOT NULL,
+    "workspaceRef" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "clientId" TEXT NOT NULL,
+    "accountCount" INTEGER NOT NULL DEFAULT 0,
+    "totalOutstandingBalance" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "recoveredAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "currency" "Currency" NOT NULL DEFAULT 'USD',
+    "archivedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "portfolios_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "portfolio_accounts" (
+    "id" TEXT NOT NULL,
+    "portfolioId" TEXT NOT NULL,
+    "externalId" TEXT NOT NULL,
+    "fullName" TEXT NOT NULL,
+    "phone" TEXT,
+    "preferredLanguage" TEXT,
+    "bestTimeToCall" TEXT,
+    "customerSegment" TEXT,
+    "principalAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "termsAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "termsFrequency" TEXT,
+    "termsLength" INTEGER NOT NULL DEFAULT 0,
+    "outstandingBalance" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "daysPastDue" INTEGER NOT NULL DEFAULT 0,
+    "missedInstallments" INTEGER NOT NULL DEFAULT 0,
+    "lastPaymentDate" TIMESTAMP(3),
+    "lastPaymentAmount" DOUBLE PRECISION,
+    "negotiationOptions" TEXT,
+    "archivedAt" TIMESTAMP(3),
+    "lastContactedAt" TIMESTAMP(3),
+    "suppressUntil" TIMESTAMP(3),
+    "intentStatus" "IntentStatus",
+    "totalAttempts" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "portfolio_accounts_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "agent_templates" (
@@ -35,11 +85,7 @@ CREATE TABLE "agent_templates" (
     "workspaceRef" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "type" "AgentType" NOT NULL,
-    "collectionStrategy" "CollectionStrategy" NOT NULL DEFAULT 'MODERATE',
-    "totalCalls" INTEGER NOT NULL DEFAULT 0,
-    "totalPromises" INTEGER NOT NULL DEFAULT 0,
-    "totalRecovered" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "successRate" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "archivedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -66,7 +112,6 @@ CREATE TABLE "voice_prerecorded_configs" (
     "fonosterAppRef" TEXT,
     "voice" TEXT NOT NULL,
     "script" TEXT NOT NULL,
-    "firstMessage" TEXT NOT NULL,
     "language" TEXT NOT NULL,
 
     CONSTRAINT "voice_prerecorded_configs_pkey" PRIMARY KEY ("templateId")
@@ -112,7 +157,7 @@ CREATE TABLE "campaigns" (
     "endDate" TIMESTAMP(3),
     "startTime" TEXT NOT NULL,
     "endTime" TEXT NOT NULL,
-    "daysOfWeek" INTEGER[] DEFAULT ARRAY[]::INTEGER[],
+    "daysOfWeek" INTEGER[],
     "maxAttemptsPerAccount" INTEGER NOT NULL,
     "maxAttemptsPerDay" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -126,7 +171,7 @@ CREATE TABLE "campaign_portfolios" (
     "campaignId" TEXT NOT NULL,
     "portfolioId" TEXT NOT NULL,
 
-    CONSTRAINT "campaign_portfolios_pkey" PRIMARY KEY ("campaignId", "portfolioId")
+    CONSTRAINT "campaign_portfolios_pkey" PRIMARY KEY ("campaignId","portfolioId")
 );
 
 -- CreateTable
@@ -148,7 +193,7 @@ CREATE TABLE "campaign_account_states" (
     "lastAttemptAt" TIMESTAMP(3),
     "suppressUntil" TIMESTAMP(3),
 
-    CONSTRAINT "campaign_account_states_pkey" PRIMARY KEY ("campaignId", "portfolioAccountId")
+    CONSTRAINT "campaign_account_states_pkey" PRIMARY KEY ("campaignId","portfolioAccountId")
 );
 
 -- CreateTable
@@ -192,7 +237,16 @@ CREATE TABLE "objectives" (
 );
 
 -- CreateIndex
-CREATE INDEX "agent_templates_workspaceRef_idx" ON "agent_templates"("workspaceRef");
+CREATE INDEX "portfolios_workspaceRef_archivedAt_idx" ON "portfolios"("workspaceRef", "archivedAt");
+
+-- CreateIndex
+CREATE INDEX "portfolio_accounts_portfolioId_archivedAt_idx" ON "portfolio_accounts"("portfolioId", "archivedAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "portfolio_accounts_portfolioId_externalId_key" ON "portfolio_accounts"("portfolioId", "externalId");
+
+-- CreateIndex
+CREATE INDEX "agent_templates_workspaceRef_archivedAt_idx" ON "agent_templates"("workspaceRef", "archivedAt");
 
 -- CreateIndex
 CREATE INDEX "campaigns_workspaceRef_idx" ON "campaigns"("workspaceRef");
@@ -211,6 +265,9 @@ CREATE INDEX "account_contact_logs_portfolioAccountId_createdAt_idx" ON "account
 
 -- CreateIndex
 CREATE INDEX "objectives_portfolioAccountId_dueDate_idx" ON "objectives"("portfolioAccountId", "dueDate");
+
+-- AddForeignKey
+ALTER TABLE "portfolio_accounts" ADD CONSTRAINT "portfolio_accounts_portfolioId_fkey" FOREIGN KEY ("portfolioId") REFERENCES "portfolios"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "voice_ai_configs" ADD CONSTRAINT "voice_ai_configs_templateId_fkey" FOREIGN KEY ("templateId") REFERENCES "agent_templates"("id") ON DELETE CASCADE ON UPDATE CASCADE;

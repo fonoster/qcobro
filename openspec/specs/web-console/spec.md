@@ -212,3 +212,22 @@ The console SHALL include Storybook so reusable components can be developed and 
 
 - **WHEN** the Storybook build script is executed for the `webapp` package
 - **THEN** a static Storybook is produced without errors
+
+### Requirement: Agent Templates section
+
+The operator console SHALL have an "Agentes" page in the sidebar showing all agent
+templates for the workspace. The list table SHALL show: name, type (channel) badge,
+creation date, and row actions (Ver detalle, Editar, Archivar/Restaurar, Eliminar).
+The list SHALL NOT show a collection-strategy column, a status column, or performance
+KPIs; archived templates are revealed by a "Mostrar archivados" toggle. The page
+header SHALL surface example template variables and a documentation link.
+
+The detail page SHALL show: the template header with its channel badge (and a
+synchronization indicator for voice templates), a type-specific configuration summary,
+and a list of campaigns using this template. The detail page SHALL NOT show a KPI strip.
+
+#### Scenario: Agent template list shows channel and creation date
+
+- **WHEN** an operator views the Agentes page
+- **THEN** each row shows the template name, its channel badge, and its creation date —
+  with no collection-strategy or performance-counter columns

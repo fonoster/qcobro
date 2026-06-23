@@ -1,4 +1,10 @@
-## ADDED Requirements
+# agent-templates Specification
+
+## Purpose
+
+TBD — created by syncing change campaigns-core. Update Purpose after archive.
+
+## Requirements
 
 ### Requirement: AgentTemplate as a first-class workspace entity
 

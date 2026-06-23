@@ -24,7 +24,7 @@ const NAV: { icon: LucideIcon; labelKey: MessageId; to?: string; end?: boolean }
   { icon: Megaphone, labelKey: "nav.campaigns", to: "/campaigns" },
   { icon: Bot, labelKey: "nav.agents", to: "/agent-templates" },
   { icon: PhoneCall, labelKey: "nav.gestiones", to: "/gestiones" },
-  { icon: Handshake, labelKey: "nav.objetivos", to: "/objetivos" },
+  { icon: Handshake, labelKey: "nav.objetivos" },
   { icon: TrendingUp, labelKey: "nav.performance" }
 ];
 

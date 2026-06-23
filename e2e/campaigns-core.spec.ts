@@ -29,15 +29,19 @@ test.describe("campaigns core", () => {
     // --- 11.1 Create a VOICE_AI agent template --------------------------------
     await page.getByRole("link", { name: "Agentes IA" }).click();
     await expect(page).toHaveURL(/\/agent-templates$/);
+    // Template-variables hint is surfaced on the list header.
+    await expect(page.getByText("{{firstName}}")).toBeVisible();
     await page.getByRole("button", { name: /Nuevo agente/ }).click();
     await page.getByLabel("Nombre del agente").fill(agentName);
-    // VOICE_AI is the default type.
-    await page.getByLabel("Voz").fill("voice-es-1");
-    await page.getByLabel("Prompt del sistema").fill("Sé cordial y claro.");
+    // VOICE_AI is the default type. Idioma + Voz are now config-sourced selects.
+    await page.getByLabel("Idioma").selectOption("es");
+    await page.getByLabel("Voz").selectOption({ label: "Sofía (es, femenina)" });
     await page.getByLabel("Primer mensaje").fill("Hola, le llamo de QCobro.");
-    await page.getByLabel("Idioma").fill("es");
+    await page.getByLabel("Prompt del sistema").fill("Sé cordial y claro.");
     await page.getByRole("button", { name: "Crear agente" }).click();
-    await expect(page.getByText(agentName)).toBeVisible();
+    // VOICE_AI create runs a best-effort Fonoster sync inline (≤15s timeout), so
+    // give the row a wide window to appear.
+    await expect(page.getByText(agentName)).toBeVisible({ timeout: 25000 });
 
     // --- 11.2 Create a campaign (starts ACTIVE), running Mon + Fri only -------
     await page.getByRole("link", { name: "Campañas" }).click();
@@ -85,5 +89,38 @@ test.describe("campaigns core", () => {
     await expect(page.getByText(portfolioName)).toBeVisible();
     await expect(page.getByText("09:00–18:00")).toBeVisible();
     await expect(page.getByText("Lun, Vie, Sáb")).toBeVisible();
+  });
+
+  test("SMS agent template — create form variant and detail (no sync badge)", async ({ page }) => {
+    const owner = newOwner("sms-agent");
+    const stamp = Date.now();
+    const agentName = `Recordatorio ${stamp}`;
+    const body = "Hola {{firstName}}, su saldo es {{outstandingBalance}}.";
+
+    await signUpAndEnter(page, owner, `WS ${stamp}`);
+
+    await page.getByRole("link", { name: "Agentes IA" }).click();
+    await expect(page).toHaveURL(/\/agent-templates$/);
+    await page.getByRole("button", { name: /Nuevo agente/ }).click();
+
+    // Switch the channel to SMS — the form swaps to text-channel fields (no voice).
+    await page.getByLabel("Nombre del agente").fill(agentName);
+    await page.getByLabel("Tipo de canal").selectOption({ label: "SMS" });
+    await expect(page.getByLabel("Voz")).toHaveCount(0);
+    await page.getByLabel("Cuerpo del mensaje").fill(body);
+    await page.getByLabel(/ID de remitente/).fill("MIKRO");
+    await page.getByRole("button", { name: "Crear agente" }).click();
+
+    const row = page.locator("tr", { hasText: agentName });
+    await expect(row).toBeVisible();
+    await expect(row.getByText("SMS", { exact: true })).toBeVisible();
+
+    // Detail: text-channel config rows, and NO Fonoster sync badge/action.
+    await row.getByText(agentName).click();
+    await expect(page).toHaveURL(/\/agent-templates\/[a-f0-9-]+$/);
+    await expect(page.getByText(body)).toBeVisible();
+    await expect(page.getByText("MIKRO")).toBeVisible();
+    await expect(page.getByText("Sincronizado")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Sincronizar" })).toHaveCount(0);
   });
 });

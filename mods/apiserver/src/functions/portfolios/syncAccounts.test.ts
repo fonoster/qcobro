@@ -117,7 +117,7 @@ function makeTx(existing: PortfolioAccountRecord[]) {
       },
       delete: async () => ({ id: "p1" }) as never
     },
-    portfolioAccount: tx.portfolioAccount,
+    portfolioAccount: tx.portfolioAccount as never,
     $transaction: async <T>(fn: (tx: PortfolioClient) => Promise<T>) =>
       fn(tx as unknown as PortfolioClient)
   };

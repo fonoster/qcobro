@@ -9,12 +9,8 @@ export const agentTypeSchema = z.enum([
 ]);
 export type AgentType = z.infer<typeof agentTypeSchema>;
 
-export const collectionStrategySchema = z.enum(["SOFT", "MODERATE", "FIRM"]);
-export type CollectionStrategy = z.infer<typeof collectionStrategySchema>;
-
 const baseFields = {
-  name: z.string().min(1).max(120),
-  collectionStrategy: collectionStrategySchema.default("MODERATE")
+  name: z.string().min(1).max(120)
 };
 
 /**
@@ -37,7 +33,6 @@ export const createAgentTemplateSchema = z.discriminatedUnion("type", [
     type: z.literal("VOICE_PRERECORDED"),
     voice: z.string().min(1),
     script: z.string().min(1),
-    firstMessage: z.string().min(1),
     language: z.string().min(1),
     fonosterAppName: z.string().min(1).optional()
   }),
@@ -73,7 +68,6 @@ export const updateAgentTemplateSchema = z
   .object({
     id: z.string().min(1),
     name: z.string().min(1).max(120).optional(),
-    collectionStrategy: collectionStrategySchema.optional(),
     // `archived` toggles the template's archived state: true sets `archivedAt` to
     // now, false clears it (restore). Templates have no status concept.
     archived: z.boolean().optional(),
@@ -86,3 +80,9 @@ export const deleteAgentTemplateSchema = z.object({
   id: z.string().min(1)
 });
 export type DeleteAgentTemplateInput = z.infer<typeof deleteAgentTemplateSchema>;
+
+/** Manually re-attempt the Fonoster sync for a voice template. */
+export const syncAgentTemplateSchema = z.object({
+  id: z.string().min(1)
+});
+export type SyncAgentTemplateInput = z.infer<typeof syncAgentTemplateSchema>;

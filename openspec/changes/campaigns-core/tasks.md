@@ -82,8 +82,8 @@
 ## 10. Pencil — Design
 
 - [x] 10.1 Design agent template list screen (table + KPI strip + "Nuevo agente" button)
-- [ ] 10.2 Design "Nuevo agente" modal (type selector + conditional type-specific fields)
-- [ ] 10.3 Design agent template detail screen (config summary + sync status badge for voice + campaigns list)
+- [x] 10.2 Design "Nuevo agente" modal (type selector + conditional type-specific fields) — all 5 channels
+- [x] 10.3 Design agent template detail screen (config summary + sync status badge for voice + campaigns list) — all 5 channels
 - [ ] 10.4 Add `CAMPAÑAS`, `GESTIONES`, `OBJETIVOS` flow sections to Application Flow
 - [x] 10.5 Design campaign list screen (table with status filter + "Nueva campaña" button; split Días + Horario columns)
 - [x] 10.6 Design "Nueva campaña" modal (all form fields + 7-day toggle for days of week)
@@ -113,3 +113,60 @@
 - [x] 12.9 Webapp CampaignDetail: status-change controls (Activar/Pausar + Completar/Archivar); show days + schedule
 - [x] 12.10 Update unit tests: createCampaign (PAUSED + daysOfWeek), deleteCampaign (attempts rule), updateCampaignStatus transitions
 - [x] 12.11 Update e2e: campaign starts PAUSED, activate flips badge, individual-day toggle persists
+
+## 13. Agent-templates refinement (design-driven — this /ps:ship pass)
+
+Model reconcile (remove strategy + counters; voz pregrabada loses firstMessage):
+
+- [x] 13.1 schema.prisma: drop `collectionStrategy`, `totalCalls`, `totalPromises`,
+      `totalRecovered`, `successRate` from `AgentTemplate`; drop `firstMessage` from
+      `VoicePrerecordedConfig`; remove `CollectionStrategy` enum if now unused; migration
+- [x] 13.2 common `agentTemplates.ts`: remove `collectionStrategySchema`,
+      `baseFields.collectionStrategy`, the VOICE_PRERECORDED `firstMessage` field, and
+      `updateAgentTemplateSchema.collectionStrategy`
+- [x] 13.3 common `types/agentTemplates.ts`: drop `collectionStrategy`/counters from
+      `AgentTemplateRecord`; drop `firstMessage` from `VoicePrerecordedConfigRecord`
+- [x] 13.4 `createAgentTemplate`/`updateAgentTemplate`: stop reading/writing strategy;
+      stop writing VOICE_PRERECORDED firstMessage
+- [x] 13.5 `createContactLog`: stop incrementing `AgentTemplate.totalCalls`/`totalPromises`
+- [x] 13.6 Update agent-template unit tests + createContactLog test for the above
+
+Voices from config:
+
+- [x] 13.7 `config.ts`: add `apiserver.voices: { id, name, language, gender, provider }[]`
+      (provider default `elevenlabs`); seed 3 es voices in `qcobro.json` + `qcobro-prod.json`
+- [x] 13.8 Expose voices via a `config` tRPC query; webapp voice `<select>` reads it
+      (labels "Sofía (es, femenina)"); detail shows voice name/lang/gender, not raw id
+
+Webapp channel forms + variables hint:
+
+- [x] 13.9 `AgentTemplates.tsx`: remove strategy column/field + counters column; enable
+      WhatsApp create (no longer "próximamente"); render all 5 channel field sets per design;
+      VOICE_AI puts Primer mensaje above Prompt; VOICE_PRERECORDED uses Guión (no firstMessage)
+- [x] 13.10 `AgentTemplateDetail.tsx`: remove KPI strip + strategy row; channel-specific
+      config summary; sync indicator only for voice types
+- [x] 13.11 List header: add template-variables hint (example tokens + docs link); i18n keys
+
+Fonoster integration — VOICE_AI only this pass (VOICE_PRERECORDED deferred per user;
+SMS/Email/WhatsApp dispatch deferred):
+
+- [x] 13.12 Add `@fonoster/sdk` dep to apiserver. Add a `fonoster` block to `qcobro.json`
+      config: accessKeyId, apiKey, apiSecret, endpoint + autopilot defaults (sttProductRef
+      `stt.deepgram`, ttsProductRef `tts.elevenlabs`, llmProductRef `llm.google`, model
+      `gemini-2.0-flash`). Reference: autopilot-demos/call.cjs (SDK.Client + loginWithApiKey),
+      mikro/autopilot-gentle.yaml (AUTOPILOT application shape).
+- [x] 13.13 Define a `VoiceApplicationClient` port (interface) in common +
+      `FonosterVoiceApplicationClient` adapter in apiserver wrapping `SDK.Applications`
+      (create/update/delete an AUTOPILOT app); inject through the tRPC context (DI, like
+      prisma/identity). Map VoiceAiConfig → app: name=fonosterAppName, tts voice=voice,
+      intelligence.systemPrompt=systemPrompt, firstMessage, stt languageCode from language.
+- [x] 13.14 `createAgentTemplate`/`updateAgentTemplate` for VOICE_AI: create/update the
+      Fonoster app, populate `fonosterAppRef`; on failure save locally and surface an error
+      state (no throw) per the "saves locally even if Fonoster sync fails" scenario.
+- [x] 13.15 `syncAgentTemplate` function + tRPC procedure: manual retry that re-attempts the
+      Fonoster app create/update and populates `fonosterAppRef`.
+- [x] 13.16 Unit tests: VOICE_AI create syncs (stubbed port); sync-failure saves locally +
+      flags error + Fonoster side effect mapping; manual re-sync succeeds.
+- [x] 13.17 Webapp: surface "Sincronizado" / "Error de sincronización" + manual re-sync.
+
+Pencil (done this pass): 10.2 create modal, 10.3 detail — and per-channel screens + hint.

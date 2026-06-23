@@ -26,12 +26,6 @@ enum AgentType {
   WHATSAPP
 }
 
-enum CollectionStrategy {
-  SOFT
-  MODERATE
-  FIRM
-}
-
 enum CampaignStatus {
   PAUSED
   ACTIVE
@@ -144,11 +138,6 @@ model AgentTemplate {
   workspaceRef           String
   name                   String
   type                   AgentType
-  collectionStrategy     CollectionStrategy      @default(MODERATE)
-  totalCalls             Int                     @default(0)
-  totalPromises          Int                     @default(0)
-  totalRecovered         Float                   @default(0)
-  successRate            Float                   @default(0)
   archivedAt             DateTime?
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
@@ -182,7 +171,6 @@ model VoicePrerecordedConfig {
   fonosterAppRef  String?
   voice           String
   script          String
-  firstMessage    String
   language        String
   template        AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 

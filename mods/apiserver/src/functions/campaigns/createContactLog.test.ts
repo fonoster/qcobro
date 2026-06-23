@@ -8,7 +8,6 @@ interface Captured {
   objective?: Record<string, unknown>;
   stateCreate?: Record<string, unknown>;
   stateUpdate?: Record<string, unknown>;
-  templateUpdate?: Record<string, unknown>;
 }
 
 function makeClient(opts: { existingState?: boolean } = {}) {
@@ -32,9 +31,6 @@ function makeClient(opts: { existingState?: boolean } = {}) {
         return { id: "obj-1", ...args.data } as never;
       }
     },
-    campaign: {
-      findFirst: async () => ({ id: "camp-1", agentTemplateId: "tmpl-1" }) as never
-    },
     campaignTrigger: {
       findMany: async () => []
     },
@@ -46,12 +42,6 @@ function makeClient(opts: { existingState?: boolean } = {}) {
         cap.stateCreate = args.create;
         cap.stateUpdate = args.update;
         return {} as never;
-      }
-    },
-    agentTemplate: {
-      update: async (args: { where: { id: string }; data: Record<string, unknown> }) => {
-        cap.templateUpdate = args.data;
-        return { id: args.where.id } as never;
       }
     },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>) => fn(client)
@@ -100,9 +90,6 @@ describe("createContactLog", () => {
     // Objective created with the promised amount + due date.
     assert.equal(cap.objective?.type, "PAYMENT_PROMISE");
     assert.equal(cap.objective?.amount, 500);
-    // Agent template counters bumped (call + promise).
-    assert.deepEqual(cap.templateUpdate?.totalCalls, { increment: 1 });
-    assert.deepEqual(cap.templateUpdate?.totalPromises, { increment: 1 });
   });
 
   it("increments CampaignAccountState counts", async () => {

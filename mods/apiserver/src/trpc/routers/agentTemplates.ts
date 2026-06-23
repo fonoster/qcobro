@@ -3,12 +3,14 @@ import {
   agentTypeSchema,
   createAgentTemplateSchema,
   updateAgentTemplateSchema,
-  deleteAgentTemplateSchema
+  deleteAgentTemplateSchema,
+  syncAgentTemplateSchema
 } from "@qcobro/common";
 import { router, workspaceProcedure } from "../trpc.js";
 import { createCreateAgentTemplate } from "../../functions/agentTemplates/createAgentTemplate.js";
 import { createUpdateAgentTemplate } from "../../functions/agentTemplates/updateAgentTemplate.js";
 import { createDeleteAgentTemplate } from "../../functions/agentTemplates/deleteAgentTemplate.js";
+import { createSyncAgentTemplate } from "../../functions/agentTemplates/syncAgentTemplate.js";
 
 export const agentTemplatesRouter = router({
   list: workspaceProcedure
@@ -45,13 +47,31 @@ export const agentTemplatesRouter = router({
   create: workspaceProcedure
     .input(createAgentTemplateSchema)
     .mutation(({ input, ctx }) =>
-      createCreateAgentTemplate(ctx.prisma as never, ctx.workspace.accessKeyId)(input)
+      createCreateAgentTemplate(
+        ctx.prisma as never,
+        ctx.workspace.accessKeyId,
+        ctx.voiceApplications
+      )(input)
     ),
 
   update: workspaceProcedure
     .input(updateAgentTemplateSchema)
     .mutation(({ input, ctx }) =>
-      createUpdateAgentTemplate(ctx.prisma as never, ctx.workspace.accessKeyId)(input)
+      createUpdateAgentTemplate(
+        ctx.prisma as never,
+        ctx.workspace.accessKeyId,
+        ctx.voiceApplications
+      )(input)
+    ),
+
+  sync: workspaceProcedure
+    .input(syncAgentTemplateSchema)
+    .mutation(({ input, ctx }) =>
+      createSyncAgentTemplate(
+        ctx.prisma as never,
+        ctx.workspace.accessKeyId,
+        ctx.voiceApplications
+      )(input)
     ),
 
   delete: workspaceProcedure

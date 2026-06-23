@@ -18,7 +18,89 @@ export const identityConfigSchema = z.object({
   httpBridgeUrl: z.string().default("http://localhost:9110")
 });
 
+/**
+ * A selectable voice in the deployment's catalog. Voice agent templates pick a
+ * voice by `id` (the provider's voice identifier, e.g. an ElevenLabs voice id);
+ * the console renders the picker from this catalog rather than free text.
+ */
+export const voiceCatalogEntrySchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  language: z.string().min(1),
+  gender: z.enum(["female", "male"]),
+  provider: z.string().min(1).default("elevenlabs")
+});
+
+export type VoiceCatalogEntry = z.infer<typeof voiceCatalogEntrySchema>;
+
+/**
+ * Fonoster connection + Autopilot defaults. VOICE_AI agent templates are synced to
+ * Fonoster as AUTOPILOT applications; the apiserver authenticates with a workspace
+ * access key + API key/secret. Optional — when absent, voice templates save locally
+ * and stay unsynced (the console offers a manual re-sync).
+ */
+export const fonosterConfigSchema = z
+  .object({
+    accessKeyId: z.string().min(1),
+    apiKey: z.string().min(1),
+    apiSecret: z.string().min(1),
+    /** Optional override for the Fonoster API endpoint (host:port). */
+    endpoint: z.string().optional(),
+    /** Default products/model used when building the Autopilot application. */
+    autopilot: z
+      .object({
+        sttProductRef: z.string().default("stt.deepgram"),
+        sttModel: z.string().default("nova-3"),
+        ttsProductRef: z.string().default("tts.elevenlabs"),
+        llmProductRef: z.string().default("llm.google"),
+        llmProvider: z.string().default("google"),
+        llmModel: z.string().default("gemini-2.0-flash"),
+        maxTokens: z.number().default(300),
+        temperature: z.number().default(0)
+      })
+      .default({
+        sttProductRef: "stt.deepgram",
+        sttModel: "nova-3",
+        ttsProductRef: "tts.elevenlabs",
+        llmProductRef: "llm.google",
+        llmProvider: "google",
+        llmModel: "gemini-2.0-flash",
+        maxTokens: 300,
+        temperature: 0
+      })
+  })
+  .optional();
+
+export type FonosterConfig = z.infer<typeof fonosterConfigSchema>;
+
 export const qcobroConfigSchema = z.object({
+  /**
+   * Selectable voice catalog for voice agent templates. Seeded with three
+   * Spanish voices; deployments override in `qcobro.json`.
+   */
+  voices: z.array(voiceCatalogEntrySchema).default([
+    {
+      id: "86V9x9hrQds83qf7zaGn",
+      name: "Sofía",
+      language: "es",
+      gender: "female",
+      provider: "elevenlabs"
+    },
+    {
+      id: "tTQzD8U8Gd5cKQEnxNyf",
+      name: "Carmen",
+      language: "es",
+      gender: "female",
+      provider: "elevenlabs"
+    },
+    {
+      id: "Iowum0gIcGfYE94JArBb",
+      name: "Andrés",
+      language: "es",
+      gender: "male",
+      provider: "elevenlabs"
+    }
+  ]),
   /** Application (apiserver) database. */
   database: z.object({ url: z.string().min(1) }),
   identity: identityConfigSchema,
@@ -33,7 +115,8 @@ export const qcobroConfigSchema = z.object({
       /** External contact-log ingress (`POST /api/contact-logs`) auth gate. */
       contactLogAuth: z.object({ enabled: z.boolean().default(false) }).default({ enabled: false })
     })
-    .default({ port: 3000, timezone: "America/Costa_Rica", contactLogAuth: { enabled: false } })
+    .default({ port: 3000, timezone: "America/Costa_Rica", contactLogAuth: { enabled: false } }),
+  fonoster: fonosterConfigSchema
 });
 
 export type IdentityConfig = z.infer<typeof identityConfigSchema>;

@@ -248,8 +248,8 @@ function CreatePortfolioModal({
           value={currency}
           onChange={(e) => setCurrency(e.target.value as "USD" | "DOP")}
         >
-          <option value="USD">{t("portfolios.currency.USD")}</option>
           <option value="DOP">{t("portfolios.currency.DOP")}</option>
+          <option value="USD">{t("portfolios.currency.USD")}</option>
         </SelectGroup>
         {error && <p className="text-xs text-red-600">{error}</p>}
         <p className="text-xs text-slate-400">{t("portfolios.form.csvNote")}</p>

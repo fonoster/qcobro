@@ -1,6 +1,8 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
+import type { VoiceApplicationClient } from "@qcobro/common";
 import { prisma } from "../db.js";
 import { createIdentityClient } from "@fonoster/identity-client";
+import { FonosterVoiceApplicationClient } from "../services/fonosterVoiceApplicationClient.js";
 import { config } from "../config.js";
 
 export interface AuthedUser {
@@ -19,6 +21,12 @@ const WORKSPACE_HEADER = "x-workspace";
 
 // Shared singletons reached by procedures through the context.
 const identity = createIdentityClient(config.identity.endpoint);
+
+// Voice-application sync is optional: only wired when Fonoster is configured.
+// When absent, voice templates save locally and stay unsynced until configured.
+const voiceApplications: VoiceApplicationClient | null = config.fonoster
+  ? new FonosterVoiceApplicationClient(config.fonoster)
+  : null;
 
 function headerValue(value: string | string[] | undefined): string | null {
   if (Array.isArray(value)) return value[0] ?? null;
@@ -53,7 +61,7 @@ export async function createContext(opts: CreateExpressContextOptions) {
     }
   }
 
-  return { token, user, workspace, prisma, identity };
+  return { token, user, workspace, prisma, identity, voiceApplications };
 }
 
 export type Context = Awaited<ReturnType<typeof createContext>>;

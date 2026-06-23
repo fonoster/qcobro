@@ -6,6 +6,7 @@ import { profileRouter } from "./routers/profile.js";
 import { portfoliosRouter } from "./routers/portfolios.js";
 import { agentTemplatesRouter } from "./routers/agentTemplates.js";
 import { campaignsRouter } from "./routers/campaigns.js";
+import { configRouter } from "./routers/config.js";
 
 export const appRouter = router({
   health: healthRouter,
@@ -14,7 +15,8 @@ export const appRouter = router({
   profile: profileRouter,
   portfolios: portfoliosRouter,
   agentTemplates: agentTemplatesRouter,
-  campaigns: campaignsRouter
+  campaigns: campaignsRouter,
+  config: configRouter
 });
 
 export type AppRouter = typeof appRouter;

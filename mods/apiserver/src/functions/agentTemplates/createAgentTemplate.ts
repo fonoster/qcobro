@@ -2,23 +2,32 @@ import {
   createAgentTemplateSchema,
   withErrorHandlingAndValidation,
   type AgentTemplateClient,
-  type CreateAgentTemplateInput
+  type CreateAgentTemplateInput,
+  type VoiceApplicationClient
 } from "@qcobro/common";
+import { syncVoiceAiApplication } from "./syncVoiceApplication.js";
 
 /**
  * Creates an agent template: a base `AgentTemplate` row plus the one child
  * config row for its channel type, in a single transaction. Type-specific
  * required fields are enforced by the discriminated-union schema.
+ *
+ * For VOICE_AI, after the records are written the template is synced to Fonoster
+ * (best-effort): on success `fonosterAppRef` is populated; on failure the template
+ * stays saved locally and unsynced, and the operator can re-sync manually.
  */
-export function createCreateAgentTemplate(client: AgentTemplateClient, workspaceRef: string) {
+export function createCreateAgentTemplate(
+  client: AgentTemplateClient,
+  workspaceRef: string,
+  voiceApplications?: VoiceApplicationClient | null
+) {
   const fn = async (params: CreateAgentTemplateInput) => {
-    return client.$transaction(async (tx) => {
+    const base = await client.$transaction(async (tx) => {
       const base = await tx.agentTemplate.create({
         data: {
           workspaceRef,
           name: params.name,
-          type: params.type,
-          collectionStrategy: params.collectionStrategy
+          type: params.type
         }
       });
 
@@ -42,7 +51,6 @@ export function createCreateAgentTemplate(client: AgentTemplateClient, workspace
               fonosterAppName: params.fonosterAppName ?? params.name,
               voice: params.voice,
               script: params.script,
-              firstMessage: params.firstMessage,
               language: params.language
             }
           });
@@ -80,6 +88,16 @@ export function createCreateAgentTemplate(client: AgentTemplateClient, workspace
 
       return base;
     });
+
+    if (params.type === "VOICE_AI" && voiceApplications) {
+      try {
+        await syncVoiceAiApplication(client, voiceApplications, base.id);
+      } catch {
+        // Saved locally; fonosterAppRef stays null. The operator can re-sync.
+      }
+    }
+
+    return base;
   };
 
   return withErrorHandlingAndValidation(fn, createAgentTemplateSchema);

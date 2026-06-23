@@ -56,8 +56,8 @@ function addHours(date: Date, hours: number): Date {
  *   field is left untouched — other campaigns stay eligible.
  * - CALLBACK_REQUESTED: set campaign-local suppression to the requested time
  *   (fallback `now + suppressHours`).
- * - Per campaign: increment `CampaignAccountState` counters and the agent
- *   template's `totalCalls` (and `totalPromises` when a promise is recorded).
+ * - Per campaign: increment `CampaignAccountState` counters. Agent templates carry
+ *   no denormalized counters — outreach is aggregated from contact logs at query time.
  */
 export function createCreateContactLog(client: CampaignClient) {
   const fn = async (params: CreateContactLogInput) => {
@@ -98,7 +98,6 @@ export function createCreateContactLog(client: CampaignClient) {
       });
 
       // Objective creation for payment outcomes.
-      let createdPromise = false;
       let promiseDueDate: Date | null = null;
       if (params.outcome === "PAYMENT_PROMISE") {
         const promisedDate =
@@ -115,7 +114,6 @@ export function createCreateContactLog(client: CampaignClient) {
             status: "PENDING"
           }
         });
-        createdPromise = true;
       } else if (params.outcome === "PARTIAL_PAYMENT_AGREED") {
         const startDate = typeof meta.startDate === "string" ? new Date(meta.startDate) : null;
         const installmentAmount =
@@ -131,12 +129,10 @@ export function createCreateContactLog(client: CampaignClient) {
             status: "PENDING"
           }
         });
-        createdPromise = true;
       }
 
       // Campaign-scoped updates (only when a campaign initiated the contact).
       if (params.campaignId) {
-        const campaign = await tx.campaign.findFirst({ where: { id: params.campaignId } });
         const triggers = await tx.campaignTrigger.findMany({
           where: { campaignId: params.campaignId }
         });
@@ -174,16 +170,6 @@ export function createCreateContactLog(client: CampaignClient) {
             ...(suppressUntil ? { suppressUntil } : {})
           }
         });
-
-        if (campaign) {
-          await tx.agentTemplate.update({
-            where: { id: campaign.agentTemplateId },
-            data: {
-              totalCalls: { increment: 1 },
-              ...(createdPromise ? { totalPromises: { increment: 1 } } : {})
-            }
-          });
-        }
       }
 
       return log;

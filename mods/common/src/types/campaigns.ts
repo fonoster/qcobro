@@ -93,11 +93,6 @@ export interface CampaignClient {
     findFirst(args: {
       where: { id: string; workspaceRef: string };
     }): Promise<{ id: string; workspaceRef: string; type: AgentType } | null>;
-
-    update(args: {
-      where: { id: string };
-      data: { totalCalls?: { increment: number }; totalPromises?: { increment: number } };
-    }): Promise<{ id: string }>;
   };
 
   campaign: {

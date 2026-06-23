@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@fonoster/identity-client": "file:../../../fonoster/mods/identity-client",
+    "@fonoster/sdk": "file:../../../fonoster/mods/sdk",
     "@grpc/grpc-js": "^1.10.6",
     "@prisma/client": "^6.0.0",
     "@qcobro/common": "*",

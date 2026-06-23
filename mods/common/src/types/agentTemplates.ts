@@ -1,6 +1,5 @@
 import type {
   AgentType,
-  CollectionStrategy,
   CreateAgentTemplateInput,
   UpdateAgentTemplateInput,
   DeleteAgentTemplateInput
@@ -11,11 +10,6 @@ export interface AgentTemplateRecord {
   workspaceRef: string;
   name: string;
   type: AgentType;
-  collectionStrategy: CollectionStrategy;
-  totalCalls: number;
-  totalPromises: number;
-  totalRecovered: number;
-  successRate: number;
   archivedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -37,7 +31,6 @@ export interface VoicePrerecordedConfigRecord {
   fonosterAppRef: string | null;
   voice: string;
   script: string;
-  firstMessage: string;
   language: string;
 }
 
@@ -61,10 +54,11 @@ export interface WhatsAppConfigRecord {
   messageBody: string;
 }
 
-/** A child-config delegate exposing the create/update calls the functions use. */
+/** A child-config delegate exposing the create/read/update calls the functions use. */
 interface ChildConfigDelegate<R> {
   create(args: { data: Record<string, unknown> }): Promise<R>;
   update(args: { where: { templateId: string }; data: Record<string, unknown> }): Promise<R>;
+  findUnique(args: { where: { templateId: string } }): Promise<R | null>;
 }
 
 export interface AgentTemplateClient {

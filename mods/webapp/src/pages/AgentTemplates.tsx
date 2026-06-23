@@ -18,13 +18,42 @@ type Template = {
   id: string;
   name: string;
   type: AgentType;
-  collectionStrategy: string;
-  totalCalls: number;
   archivedAt: Date | string | null;
   createdAt: Date | string;
 };
 
 const TYPE_FILTERS: AgentType[] = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL", "WHATSAPP"];
+
+/** Documentation listing every supported template variable. */
+const VARS_DOC_URL = "https://docs.qcobro.com/agentes/variables";
+const EXAMPLE_VARS = ["{{firstName}}", "{{principalAmount}}", "{{outstandingBalance}}"];
+
+/** Example template variables + a link to the full reference, under the page header. */
+function VariablesHint() {
+  const { t } = useI18n();
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-sm">
+      <span className="font-medium text-slate-400">{t("agents.vars.label")}</span>
+      {EXAMPLE_VARS.map((v) => (
+        <code
+          key={v}
+          className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-600"
+        >
+          {v}
+        </code>
+      ))}
+      <span className="text-slate-300">·</span>
+      <a
+        href={VARS_DOC_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="font-medium text-emerald-600 underline"
+      >
+        {t("agents.vars.link")}
+      </a>
+    </div>
+  );
+}
 
 export function AgentTemplates() {
   const { t } = useI18n();
@@ -57,7 +86,10 @@ export function AgentTemplates() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={t("agents.title")} description={t("agents.description")} />
+      <div className="flex flex-col gap-2">
+        <PageHeader title={t("agents.title")} description={t("agents.description")} />
+        <VariablesHint />
+      </div>
 
       <DataTable
         data={templates}
@@ -100,16 +132,6 @@ export function AgentTemplates() {
                 {t(`agents.type.${r.type}` as Parameters<typeof t>[0])}
               </Badge>
             )
-          },
-          {
-            key: "collectionStrategy",
-            header: t("agents.col.strategy"),
-            render: (r) => t(`agents.strategy.${r.collectionStrategy}` as Parameters<typeof t>[0])
-          },
-          {
-            key: "totalCalls",
-            header: t("agents.col.calls"),
-            render: (r) => r.totalCalls.toLocaleString()
           },
           {
             key: "createdAt",
@@ -179,6 +201,7 @@ export function AgentTemplates() {
 }
 
 const CREATABLE_TYPES: AgentType[] = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL", "WHATSAPP"];
+const LANGUAGES = ["es", "en"] as const;
 
 function CreateAgentTemplateModal({
   onClose,
@@ -190,9 +213,10 @@ function CreateAgentTemplateModal({
   const { t } = useI18n();
   const [name, setName] = useState("");
   const [type, setType] = useState<AgentType>("VOICE_AI");
-  const [strategy, setStrategy] = useState("MODERATE");
-  const [fields, setFields] = useState<Record<string, string>>({});
+  const [fields, setFields] = useState<Record<string, string>>({ language: "es" });
   const [error, setError] = useState<string | null>(null);
+
+  const { data: voices } = trpc.config.voices.useQuery();
 
   const create = trpc.agentTemplates.create.useMutation({
     onSuccess,
@@ -209,10 +233,7 @@ function CreateAgentTemplateModal({
       return;
     }
     setError(null);
-    const base = {
-      name: name.trim(),
-      collectionStrategy: strategy as "SOFT" | "MODERATE" | "FIRM"
-    };
+    const base = { name: name.trim() };
     let payload: Record<string, unknown>;
     switch (type) {
       case "VOICE_AI":
@@ -231,28 +252,40 @@ function CreateAgentTemplateModal({
           type,
           voice: fields.voice ?? "",
           script: fields.script ?? "",
-          firstMessage: fields.firstMessage ?? "",
           language: fields.language ?? "es"
         };
         break;
       case "SMS":
-        payload = { ...base, type, messageBody: fields.messageBody ?? "" };
+        payload = {
+          ...base,
+          type,
+          messageBody: fields.messageBody ?? "",
+          ...(fields.senderId ? { senderId: fields.senderId } : {})
+        };
         break;
       case "EMAIL":
         payload = {
           ...base,
           type,
-          subject: fields.subject ?? "",
-          messageBody: fields.messageBody ?? "",
           fromName: fields.fromName ?? "",
-          fromEmail: fields.fromEmail ?? ""
+          fromEmail: fields.fromEmail ?? "",
+          subject: fields.subject ?? "",
+          messageBody: fields.messageBody ?? ""
         };
         break;
-      default:
-        return; // WHATSAPP disabled
+      case "WHATSAPP":
+        payload = {
+          ...base,
+          type,
+          templateName: fields.templateName ?? "",
+          messageBody: fields.messageBody ?? ""
+        };
+        break;
     }
     create.mutate(payload as never);
   }
+
+  const isVoice = type === "VOICE_AI" || type === "VOICE_PRERECORDED";
 
   return (
     <Dialog
@@ -276,73 +309,101 @@ function CreateAgentTemplateModal({
           onChange={(e) => setType(e.target.value as AgentType)}
         >
           {CREATABLE_TYPES.map((tp) => (
-            <option key={tp} value={tp} disabled={tp === "WHATSAPP"}>
+            <option key={tp} value={tp}>
               {t(`agents.type.${tp}` as Parameters<typeof t>[0])}
-              {tp === "WHATSAPP" ? ` — ${t("agents.whatsapp.soon")}` : ""}
             </option>
           ))}
         </SelectGroup>
-        <SelectGroup
-          label={t("agents.form.strategy")}
-          id="a-strategy"
-          value={strategy}
-          onChange={(e) => setStrategy(e.target.value)}
-        >
-          <option value="SOFT">{t("agents.strategy.SOFT")}</option>
-          <option value="MODERATE">{t("agents.strategy.MODERATE")}</option>
-          <option value="FIRM">{t("agents.strategy.FIRM")}</option>
-        </SelectGroup>
 
-        {(type === "VOICE_AI" || type === "VOICE_PRERECORDED") && (
+        {isVoice && (
           <>
-            <InputGroup
+            <SelectGroup
+              label={t("agents.form.language")}
+              id="a-lang"
+              value={fields.language ?? "es"}
+              onChange={(e) => set("language", e.target.value)}
+            >
+              {LANGUAGES.map((lng) => (
+                <option key={lng} value={lng}>
+                  {t(`agents.lang.${lng}` as Parameters<typeof t>[0])}
+                </option>
+              ))}
+            </SelectGroup>
+            <SelectGroup
               label={t("agents.form.voice")}
               id="a-voice"
               value={fields.voice ?? ""}
               onChange={(e) => set("voice", e.target.value)}
-            />
-            {type === "VOICE_AI" ? (
-              <TextareaGroup
-                label={t("agents.form.systemPrompt")}
-                id="a-prompt"
-                value={fields.systemPrompt ?? ""}
-                onChange={(e) => set("systemPrompt", e.target.value)}
-              />
-            ) : (
-              <TextareaGroup
-                label={t("agents.form.script")}
-                id="a-script"
-                value={fields.script ?? ""}
-                onChange={(e) => set("script", e.target.value)}
-              />
-            )}
-            <InputGroup
+            >
+              <option value="" disabled>
+                {t("agents.form.voicePlaceholder")}
+              </option>
+              {(voices ?? []).map((v) => (
+                <option key={v.id} value={v.id}>
+                  {`${v.name} (${v.language}, ${t(`agents.gender.${v.gender}` as Parameters<typeof t>[0])})`}
+                </option>
+              ))}
+            </SelectGroup>
+          </>
+        )}
+
+        {type === "VOICE_AI" && (
+          <>
+            <TextareaGroup
               label={t("agents.form.firstMessage")}
               id="a-first"
               value={fields.firstMessage ?? ""}
               onChange={(e) => set("firstMessage", e.target.value)}
             />
-            <InputGroup
-              label={t("agents.form.language")}
-              id="a-lang"
-              value={fields.language ?? ""}
-              onChange={(e) => set("language", e.target.value)}
-              placeholder="es"
+            <TextareaGroup
+              label={t("agents.form.systemPrompt")}
+              id="a-prompt"
+              value={fields.systemPrompt ?? ""}
+              onChange={(e) => set("systemPrompt", e.target.value)}
             />
           </>
         )}
 
-        {type === "SMS" && (
+        {type === "VOICE_PRERECORDED" && (
           <TextareaGroup
-            label={t("agents.form.messageBody")}
-            id="a-sms"
-            value={fields.messageBody ?? ""}
-            onChange={(e) => set("messageBody", e.target.value)}
+            label={t("agents.form.script")}
+            id="a-script"
+            value={fields.script ?? ""}
+            onChange={(e) => set("script", e.target.value)}
           />
+        )}
+
+        {type === "SMS" && (
+          <>
+            <TextareaGroup
+              label={t("agents.form.messageBody")}
+              id="a-sms"
+              value={fields.messageBody ?? ""}
+              onChange={(e) => set("messageBody", e.target.value)}
+            />
+            <InputGroup
+              label={t("agents.form.senderId")}
+              id="a-sender"
+              value={fields.senderId ?? ""}
+              onChange={(e) => set("senderId", e.target.value)}
+            />
+          </>
         )}
 
         {type === "EMAIL" && (
           <>
+            <InputGroup
+              label={t("agents.form.fromName")}
+              id="a-fromname"
+              value={fields.fromName ?? ""}
+              onChange={(e) => set("fromName", e.target.value)}
+            />
+            <InputGroup
+              label={t("agents.form.fromEmail")}
+              id="a-fromemail"
+              value={fields.fromEmail ?? ""}
+              onChange={(e) => set("fromEmail", e.target.value)}
+            />
             <InputGroup
               label={t("agents.form.subject")}
               id="a-subject"
@@ -355,17 +416,22 @@ function CreateAgentTemplateModal({
               value={fields.messageBody ?? ""}
               onChange={(e) => set("messageBody", e.target.value)}
             />
+          </>
+        )}
+
+        {type === "WHATSAPP" && (
+          <>
             <InputGroup
-              label={t("agents.form.fromName")}
-              id="a-fromname"
-              value={fields.fromName ?? ""}
-              onChange={(e) => set("fromName", e.target.value)}
+              label={t("agents.form.templateName")}
+              id="a-template"
+              value={fields.templateName ?? ""}
+              onChange={(e) => set("templateName", e.target.value)}
             />
-            <InputGroup
-              label={t("agents.form.fromEmail")}
-              id="a-fromemail"
-              value={fields.fromEmail ?? ""}
-              onChange={(e) => set("fromEmail", e.target.value)}
+            <TextareaGroup
+              label={t("agents.form.messageBody")}
+              id="a-wa-body"
+              value={fields.messageBody ?? ""}
+              onChange={(e) => set("messageBody", e.target.value)}
             />
           </>
         )}

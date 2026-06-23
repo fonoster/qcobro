@@ -46,10 +46,9 @@ describe("updateAgentTemplate", () => {
     const { client, stats } = makeClient();
     const fn = createUpdateAgentTemplate(client as never, "ws-1");
 
-    await fn({ id: "tmpl-1", name: "Renamed", collectionStrategy: "FIRM" });
+    await fn({ id: "tmpl-1", name: "Renamed" });
 
     assert.equal(stats().baseUpdate?.name, "Renamed");
-    assert.equal(stats().baseUpdate?.collectionStrategy, "FIRM");
   });
 
   it("applies config to the stored child type", async () => {

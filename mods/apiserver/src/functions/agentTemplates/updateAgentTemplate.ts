@@ -3,8 +3,10 @@ import {
   withErrorHandlingAndValidation,
   type AgentTemplateClient,
   type AgentType,
-  type UpdateAgentTemplateInput
+  type UpdateAgentTemplateInput,
+  type VoiceApplicationClient
 } from "@qcobro/common";
+import { syncVoiceAiApplication } from "./syncVoiceApplication.js";
 
 function childDelegate(client: AgentTemplateClient, type: AgentType) {
   switch (type) {
@@ -26,7 +28,11 @@ function childDelegate(client: AgentTemplateClient, type: AgentType) {
  * supplied, its type-specific child row. The template `type` is immutable —
  * the `.strict()` schema rejects any attempt to change it.
  */
-export function createUpdateAgentTemplate(client: AgentTemplateClient, workspaceRef: string) {
+export function createUpdateAgentTemplate(
+  client: AgentTemplateClient,
+  workspaceRef: string,
+  voiceApplications?: VoiceApplicationClient | null
+) {
   const fn = async (params: UpdateAgentTemplateInput) => {
     const existing = await client.agentTemplate.findFirstOrThrow({
       where: { id: params.id, workspaceRef }
@@ -34,9 +40,6 @@ export function createUpdateAgentTemplate(client: AgentTemplateClient, workspace
 
     const baseData: Record<string, unknown> = {};
     if (params.name !== undefined) baseData.name = params.name;
-    if (params.collectionStrategy !== undefined) {
-      baseData.collectionStrategy = params.collectionStrategy;
-    }
     // Translate the `archived` toggle into an archivedAt timestamp (or clear it).
     if (params.archived !== undefined) {
       baseData.archivedAt = params.archived ? new Date() : null;
@@ -52,6 +55,15 @@ export function createUpdateAgentTemplate(client: AgentTemplateClient, workspace
         where: { templateId: params.id },
         data: params.config
       });
+    }
+
+    // Re-sync VOICE_AI to Fonoster after a config/name change (best-effort).
+    if (existing.type === "VOICE_AI" && voiceApplications) {
+      try {
+        await syncVoiceAiApplication(client, voiceApplications, params.id);
+      } catch {
+        // Saved locally; the operator can re-sync manually.
+      }
     }
 
     return updated;
