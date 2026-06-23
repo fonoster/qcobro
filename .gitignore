@@ -8,6 +8,9 @@ dist
 *.tsbuildinfo
 coverage
 storybook-static
+
+# Generated SDK API reference (run `npm run docs` to regenerate)
+mods/sdk/docs
 .DS_Store
 
 # Local service config (holds dev secrets). Commit qcobro.example.json as the example.

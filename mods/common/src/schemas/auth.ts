@@ -21,6 +21,15 @@ export const refreshTokenSchema = z.object({
 });
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 
+// Exchange a workspace API key (accessKeyId + accessKeySecret) for tokens.
+// Used by unattended, server-to-server integrations (e.g. the SDK's
+// loginWithApiKey) that cannot perform an interactive credentials login.
+export const apiKeyLoginSchema = z.object({
+  accessKeyId: z.string().min(1),
+  accessKeySecret: z.string().min(1)
+});
+export type ApiKeyLoginInput = z.infer<typeof apiKeyLoginSchema>;
+
 export const sendResetPasswordCodeSchema = z.object({
   username: z.email(),
   resetPasswordUrl: z.string().url()

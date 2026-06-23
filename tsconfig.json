@@ -13,5 +13,9 @@
     "incremental": true,
     "skipLibCheck": true
   },
-  "references": [{ "path": "./mods/common" }, { "path": "./mods/apiserver" }]
+  "references": [
+    { "path": "./mods/common" },
+    { "path": "./mods/apiserver" },
+    { "path": "./mods/sdk" }
+  ]
 }

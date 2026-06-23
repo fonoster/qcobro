@@ -1,6 +1,7 @@
 import {
   signUpSchema,
   loginSchema,
+  apiKeyLoginSchema,
   refreshTokenSchema,
   sendResetPasswordCodeSchema,
   resetPasswordSchema,
@@ -42,6 +43,14 @@ export const authRouter = router({
       })
     )
   ),
+
+  // Exchange a workspace API key (accessKeyId + accessKeySecret) for tokens.
+  // For unattended, server-to-server integrations (e.g. the SDK).
+  exchangeApiKey: publicProcedure
+    .input(apiKeyLoginSchema)
+    .mutation(({ ctx, input }) =>
+      identityCall(() => ctx.identity.exchangeApiKey(input.accessKeyId, input.accessKeySecret))
+    ),
 
   // Exchange a refresh token for a fresh access token.
   refresh: publicProcedure
