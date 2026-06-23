@@ -57,7 +57,7 @@ const contactLogRouter = router({
           take: input.limit,
           skip: input.offset,
           include: {
-            portfolioAccount: { select: { fullName: true, portfolioId: true } },
+            portfolioAccount: { select: { fullName: true, externalId: true, portfolioId: true } },
             campaign: { select: { name: true } }
           }
         }),

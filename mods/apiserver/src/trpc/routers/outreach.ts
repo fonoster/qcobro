@@ -117,7 +117,12 @@ export const outreachRouter = router({
       outcome: "OTHER",
       notes: "Contacto manual",
       debtAmountSnapshot: account.outstandingBalance,
-      channelData: { providerRef: result.providerRef, from: result.from, to: result.to }
+      channelData: {
+        providerRef: result.providerRef,
+        from: result.from,
+        to: result.to,
+        messageBody: result.renderedBody
+      }
     });
 
     return result;

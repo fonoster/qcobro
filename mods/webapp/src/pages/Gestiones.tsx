@@ -1,13 +1,22 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { PageHeader } from "../components/page-header.js";
 import { DataTable } from "../components/ui/data-table.js";
 import { FilterSelect } from "../components/ui/select.js";
-import { Badge } from "../components/ui/badge.js";
+import { SlideOver } from "../components/ui/slide-over.js";
+import { GestionDetailContent } from "./GestionDetail.js";
+import { PhoneCall, Voicemail, MessageSquare, Mail, MessageCircle } from "lucide-react";
 
 const PAGE_SIZE = 50;
+
+const CHANNEL_ICON: Record<string, typeof MessageSquare> = {
+  VOICE_AI: PhoneCall,
+  VOICE_PRERECORDED: Voicemail,
+  SMS: MessageSquare,
+  EMAIL: Mail,
+  WHATSAPP: MessageCircle
+};
 
 const OUTCOMES = [
   "NO_ANSWER",
@@ -24,21 +33,13 @@ const OUTCOMES = [
 
 const AGENT_TYPES = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL", "WHATSAPP"] as const;
 
-function outcomeVariant(outcome: string) {
-  if (["RESOLVED", "PAID", "PAYMENT_PROMISE", "PARTIAL_PAYMENT_AGREED"].includes(outcome))
-    return "success";
-  if (["WRONG_NUMBER", "OPT_OUT", "REFUSED"].includes(outcome)) return "destructive";
-  if (outcome === "CALLBACK_REQUESTED") return "orange";
-  return "secondary";
-}
-
 export function Gestiones() {
   const { t } = useI18n();
-  const navigate = useNavigate();
 
   const [outcome, setOutcome] = useState("");
   const [agentType, setAgentType] = useState("");
   const [page, setPage] = useState(1);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const { data } = trpc.campaigns.contactLog.list.useQuery({
     outcome: (outcome || undefined) as (typeof OUTCOMES)[number] | undefined,
@@ -83,51 +84,71 @@ export function Gestiones() {
         totalPages={totalPages}
         totalRecords={total}
         onPageChange={setPage}
-        onRowClick={(row) => navigate(`/gestiones/${row.id}`)}
+        onRowClick={(row) => setSelectedId(row.id as string)}
         columns={[
           {
             key: "portfolioAccount",
             header: t("gestiones.col.debtor"),
-            render: (r) => (r.portfolioAccount as { fullName: string } | undefined)?.fullName ?? "—"
+            render: (r) => {
+              const acc = r.portfolioAccount as
+                | { fullName: string; externalId?: string }
+                | undefined;
+              return (
+                <div className="flex flex-col">
+                  <span className="font-medium text-slate-900">{acc?.fullName ?? "—"}</span>
+                  {acc?.externalId && (
+                    <span className="text-xs text-slate-400">{acc.externalId}</span>
+                  )}
+                </div>
+              );
+            }
+          },
+          {
+            key: "agentType",
+            header: t("gestiones.col.agent"),
+            render: (r) => {
+              const Icon = CHANNEL_ICON[r.agentType as string] ?? MessageSquare;
+              return (
+                <span className="inline-flex items-center gap-2 text-slate-700">
+                  <Icon className="h-4 w-4 text-slate-400" />
+                  {t(`agents.type.${r.agentType}` as Parameters<typeof t>[0])}
+                </span>
+              );
+            }
           },
           {
             key: "outcome",
             header: t("gestiones.col.result"),
             render: (r) => (
-              <Badge variant={outcomeVariant(r.outcome as string)}>
+              <span className="text-slate-700">
                 {t(`gestiones.outcome.${r.outcome}` as Parameters<typeof t>[0])}
-              </Badge>
+              </span>
             )
           },
           {
-            key: "agentType",
-            header: t("gestiones.col.agent"),
-            render: (r) => t(`agents.type.${r.agentType}` as Parameters<typeof t>[0])
-          },
-          {
-            key: "campaign",
-            header: t("gestiones.col.campaign"),
-            render: (r) => (r.campaign as { name: string } | null)?.name ?? "—"
-          },
-          {
-            key: "debtAmountSnapshot",
-            header: t("gestiones.col.amount"),
-            render: (r) =>
-              r.debtAmountSnapshot != null
-                ? new Intl.NumberFormat("es", {
-                    style: "currency",
-                    currency: "USD",
-                    minimumFractionDigits: 0
-                  }).format(r.debtAmountSnapshot as number)
-                : "—"
+            key: "aiSummary",
+            header: t("gestiones.col.summary"),
+            render: (r) => (
+              <span className="line-clamp-2 max-w-md text-sm text-slate-600">
+                {(r.aiSummary as string | null) || ""}
+              </span>
+            )
           },
           {
             key: "contactedAt",
             header: t("gestiones.col.date"),
-            render: (r) => new Date(r.contactedAt as string).toLocaleString()
+            render: (r) => (
+              <span className="whitespace-nowrap text-slate-600">
+                {new Date(r.contactedAt as string).toLocaleString()}
+              </span>
+            )
           }
         ]}
       />
+
+      <SlideOver open={!!selectedId} onClose={() => setSelectedId(null)}>
+        {selectedId && <GestionDetailContent id={selectedId} onClose={() => setSelectedId(null)} />}
+      </SlideOver>
     </div>
   );
 }
