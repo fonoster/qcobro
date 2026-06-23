@@ -13,14 +13,14 @@ export function CreateWorkspace() {
   const { setTokens, setWorkspace, currentUser } = useAuth();
   const navigate = useNavigate();
   const utils = trpc.useUtils();
-  const workspaces = trpc.workspaces.list.useQuery();
+  const workspaces = trpc.workspaces.summaries.useQuery();
   const create = trpc.workspaces.create.useMutation();
   const refresh = trpc.auth.refresh.useMutation();
 
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
 
-  const items = workspaces.data?.items ?? [];
+  const items = workspaces.data ?? [];
   const pending = create.isPending || refresh.isPending;
 
   function onSelect(accessKeyId: string) {
@@ -38,9 +38,9 @@ export function CreateWorkspace() {
       setTokens(res.accessToken, res.refreshToken, res.idToken);
     }
 
-    await utils.workspaces.list.invalidate();
-    const list = await utils.workspaces.list.fetch();
-    const created = list.items.find((w) => w.ref === ref) ?? list.items[0];
+    await utils.workspaces.summaries.invalidate();
+    const list = await utils.workspaces.summaries.fetch();
+    const created = list.find((w) => w.ref === ref) ?? list[0];
     if (created) setWorkspace(created.accessKeyId);
     navigate("/");
   }
@@ -73,7 +73,10 @@ export function CreateWorkspace() {
             >
               <div className="flex flex-col gap-1">
                 <p className="text-[17px] font-bold text-slate-900">{ws.name}</p>
-                <p className="text-[13px] text-slate-400">0 carteras · 0 miembros</p>
+                <p className="text-[13px] text-slate-400">
+                  {ws.portfolioCount} {ws.portfolioCount === 1 ? "cartera" : "carteras"} ·{" "}
+                  {ws.memberCount} {ws.memberCount === 1 ? "miembro" : "miembros"}
+                </p>
               </div>
               <button
                 type="button"

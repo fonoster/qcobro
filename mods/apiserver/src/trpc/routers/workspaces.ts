@@ -50,6 +50,35 @@ export const workspacesRouter = router({
     identityCall(() => ctx.identity.listWorkspaces(ctx.token))
   ),
 
+  // Each workspace enriched with its cartera + member counts, for the workspace
+  // picker. protectedProcedure (no active workspace required): counts are gathered
+  // per workspace from Prisma (portfolios) and Identity (members). The owner is not a
+  // member row in Identity (mirrors the Members page), so it's added to the count. A
+  // failed member lookup degrades that workspace to the owner-only count of 1.
+  summaries: protectedProcedure.query(async ({ ctx }) => {
+    const { items } = await identityCall(() => ctx.identity.listWorkspaces(ctx.token));
+    return Promise.all(
+      items.map(async (ws) => {
+        const [portfolioCount, memberCount] = await Promise.all([
+          ctx.prisma.portfolio.count({
+            where: { workspaceRef: ws.accessKeyId, archivedAt: null }
+          }),
+          ctx.identity
+            .listWorkspaceMembers(ws.accessKeyId, ctx.token)
+            .then((m) => m.items.length + 1)
+            .catch(() => 1)
+        ]);
+        return {
+          ref: ws.ref,
+          name: ws.name,
+          accessKeyId: ws.accessKeyId,
+          portfolioCount,
+          memberCount
+        };
+      })
+    );
+  }),
+
   get: protectedProcedure
     .input(getWorkspaceSchema)
     .query(({ ctx, input }) => identityCall(() => ctx.identity.getWorkspace(input.ref, ctx.token))),
