@@ -55,7 +55,7 @@ const JUAN_FIRST_MESSAGE = "";
 const ACCOUNTS: Omit<AccountRowInput, "phone">[] = [
   {
     externalId: "LN001023",
-    fullName: "Pedro Sanders",
+    fullName: "Marino Del Monte",
     preferredLanguage: "es-DO",
     bestTimeToCall: "PM",
     customerSegment: "control",
