@@ -1,5 +1,10 @@
 import * as SDK from "@fonoster/sdk";
-import type { FonosterConfig, VoiceApplicationClient, VoiceApplicationInput } from "@qcobro/common";
+import {
+  ttsProductRefForVoice,
+  type FonosterConfig,
+  type VoiceApplicationClient,
+  type VoiceApplicationInput
+} from "@qcobro/common";
 
 type FonosterSettings = NonNullable<FonosterConfig>;
 
@@ -57,7 +62,7 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
         config: { model: autopilot.sttModel, languageCode: input.language }
       },
       textToSpeech: {
-        productRef: autopilot.ttsProductRef,
+        productRef: ttsProductRefForVoice(input.voice, this.settings.voices),
         config: { voice: input.voice }
       },
       intelligence: {

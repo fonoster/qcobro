@@ -46,12 +46,13 @@ export const fonosterConfigSchema = z
     apiSecret: z.string().min(1),
     /** Optional override for the Fonoster API endpoint (host:port). */
     endpoint: z.string().optional(),
-    /** Default products/model used when building the Autopilot application. */
+    /** Default products/model used when building the Autopilot application. The
+     * TTS product is NOT set here — it is derived per voice (see `voices`) since
+     * both Voz IA and pre-recorded voice use it. */
     autopilot: z
       .object({
         sttProductRef: z.string().default("stt.deepgram"),
         sttModel: z.string().default("nova-3"),
-        ttsProductRef: z.string().default("tts.elevenlabs"),
         llmProductRef: z.string().default("llm.google"),
         llmProvider: z.string().default("google"),
         llmModel: z.string().default("gemini-2.0-flash"),
@@ -61,13 +62,41 @@ export const fonosterConfigSchema = z
       .default({
         sttProductRef: "stt.deepgram",
         sttModel: "nova-3",
-        ttsProductRef: "tts.elevenlabs",
         llmProductRef: "llm.google",
         llmProvider: "google",
         llmModel: "gemini-2.0-flash",
         maxTokens: 300,
         temperature: 0
       }),
+    /**
+     * Selectable voice catalog for voice agent templates (Voz IA + pre-recorded).
+     * Voices are Fonoster-only, so they live here. Seeded with three Spanish
+     * voices; deployments override in `qcobro.json`. The TTS product ref is
+     * derived from each voice's `provider` (see {@link ttsProductRefForVoice}).
+     */
+    voices: z.array(voiceCatalogEntrySchema).default([
+      {
+        id: "86V9x9hrQds83qf7zaGn",
+        name: "Sofía",
+        language: "es",
+        gender: "female",
+        provider: "elevenlabs"
+      },
+      {
+        id: "tTQzD8U8Gd5cKQEnxNyf",
+        name: "Carmen",
+        language: "es",
+        gender: "female",
+        provider: "elevenlabs"
+      },
+      {
+        id: "Iowum0gIcGfYE94JArBb",
+        name: "Andrés",
+        language: "es",
+        gender: "male",
+        provider: "elevenlabs"
+      }
+    ]),
     /**
      * Caller-ID numbers (E.164) outbound voice dispatch rotates through. Empty by
      * default — voice dispatch fails clearly until at least one number is configured.
@@ -77,6 +106,16 @@ export const fonosterConfigSchema = z
   .optional();
 
 export type FonosterConfig = z.infer<typeof fonosterConfigSchema>;
+
+/**
+ * Derives the TTS product ref for a voice from its provider (e.g. an `elevenlabs`
+ * voice → `tts.elevenlabs`). Used by both Voz IA (Autopilot) and pre-recorded
+ * voice. Falls back to `tts.elevenlabs` when the voice isn't in the catalog.
+ */
+export function ttsProductRefForVoice(voiceId: string, voices: VoiceCatalogEntry[]): string {
+  const voice = voices.find((v) => v.id === voiceId);
+  return voice ? `tts.${voice.provider}` : "tts.elevenlabs";
+}
 
 /**
  * Twilio connection for SMS dispatch. Optional — when absent, SMS dispatch fails
@@ -93,33 +132,6 @@ export const twilioConfigSchema = z
 export type TwilioConfig = z.infer<typeof twilioConfigSchema>;
 
 export const qcobroConfigSchema = z.object({
-  /**
-   * Selectable voice catalog for voice agent templates. Seeded with three
-   * Spanish voices; deployments override in `qcobro.json`.
-   */
-  voices: z.array(voiceCatalogEntrySchema).default([
-    {
-      id: "86V9x9hrQds83qf7zaGn",
-      name: "Sofía",
-      language: "es",
-      gender: "female",
-      provider: "elevenlabs"
-    },
-    {
-      id: "tTQzD8U8Gd5cKQEnxNyf",
-      name: "Carmen",
-      language: "es",
-      gender: "female",
-      provider: "elevenlabs"
-    },
-    {
-      id: "Iowum0gIcGfYE94JArBb",
-      name: "Andrés",
-      language: "es",
-      gender: "male",
-      provider: "elevenlabs"
-    }
-  ]),
   /** Application (apiserver) database. */
   database: z.object({ url: z.string().min(1) }),
   identity: identityConfigSchema,

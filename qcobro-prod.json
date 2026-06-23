@@ -2,29 +2,6 @@
   "database": {
     "url": "postgresql://qcobro:CHANGE_ME@db:5432/qcobro?schema=public"
   },
-  "voices": [
-    {
-      "id": "86V9x9hrQds83qf7zaGn",
-      "name": "Sofía",
-      "language": "es",
-      "gender": "female",
-      "provider": "elevenlabs"
-    },
-    {
-      "id": "tTQzD8U8Gd5cKQEnxNyf",
-      "name": "Carmen",
-      "language": "es",
-      "gender": "female",
-      "provider": "elevenlabs"
-    },
-    {
-      "id": "Iowum0gIcGfYE94JArBb",
-      "name": "Andrés",
-      "language": "es",
-      "gender": "male",
-      "provider": "elevenlabs"
-    }
-  ],
   "identity": {
     "endpoint": "identity:50051",
     "httpBridgeUrl": "https://identity.example.com"
@@ -41,9 +18,31 @@
     "apiKey": "CHANGE_ME",
     "apiSecret": "CHANGE_ME",
     "autopilot": {
-      "ttsProductRef": "tts.elevenlabs",
       "llmModel": "gemini-2.0-flash"
     },
+    "voices": [
+      {
+        "id": "86V9x9hrQds83qf7zaGn",
+        "name": "Sofía",
+        "language": "es",
+        "gender": "female",
+        "provider": "elevenlabs"
+      },
+      {
+        "id": "tTQzD8U8Gd5cKQEnxNyf",
+        "name": "Carmen",
+        "language": "es",
+        "gender": "female",
+        "provider": "elevenlabs"
+      },
+      {
+        "id": "Iowum0gIcGfYE94JArBb",
+        "name": "Andrés",
+        "language": "es",
+        "gender": "male",
+        "provider": "elevenlabs"
+      }
+    ],
     "numbers": ["+50670000000"]
   },
   "twilio": {
