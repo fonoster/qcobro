@@ -6,6 +6,7 @@ import { DataTable } from "../components/ui/data-table.js";
 import { FilterSelect } from "../components/ui/select.js";
 import { SlideOver } from "../components/ui/slide-over.js";
 import { GestionDetailContent } from "./GestionDetail.js";
+import { formatRelativeDate } from "../lib/relativeDate.js";
 import { PhoneCall, Voicemail, MessageSquare, Mail, MessageCircle } from "lucide-react";
 
 const PAGE_SIZE = 50;
@@ -34,7 +35,7 @@ const OUTCOMES = [
 const AGENT_TYPES = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL", "WHATSAPP"] as const;
 
 export function Gestiones() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   const [outcome, setOutcome] = useState("");
   const [agentType, setAgentType] = useState("");
@@ -138,8 +139,11 @@ export function Gestiones() {
             key: "contactedAt",
             header: t("gestiones.col.date"),
             render: (r) => (
-              <span className="whitespace-nowrap text-slate-600">
-                {new Date(r.contactedAt as string).toLocaleString()}
+              <span
+                className="whitespace-nowrap text-slate-600"
+                title={new Date(r.contactedAt as string).toLocaleString()}
+              >
+                {formatRelativeDate(r.contactedAt as string, language)}
               </span>
             )
           }
