@@ -19,7 +19,8 @@
     "db:generate": "node scripts/prisma.mjs generate",
     "db:migrate": "node scripts/prisma.mjs migrate dev",
     "db:migrate:deploy": "node scripts/prisma.mjs migrate deploy",
-    "db:studio": "node scripts/prisma.mjs studio"
+    "db:studio": "node scripts/prisma.mjs studio",
+    "db:seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
     "@fonoster/identity-client": "file:../../../fonoster/mods/identity-client",
@@ -32,6 +33,7 @@
     "cors": "^2.8.5",
     "express": "^5.0.0",
     "twilio": "^5.13.1",
+    "yaml": "^2.9.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {
