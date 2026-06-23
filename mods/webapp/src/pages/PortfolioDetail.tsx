@@ -7,6 +7,8 @@ import { DataTable } from "../components/ui/data-table.js";
 import { Button } from "../components/ui/button.js";
 import { PageHeader } from "../components/page-header.js";
 import { CsvSyncModal } from "../components/portfolios/CsvSyncModal.js";
+import { ReachOutModal } from "../components/portfolios/ReachOutModal.js";
+import { RowActionsMenu, type RowAction } from "../components/ui/row-actions-menu.js";
 
 const PAGE_SIZE = 50;
 
@@ -24,6 +26,7 @@ export function PortfolioDetail() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [showSync, setShowSync] = useState(false);
+  const [reachOut, setReachOut] = useState<Record<string, unknown> | null>(null);
 
   const portfolio = trpc.portfolios.get.useQuery({ id: id! });
   const accounts = trpc.portfolios.listAccounts.useQuery({
@@ -83,9 +86,41 @@ export function PortfolioDetail() {
             key: "preferredLanguage",
             header: t("portfolios.detail.col.language"),
             render: (r) => String(r.preferredLanguage ?? "—")
+          },
+          {
+            key: "id",
+            header: t("portfolios.detail.col.actions"),
+            align: "center",
+            render: (r) => {
+              const items: RowAction[] = [
+                {
+                  label: t("portfolios.reachOut.action"),
+                  onClick: () => setReachOut(r)
+                }
+              ];
+              return <RowActionsMenu items={items} />;
+            }
           }
         ]}
       />
+
+      {reachOut && portfolio.data && (
+        <ReachOutModal
+          account={
+            reachOut as Record<string, unknown> & {
+              id: string;
+              fullName: string;
+              phone?: string | null;
+            }
+          }
+          portfolio={{ currency: portfolio.data.currency }}
+          onClose={() => setReachOut(null)}
+          onSuccess={() => {
+            setReachOut(null);
+            utils.portfolios.listAccounts.invalidate({ portfolioId: id! });
+          }}
+        />
+      )}
 
       {showSync && portfolio.data && (
         <CsvSyncModal

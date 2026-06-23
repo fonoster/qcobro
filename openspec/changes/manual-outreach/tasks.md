@@ -1,7 +1,7 @@
 ## 1. Pencil — Design
 
-- [ ] 1.1 Design "Contactar manualmente" action in the portfolio accounts row ⋯ menu
-- [ ] 1.2 Design the manual-outreach modal (agent template select, optional campaign
+- [x] 1.1 Design "Contactar manualmente" action in the portfolio accounts row ⋯ menu
+- [x] 1.2 Design the manual-outreach modal (agent template select, optional campaign
       adjudication, rendered body preview, send) over the dimmed Cartera page
 
 ## 2. Common — config, ports, schemas, templating
@@ -23,13 +23,13 @@
 
 ## 4. Webapp — manual outreach modal
 
-- [ ] 4.1 "Contactar manualmente" row action in the portfolio accounts view
-- [ ] 4.2 Manual-outreach modal: template select, campaign adjudication, rendered preview, send
-- [ ] 4.3 i18n keys (en/es)
+- [x] 4.1 "Contactar manualmente" row action in the portfolio accounts view
+- [x] 4.2 Manual-outreach modal: template select, campaign adjudication, rendered preview, send
+- [x] 4.3 i18n keys (en/es)
 
 ## 5. Tests
 
 - [x] 5.1 Unit: `renderTemplate` / context (incl. missing field renders empty)
 - [x] 5.2 Unit: `dispatchOutreach` voice + SMS happy paths (stubbed clients)
 - [x] 5.3 Unit: validation-failure + unconfigured-channel + empty-pool error cases (no provider call fired)
-- [ ] 5.4 E2E: open a Cartera, "Contactar manualmente", send an SMS, verify confirmation
+- [x] 5.4 E2E: open a Cartera, "Contactar manualmente", send an SMS, verify confirmation

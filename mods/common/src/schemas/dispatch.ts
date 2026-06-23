@@ -52,14 +52,14 @@ export const dispatchOutreachSchema = z
 export type DispatchOutreachInput = z.infer<typeof dispatchOutreachSchema>;
 
 /**
- * Input for the manual "Contactar manualmente" procedure: which customer, which
- * agent template, and optionally the campaign the contact is adjudicated to. The
- * server resolves these to a {@link dispatchOutreachSchema} request.
+ * Input for the manual "Contactar manualmente" procedure: which customer and which
+ * campaign. A manual contact runs the campaign's agent against this one customer, so
+ * the campaign (required) determines the agent/channel; the server resolves these to
+ * a {@link dispatchOutreachSchema} request.
  */
 export const manualOutreachSchema = z.object({
   portfolioAccountId: z.string().min(1),
-  agentTemplateId: z.string().min(1),
-  campaignId: z.string().min(1).optional()
+  campaignId: z.string().min(1)
 });
 
 export type ManualOutreachInput = z.infer<typeof manualOutreachSchema>;

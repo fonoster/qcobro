@@ -65,9 +65,10 @@ function buildDispatchRequest(
 
 export const outreachRouter = router({
   /**
-   * Manual one-off outreach to a single customer. Loads the account + template
-   * (workspace-scoped), dispatches via the channel-dispatch trigger, and records
-   * the attempt as a gestión so it appears in the account's history.
+   * Manual one-off outreach to a single customer. Runs the selected campaign's agent
+   * against this account: loads the account + campaign (workspace-scoped), derives the
+   * campaign's agent template, dispatches via the channel-dispatch trigger, and records
+   * the attempt as a gestión of the campaign so it appears in the account's history.
    */
   dispatch: workspaceProcedure.input(manualOutreachSchema).mutation(async ({ input, ctx }) => {
     const workspaceRef = ctx.workspace.accessKeyId;
@@ -80,8 +81,13 @@ export const outreachRouter = router({
     if (!account.phone)
       throw new TRPCError({ code: "BAD_REQUEST", message: "Account has no phone number" });
 
+    const campaign = await ctx.prisma.campaign.findFirst({
+      where: { id: input.campaignId, workspaceRef }
+    });
+    if (!campaign) throw new TRPCError({ code: "NOT_FOUND", message: "Campaign not found" });
+
     const template = await ctx.prisma.agentTemplate.findFirst({
-      where: { id: input.agentTemplateId, workspaceRef },
+      where: { id: campaign.agentTemplateId, workspaceRef },
       include: { voiceAiConfig: true, voicePrerecordedConfig: true, smsConfig: true }
     });
     if (!template) throw new TRPCError({ code: "NOT_FOUND", message: "Agent template not found" });
