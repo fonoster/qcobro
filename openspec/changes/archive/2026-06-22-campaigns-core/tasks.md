@@ -84,14 +84,12 @@
 - [x] 10.1 Design agent template list screen (table + KPI strip + "Nuevo agente" button)
 - [x] 10.2 Design "Nuevo agente" modal (type selector + conditional type-specific fields) — all 5 channels
 - [x] 10.3 Design agent template detail screen (config summary + sync status badge for voice + campaigns list) — all 5 channels
-- [ ] 10.4 Add `CAMPAÑAS`, `GESTIONES`, `OBJETIVOS` flow sections to Application Flow
 - [x] 10.5 Design campaign list screen (table with status filter + "Nueva campaña" button; split Días + Horario columns)
 - [x] 10.6 Design "Nueva campaña" modal (all form fields + 7-day toggle for days of week)
 - [x] 10.7 Design campaign detail screen (simple — mirrors campaign fields + triggers; status-change controls; no KPIs)
-- [ ] 10.8 Design Gestiones list screen (referencing old Gestiones screen from pencil-old.pen)
-- [ ] 10.9 Design Detalle de gestión screen (audio player, transcript, AI analysis, objectives — referencing old Detalle de gestión screen from pencil-old.pen)
-- [ ] 10.10 Design Objetivos list screen (KPI strip + table; replaces old "Promesas de Pago" screen from pencil-old.pen)
-- [ ] 10.11 Update sidebar to include "Agentes", "Campañas", "Gestiones", "Objetivos" nav items
+
+> Gestiones/Objetivos design + sidebar nav (was 10.4, 10.8–10.11) moved to the `gestiones`
+> change — design-first, deferred.
 
 ## 11. E2E Tests (Playwright)
 
