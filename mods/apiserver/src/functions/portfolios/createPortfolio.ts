@@ -14,8 +14,7 @@ export function createCreatePortfolio(client: PortfolioClient, workspaceRef: str
         currency: params.currency,
         totalOutstandingBalance: 0,
         accountCount: 0,
-        recoveredAmount: 0,
-        status: "ACTIVE"
+        recoveredAmount: 0
       }
     });
   };

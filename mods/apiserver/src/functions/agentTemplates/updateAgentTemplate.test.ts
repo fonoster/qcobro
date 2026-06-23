@@ -60,4 +60,22 @@ describe("updateAgentTemplate", () => {
 
     assert.equal(stats().smsUpdate?.messageBody, "Nuevo mensaje");
   });
+
+  it("archiving sets archivedAt to a timestamp", async () => {
+    const { client, stats } = makeClient();
+    const fn = createUpdateAgentTemplate(client as never, "ws-1");
+
+    await fn({ id: "tmpl-1", archived: true });
+
+    assert.ok(stats().baseUpdate?.archivedAt instanceof Date);
+  });
+
+  it("restoring clears archivedAt", async () => {
+    const { client, stats } = makeClient();
+    const fn = createUpdateAgentTemplate(client as never, "ws-1");
+
+    await fn({ id: "tmpl-1", archived: false });
+
+    assert.equal(stats().baseUpdate?.archivedAt, null);
+  });
 });

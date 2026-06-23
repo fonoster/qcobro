@@ -10,7 +10,9 @@ export type CreatePortfolioInput = z.infer<typeof createPortfolioSchema>;
 export const updatePortfolioSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(120).optional(),
-  status: z.enum(["ACTIVE", "PAUSED", "ARCHIVED"]).optional()
+  // `archived` toggles the portfolio's archived state: true sets `archivedAt` to
+  // now, false clears it (restore). There is no separate status concept.
+  archived: z.boolean().optional()
 });
 export type UpdatePortfolioInput = z.infer<typeof updatePortfolioSchema>;
 

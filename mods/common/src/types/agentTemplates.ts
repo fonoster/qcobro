@@ -16,6 +16,7 @@ export interface AgentTemplateRecord {
   totalPromises: number;
   totalRecovered: number;
   successRate: number;
+  archivedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -69,7 +70,7 @@ interface ChildConfigDelegate<R> {
 export interface AgentTemplateClient {
   agentTemplate: {
     findMany(args: {
-      where: { workspaceRef: string; type?: AgentType };
+      where: { workspaceRef: string; type?: AgentType; archivedAt?: Date | null };
       orderBy?: { createdAt: "asc" | "desc" };
     }): Promise<AgentTemplateRecord[]>;
 

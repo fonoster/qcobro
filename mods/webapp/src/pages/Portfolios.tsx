@@ -7,7 +7,7 @@ import { DataTable } from "../components/ui/data-table.js";
 import { Dialog } from "../components/ui/dialog.js";
 import { ConfirmDeleteDialog } from "../components/ui/confirm-delete-dialog.js";
 import { InputGroup } from "../components/ui/input.js";
-import { SelectGroup, FilterSelect } from "../components/ui/select.js";
+import { SelectGroup } from "../components/ui/select.js";
 import { Badge } from "../components/ui/badge.js";
 import { RowActionsMenu } from "../components/ui/row-actions-menu.js";
 import { CsvSyncModal } from "../components/portfolios/CsvSyncModal.js";
@@ -28,31 +28,23 @@ type Portfolio = {
   accountCount: number;
   totalOutstandingBalance: number;
   recoveredAmount: number;
-  status: string;
+  archivedAt: Date | string | null;
   createdAt: Date | string;
 };
-
-type StatusFilter = "" | "ACTIVE" | "PAUSED" | "ARCHIVED";
-
-function statusBadgeVariant(status: string) {
-  if (status === "ACTIVE") return "success";
-  if (status === "PAUSED") return "orange";
-  return "secondary";
-}
 
 export function Portfolios() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const utils = trpc.useUtils();
 
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("");
+  const [includeArchived, setIncludeArchived] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<Portfolio | null>(null);
   const [syncing, setSyncing] = useState<Portfolio | null>(null);
   const [deleting, setDeleting] = useState<Portfolio | null>(null);
 
   const { data } = trpc.portfolios.list.useQuery(
-    statusFilter ? { status: statusFilter } : undefined
+    includeArchived ? { includeArchived: true } : undefined
   );
   const portfolios: Portfolio[] = (data ?? []) as Portfolio[];
 
@@ -67,6 +59,8 @@ export function Portfolios() {
     }
   });
 
+  const setArchived = trpc.portfolios.update.useMutation({ onSuccess: invalidate });
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t("portfolios.title")} description={t("portfolios.description")} />
@@ -76,15 +70,15 @@ export function Portfolios() {
         keyField="id"
         searchable={false}
         filterElement={
-          <FilterSelect
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          >
-            <option value="">{t("portfolios.filter.activeAndPaused")}</option>
-            <option value="ACTIVE">{t("portfolios.filter.activeOnly")}</option>
-            <option value="PAUSED">{t("portfolios.filter.pausedOnly")}</option>
-            <option value="ARCHIVED">{t("portfolios.filter.archived")}</option>
-          </FilterSelect>
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-slate-300"
+              checked={includeArchived}
+              onChange={(e) => setIncludeArchived(e.target.checked)}
+            />
+            {t("portfolios.filter.showArchived")}
+          </label>
         }
         actionLabel={t("portfolios.new")}
         onAction={() => setShowCreate(true)}
@@ -108,18 +102,17 @@ export function Portfolios() {
             render: (r) => money(r.recoveredAmount as number, r.currency as string)
           },
           {
-            key: "status",
-            header: t("portfolios.col.status"),
-            render: (r) => (
-              <Badge variant={statusBadgeVariant(r.status)}>
-                {t(`portfolios.status.${r.status}` as Parameters<typeof t>[0])}
-              </Badge>
-            )
-          },
-          {
             key: "createdAt",
             header: t("portfolios.col.created"),
-            render: (r) => new Date(r.createdAt).toLocaleDateString()
+            render: (r) =>
+              r.archivedAt ? (
+                <span className="inline-flex items-center gap-2">
+                  {new Date(r.createdAt).toLocaleDateString()}
+                  <Badge variant="secondary">{t("portfolios.archivedBadge")}</Badge>
+                </span>
+              ) : (
+                new Date(r.createdAt).toLocaleDateString()
+              )
           },
           {
             key: "id",
@@ -130,6 +123,15 @@ export function Portfolios() {
                 items={[
                   { label: t("portfolios.actions.sync"), onClick: () => setSyncing(r) },
                   { label: t("portfolios.actions.edit"), onClick: () => setEditing(r) },
+                  r.archivedAt
+                    ? {
+                        label: t("portfolios.actions.restore"),
+                        onClick: () => setArchived.mutate({ id: r.id, archived: false })
+                      }
+                    : {
+                        label: t("portfolios.actions.archive"),
+                        onClick: () => setArchived.mutate({ id: r.id, archived: true })
+                      },
                   {
                     label: t("portfolios.actions.delete"),
                     onClick: () => setDeleting(r),
@@ -267,7 +269,6 @@ function EditPortfolioModal({
 }) {
   const { t } = useI18n();
   const [name, setName] = useState(portfolio.name);
-  const [status, setStatus] = useState(portfolio.status);
 
   const update = trpc.portfolios.update.useMutation({ onSuccess });
 
@@ -277,13 +278,7 @@ function EditPortfolioModal({
       onClose={onClose}
       title={t("portfolios.form.editTitle")}
       confirmLabel={update.isPending ? "Guardando…" : t("portfolios.form.save")}
-      onConfirm={() =>
-        update.mutate({
-          id: portfolio.id,
-          name,
-          status: status as "ACTIVE" | "PAUSED" | "ARCHIVED"
-        })
-      }
+      onConfirm={() => update.mutate({ id: portfolio.id, name })}
     >
       <div className="mt-4 flex flex-col gap-3">
         <InputGroup
@@ -292,16 +287,6 @@ function EditPortfolioModal({
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <SelectGroup
-          label={t("portfolios.form.status")}
-          id="ep-status"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-        >
-          <option value="ACTIVE">{t("portfolios.status.ACTIVE")}</option>
-          <option value="PAUSED">{t("portfolios.status.PAUSED")}</option>
-          <option value="ARCHIVED">{t("portfolios.status.ARCHIVED")}</option>
-        </SelectGroup>
       </div>
     </Dialog>
   );

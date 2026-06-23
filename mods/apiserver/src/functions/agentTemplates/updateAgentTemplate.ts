@@ -37,6 +37,10 @@ export function createUpdateAgentTemplate(client: AgentTemplateClient, workspace
     if (params.collectionStrategy !== undefined) {
       baseData.collectionStrategy = params.collectionStrategy;
     }
+    // Translate the `archived` toggle into an archivedAt timestamp (or clear it).
+    if (params.archived !== undefined) {
+      baseData.archivedAt = params.archived ? new Date() : null;
+    }
 
     const updated = await client.agentTemplate.update({
       where: { id: params.id },

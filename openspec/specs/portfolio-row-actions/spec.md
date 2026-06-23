@@ -6,57 +6,58 @@ TBD - created by archiving change portfolio-status-and-actions. Update Purpose a
 
 ## Requirements
 
-### Requirement: Portfolio status is three-valued
+### Requirement: Portfolio archived state is a single timestamp
 
-The system SHALL support three portfolio statuses: `ACTIVE`, `PAUSED`, and `ARCHIVED`.
-`ACTIVE` means the portfolio is in active collections. `PAUSED` means collections are
-temporarily halted. `ARCHIVED` means the portfolio is closed and hidden from default views.
-The previous `CLOSED` status is replaced by `PAUSED` and `ARCHIVED`.
+A portfolio SHALL NOT carry a multi-valued status enum. Instead it has an optional
+`archivedAt` timestamp: when unset the portfolio is **active**, when set the portfolio is
+**archived** (closed and hidden from default views). There is no `PAUSED` or `CLOSED`
+state. Archiving and restoring are toggles, not status selections.
 
-#### Scenario: Portfolio can be set to PAUSED
+#### Scenario: Portfolio can be archived
 
-- **WHEN** an operator edits a portfolio and selects the Paused status
-- **THEN** the portfolio status is saved as PAUSED
-- **AND** the portfolio appears in the default list view
-
-#### Scenario: Portfolio can be set to ARCHIVED
-
-- **WHEN** an operator edits a portfolio and selects the Archived status
-- **THEN** the portfolio status is saved as ARCHIVED
+- **WHEN** an operator archives a portfolio from its row actions
+- **THEN** the portfolio's `archivedAt` is set to the current time
 - **AND** the portfolio is hidden from the default list view
 
-#### Scenario: CLOSED status no longer accepted
+#### Scenario: Portfolio can be restored
 
-- **WHEN** a request is made to set a portfolio status to CLOSED
-- **THEN** the system SHALL reject it with a validation error
+- **WHEN** an operator restores an archived portfolio
+- **THEN** the portfolio's `archivedAt` is cleared
+- **AND** the portfolio reappears in the default list view
 
-### Requirement: Portfolio list default excludes ARCHIVED
+#### Scenario: Edit modal exposes no status control
 
-The portfolio list SHALL default to showing only `ACTIVE` and `PAUSED` portfolios.
-`ARCHIVED` portfolios SHALL only appear when the filter is explicitly set to show them.
+- **WHEN** an operator opens the edit portfolio modal
+- **THEN** no status selector is shown; only the name is editable
 
-#### Scenario: Default view omits ARCHIVED
+### Requirement: Portfolio list default excludes archived
 
-- **WHEN** the portfolio list is loaded with no filter applied
-- **THEN** only ACTIVE and PAUSED portfolios are returned
-- **AND** ARCHIVED portfolios are not included in the results
+The portfolio list SHALL default to showing only active (non-archived) portfolios.
+Archived portfolios SHALL only appear when the operator opts in via a "Mostrar
+archivadas" toggle.
 
-#### Scenario: Filter can reveal ARCHIVED portfolios
+#### Scenario: Default view omits archived
 
-- **WHEN** the operator selects "Archivadas" from the status filter
-- **THEN** only ARCHIVED portfolios are returned
+- **WHEN** the portfolio list is loaded with the toggle off
+- **THEN** only portfolios with no `archivedAt` are returned
+- **AND** archived portfolios are not included in the results
+
+#### Scenario: Toggle can reveal archived portfolios
+
+- **WHEN** the operator enables the "Mostrar archivadas" toggle
+- **THEN** archived portfolios are included alongside active ones
 
 ### Requirement: Portfolio row actions ellipsis menu
 
 Each row in the portfolio list SHALL show a single ellipsis (⋯) button instead of
-individual action buttons. Clicking it SHALL open a floating dropdown menu with three
-actions: Sincronizar CSV, Editar, and Eliminar. Eliminar SHALL require a confirmation
-dialog before executing.
+individual action buttons. Clicking it SHALL open a floating dropdown menu with the
+actions: Sincronizar CSV, Editar, Archivar (or Restaurar when the portfolio is already
+archived), and Eliminar. Eliminar SHALL require a confirmation dialog before executing.
 
 #### Scenario: Ellipsis menu opens on click
 
 - **WHEN** an operator clicks the ⋯ button on a portfolio row
-- **THEN** a floating dropdown appears with options: Sincronizar CSV, Editar, Eliminar
+- **THEN** a floating dropdown appears with options: Sincronizar CSV, Editar, Archivar/Restaurar, Eliminar
 
 #### Scenario: Sincronizar CSV opens the sync modal
 

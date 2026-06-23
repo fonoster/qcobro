@@ -16,15 +16,16 @@ The apiserver SHALL allow authenticated operators to create, read, update, and d
 - **THEN** only portfolios belonging to their active workspace are returned
 - **AND** portfolios are ordered by creation date descending
 
-#### Scenario: Operator filters by status
+#### Scenario: Operator includes archived portfolios
 
-- **WHEN** an authenticated operator lists portfolios with a status filter of ACTIVE or CLOSED
-- **THEN** only portfolios matching that status are returned
+- **WHEN** an authenticated operator lists portfolios with the include-archived flag set
+- **THEN** archived portfolios are returned alongside active ones
+- **AND** with the flag unset only active (non-archived) portfolios are returned
 
 #### Scenario: Operator creates a portfolio
 
 - **WHEN** an authenticated operator submits a name, clientId, and total amount
-- **THEN** a new portfolio is created in their workspace with status ACTIVE
+- **THEN** a new portfolio is created in their workspace in the active (non-archived) state
 - **AND** account count and recovered amount default to zero
 
 #### Scenario: Operator reads a portfolio
@@ -35,15 +36,16 @@ The apiserver SHALL allow authenticated operators to create, read, update, and d
 
 #### Scenario: Operator updates a portfolio
 
-- **WHEN** an authenticated operator updates a portfolio's name, status, or recovered amount
+- **WHEN** an authenticated operator updates a portfolio's name
 - **THEN** only the supplied fields are changed
 - **AND** other fields remain unchanged
 
-#### Scenario: Operator closes a portfolio
+#### Scenario: Operator archives a portfolio
 
-- **WHEN** an authenticated operator sets a portfolio's status to CLOSED
-- **THEN** the portfolio status is updated to CLOSED
-- **AND** the portfolio remains accessible for historical reporting but cannot receive new account syncs
+- **WHEN** an authenticated operator archives a portfolio
+- **THEN** the portfolio's `archivedAt` timestamp is set
+- **AND** the portfolio is excluded from the default list but remains accessible for historical reporting
+- **AND** restoring it clears `archivedAt` and returns it to the default list
 
 #### Scenario: Operator deletes a portfolio
 

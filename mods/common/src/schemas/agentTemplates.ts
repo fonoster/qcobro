@@ -74,6 +74,9 @@ export const updateAgentTemplateSchema = z
     id: z.string().min(1),
     name: z.string().min(1).max(120).optional(),
     collectionStrategy: collectionStrategySchema.optional(),
+    // `archived` toggles the template's archived state: true sets `archivedAt` to
+    // now, false clears it (restore). Templates have no status concept.
+    archived: z.boolean().optional(),
     config: z.record(z.string(), z.unknown()).optional()
   })
   .strict();

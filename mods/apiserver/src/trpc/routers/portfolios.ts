@@ -13,12 +13,12 @@ import { createSyncAccounts } from "../../functions/portfolios/syncAccounts.js";
 
 export const portfoliosRouter = router({
   list: workspaceProcedure
-    .input(z.object({ status: z.enum(["ACTIVE", "PAUSED", "ARCHIVED"]).optional() }).optional())
+    .input(z.object({ includeArchived: z.boolean().optional() }).optional())
     .query(({ input, ctx }) =>
       ctx.prisma.portfolio.findMany({
         where: {
           workspaceRef: ctx.workspace.accessKeyId,
-          status: input?.status ?? { in: ["ACTIVE", "PAUSED"] }
+          ...(input?.includeArchived ? {} : { archivedAt: null })
         },
         orderBy: { createdAt: "desc" }
       })

@@ -13,12 +13,6 @@ model HealthCheck {
   createdAt DateTime @default(now())
 }
 
-enum PortfolioStatus {
-  ACTIVE
-  PAUSED
-  ARCHIVED
-}
-
 enum Currency {
   USD
   DOP
@@ -99,13 +93,13 @@ model Portfolio {
   totalOutstandingBalance Float               @default(0)
   recoveredAmount         Float               @default(0)
   currency                Currency            @default(USD)
-  status                  PortfolioStatus     @default(ACTIVE)
+  archivedAt              DateTime?
   createdAt               DateTime            @default(now())
   updatedAt               DateTime            @updatedAt
   accounts                PortfolioAccount[]
   campaignLinks           CampaignPortfolio[]
 
-  @@index([workspaceRef])
+  @@index([workspaceRef, archivedAt])
   @@map("portfolios")
 }
 
@@ -155,6 +149,7 @@ model AgentTemplate {
   totalPromises          Int                     @default(0)
   totalRecovered         Float                   @default(0)
   successRate            Float                   @default(0)
+  archivedAt             DateTime?
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
   voiceAiConfig          VoiceAiConfig?
@@ -164,7 +159,7 @@ model AgentTemplate {
   whatsAppConfig         WhatsAppConfig?
   campaigns              Campaign[]
 
-  @@index([workspaceRef])
+  @@index([workspaceRef, archivedAt])
   @@map("agent_templates")
 }
 

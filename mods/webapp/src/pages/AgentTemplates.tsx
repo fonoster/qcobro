@@ -20,6 +20,7 @@ type Template = {
   type: AgentType;
   collectionStrategy: string;
   totalCalls: number;
+  archivedAt: Date | string | null;
   createdAt: Date | string;
 };
 
@@ -31,18 +32,28 @@ export function AgentTemplates() {
   const utils = trpc.useUtils();
 
   const [typeFilter, setTypeFilter] = useState<"" | AgentType>("");
+  const [includeArchived, setIncludeArchived] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [deleting, setDeleting] = useState<Template | null>(null);
 
-  const { data } = trpc.agentTemplates.list.useQuery(typeFilter ? { type: typeFilter } : undefined);
+  const { data } = trpc.agentTemplates.list.useQuery({
+    ...(typeFilter ? { type: typeFilter } : {}),
+    ...(includeArchived ? { includeArchived: true } : {})
+  });
   const templates: Template[] = (data ?? []) as Template[];
+
+  function invalidate() {
+    utils.agentTemplates.list.invalidate();
+  }
 
   const del = trpc.agentTemplates.delete.useMutation({
     onSuccess: () => {
       setDeleting(null);
-      utils.agentTemplates.list.invalidate();
+      invalidate();
     }
   });
+
+  const setArchived = trpc.agentTemplates.update.useMutation({ onSuccess: invalidate });
 
   return (
     <div className="flex flex-col gap-6">
@@ -53,17 +64,28 @@ export function AgentTemplates() {
         keyField="id"
         searchable={false}
         filterElement={
-          <FilterSelect
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as "" | AgentType)}
-          >
-            <option value="">{t("agents.filter.allTypes")}</option>
-            {TYPE_FILTERS.map((tp) => (
-              <option key={tp} value={tp}>
-                {t(`agents.type.${tp}` as Parameters<typeof t>[0])}
-              </option>
-            ))}
-          </FilterSelect>
+          <div className="flex items-center gap-4">
+            <FilterSelect
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value as "" | AgentType)}
+            >
+              <option value="">{t("agents.filter.allTypes")}</option>
+              {TYPE_FILTERS.map((tp) => (
+                <option key={tp} value={tp}>
+                  {t(`agents.type.${tp}` as Parameters<typeof t>[0])}
+                </option>
+              ))}
+            </FilterSelect>
+            <label className="flex items-center gap-2 text-sm text-slate-600">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-slate-300"
+                checked={includeArchived}
+                onChange={(e) => setIncludeArchived(e.target.checked)}
+              />
+              {t("agents.filter.showArchived")}
+            </label>
+          </div>
         }
         actionLabel={t("agents.new")}
         onAction={() => setShowCreate(true)}
@@ -92,7 +114,15 @@ export function AgentTemplates() {
           {
             key: "createdAt",
             header: t("agents.col.created"),
-            render: (r) => new Date(r.createdAt).toLocaleDateString()
+            render: (r) =>
+              r.archivedAt ? (
+                <span className="inline-flex items-center gap-2">
+                  {new Date(r.createdAt).toLocaleDateString()}
+                  <Badge variant="secondary">{t("agents.archivedBadge")}</Badge>
+                </span>
+              ) : (
+                new Date(r.createdAt).toLocaleDateString()
+              )
           },
           {
             key: "id",
@@ -105,6 +135,15 @@ export function AgentTemplates() {
                     label: t("agents.actions.view"),
                     onClick: () => navigate(`/agent-templates/${r.id}`)
                   },
+                  r.archivedAt
+                    ? {
+                        label: t("agents.actions.restore"),
+                        onClick: () => setArchived.mutate({ id: r.id, archived: false })
+                      }
+                    : {
+                        label: t("agents.actions.archive"),
+                        onClick: () => setArchived.mutate({ id: r.id, archived: true })
+                      },
                   {
                     label: t("agents.actions.delete"),
                     onClick: () => setDeleting(r),

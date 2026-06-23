@@ -14,7 +14,7 @@ export interface PortfolioRecord {
   accountCount: number;
   totalOutstandingBalance: number;
   recoveredAmount: number;
-  status: string;
+  archivedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -53,7 +53,7 @@ export interface SyncResult {
 export interface PortfolioClient {
   portfolio: {
     findMany(args: {
-      where?: { workspaceRef?: string; status?: string };
+      where?: { workspaceRef?: string; archivedAt?: Date | null };
       orderBy?: { createdAt: "asc" | "desc" };
     }): Promise<PortfolioRecord[]>;
 
@@ -64,7 +64,7 @@ export interface PortfolioClient {
     create(args: {
       data: Omit<
         PortfolioRecord,
-        "id" | "accountCount" | "recoveredAmount" | "createdAt" | "updatedAt"
+        "id" | "accountCount" | "recoveredAmount" | "archivedAt" | "createdAt" | "updatedAt"
       > & { accountCount?: number; recoveredAmount?: number };
     }): Promise<PortfolioRecord>;
 

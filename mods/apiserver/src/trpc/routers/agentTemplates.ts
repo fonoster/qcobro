@@ -12,12 +12,17 @@ import { createDeleteAgentTemplate } from "../../functions/agentTemplates/delete
 
 export const agentTemplatesRouter = router({
   list: workspaceProcedure
-    .input(z.object({ type: agentTypeSchema.optional() }).optional())
+    .input(
+      z
+        .object({ type: agentTypeSchema.optional(), includeArchived: z.boolean().optional() })
+        .optional()
+    )
     .query(({ input, ctx }) =>
       ctx.prisma.agentTemplate.findMany({
         where: {
           workspaceRef: ctx.workspace.accessKeyId,
-          ...(input?.type ? { type: input.type } : {})
+          ...(input?.type ? { type: input.type } : {}),
+          ...(input?.includeArchived ? {} : { archivedAt: null })
         },
         orderBy: { createdAt: "desc" }
       })

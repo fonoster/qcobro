@@ -8,7 +8,7 @@ It SHALL have a `type` that determines which channel it operates on:
 
 Type-specific configuration SHALL be stored in a separate child table linked by
 `templateId` — never mixed into the base table. The base table holds only identity
-fields: `id`, `workspaceRef`, `name`, `type`, `createdAt`, `updatedAt`.
+fields: `id`, `workspaceRef`, `name`, `type`, `archivedAt`, `createdAt`, `updatedAt`.
 
 The base table also holds a `collectionStrategy` field (`SOFT`, `MODERATE`, `FIRM`)
 that informs both the agent's tone (for voice) and the message framing (for text
@@ -37,6 +37,31 @@ agent template performance summary on the detail page.
 
 - **WHEN** an operator attempts to change the type of an existing template
 - **THEN** the system SHALL reject the update with a validation error
+
+### Requirement: Agent template archived state is a single timestamp
+
+An `AgentTemplate` SHALL NOT carry a status enum. Instead it has an optional `archivedAt`
+timestamp: when unset the template is **active**, when set it is **archived** and hidden
+from the default list. Archiving and restoring are toggles, not status selections. The
+agent templates list SHALL default to showing only active templates; archived templates
+SHALL only appear when the operator enables a "Mostrar archivados" toggle.
+
+#### Scenario: Operator archives a template
+
+- **WHEN** an operator archives an agent template from its row actions
+- **THEN** the template's `archivedAt` is set to the current time
+- **AND** the template is hidden from the default list
+
+#### Scenario: Operator restores a template
+
+- **WHEN** an operator restores an archived template
+- **THEN** the template's `archivedAt` is cleared
+- **AND** the template reappears in the default list
+
+#### Scenario: Default list excludes archived templates
+
+- **WHEN** the agent templates list is loaded with the toggle off
+- **THEN** only templates with no `archivedAt` are returned
 
 ### Requirement: Voice template config fields
 
