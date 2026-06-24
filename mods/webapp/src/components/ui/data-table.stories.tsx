@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-import { DataTable } from "./data-table.js";
+import { DataTable, TableCellStack } from "./data-table.js";
 import { Badge } from "./badge.js";
+import { Button } from "./button.js";
 
 const meta = {
   title: "UI/DataTable",
@@ -73,7 +74,7 @@ const statusVariant: Record<string, "success" | "destructive" | "orange"> = {
 const columns = [
   { key: "name", header: "Name" },
   { key: "accountId", header: "Account ID" },
-  { key: "balance", header: "Balance" },
+  { key: "balance", header: "Balance", align: "right" as const },
   {
     key: "status",
     header: "Status",
@@ -81,12 +82,13 @@ const columns = [
       <Badge variant={statusVariant[row.status] ?? "secondary"}>{row.status}</Badge>
     )
   },
-  { key: "daysPastDue", header: "Days Past Due" }
+  { key: "daysPastDue", header: "Days Past Due", align: "right" as const }
 ] as const;
 
-export const WithoutPagination: StoryObj = {
-  name: "Without Pagination",
-  render: () => <DataTable data={accounts} keyField="id" columns={[...columns]} />
+export const Default: StoryObj = {
+  render: () => (
+    <DataTable data={accounts} keyField="id" columns={[...columns]} searchable={false} />
+  )
 };
 
 export const WithPagination: StoryObj = {
@@ -98,6 +100,7 @@ export const WithPagination: StoryObj = {
         data={accounts}
         keyField="id"
         columns={[...columns]}
+        searchable={false}
         page={page}
         totalPages={8}
         totalRecords={40}
@@ -107,45 +110,79 @@ export const WithPagination: StoryObj = {
   }
 };
 
-export const WithAction: StoryObj = {
-  name: "With Action Button",
+export const WithSearchAndAction: StoryObj = {
+  name: "With Search + Action",
   render: () => (
     <DataTable
       data={accounts}
       keyField="id"
-      columns={[
-        { key: "name", header: "Name" },
-        { key: "balance", header: "Balance" },
-        {
-          key: "status",
-          header: "Status",
-          render: (row: Account) => (
-            <Badge variant={statusVariant[row.status] ?? "secondary"}>{row.status}</Badge>
-          )
-        }
-      ]}
+      columns={[...columns]}
+      searchable
       actionLabel="New account"
       onAction={() => alert("New account")}
     />
   )
 };
 
-export const WithSearchAndPagination: StoryObj = {
-  name: "With Search + Pagination",
+export const TwoLineCell: StoryObj = {
+  name: "Two-line primary cell",
+  render: () => (
+    <DataTable
+      data={accounts}
+      keyField="id"
+      searchable={false}
+      columns={[
+        {
+          key: "name",
+          header: "Debtor",
+          render: (r: Account) => <TableCellStack title={r.name} sub={r.accountId} />
+        },
+        { key: "balance", header: "Balance", align: "right" },
+        {
+          key: "status",
+          header: "Status",
+          render: (r: Account) => (
+            <Badge variant={statusVariant[r.status] ?? "secondary"}>{r.status}</Badge>
+          )
+        }
+      ]}
+    />
+  )
+};
+
+export const Selectable: StoryObj = {
+  name: "Selectable (bulk bar)",
   render: () => {
-    const [page, setPage] = useState(1);
+    const [selected, setSelected] = useState<string[]>(["1", "2"]);
     return (
       <DataTable
         data={accounts}
         keyField="id"
-        columns={[...columns]}
-        searchable
-        searchPlaceholder="Buscar cuentas…"
-        actionLabel="Nueva cuenta"
-        page={page}
-        totalPages={5}
-        totalRecords={25}
-        onPageChange={setPage}
+        searchable={false}
+        selectable
+        getRowId={(r) => r.id as string}
+        selectedIds={selected}
+        onSelectionChange={setSelected}
+        bulkActions={
+          <Button variant="outline" onClick={() => alert(`Contact ${selected.length}`)}>
+            Contact selected
+          </Button>
+        }
+        columns={[
+          {
+            key: "name",
+            header: "Debtor",
+            render: (r: Account) => <TableCellStack title={r.name} sub={r.accountId} />
+          },
+          { key: "balance", header: "Balance", align: "right" },
+          {
+            key: "status",
+            header: "Status",
+            render: (r: Account) => (
+              <Badge variant={statusVariant[r.status] ?? "secondary"}>{r.status}</Badge>
+            )
+          }
+        ]}
       />
     );
   }
@@ -154,6 +191,12 @@ export const WithSearchAndPagination: StoryObj = {
 export const Empty: StoryObj = {
   name: "Empty State",
   render: () => (
-    <DataTable data={[]} keyField="id" columns={[...columns]} actionLabel="New account" />
+    <DataTable
+      data={[]}
+      keyField="id"
+      columns={[...columns]}
+      searchable={false}
+      actionLabel="New account"
+    />
   )
 };

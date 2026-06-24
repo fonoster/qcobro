@@ -43,7 +43,7 @@ export function Dialog({
       >
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-md p-1 text-slate-400 hover:text-slate-600"
+          className="absolute right-4 top-4 cursor-pointer rounded-md p-1 text-slate-400 hover:text-slate-600"
         >
           <X className="h-4 w-4" />
         </button>

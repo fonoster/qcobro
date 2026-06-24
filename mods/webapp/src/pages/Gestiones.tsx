@@ -2,7 +2,7 @@ import { useState } from "react";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { PageHeader } from "../components/page-header.js";
-import { DataTable } from "../components/ui/data-table.js";
+import { DataTable, TableCellStack } from "../components/ui/data-table.js";
 import { FilterSelect } from "../components/ui/select.js";
 import { SlideOver } from "../components/ui/slide-over.js";
 import { GestionDetailContent } from "./GestionDetail.js";
@@ -94,14 +94,7 @@ export function Gestiones() {
               const acc = r.portfolioAccount as
                 | { fullName: string; externalId?: string }
                 | undefined;
-              return (
-                <div className="flex flex-col">
-                  <span className="font-medium text-slate-900">{acc?.fullName ?? "—"}</span>
-                  {acc?.externalId && (
-                    <span className="text-xs text-slate-400">{acc.externalId}</span>
-                  )}
-                </div>
-              );
+              return <TableCellStack title={acc?.fullName ?? "—"} sub={acc?.externalId} />;
             }
           },
           {

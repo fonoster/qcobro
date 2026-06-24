@@ -3,11 +3,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
-import { DataTable } from "../components/ui/data-table.js";
+import { DataTable, TableCellStack } from "../components/ui/data-table.js";
 import { Button } from "../components/ui/button.js";
 import { PageHeader } from "../components/page-header.js";
 import { CsvSyncModal } from "../components/portfolios/CsvSyncModal.js";
 import { ReachOutModal } from "../components/portfolios/ReachOutModal.js";
+import { BulkReachOutModal } from "../components/portfolios/BulkReachOutModal.js";
 import { RowActionsMenu, type RowAction } from "../components/ui/row-actions-menu.js";
 
 const PAGE_SIZE = 50;
@@ -27,6 +28,8 @@ export function PortfolioDetail() {
   const [page, setPage] = useState(1);
   const [showSync, setShowSync] = useState(false);
   const [reachOut, setReachOut] = useState<Record<string, unknown> | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const portfolio = trpc.portfolios.get.useQuery({ id: id! });
   const accounts = trpc.portfolios.listAccounts.useQuery({
@@ -58,17 +61,31 @@ export function PortfolioDetail() {
         searchPlaceholder="Buscar cuenta..."
         actionLabel={t("portfolios.csv.title")}
         onAction={() => setShowSync(true)}
+        selectable
+        getRowId={(r) => r.id as string}
+        selectedIds={selected}
+        onSelectionChange={setSelected}
+        bulkActions={
+          <Button variant="outline" onClick={() => setBulkOpen(true)}>
+            {t("portfolios.bulk.action")}
+          </Button>
+        }
         page={page}
         totalPages={totalPages}
         totalRecords={total}
         onPageChange={setPage}
         columns={[
-          { key: "externalId", header: t("portfolios.detail.col.externalId") },
-          { key: "fullName", header: t("portfolios.detail.col.name") },
+          // `preferredLanguage` is kept on the record as a reserved field for future
+          // language-aware routing, but intentionally not shown in the console table.
           {
-            key: "phone",
-            header: t("portfolios.detail.col.phone"),
-            render: (r) => String(r.phone ?? "—")
+            key: "fullName",
+            header: t("portfolios.detail.col.name"),
+            render: (r) => (
+              <TableCellStack
+                title={String(r.fullName ?? "—")}
+                sub={[r.externalId, r.phone].filter(Boolean).join(" · ")}
+              />
+            )
           },
           {
             key: "outstandingBalance",
@@ -82,8 +99,6 @@ export function PortfolioDetail() {
             render: (r) => String(r.daysPastDue),
             align: "right"
           },
-          // `preferredLanguage` is kept on the record as a reserved field for future
-          // language-aware routing, but intentionally not shown in the console table.
           {
             key: "id",
             header: "",
@@ -114,6 +129,18 @@ export function PortfolioDetail() {
           onClose={() => setReachOut(null)}
           onSuccess={() => {
             setReachOut(null);
+            utils.portfolios.listAccounts.invalidate({ portfolioId: id! });
+          }}
+        />
+      )}
+
+      {bulkOpen && (
+        <BulkReachOutModal
+          accountIds={selected}
+          onClose={() => setBulkOpen(false)}
+          onSuccess={() => {
+            setBulkOpen(false);
+            setSelected([]);
             utils.portfolios.listAccounts.invalidate({ portfolioId: id! });
           }}
         />
