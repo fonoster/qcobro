@@ -30,7 +30,8 @@ function formatRelative(date: Date | string, language: Language): string {
 /**
  * Deterministic, stable progress percentage (10–80%) for a cartera. There is no
  * recovery-progress metric yet, so this is simulated from the cartera id so the
- * same cartera always shows the same value across renders.
+ * same cartera always shows the same value across renders. The widget is labelled
+ * "sample data" in the UI until a real metric is wired from the backend.
  */
 function simulatedProgress(id: string): number {
   let h = 0;
@@ -53,14 +54,31 @@ export function Home() {
   const accountsInManagement = carteras.reduce((sum, p) => sum + p.accountCount, 0);
   const activity = (recent.data?.items ?? []) as RecentGestion[];
 
-  const kpis = [
-    { label: "Recuperado", value: "$287,430", meta: "+12% vs. mes anterior" },
-    { label: "Objetivos alcanzados", value: "312", meta: "registrados hoy" },
-    { label: "Tasa de contacto", value: "68%", meta: "+4 pts vs. semana" },
+  // Only "accounts in management" has a real backend source today. The other three
+  // are sample figures, rendered greyed-out so they read as not-yet-implemented.
+  const kpis: { label: string; value: string; meta: string; muted?: boolean }[] = [
     {
-      label: "Cuentas en gestión",
+      label: t("home.kpi.recovered"),
+      value: "$287,430",
+      meta: t("home.kpi.recoveredMeta"),
+      muted: true
+    },
+    {
+      label: t("home.kpi.objectivesMet"),
+      value: "312",
+      meta: t("home.kpi.objectivesMetMeta"),
+      muted: true
+    },
+    {
+      label: t("home.kpi.contactRate"),
+      value: "68%",
+      meta: t("home.kpi.contactRateMeta"),
+      muted: true
+    },
+    {
+      label: t("home.kpi.accountsInManagement"),
       value: accountsInManagement.toLocaleString(),
-      meta: "activas"
+      meta: t("home.kpi.active")
     }
   ];
 
@@ -68,13 +86,17 @@ export function Home() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-bold text-slate-900">Panel de control</h1>
-          <p className="text-sm text-slate-500">Resumen de {wsName}</p>
+          <h1 className="text-[22px] font-bold text-slate-900">{t("home.title")}</h1>
+          <p className="text-sm text-slate-500">{t("home.subtitle").replace("{name}", wsName)}</p>
         </div>
-        <button className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-[13px] font-medium text-slate-700 hover:bg-slate-50">
-          <Calendar className="h-4 w-4 text-slate-500" />
-          Últimos 30 días
-          <ChevronDown className="h-4 w-4 text-slate-500" />
+        <button
+          disabled
+          title={t("common.comingSoon")}
+          className="flex cursor-not-allowed items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-[13px] font-medium text-slate-400 opacity-60"
+        >
+          <Calendar className="h-4 w-4 text-slate-400" />
+          {t("home.dateRange")}
+          <ChevronDown className="h-4 w-4 text-slate-400" />
         </button>
       </div>
 
@@ -85,7 +107,11 @@ export function Home() {
             className="flex flex-col gap-1 rounded-xl border-slate-200 p-5 shadow-none"
           >
             <span className="text-[13px] font-medium text-slate-500">{k.label}</span>
-            <span className="text-[28px] font-bold text-slate-900">{k.value}</span>
+            <span
+              className={cn("text-[28px] font-bold", k.muted ? "text-slate-400" : "text-slate-900")}
+            >
+              {k.value}
+            </span>
             <span className="text-xs text-slate-400">{k.meta}</span>
           </Card>
         ))}
@@ -93,7 +119,9 @@ export function Home() {
 
       <div className="grid grid-cols-[1fr_360px] gap-6">
         <Card className="rounded-xl border-slate-200 p-5 shadow-none">
-          <h2 className="mb-2 text-[15px] font-semibold text-slate-900">Gestiones recientes</h2>
+          <h2 className="mb-2 text-[15px] font-semibold text-slate-900">
+            {t("home.recentActivity")}
+          </h2>
           {activity.length === 0 ? (
             <p className="py-6 text-sm text-slate-400">{t("gestiones.empty")}</p>
           ) : (
@@ -130,7 +158,9 @@ export function Home() {
         </Card>
 
         <Card className="rounded-xl border-slate-200 p-5 shadow-none">
-          <h2 className="mb-4 text-[15px] font-semibold text-slate-900">Progreso por cartera</h2>
+          <h2 className="mb-4 text-[15px] font-semibold text-slate-900">
+            {t("home.progressByPortfolio")}
+          </h2>
           {carteras.length === 0 ? (
             <p className="py-6 text-sm text-slate-400">{t("gestiones.empty")}</p>
           ) : (
@@ -141,13 +171,10 @@ export function Home() {
                   <div key={p.id} className="flex flex-col gap-1.5">
                     <div className="flex justify-between text-[13px]">
                       <span className="text-slate-600">{p.name}</span>
-                      <span className="font-semibold text-slate-900">{pct}%</span>
+                      <span className="font-semibold text-slate-400">{pct}%</span>
                     </div>
                     <div className="h-2 w-full rounded-full bg-slate-100">
-                      <div
-                        className="h-2 rounded-full bg-emerald-500"
-                        style={{ width: `${pct}%` }}
-                      />
+                      <div className="h-2 rounded-full bg-slate-300" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 );

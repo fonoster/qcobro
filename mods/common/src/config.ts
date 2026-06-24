@@ -211,6 +211,44 @@ export const ttsConfigSchema = z
 
 export type TtsConfig = z.infer<typeof ttsConfigSchema>;
 
+/**
+ * A piece of user-facing copy that may be localized. Either a single string
+ * (same text for every language) or a map of language code → string
+ * (e.g. `{ "en": "Early access", "es": "Acceso temprano" }`). The console
+ * resolves it against the active UI language, falling back to any available value.
+ */
+export const localizedStringSchema = z.union([
+  z.string().min(1),
+  z.record(z.string(), z.string().min(1))
+]);
+export type LocalizedString = z.infer<typeof localizedStringSchema>;
+
+/**
+ * A deployment-wide announcement rendered as a dismissible banner across the
+ * console (and the workspace picker). Optional — when absent, no banner shows.
+ *
+ * `variant` selects the color scheme and `icon` the leading glyph, so a
+ * deployment can style it as a neutral announcement, an amber alert, etc.
+ * `title` and `message` are localizable (see {@link localizedStringSchema}).
+ */
+export const announcementConfigSchema = z
+  .object({
+    enabled: z.boolean().default(true),
+    /** Color scheme: `announcement` (blue), `alert` (amber), `success` (green), `danger` (red). */
+    variant: z.enum(["announcement", "alert", "success", "danger"]).default("announcement"),
+    /** Leading icon from a curated set. */
+    icon: z
+      .enum(["megaphone", "info", "alert-triangle", "sparkles", "rocket", "bell"])
+      .default("megaphone"),
+    /** Whether the user can dismiss the banner. */
+    dismissible: z.boolean().default(true),
+    title: localizedStringSchema.optional(),
+    message: localizedStringSchema
+  })
+  .optional();
+
+export type AnnouncementConfig = z.infer<typeof announcementConfigSchema>;
+
 export const qcobroConfigSchema = z.object({
   /** Application (apiserver) database. */
   database: z.object({ url: z.string().min(1) }),
@@ -241,7 +279,8 @@ export const qcobroConfigSchema = z.object({
   fonoster: fonosterConfigSchema,
   twilio: twilioConfigSchema,
   ai: aiConfigSchema,
-  tts: ttsConfigSchema
+  tts: ttsConfigSchema,
+  announcement: announcementConfigSchema
 });
 
 export type IdentityConfig = z.infer<typeof identityConfigSchema>;

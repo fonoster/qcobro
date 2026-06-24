@@ -66,5 +66,16 @@
     "provider": "elevenlabs",
     "apiKey": "CHANGE_ME",
     "model": "eleven_multilingual_v2"
+  },
+  "announcement": {
+    "enabled": true,
+    "variant": "announcement",
+    "icon": "megaphone",
+    "dismissible": true,
+    "title": { "en": "Early access", "es": "Acceso temprano" },
+    "message": {
+      "en": "QCobro is in early access. Some areas show sample data and may change. Please report any bugs or feedback you run into.",
+      "es": "QCobro está en acceso temprano. Algunas secciones muestran datos de ejemplo y pueden cambiar. Por favor, reporta cualquier error o comentario que encuentres."
+    }
   }
 }

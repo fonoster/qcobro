@@ -8,5 +8,10 @@ import { config } from "../../config.js";
  * catalog is global. Empty when Fonoster is not configured.
  */
 export const configRouter = router({
-  voices: protectedProcedure.query(() => config.fonoster?.voices ?? [])
+  voices: protectedProcedure.query(() => config.fonoster?.voices ?? []),
+  /**
+   * Deployment-wide announcement banner config (or null). Title/message may be
+   * localized maps; the console resolves them against the active UI language.
+   */
+  announcement: protectedProcedure.query(() => config.announcement ?? null)
 });
