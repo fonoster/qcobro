@@ -41,9 +41,10 @@ export function RowActionsMenu({ items }: { items: RowAction[] }) {
       <button
         ref={btnRef}
         onClick={handleToggle}
-        className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+        aria-label="Acciones"
+        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
       >
-        <Ellipsis className="h-4 w-4" />
+        <Ellipsis className="h-[18px] w-[18px]" />
       </button>
 
       {open &&

@@ -2,24 +2,12 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
+import { activeRole } from "../lib/workspaceRole.js";
 import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
 
 const CONFIRM_WORD = "ELIMINAR";
-
-/** Role the caller holds in the active workspace, read from the access token. */
-function activeRole(accessToken: string | null, accessKeyId: string | null): string | null {
-  if (!accessToken || !accessKeyId) return null;
-  try {
-    const payload = accessToken.split(".")[1];
-    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
-    const claims = JSON.parse(json) as { access?: { accessKeyId: string; role: string }[] };
-    return claims.access?.find((a) => a.accessKeyId === accessKeyId)?.role ?? null;
-  } catch {
-    return null;
-  }
-}
 
 export function WorkspaceSettings() {
   const { workspace, accessToken, setWorkspace } = useAuth();

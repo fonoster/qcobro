@@ -7,6 +7,7 @@ import { AcceptInvitation } from "./pages/AcceptInvitation.js";
 import { Home } from "./pages/Home.js";
 import { Members } from "./pages/Members.js";
 import { WorkspaceSettings } from "./pages/WorkspaceSettings.js";
+import { ApiKeys } from "./pages/ApiKeys.js";
 import { Profile } from "./pages/Profile.js";
 import { Portfolios } from "./pages/Portfolios.js";
 import { PortfolioDetail } from "./pages/PortfolioDetail.js";
@@ -53,6 +54,7 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="members" element={<Members />} />
         <Route path="settings" element={<WorkspaceSettings />} />
+        <Route path="api-keys" element={<ApiKeys />} />
         <Route path="profile" element={<Profile />} />
         <Route path="portfolios" element={<Portfolios />} />
         <Route path="portfolios/:id" element={<PortfolioDetail />} />

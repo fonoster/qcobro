@@ -1,8 +1,10 @@
 import { useState, type ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, SlidersHorizontal, Users, LogOut } from "lucide-react";
+import { User, SlidersHorizontal, Users, KeyRound, LogOut } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
+import { useI18n } from "../lib/i18n.js";
+import { isWorkspaceAdmin } from "../lib/workspaceRole.js";
 import { cn } from "@/lib/utils.js";
 
 function MenuItem({
@@ -32,9 +34,11 @@ function MenuItem({
 }
 
 export function UserMenu() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, accessToken, workspace } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const canManageKeys = isWorkspaceAdmin(accessToken, workspace);
 
   function go(path: string) {
     setOpen(false);
@@ -71,6 +75,9 @@ export function UserMenu() {
             onClick={() => go("/settings")}
           />
           <MenuItem icon={Users} label="Miembros" onClick={() => go("/members")} />
+          {canManageKeys && (
+            <MenuItem icon={KeyRound} label={t("nav.apiKeys")} onClick={() => go("/api-keys")} />
+          )}
           <div className="my-1 h-px bg-slate-100" />
           <MenuItem
             icon={LogOut}
