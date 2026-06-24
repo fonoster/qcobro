@@ -7,14 +7,18 @@ services:
     volumes:
       - ./config/identity:/service/config:ro
 
+  # Image versions are pinned via QCOBRO_VERSION (set it in a .env file next to
+  # this compose.yaml, e.g. `QCOBRO_VERSION=v1.0.0`). To deploy/upgrade, change
+  # that one value and run `docker compose pull && docker compose up -d` — never
+  # re-tag images locally.
   apiserver:
-    image: qcobro-apiserver:latest
+    image: ghcr.io/fonoster/qcobro-apiserver:${QCOBRO_VERSION}
     restart: unless-stopped
     volumes:
       - ./qcobro.json:/config/qcobro.json:ro
 
   webapp:
-    image: qcobro-webapp:latest
+    image: ghcr.io/fonoster/qcobro-webapp:${QCOBRO_VERSION}
     restart: unless-stopped
 
   envoy:
