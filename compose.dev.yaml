@@ -1,0 +1,49 @@
+# Development stack — backing services only.
+# The apiserver and webapp run on the host via npm scripts.
+#
+# Usage:
+#   docker compose -f compose.dev.yaml up -d
+#
+# Then start the app:
+#   npm run start:dev          # apiserver on :3000
+#   npm run start:webapp       # webapp on :5173
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: qcobro
+      POSTGRES_PASSWORD: qcobro
+      POSTGRES_DB: qcobro
+    ports:
+      - "5432:5432"
+    volumes:
+      - qcobro-db-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qcobro -d qcobro"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  identity:
+    image: fonoster/identity:0.20.1
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./config/identity:/service/config:ro
+    ports:
+      - "50051:50051"
+      - "9110:9110"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP (identity sends verification emails here)
+      - "8025:8025" # Web UI for inspecting emails during e2e tests
+
+volumes:
+  qcobro-db-dev:

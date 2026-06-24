@@ -1,43 +1,30 @@
 services:
-  db:
-    image: postgres:16
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: qcobro
-      POSTGRES_PASSWORD: qcobro
-      POSTGRES_DB: qcobro
-    ports:
-      - "5432:5432"
-    volumes:
-      - qcobro-db:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U qcobro -d qcobro"]
-      interval: 3s
-      timeout: 3s
-      retries: 20
-
-  # Fonoster Identity, run from the published image and configured entirely by a
-  # mounted file (no environment variables). It provisions its own database on
-  # start. QCobro reaches it as a client at identity:50051 (or localhost:50051
-  # when the apiserver runs on the host).
+  # Fonoster Identity — configured entirely by a mounted file (no env vars).
+  # QCobro reaches it at identity:50051 on the internal Docker network.
   identity:
     image: fonoster/identity:0.20.1
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
     volumes:
       - ./config/identity:/service/config:ro
-    ports:
-      - "50051:50051"
-      - "9110:9110"
 
-  mailpit:
-    image: axllent/mailpit:latest
+  apiserver:
+    image: qcobro-apiserver:latest
     restart: unless-stopped
-    ports:
-      - "1025:1025"
-      - "8025:8025"
+    volumes:
+      - ./qcobro.json:/config/qcobro.json:ro
 
-volumes:
-  qcobro-db:
+  webapp:
+    image: qcobro-webapp:latest
+    restart: unless-stopped
+
+  envoy:
+    image: envoyproxy/envoy:v1.35.0
+    restart: unless-stopped
+    volumes:
+      - ./config/envoy.yaml:/etc/envoy/envoy.yaml:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    ports:
+      - "443:443"
+    depends_on:
+      - apiserver
+      - webapp

@@ -30,3 +30,6 @@ playwright/.cache/
 
 # Pencil design backups (active file is pencil.pen)
 *-old.pen
+
+# Fonoster dependency tarballs pre-packed for Docker builds
+.docker-deps/

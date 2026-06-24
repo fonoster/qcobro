@@ -2,10 +2,9 @@ import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Lighter setup: assumes the dev stack is already running before `npm run test:e2e`.
- *   docker compose up -d            # postgres x2 + mailpit
- *   npm start --workspace=mods/identity-service
- *   npm run start:dev --workspace=mods/apiserver
- *   npm run start:webapp
+ *   docker compose -f compose.dev.yaml up -d   # db + identity + mailpit
+ *   npm run start:dev                           # apiserver on :3000
+ *   npm run start:webapp                        # webapp on :5173
  *
  * Webapp on :5173 (proxies /trpc -> apiserver :3000), Mailpit on :8025.
  */

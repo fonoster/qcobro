@@ -1,0 +1,118 @@
+name: Publish Docker Images
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag (default: latest)"
+        required: false
+        default: "latest"
+
+env:
+  REGISTRY: ghcr.io
+  PREFIX: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout qcobro
+        uses: actions/checkout@v4
+
+      # Fonoster packages are file: deps — clone the fonoster repo as a sibling
+      # directory (../fonoster) to match the paths in package-lock.json.
+      - name: Checkout fonoster
+        uses: actions/checkout@v4
+        with:
+          repository: fonoster/fonoster
+          path: ${{ github.workspace }}/../fonoster
+          token: ${{ secrets.FONOSTER_REPO_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute image tags
+        id: meta
+        run: |
+          P="${{ env.PREFIX }}"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VER="${GITHUB_REF#refs/tags/}"
+            echo "apiserver_tags=${P}/qcobro-apiserver:${VER}
+          ${P}/qcobro-apiserver:latest" >> "$GITHUB_OUTPUT"
+            echo "webapp_tags=${P}/qcobro-webapp:${VER}
+          ${P}/qcobro-webapp:latest" >> "$GITHUB_OUTPUT"
+          elif [[ "$GITHUB_REF" == refs/heads/main ]]; then
+            SHA="${GITHUB_SHA:0:7}"
+            echo "apiserver_tags=${P}/qcobro-apiserver:main-${SHA}
+          ${P}/qcobro-apiserver:latest" >> "$GITHUB_OUTPUT"
+            echo "webapp_tags=${P}/qcobro-webapp:main-${SHA}
+          ${P}/qcobro-webapp:latest" >> "$GITHUB_OUTPUT"
+          else
+            TAG="${{ inputs.tag }}"
+            echo "apiserver_tags=${P}/qcobro-apiserver:${TAG}" >> "$GITHUB_OUTPUT"
+            echo "webapp_tags=${P}/qcobro-webapp:${TAG}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build and pack fonoster dependencies
+        run: |
+          FONOSTER_DIR="${{ github.workspace }}/../fonoster"
+          rm -rf .docker-deps && mkdir -p .docker-deps
+          for pkg in sdk voice identity-client; do
+            pkgdir="$FONOSTER_DIR/mods/$pkg"
+            if [[ ! -d "$pkgdir/dist" ]]; then
+              echo "Building @fonoster/$pkg..."
+              (cd "$pkgdir" && npm install --ignore-scripts && npm run build)
+            fi
+            echo "Packing @fonoster/$pkg..."
+            (cd "$pkgdir" && npm pack --pack-destination "${{ github.workspace }}/.docker-deps/" --quiet)
+          done
+          echo "Packed:" && ls -lh .docker-deps/
+
+      - name: Build and push apiserver
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: apiserver
+          push: true
+          tags: ${{ steps.meta.outputs.apiserver_tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push webapp
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: webapp
+          push: true
+          tags: ${{ steps.meta.outputs.webapp_tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Summary
+        run: |
+          echo "## Published images" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.meta.outputs.apiserver_tags }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.meta.outputs.webapp_tags }}"    >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
