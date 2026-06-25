@@ -4,6 +4,83 @@ QCobro (by Fonoster) is a multilingual AI-voice debt-collections platform — a
 React operator console backed by a tRPC API over PostgreSQL, with voice/SMS/email
 outreach.
 
+## Local development
+
+**Prerequisites:** Node 22 and Docker.
+
+```bash
+# 1. Backing services (Postgres, Identity, Mailpit) on localhost
+docker compose -f compose.dev.yaml up -d
+
+# 2. Config — point at the dev DB. The engine stays OFF by default (never auto-dials)
+cp qcobro.example.json qcobro.json
+#   set database.url to:
+#   postgresql://qcobro:qcobro@localhost:5432/qcobro?schema=public
+
+# 3. Database — apply migrations (and an optional demo seed)
+npm run db:migrate --workspace=mods/apiserver
+npm run db:seed    --workspace=mods/apiserver   # optional
+
+# 4. Run the API + console
+npm run start:dev      # apiserver on :3000
+npm run start:webapp   # console on :5173
+```
+
+### Running the campaigns engine
+
+The engine is the autonomous loop that originates outreach. It is **off by default**
+(`engine.enabled: false`) so it never dials in development.
+
+**Simulate one tick** — runs the real engine with **emulated** channels (real DB writes,
+nothing actually dialed or texted):
+
+```bash
+npm run engine:sim --workspace=mods/apiserver
+```
+
+Try it end to end:
+
+1. In the console (`:5173`) create a workspace, a portfolio (import a few accounts with
+   phone numbers), an **SMS** agent template, and an **ACTIVE** campaign whose schedule
+   window covers right now.
+2. Run `npm run engine:sim`. It prints a **TickReport**: each campaign's in-window status
+   and a per-account decision (`dispatched` / `daily_cap` / `promise_suppressed` / …),
+   plus the would-be dispatches (emulated).
+3. Open the **Gestiones** page — the simulated attempts are recorded as real gestiones.
+4. Run the sim **again**: the same account is now `daily_cap` — proof of at-most-once
+   (it is never dialed twice).
+
+**Run it for real** (⚠️ places real calls/SMS): set `engine.enabled: true` and configure
+`fonoster` / `twilio` in `qcobro.json`, then start the apiserver — it ticks every
+`engine.tickSeconds`, guarded by a Postgres advisory lock so only one instance dispatches.
+
+### Verifying behavior matches the spec
+
+Product behavior lives in OpenSpec specs (`openspec/`); the tests are the executable
+proof of those specs.
+
+```bash
+# The spec is internally consistent
+openspec validate campaigns-engine
+
+# Unit tests — window gate, eligibility funnel, pacing, reserve/record
+# (integration tests auto-skip without a DB)
+npm test --workspace=mods/apiserver
+
+# Integration tests — prove at-most-once end to end against the dev DB
+DATABASE_URL=postgresql://qcobro:qcobro@localhost:5432/qcobro?schema=public \
+  npm test --workspace=mods/apiserver
+```
+
+Spec ↔ test map (a few):
+
+| Spec requirement                                                  | Test                                        |
+| ----------------------------------------------------------------- | ------------------------------------------- |
+| Schedule-window gate (`campaigns-engine`)                         | `engine/window.test.ts`                     |
+| Account eligibility funnel + reasons                              | `engine/funnel.test.ts`                     |
+| At-most-once dispatch (re-tick + crash)                           | `engine/engine.integration.test.ts`         |
+| One gestión per attempt / never-downgrade (`account-contact-log`) | `functions/campaigns/recordOutcome.test.ts` |
+
 ## Architecture (production)
 
 A single DigitalOcean Droplet running Docker Compose. Envoy terminates TLS on

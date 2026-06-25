@@ -16,6 +16,7 @@
     "start:dev": "tsx watch src/index.ts",
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
+    "engine:sim": "tsx scripts/simulate-engine-tick.ts",
     "db:generate": "node scripts/prisma.mjs generate",
     "db:migrate": "node scripts/prisma.mjs migrate dev",
     "db:migrate:deploy": "node scripts/prisma.mjs migrate deploy",
