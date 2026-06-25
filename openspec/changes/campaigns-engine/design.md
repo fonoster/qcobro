@@ -39,17 +39,23 @@ warranted at low demand); pg-boss/BullMQ (real queue, but Redis or extra machine
 don't need yet). The `tick()` boundary is the seam — it can later be invoked by a queue,
 cron, or worker with no change to the reserve/dispatch/record core.
 
-### At-most-once via row-level reserve-before-send
+### At-most-once via reserve-before-send (as implemented)
 
-The real guarantee is the row, not the timer: a reserve transaction does
-`SELECT … FOR UPDATE` on the `CampaignAccountState` row for `(campaignId, accountId)`,
-re-validates eligibility, increments counters, commits — and only then calls the provider
-**outside** the transaction. **Why:** the manual flow and webhooks run concurrently with
-the engine, so correctness must live at the row, not in a global lock. A crash between
-commit and dispatch yields a _missed_ attempt (acceptable), never a double-dial. We never
-compensate/decrement, because an ambiguous timeout (call may have gone out) must be
-treated as sent. **Alternative considered:** idempotency keys + retq ueue — heavier, and
-still needs the reserve to be safe.
+The reserve transaction increments the `CampaignAccountState` counters for
+`(campaignId, accountId)` and commits **before** the provider call, which happens
+**outside** the transaction. After a crash the next tick's funnel reads the committed
+counters and won't re-select the account (within caps) — a crash yields a _missed_
+attempt (acceptable), never a double-dial. We never compensate/decrement, because an
+ambiguous timeout (call may have gone out) must be treated as sent.
+
+**v1 mechanism:** at-most-once for the engine rests on **single-flight + the Postgres
+advisory lock** (only one tick runs at a time, one instance) **+ reserve-before-send +
+the funnel re-reading committed state**. This is proven by the crash integration test
+(exactly one dispatch per `(campaign, account)`), with no raw SQL. **Deferred:** a strict
+row-level `SELECT … FOR UPDATE` to also serialize the _engine vs. concurrent manual_
+case — manual is deliberately an operator override, so this is belt-and-suspenders we can
+add later behind the same reserve seam. **Alternative considered:** idempotency keys +
+retry queue — heavier, and still needs the reserve to be safe.
 
 ### Per-channel pacing via in-memory token buckets
 

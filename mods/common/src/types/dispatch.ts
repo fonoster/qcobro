@@ -1,8 +1,8 @@
 /**
  * Ports and result types for the channel-dispatch trigger layer. Kept
  * provider-agnostic so dispatch functions depend on these interfaces and tests
- * inject stubs — no live Fonoster/Twilio in unit tests. The same primitives back
- * both the manual outreach flow and the (deferred) campaigns engine.
+ * inject emulators — no live Fonoster/Twilio in unit tests. The same primitives back
+ * both the manual outreach flow and the campaigns engine.
  */
 
 /** Channels the dispatch layer can trigger. */

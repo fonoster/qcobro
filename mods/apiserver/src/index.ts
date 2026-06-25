@@ -10,6 +10,7 @@ import { createVoiceEventsHandler } from "./rest/voiceEvents.js";
 import { createInsightGenerator } from "./services/insightGenerator.js";
 import { synthesizeSpeech } from "./services/elevenLabsTts.js";
 import { startVoiceServer } from "./voice/voiceServer.js";
+import { startEngine } from "./engine/start.js";
 
 const app = express();
 const port = config.apiserver.port;
@@ -78,3 +79,12 @@ app.listen(port, () => {
 
 // External voice application for pre-recorded agents (own port).
 startVoiceServer();
+
+// Campaigns engine — the autonomous tick that originates outreach (only when
+// engine.enabled; off in dev). Stopped gracefully so an in-flight tick can settle.
+const engineRunner = startEngine();
+for (const signal of ["SIGTERM", "SIGINT"] as const) {
+  process.on(signal, () => {
+    void engineRunner?.stop().finally(() => process.exit(0));
+  });
+}

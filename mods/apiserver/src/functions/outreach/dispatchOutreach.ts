@@ -15,7 +15,7 @@ import {
  *
  * Pure trigger: it sends and returns a {@link DispatchResult}; it never touches the
  * database, so the same function backs both the manual flow and the campaigns
- * engine. Providers are injected, so unit tests run with stubs and no live calls.
+ * engine. Providers are injected, so unit tests run with emulators and no live calls.
  */
 export function createDispatchOutreach(deps: DispatchDeps) {
   const pick = deps.pickNumber ?? pickRandomNumber;

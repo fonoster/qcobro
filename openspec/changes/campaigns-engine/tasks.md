@@ -42,19 +42,19 @@
 
 ## 7. Engine wiring
 
-- [ ] 7.1 Engine module with single-flight guard + a Postgres advisory lock around each tick
-- [ ] 7.2 Start the timer on apiserver boot only when `engine.enabled`; emit the `TickReport` as a structured log each tick
-- [ ] 7.3 Graceful shutdown: stop scheduling, start no new reservations, let the in-flight dispatch settle
+- [x] 7.1 Engine module with single-flight guard + a Postgres advisory lock around each tick
+- [x] 7.2 Start the timer on apiserver boot only when `engine.enabled`; emit the `TickReport` as a structured log each tick
+- [x] 7.3 Graceful shutdown: stop scheduling, start no new reservations, let the in-flight dispatch settle
 
 ## 8. Tests
 
-- [ ] 8.1 Unit: window gate (incl. DST/weekday/edges), eligibility funnel reasons, pacing budget, completion — fake `CampaignClient` + emulators, assert the `TickReport`
+- [x] 8.1 Unit: window gate (incl. DST/weekday/edges), eligibility funnel reasons, pacing budget, completion — fake `CampaignClient` + emulators, assert the `TickReport`
 - [x] 8.2 Integration: real Postgres + emulators — **simulate a crash between reserve-commit and dispatch, re-run the tick, assert exactly one dispatch per `(campaign, account)`**
-- [ ] 8.3 Integration: concurrent manual + engine for the same `(campaign, account)` cannot double-reserve
-- [ ] 8.4 Run lint + typecheck + the apiserver/common test suites green
+- [~] 8.3 Integration: concurrent manual + engine — DEFERRED with the strict FOR UPDATE row-lock (engine is single-flight; manual is an operator override). At-most-once for the engine is proven by 8.2.
+- [x] 8.4 Run lint + typecheck + the apiserver/common test suites green
 
 ## 9. Spec sync & cleanup
 
-- [ ] 9.1 Make the engine ignore any legacy `MAX_ATTEMPTS_PER_DAY` trigger rows (campaign fields canonical); note removal in release notes
-- [ ] 9.2 Align the `channel-dispatch` test-double wording ("stubs" → "emulators")
-- [ ] 9.3 `openspec validate campaigns-engine` clean; verify `qcobro.example.json` documents the new config
+- [x] 9.1 Make the engine ignore any legacy `MAX_ATTEMPTS_PER_DAY` trigger rows (campaign fields canonical); note removal in release notes
+- [x] 9.2 Align the `channel-dispatch` test-double wording ("stubs" → "emulators")
+- [x] 9.3 `openspec validate campaigns-engine` clean; verify `qcobro.example.json` documents the new config
