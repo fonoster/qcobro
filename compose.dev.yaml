@@ -29,7 +29,7 @@ services:
       retries: 20
 
   identity:
-    image: fonoster/identity:0.20.1
+    image: fonoster/identity:0.22.0
     restart: unless-stopped
     depends_on:
       db:

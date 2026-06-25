@@ -25,9 +25,9 @@
     "db:seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
-    "@fonoster/identity-client": "file:../../../fonoster/mods/identity-client",
-    "@fonoster/sdk": "file:../../../fonoster/mods/sdk",
-    "@fonoster/voice": "file:../../../fonoster/mods/voice",
+    "@fonoster/identity-client": "0.22.0",
+    "@fonoster/sdk": "0.22.0",
+    "@fonoster/voice": "0.22.0",
     "@grpc/grpc-js": "^1.10.6",
     "@prisma/client": "^6.0.0",
     "@qcobro/common": "*",

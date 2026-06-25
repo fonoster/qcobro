@@ -2,7 +2,7 @@ services:
   # Fonoster Identity — configured entirely by a mounted file (no env vars).
   # QCobro reaches it at identity:50051 on the internal Docker network.
   identity:
-    image: fonoster/identity:0.20.1
+    image: fonoster/identity:0.22.0
     restart: unless-stopped
     volumes:
       - ./config/identity:/service/config:ro
