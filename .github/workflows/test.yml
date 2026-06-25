@@ -20,13 +20,17 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - run: npm ci
 
       - name: Build common (provides types for downstream packages)
         run: npm run build --workspace=mods/common
+
+      # Generate the Prisma client so apiserver's types resolve during typecheck.
+      - name: Generate Prisma client
+        run: npm run db:generate --workspace=mods/apiserver
 
       - name: Typecheck
         run: npm run typecheck

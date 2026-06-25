@@ -28,15 +28,6 @@ jobs:
       - name: Checkout qcobro
         uses: actions/checkout@v4
 
-      # Fonoster packages are file: deps — clone the fonoster repo as a sibling
-      # directory (../fonoster) to match the paths in package-lock.json.
-      - name: Checkout fonoster
-        uses: actions/checkout@v4
-        with:
-          repository: fonoster/fonoster
-          path: ${{ github.workspace }}/../fonoster
-          token: ${{ secrets.FONOSTER_REPO_TOKEN }}
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -68,26 +59,6 @@ jobs:
             echo "apiserver_tags=${P}/qcobro-apiserver:${TAG}" >> "$GITHUB_OUTPUT"
             echo "webapp_tags=${P}/qcobro-webapp:${TAG}" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Build and pack fonoster dependencies
-        run: |
-          FONOSTER_DIR="${{ github.workspace }}/../fonoster"
-          rm -rf .docker-deps && mkdir -p .docker-deps
-          for pkg in sdk voice identity-client; do
-            pkgdir="$FONOSTER_DIR/mods/$pkg"
-            if [[ ! -d "$pkgdir/dist" ]]; then
-              echo "Building @fonoster/$pkg..."
-              (cd "$pkgdir" && npm install --ignore-scripts && npm run build)
-            fi
-            echo "Packing @fonoster/$pkg..."
-            (cd "$pkgdir" && npm pack --pack-destination "${{ github.workspace }}/.docker-deps/" --quiet)
-          done
-          echo "Packed:" && ls -lh .docker-deps/
 
       - name: Build and push apiserver
         uses: docker/build-push-action@v5

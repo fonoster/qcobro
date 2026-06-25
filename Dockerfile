@@ -6,10 +6,8 @@
 #   apiserver  Node.js tRPC + REST + voice server  (port 3000)
 #   webapp     Nginx serving the compiled React SPA (port 80)
 #
-# The apiserver depends on three fonoster packages that are file: references
-# in package.json.  Run scripts/docker-build.sh instead of calling docker
-# build directly — that script packs those packages into .docker-deps/ so
-# this Dockerfile can resolve the file: paths inside the container.
+# The @fonoster/* packages are ordinary published npm dependencies, so a plain
+# `npm ci` resolves everything — no sibling checkout or tarball packing needed.
 # ─────────────────────────────────────────────────────────────────────────────
 ARG NODE_VERSION=22
 
@@ -19,16 +17,7 @@ RUN apk add --no-cache openssl
 WORKDIR /app
 
 # ── deps ──────────────────────────────────────────────────────────────────────
-# Place fonoster tarballs at the paths the package-lock.json expects them
-# (/fonoster/mods/…), then run npm ci so local "link" entries resolve.
 FROM base AS deps
-
-COPY .docker-deps/ .docker-deps/
-
-RUN mkdir -p /fonoster/mods/sdk /fonoster/mods/voice /fonoster/mods/identity-client && \
-    tar -xzf .docker-deps/fonoster-sdk-*.tgz           -C /fonoster/mods/sdk            --strip-components=1 && \
-    tar -xzf .docker-deps/fonoster-voice-*.tgz         -C /fonoster/mods/voice          --strip-components=1 && \
-    tar -xzf .docker-deps/fonoster-identity-client-*.tgz -C /fonoster/mods/identity-client --strip-components=1
 
 COPY package.json package-lock.json lerna.json ./
 COPY mods/common/package.json     mods/common/
@@ -63,9 +52,6 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV QCOBRO_CONFIG=/config/qcobro.json
-
-# Fonoster packages (extracted at build time, symlinked by npm)
-COPY --from=deps /fonoster /fonoster
 
 # Node modules (includes prisma CLI needed for migrate deploy at startup)
 COPY --from=deps /app/node_modules              ./node_modules
