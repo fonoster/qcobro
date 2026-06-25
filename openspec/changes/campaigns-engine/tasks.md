@@ -28,17 +28,17 @@
 ## 5. Engine core
 
 - [x] 5.1 `isInWindow(campaign, now, tz)` pure function (status + dates + ISO `daysOfWeek` + `startTime`..`endTime` in deployment tz; no overnight) over the injected clock
-- [ ] 5.2 Candidate query: accounts in the campaign's portfolios with a phone (workspace-spanning across all tenants)
+- [x] 5.2 Candidate query: accounts in the campaign's portfolios with a phone (workspace-spanning across all tenants)
 - [x] 5.3 Eligibility funnel with decision reasons: global intent/`suppressUntil`, campaign-local `suppressUntil`, `maxAttemptsPerAccount`, `maxAttemptsPerDay` (daily count derived from `lastAttemptAt` local date), fairness ordering (`lastAttemptAt` asc, stable tiebreaker)
 - [x] 5.4 Per-channel token buckets with a `tryTake()` interface; map a campaign's channel from its agent-template type; voice + SMS only
-- [ ] 5.5 `reserveAndDispatch(campaign, account)`: row-lock reserve txn (re-validate + increment) → commit → `dispatchOutreach` outside the txn → `recordOutcome(providerRef, placeholder)`
-- [ ] 5.6 `tick()`: iterate ACTIVE campaigns, gate window, run readiness check, select + dispatch within per-channel budget and the per-tick cap `K`, accumulate the `TickReport`
+- [x] 5.5 `reserveAndDispatch(campaign, account)`: row-lock reserve txn (re-validate + increment) → commit → `dispatchOutreach` outside the txn → `recordOutcome(providerRef, placeholder)`
+- [x] 5.6 `tick()`: iterate ACTIVE campaigns, gate window, run readiness check, select + dispatch within per-channel budget and the per-tick cap `K`, accumulate the `TickReport`
 
 ## 6. Failure handling & lifecycle
 
-- [ ] 6.1 Readiness check per campaign per tick (channel configured/synced, non-empty pool, supported channel) → skip whole campaign, zero attempts, reason in report
-- [ ] 6.2 Per-call failure path: attempt stays consumed, no retry, no gestión, reason in report
-- [ ] 6.3 Auto-complete: flip `ACTIVE → COMPLETED` when `endDate` has passed (local tz) via the existing guarded transition; open-ended campaigns untouched
+- [x] 6.1 Readiness check per campaign per tick (channel configured/synced, non-empty pool, supported channel) → skip whole campaign, zero attempts, reason in report
+- [x] 6.2 Per-call failure path: attempt stays consumed, no retry, no gestión, reason in report
+- [x] 6.3 Auto-complete: flip `ACTIVE → COMPLETED` when `endDate` has passed (local tz) via the existing guarded transition; open-ended campaigns untouched
 
 ## 7. Engine wiring
 
@@ -49,7 +49,7 @@
 ## 8. Tests
 
 - [ ] 8.1 Unit: window gate (incl. DST/weekday/edges), eligibility funnel reasons, pacing budget, completion — fake `CampaignClient` + emulators, assert the `TickReport`
-- [ ] 8.2 Integration: real Postgres + emulators — **simulate a crash between reserve-commit and dispatch, re-run the tick, assert exactly one dispatch per `(campaign, account)`**
+- [x] 8.2 Integration: real Postgres + emulators — **simulate a crash between reserve-commit and dispatch, re-run the tick, assert exactly one dispatch per `(campaign, account)`**
 - [ ] 8.3 Integration: concurrent manual + engine for the same `(campaign, account)` cannot double-reserve
 - [ ] 8.4 Run lint + typecheck + the apiserver/common test suites green
 
