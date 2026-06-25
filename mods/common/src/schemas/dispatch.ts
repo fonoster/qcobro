@@ -39,11 +39,14 @@ export const dispatchOutreachSchema = z
           message: "Voice dispatch requires appRef"
         });
       }
-      if ((value.firstMessage ?? "").length === 0) {
+      // Only pre-recorded voice needs content up front (firstMessage carries the script).
+      // VOICE_AI may have an empty first message: the autopilot places the call and waits
+      // for the customer to speak first (its system prompt drives the conversation).
+      if (value.channel === "VOICE_PRERECORDED" && (value.firstMessage ?? "").length === 0) {
         ctx.addIssue({
           code: "custom",
           path: ["firstMessage"],
-          message: "Voice dispatch requires a first message / script"
+          message: "Pre-recorded voice dispatch requires a script"
         });
       }
     }

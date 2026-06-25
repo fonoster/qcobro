@@ -79,18 +79,35 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
 
   const mine = (sms: EmulatedSmsClient) => sms.messages.filter((m) => m.to.includes(tag));
 
+  // IDs of other ACTIVE campaigns we temporarily pause to isolate the test — restored
+  // in `after` so the test never leaves the dev DB's real/seeded campaigns paused.
+  let pausedByTest: string[] = [];
+
   before(async () => {
-    // Isolate: no other ACTIVE campaigns should interfere on this dev DB.
-    await prisma.campaign.updateMany({
+    const others = await prisma.campaign.findMany({
       where: { status: "ACTIVE", workspaceRef: { not: ws } },
-      data: { status: "PAUSED" }
+      select: { id: true }
     });
+    pausedByTest = others.map((c) => c.id);
+    if (pausedByTest.length > 0) {
+      await prisma.campaign.updateMany({
+        where: { id: { in: pausedByTest } },
+        data: { status: "PAUSED" }
+      });
+    }
   });
 
   after(async () => {
     await prisma.campaign.deleteMany({ where: { workspaceRef: ws } });
     await prisma.portfolio.deleteMany({ where: { workspaceRef: ws } });
     await prisma.agentTemplate.deleteMany({ where: { workspaceRef: ws } });
+    // Restore exactly the campaigns we paused for isolation.
+    if (pausedByTest.length > 0) {
+      await prisma.campaign.updateMany({
+        where: { id: { in: pausedByTest } },
+        data: { status: "ACTIVE" }
+      });
+    }
     await prisma.$disconnect();
   });
 
