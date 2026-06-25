@@ -31,24 +31,15 @@ export const dispatchOutreachSchema = z
     if (value.channel === "SMS" && (value.body ?? "").length === 0) {
       ctx.addIssue({ code: "custom", path: ["body"], message: "SMS requires a message body" });
     }
-    if (value.channel !== "SMS") {
-      if (!value.appRef) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["appRef"],
-          message: "Voice dispatch requires appRef"
-        });
-      }
-      // Only pre-recorded voice needs content up front (firstMessage carries the script).
-      // VOICE_AI may have an empty first message: the autopilot places the call and waits
-      // for the customer to speak first (its system prompt drives the conversation).
-      if (value.channel === "VOICE_PRERECORDED" && (value.firstMessage ?? "").length === 0) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["firstMessage"],
-          message: "Pre-recorded voice dispatch requires a script"
-        });
-      }
+    // Voice dispatch needs the synced application ref. Neither voice channel requires a
+    // `firstMessage`: VOICE_AI may open silently (the autopilot places the call and waits
+    // for the customer to speak first), and pre-recorded has no first message at all.
+    if (value.channel !== "SMS" && !value.appRef) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["appRef"],
+        message: "Voice dispatch requires appRef"
+      });
     }
   });
 
