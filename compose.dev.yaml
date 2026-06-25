@@ -20,6 +20,8 @@ services:
       - "5432:5432"
     volumes:
       - qcobro-db-dev:/var/lib/postgresql/data
+      # Creates the `identity` database on first init (Identity uses its own DB).
+      - ./config/db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U qcobro -d qcobro"]
       interval: 3s

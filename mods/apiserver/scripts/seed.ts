@@ -413,7 +413,10 @@ async function main() {
     await identity.createUser(USER);
     log(`created ${USER.email}`);
   } catch (err) {
-    log(`${USER.email} already exists (${(err as Error).message.split("\n")[0]}) — reusing`);
+    // Only a genuine ALREADY_EXISTS (gRPC code 6) means "reuse"; anything else (e.g.
+    // 13 INTERNAL when Identity's database is missing) is a real failure — surface it.
+    if ((err as { code?: number }).code !== 6) throw err;
+    log(`${USER.email} already exists — reusing`);
   }
   let { accessToken } = await identity.exchangeCredentials({
     username: USER.email,
