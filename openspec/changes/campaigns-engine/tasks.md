@@ -27,10 +27,10 @@
 
 ## 5. Engine core
 
-- [ ] 5.1 `isInWindow(campaign, now, tz)` pure function (status + dates + ISO `daysOfWeek` + `startTime`..`endTime` in deployment tz; no overnight) over the injected clock
+- [x] 5.1 `isInWindow(campaign, now, tz)` pure function (status + dates + ISO `daysOfWeek` + `startTime`..`endTime` in deployment tz; no overnight) over the injected clock
 - [ ] 5.2 Candidate query: accounts in the campaign's portfolios with a phone (workspace-spanning across all tenants)
-- [ ] 5.3 Eligibility funnel with decision reasons: global intent/`suppressUntil`, campaign-local `suppressUntil`, `maxAttemptsPerAccount`, `maxAttemptsPerDay` (daily count derived from `lastAttemptAt` local date), fairness ordering (`lastAttemptAt` asc, stable tiebreaker)
-- [ ] 5.4 Per-channel token buckets with a `tryTake()` interface; map a campaign's channel from its agent-template type; voice + SMS only
+- [x] 5.3 Eligibility funnel with decision reasons: global intent/`suppressUntil`, campaign-local `suppressUntil`, `maxAttemptsPerAccount`, `maxAttemptsPerDay` (daily count derived from `lastAttemptAt` local date), fairness ordering (`lastAttemptAt` asc, stable tiebreaker)
+- [x] 5.4 Per-channel token buckets with a `tryTake()` interface; map a campaign's channel from its agent-template type; voice + SMS only
 - [ ] 5.5 `reserveAndDispatch(campaign, account)`: row-lock reserve txn (re-validate + increment) → commit → `dispatchOutreach` outside the txn → `recordOutcome(providerRef, placeholder)`
 - [ ] 5.6 `tick()`: iterate ACTIVE campaigns, gate window, run readiness check, select + dispatch within per-channel budget and the per-tick cap `K`, accumulate the `TickReport`
 
