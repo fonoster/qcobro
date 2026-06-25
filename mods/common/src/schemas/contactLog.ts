@@ -46,9 +46,27 @@ export const createContactLogSchema = z.object({
   aiResult: z.string().optional(),
   aiNextStep: z.string().optional(),
   intentMetadata: z.record(z.string(), z.unknown()).optional(),
-  channelData: z.record(z.string(), z.unknown()).optional()
+  channelData: z.record(z.string(), z.unknown()).optional(),
+  /**
+   * Provider call ref (voice) / message sid (sms) for the dispatch-time attempt.
+   * When present, `recordOutcome` upserts the gestión keyed by it (one row per
+   * attempt, enriched by the async callback) instead of inserting a duplicate.
+   */
+  providerRef: z.string().min(1).optional()
 });
 export type CreateContactLogInput = z.infer<typeof createContactLogSchema>;
+
+/**
+ * Input to reserve a campaign attempt before the provider call (the engine's
+ * at-most-once step). Increments the attempt counters; writes no gestión.
+ */
+export const reserveAttemptSchema = z.object({
+  campaignId: z.string().min(1).optional(),
+  portfolioAccountId: z.string().min(1),
+  /** When the attempt is being made (ISO). */
+  at: z.string().min(1)
+});
+export type ReserveAttemptInput = z.infer<typeof reserveAttemptSchema>;
 
 export const updateObjectiveSchema = z.object({
   id: z.string().min(1),

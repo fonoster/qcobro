@@ -72,6 +72,7 @@ export interface AccountContactLogRecord {
   intentMetadata: Record<string, unknown> | null;
   channelData: Record<string, unknown> | null;
   correctedEntryId: string | null;
+  providerRef: string | null;
   createdAt: Date;
 }
 
@@ -127,6 +128,12 @@ export interface CampaignClient {
   };
 
   campaignAccountState: {
+    findUnique(args: {
+      where: {
+        campaignId_portfolioAccountId: { campaignId: string; portfolioAccountId: string };
+      };
+    }): Promise<CampaignAccountStateRecord | null>;
+
     upsert(args: {
       where: {
         campaignId_portfolioAccountId: { campaignId: string; portfolioAccountId: string };
@@ -140,6 +147,11 @@ export interface CampaignClient {
 
   accountContactLog: {
     create(args: { data: Record<string, unknown> }): Promise<AccountContactLogRecord>;
+    findFirst(args: { where: Record<string, unknown> }): Promise<AccountContactLogRecord | null>;
+    update(args: {
+      where: { id: string };
+      data: Record<string, unknown>;
+    }): Promise<AccountContactLogRecord>;
     findMany(args: {
       where: Record<string, unknown>;
       orderBy?: { createdAt: "asc" | "desc" };
