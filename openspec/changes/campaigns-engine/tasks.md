@@ -22,8 +22,8 @@
 
 ## 4. Channel emulators (test-support only)
 
-- [ ] 4.1 Implement `EmulatedOutboundCallClient` and `EmulatedSmsClient` that record would-be dispatches and return deterministic provider refs (in a test-support module, never imported by production code)
-- [ ] 4.2 Optionally support emulating provider failure (to exercise the per-call failure path)
+- [x] 4.1 Implement `EmulatedOutboundCallClient` and `EmulatedSmsClient` that record would-be dispatches and return deterministic provider refs (in a test-support module, never imported by production code)
+- [x] 4.2 Optionally support emulating provider failure (to exercise the per-call failure path)
 
 ## 5. Engine core
 
