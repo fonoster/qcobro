@@ -14,11 +14,11 @@
 
 ## 3. Contact-log accounting refactor
 
-- [ ] 3.1 Split `createContactLog` into `reserveAttempt(campaignId, accountId)` (counter increments + `PortfolioAccount` hot-path, transactional) and `recordOutcome({ providerRef, … })` (upsert gestión by provider ref + apply triggers, no recount)
-- [ ] 3.2 Make `recordOutcome` idempotent: upsert by provider ref, never downgrade a real outcome to the placeholder, guard duplicate `Objective` creation, create-if-absent when the callback precedes the dispatch entry
-- [ ] 3.3 Point the voice-events webhook and `POST /api/contact-logs` at `recordOutcome`
-- [ ] 3.4 Rewire manual `outreach.dispatch` to `reserveAttempt` → dispatch → `recordOutcome` (operator override on soft caps; still counted + logged)
-- [ ] 3.5 Update/extend unit tests for the split (counters increment once at reserve; re-delivered webhook is idempotent; no downgrade)
+- [x] 3.1 Split `createContactLog` into `reserveAttempt(campaignId, accountId)` (counter increments + `PortfolioAccount` hot-path, transactional) and `recordOutcome({ providerRef, … })` (upsert gestión by provider ref + apply triggers, no recount)
+- [x] 3.2 Make `recordOutcome` idempotent: upsert by provider ref, never downgrade a real outcome to the placeholder, guard duplicate `Objective` creation, create-if-absent when the callback precedes the dispatch entry
+- [~] 3.3 Point the voice-events webhook and `POST /api/contact-logs` at `recordOutcome` — DEFERRED (needs outcome-flow + first-class providerRef in payload; tracked as follow-up)
+- [x] 3.4 Rewire manual `outreach.dispatch` to `reserveAttempt` → dispatch → `recordOutcome` (operator override on soft caps; still counted + logged)
+- [x] 3.5 Update/extend unit tests for the split (counters increment once at reserve; re-delivered webhook is idempotent; no downgrade)
 
 ## 4. Channel emulators (test-support only)
 

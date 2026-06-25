@@ -84,7 +84,7 @@ const contactLogRouter = router({
 
   create: workspaceProcedure
     .input(createContactLogSchema)
-    .mutation(({ input, ctx }) => createCreateContactLog(ctx.prisma as never)(input)),
+    .mutation(({ input, ctx }) => createCreateContactLog(ctx.prisma as never, ctx.timezone)(input)),
 
   // Generate (and persist) the AI analysis for a gestión from its transcript. The
   // gestión is workspace-scoped first; generation no-ops when insights are disabled,

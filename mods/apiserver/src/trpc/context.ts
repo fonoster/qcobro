@@ -94,7 +94,8 @@ export async function createContext(opts: CreateExpressContextOptions) {
     twilioFromNumbers,
     fonosterPrerecordedAppRef,
     insightGenerator,
-    aiGeneration: config.ai?.generation ?? "onDemand"
+    aiGeneration: config.ai?.generation ?? "onDemand",
+    timezone: config.timezone
   };
 }
 

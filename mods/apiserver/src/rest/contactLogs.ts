@@ -5,6 +5,8 @@ import { createCreateContactLog } from "../functions/campaigns/createContactLog.
 /** Minimal shape of the config slice this module needs. */
 export interface ContactLogAuthConfig {
   apiserver: { contactLogAuth: { enabled: boolean } };
+  /** Deployment timezone, for the daily-cap reset when recording the attempt. */
+  timezone: string;
 }
 
 /** Minimal Prisma surface used to resolve an account's owning workspace. */
@@ -45,7 +47,7 @@ export function parseBasicWorkspace(authHeader: string | undefined): string | nu
  * disabled (local dev) the endpoint accepts unauthenticated requests.
  */
 export function createContactLogHandler(prisma: ContactLogPrisma, config: ContactLogAuthConfig) {
-  const create = createCreateContactLog(prisma as never);
+  const create = createCreateContactLog(prisma as never, config.timezone);
 
   return async (req: Request, res: Response): Promise<void> => {
     if (config.apiserver.contactLogAuth.enabled) {

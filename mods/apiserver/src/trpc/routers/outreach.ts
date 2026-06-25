@@ -6,7 +6,8 @@ import {
 } from "@qcobro/common";
 import { router, workspaceProcedure } from "../trpc.js";
 import { createDispatchOutreach } from "../../functions/outreach/dispatchOutreach.js";
-import { createCreateContactLog } from "../../functions/campaigns/createContactLog.js";
+import { createReserveAttempt } from "../../functions/campaigns/reserveAttempt.js";
+import { createRecordOutcome } from "../../functions/campaigns/recordOutcome.js";
 
 /** An agent template with its three dispatchable channel configs loaded. */
 type TemplateWithConfigs = {
@@ -106,19 +107,30 @@ export const outreachRouter = router({
       fonosterNumbers: ctx.fonosterNumbers,
       twilioFromNumbers: ctx.twilioFromNumbers
     });
+
+    const at = new Date().toISOString();
+
+    // Manual = a first-class campaign attempt, counted like the engine's. Operator
+    // override: we reserve (count) the attempt before dialing, but do not gate on caps.
+    await createReserveAttempt(
+      ctx.prisma as never,
+      ctx.timezone
+    )({ campaignId: input.campaignId, portfolioAccountId: account.id, at });
+
     const result = await dispatch(request);
 
-    // Record the manual attempt (outcome OTHER; richer outcomes arrive via callbacks).
-    await createCreateContactLog(ctx.prisma as never)({
+    // One gestión per attempt, correlated by providerRef (richer outcomes arrive via
+    // callbacks and enrich this same row).
+    await createRecordOutcome(ctx.prisma as never)({
       portfolioAccountId: account.id,
       campaignId: input.campaignId,
       agentType: template.type as DispatchOutreachInput["channel"],
-      contactedAt: new Date().toISOString(),
+      contactedAt: at,
       outcome: "OTHER",
       notes: "Contacto manual",
       debtAmountSnapshot: account.outstandingBalance,
+      providerRef: result.providerRef,
       channelData: {
-        providerRef: result.providerRef,
         from: result.from,
         to: result.to,
         messageBody: result.renderedBody
