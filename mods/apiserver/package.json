@@ -20,6 +20,7 @@
     "db:generate": "node scripts/prisma.mjs generate",
     "db:migrate": "node scripts/prisma.mjs migrate dev",
     "db:migrate:deploy": "node scripts/prisma.mjs migrate deploy",
+    "db:reset": "node scripts/prisma.mjs migrate reset --force --skip-seed",
     "db:studio": "node scripts/prisma.mjs studio",
     "db:seed": "tsx scripts/seed.ts"
   },

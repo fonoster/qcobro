@@ -20,6 +20,8 @@ cp qcobro.example.json qcobro.json
 # 3. Database — apply migrations (and an optional demo seed)
 npm run db:migrate --workspace=mods/apiserver
 npm run db:seed    --workspace=mods/apiserver   # optional
+# Starting over? Drop all app data + re-apply migrations, then re-seed (dev only):
+#   npm run db:reset --workspace=mods/apiserver && npm run db:seed --workspace=mods/apiserver
 
 # 4. Run the API + console
 npm run start:dev      # apiserver on :3000
