@@ -165,8 +165,13 @@ export function createEngine(deps: EngineDeps) {
     let result;
     try {
       result = await dispatch(buildRequest(c, acc, channel, appRef));
-    } catch {
+    } catch (err) {
       // Attempt stays consumed (at-most-once); no gestión for a failed dispatch.
+      // Surface the reason — a swallowed dispatch error is undebuggable in prod.
+      console.error(
+        `[engine] dispatch failed campaign=${c.id} account=${acc.id} channel=${channel}:`,
+        err instanceof Error ? err.message : err
+      );
       return { decision: "dispatch_failed" };
     }
 
