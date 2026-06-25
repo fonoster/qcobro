@@ -40,15 +40,22 @@ npm run engine:sim --workspace=mods/apiserver
 
 Try it end to end:
 
-1. In the console (`:5173`) create a workspace, a portfolio (import a few accounts with
-   phone numbers), an **SMS** agent template, and an **ACTIVE** campaign whose schedule
-   window covers right now.
-2. Run `npm run engine:sim`. It prints a **TickReport**: each campaign's in-window status
-   and a per-account decision (`dispatched` / `daily_cap` / `promise_suppressed` / …),
-   plus the would-be dispatches (emulated).
+1. Seed a complete demo (idempotent — user, portfolio + accounts, agents, and three
+   **ACTIVE** campaigns scheduled Mon–Fri 09:00–18:00):
+
+   ```bash
+   npm run db:seed --workspace=mods/apiserver   # login: demo@qcobro.com / password123
+   ```
+
+2. Run `npm run engine:sim` **during the campaign window** (Mon–Fri, 09:00–18:00 in the
+   deployment timezone). It prints a **TickReport**: each campaign's in-window status and
+   a per-account decision (`dispatched` / `daily_cap` / `promise_suppressed` / …), plus
+   the would-be dispatches (emulated). The SMS and Voz-pregrabada campaigns dispatch; the
+   Voz IA one shows `voice_not_synced` until Fonoster is configured. Outside the window
+   every campaign is `out_of_window`.
 3. Open the **Gestiones** page — the simulated attempts are recorded as real gestiones.
-4. Run the sim **again**: the same account is now `daily_cap` — proof of at-most-once
-   (it is never dialed twice).
+4. Run the sim a few more times: once an account reaches `maxAttemptsPerDay` it shows
+   `daily_cap` — proof of at-most-once (it is never dialed beyond its cap).
 
 **Run it for real** (⚠️ places real calls/SMS): set `engine.enabled: true` and configure
 `fonoster` / `twilio` in `qcobro.json`, then start the apiserver — it ticks every
