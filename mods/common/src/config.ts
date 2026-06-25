@@ -116,7 +116,14 @@ export const fonosterConfigSchema = z
      * ngrok URL). When set, syncing a Voz IA agent registers the autopilot events-hook
      * at `${webhookBaseUrl}/api/voice/events` so conversation events return as gestiones.
      */
-    webhookBaseUrl: z.string().url().optional()
+    webhookBaseUrl: z.string().url().optional(),
+    /**
+     * Campaigns-engine pacing: the maximum number of voice calls the engine will
+     * originate per minute, deployment-wide (the caller-ID pool is shared by all
+     * workspaces). A conservative value bounds in-flight concurrency given the pool
+     * size and typical call duration. Reserve `0` to pause voice dispatch.
+     */
+    maxCallsPerMinute: z.number().int().nonnegative().default(6)
   })
   .optional();
 
@@ -140,7 +147,13 @@ export const twilioConfigSchema = z
   .object({
     accountSid: z.string().min(1),
     authToken: z.string().min(1),
-    fromNumbers: z.array(z.string().min(1)).default([])
+    fromNumbers: z.array(z.string().min(1)).default([]),
+    /**
+     * Campaigns-engine pacing: the maximum number of SMS messages the engine will
+     * send per minute, deployment-wide (the sender pool is shared by all workspaces).
+     * Reserve `0` to pause SMS dispatch.
+     */
+    maxSmsPerMinute: z.number().int().nonnegative().default(60)
   })
   .optional();
 
@@ -280,7 +293,20 @@ export const qcobroConfigSchema = z.object({
   twilio: twilioConfigSchema,
   ai: aiConfigSchema,
   tts: ttsConfigSchema,
-  announcement: announcementConfigSchema
+  announcement: announcementConfigSchema,
+  /**
+   * Campaigns engine. The autonomous in-process loop that originates campaign
+   * outreach. Disabled by default so it never auto-dials in local development;
+   * enable it in production. Per-channel pacing lives in the `fonoster`/`twilio`
+   * blocks (the provider pools they configure are deployment-wide).
+   */
+  engine: z
+    .object({
+      enabled: z.boolean().default(false),
+      /** Seconds between engine ticks. */
+      tickSeconds: z.number().int().positive().default(60)
+    })
+    .default({ enabled: false, tickSeconds: 60 })
 });
 
 export type IdentityConfig = z.infer<typeof identityConfigSchema>;
