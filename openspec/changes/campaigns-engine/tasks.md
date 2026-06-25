@@ -8,9 +8,9 @@
 
 ## 2. Data model (Prisma)
 
-- [ ] 2.1 Ensure the gestión stores the provider ref for correlation (in `channelData` or a dedicated indexed column); add an index supporting lookup-by-provider-ref
-- [ ] 2.2 Add a uniqueness guard so one gestión yields at most one `Objective` (unique on `contactLogId` or equivalent)
-- [ ] 2.3 Generate + write the migration; run `db:generate`
+- [x] 2.1 Ensure the gestión stores the provider ref for correlation (in `channelData` or a dedicated indexed column); add an index supporting lookup-by-provider-ref
+- [x] 2.2 Add a uniqueness guard so one gestión yields at most one `Objective` (unique on `contactLogId` or equivalent)
+- [x] 2.3 Generate + write the migration; run `db:generate`
 
 ## 3. Contact-log accounting refactor
 

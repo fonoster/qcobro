@@ -286,6 +286,12 @@ model AccountContactLog {
   intentMetadata     Json?
   channelData        Json?
   correctedEntryId   String?
+  // Provider call ref (voice) / message sid (sms) for the dispatch-time attempt.
+  // The engine writes one gestión per attempt keyed by this; the async outcome
+  // callback correlates on it to enrich the same row (no duplicate gestiones).
+  // Unique so re-delivered webhooks upsert rather than insert (nulls allowed for
+  // legacy/manual rows without a ref).
+  providerRef        String?          @unique
   createdAt          DateTime         @default(now())
   portfolioAccount   PortfolioAccount @relation(fields: [portfolioAccountId], references: [id], onDelete: Cascade)
   campaign           Campaign?        @relation(fields: [campaignId], references: [id], onDelete: SetNull)
@@ -309,6 +315,9 @@ model Objective {
   contactLog         AccountContactLog @relation(fields: [contactLogId], references: [id], onDelete: Cascade)
   portfolioAccount   PortfolioAccount  @relation(fields: [portfolioAccountId], references: [id], onDelete: Cascade)
 
+  // One objective per (gestión, type): a single contact may yield distinct objective
+  // types, but a re-delivered outcome callback cannot duplicate the same one.
+  @@unique([contactLogId, type])
   @@index([portfolioAccountId, dueDate])
   @@map("objectives")
 }
