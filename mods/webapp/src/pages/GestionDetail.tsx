@@ -1,13 +1,14 @@
 import type { ComponentType, ReactNode } from "react";
 import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { X, Sparkles, CheckCheck, PhoneCall, MessagesSquare, Target } from "lucide-react";
-import type { TranscriptLine } from "@qcobro/common";
+import { X, Sparkles, CheckCheck, PhoneCall, MessagesSquare, Target, Mail } from "lucide-react";
+import type { EmailThreadMessage, TranscriptLine } from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { channelIcon, type Channel } from "../lib/channelIcon.js";
 
-const ONE_WAY: Channel[] = ["SMS", "VOICE_PRERECORDED", "EMAIL"];
+// EMAIL is bidirectional (autopilot thread); the other two are one-way sends.
+const ONE_WAY: Channel[] = ["SMS", "VOICE_PRERECORDED"];
 
 const currency = (n: number) =>
   new Intl.NumberFormat("es", {
@@ -88,6 +89,8 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
   const subject = g?.channelData?.subject as string | undefined;
   const recordingUrl = g?.channelData?.recordingUrl as string | undefined;
   const transcript = (g?.channelData?.transcript as TranscriptLine[] | undefined) ?? [];
+  const emailThread =
+    (g?.channelData?.emailThread as { messages: EmailThreadMessage[] } | undefined) ?? null;
   const toNumber = (g?.channelData?.to as string | undefined) ?? g?.portfolioAccount.phone ?? null;
   const timeStr = g
     ? new Date(g.contactedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
@@ -95,6 +98,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
   const durationStr = formatDuration(g?.durationSeconds);
   const oneWay = !!g && ONE_WAY.includes(g.agentType);
   const isVoiceAi = g?.agentType === "VOICE_AI";
+  const isEmail = g?.agentType === "EMAIL";
   const ChannelIcon = g ? channelIcon(g.agentType) : channelIcon("SMS");
 
   // On-demand AI analysis: when a Voz IA gestión has a transcript but no analysis yet,
@@ -235,6 +239,52 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
           </Section>
         )}
 
+        {/* EMAIL: bidirectional autopilot thread (initial notice + replies) */}
+        {isEmail && (
+          <Section
+            icon={Mail}
+            iconClass="text-emerald-700"
+            title={t("gestiones.detail.emailThread")}
+          >
+            <div className="flex flex-col gap-2">
+              {messageBody && (
+                <div className="flex justify-end">
+                  <div className="max-w-[85%] rounded-2xl rounded-br-sm border border-emerald-100 bg-emerald-50 px-3.5 py-2.5">
+                    {subject && (
+                      <p className="text-[11px] font-semibold text-emerald-700">{subject}</p>
+                    )}
+                    <p className="text-sm leading-relaxed text-emerald-900">{messageBody}</p>
+                  </div>
+                </div>
+              )}
+              {emailThread?.messages.map((m, i) =>
+                m.direction === "outbound" ? (
+                  <div key={i} className="flex justify-end">
+                    <div className="max-w-[85%] rounded-2xl rounded-br-sm border border-emerald-100 bg-emerald-50 px-3.5 py-2.5">
+                      <span className="text-[11px] font-semibold text-emerald-700">
+                        {t("gestiones.detail.agentSpeaker")}
+                      </span>
+                      <p className="text-sm leading-relaxed text-emerald-900">{m.body}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div key={i} className="flex justify-start">
+                    <div className="max-w-[85%] rounded-2xl rounded-bl-sm border border-slate-200 bg-slate-100 px-3.5 py-2.5">
+                      <span className="text-[11px] font-semibold text-slate-400">
+                        {t("gestiones.detail.customerSpeaker")}
+                      </span>
+                      <p className="text-sm leading-relaxed text-slate-700">{m.body}</p>
+                    </div>
+                  </div>
+                )
+              )}
+              {!messageBody && !emailThread && (
+                <p className="text-sm text-slate-500">{t("gestiones.detail.noMessage")}</p>
+              )}
+            </div>
+          </Section>
+        )}
+
         {/* Voz IA: full AI analysis */}
         {isVoiceAi && (
           <Section
@@ -268,8 +318,8 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
           </Section>
         )}
 
-        {/* Voz IA: linked objectives */}
-        {isVoiceAi && g && g.objectives.length > 0 && (
+        {/* Voz IA + EMAIL: linked objectives (promises captured by the autopilot) */}
+        {(isVoiceAi || isEmail) && g && g.objectives.length > 0 && (
           <Section
             icon={Target}
             iconClass="text-emerald-700"

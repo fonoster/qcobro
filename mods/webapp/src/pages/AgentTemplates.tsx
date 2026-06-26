@@ -269,7 +269,9 @@ function CreateAgentTemplateModal({
           fromName: fields.fromName ?? "",
           fromEmail: fields.fromEmail ?? "",
           subject: fields.subject ?? "",
-          messageBody: fields.messageBody ?? ""
+          messageBody: fields.messageBody ?? "",
+          systemPrompt: fields.systemPrompt ?? "",
+          ...(fields.maxReplies ? { maxReplies: Number(fields.maxReplies) } : {})
         };
         break;
       case "WHATSAPP":
@@ -414,6 +416,19 @@ function CreateAgentTemplateModal({
               id="a-email-body"
               value={fields.messageBody ?? ""}
               onChange={(e) => set("messageBody", e.target.value)}
+            />
+            <TextareaGroup
+              label={t("agents.form.systemPrompt")}
+              id="a-email-prompt"
+              value={fields.systemPrompt ?? ""}
+              onChange={(e) => set("systemPrompt", e.target.value)}
+            />
+            <InputGroup
+              label={t("agents.form.maxReplies")}
+              id="a-email-maxreplies"
+              type="number"
+              value={fields.maxReplies ?? ""}
+              onChange={(e) => set("maxReplies", e.target.value)}
             />
           </>
         )}
