@@ -20,28 +20,61 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Backing services (db + identity + mailpit) via the same compose file
-      # used for local development. The apiserver and webapp run on the host
-      # below. Config (qcobro.json, config/identity) is committed and points at
-      # localhost, which matches the ports compose.dev.yaml publishes.
-      - name: Start backing services
+      # qcobro.json and the Identity service config are gitignored (they hold
+      # deployment secrets), so generate CI-local copies. Values point at the
+      # services compose.dev.yaml publishes on localhost; the Identity container
+      # reaches Postgres/Mailpit by service name on the compose network.
+      - name: Generate config and Identity keys
         run: |
-          docker compose -f compose.dev.yaml up -d --wait db
-          # The single postgres only auto-creates the qcobro database; the
-          # identity service expects a separate `identity` database.
-          docker compose -f compose.dev.yaml exec -T db \
-            psql -U qcobro -d qcobro -tc \
-            "SELECT 1 FROM pg_database WHERE datname='identity'" | grep -q 1 \
-            || docker compose -f compose.dev.yaml exec -T db createdb -U qcobro identity
-          docker compose -f compose.dev.yaml up -d identity mailpit
+          mkdir -p config/identity/keys
+          openssl genrsa -out config/identity/keys/private.pem 2048
+          openssl rsa -in config/identity/keys/private.pem -pubout \
+            -out config/identity/keys/public.pem
 
-      - name: Build common and provision apiserver database
+          cat > config/identity/identity.json <<'JSON'
+          {
+            "server": { "bindAddr": "0.0.0.0:50051", "httpBridgePort": 9110 },
+            "database": { "url": "postgresql://qcobro:qcobro@db:5432/identity?schema=public" },
+            "encryptionKey": "k1.aesgcm256.cWpIPDjly8s0Y1UIKPhV2LDs-mJDkxpHQjOWnLiXK_E",
+            "issuer": "qcobro",
+            "audience": "qcobro",
+            "keys": {
+              "privateKeyPath": "/service/config/keys/private.pem",
+              "publicKeyPath": "/service/config/keys/public.pem"
+            },
+            "appUrl": "http://localhost:5173",
+            "invite": {
+              "url": "http://localhost:5173/accept-invite",
+              "failUrl": "http://localhost:5173/invite-failed"
+            },
+            "smtp": {
+              "host": "mailpit", "port": 1025, "secure": false,
+              "sender": "QCobro <no-reply@qcobro.local>"
+            }
+          }
+          JSON
+
+          cat > qcobro.json <<'JSON'
+          {
+            "database": { "url": "postgresql://qcobro:qcobro@localhost:5432/qcobro?schema=public" },
+            "identity": { "endpoint": "localhost:50051", "httpBridgeUrl": "http://localhost:9110" },
+            "ai": { "enabled": true, "provider": "mock", "model": "mock" }
+          }
+          JSON
+
+      # Backing services (db + identity + mailpit) from the dev compose file.
+      # db-init creates the `identity` database; Identity migrates its own schema
+      # on startup. The apiserver and webapp run on the host (below).
+      - name: Start backing services
+        run: docker compose -f compose.dev.yaml up -d --wait
+
+      - name: Build and provision the apiserver database
         run: |
           npm run build --workspace=mods/common
           npm run db:generate --workspace=mods/apiserver
           npm run db:migrate:deploy --workspace=mods/apiserver
 
-      - name: Wait for identity
+      - name: Wait for Identity
         run: |
           for i in $(seq 1 60); do
             if (echo > /dev/tcp/localhost/50051) 2>/dev/null; then
@@ -53,7 +86,7 @@ jobs:
           docker compose -f compose.dev.yaml logs identity
           exit 1
 
-      - name: Start services (apiserver, webapp)
+      - name: Start apiserver and webapp
         run: |
           npm run start:dev > /tmp/apiserver.log 2>&1 &
           npm run start:webapp > /tmp/webapp.log 2>&1 &
