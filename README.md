@@ -189,6 +189,28 @@ All deployment settings live in `qcobro.json` (Zod-validated, never committed).
 `qcobro.example.json` is the documented template. Changes require an apiserver
 restart (`docker compose up -d`).
 
+### Email channel (Resend)
+
+EMAIL is a bidirectional, autopilot channel (send a notice → the customer replies →
+the agent's system prompt decides reply/ignore/resolve/escalate, capped per case). Add a
+`resend` block to `qcobro.json`:
+
+```jsonc
+"resend": {
+  "apiKey": "re_...",
+  "fromEmail": "cobranza@yourdomain.com",
+  "fromName": "Your Brand",
+  "inboundDomain": "inbound.yourdomain.com", // reply-to: reply+<token>@<inboundDomain>
+  "inboundSigningSecret": "shared-secret",   // required on the inbound webhook
+  "maxEmailsPerMinute": 60,
+  "maxRepliesDefault": 3                      // per-case autopilot reply ceiling
+}
+```
+
+Point your Resend **inbound** route at `POST https://<host>/api/email/inbound` and set the
+`x-webhook-secret` header to `inboundSigningSecret`. When `resend` is absent, EMAIL
+campaigns are skipped as `channel_not_configured` and the webhook returns `503`.
+
 ## More
 
 The complete guide — GHCR images, DNS-01 certificates, renewal hooks, the secrets

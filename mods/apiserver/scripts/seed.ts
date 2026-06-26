@@ -443,10 +443,14 @@ async function seedEngineShowcase(workspaceRef: string, smsAgentId: string) {
         type: "EMAIL",
         emailConfig: {
           create: {
-            subject: "Su cuenta",
-            messageBody: "Hola {{firstName}}",
+            subject: "Su cuenta {{firstName}}",
+            messageBody:
+              "Hola {{firstName}}, tiene un saldo pendiente. Responda a este correo para coordinar su pago.",
             fromName: "Mikro Créditos",
-            fromEmail: "no-reply@mikro.do"
+            fromEmail: "no-reply@mikro.do",
+            systemPrompt:
+              "Eres un agente de cobranza por correo, cordial y breve. Si el cliente promete pagar, registra la promesa (PAYMENT_PROMISE) con monto y fecha. Si el asunto no corresponde o ya está resuelto, no respondas.",
+            maxReplies: 3
           }
         }
       }
@@ -479,7 +483,7 @@ async function seedEngineShowcase(workspaceRef: string, smsAgentId: string) {
   await prisma.campaign.create({
     data: {
       workspaceRef,
-      name: "Showcase · Correo (no soportado)",
+      name: "Showcase · Correo (autopiloto)",
       agentTemplateId: email.id,
       status: "ACTIVE",
       startDate: days(-7),
@@ -487,7 +491,7 @@ async function seedEngineShowcase(workspaceRef: string, smsAgentId: string) {
       ...sched,
       portfolios: link
     }
-  }); // → channel_not_supported
+  }); // → dispatches when Resend is configured, else channel_not_configured
   await prisma.campaign.create({
     data: {
       workspaceRef,
@@ -522,6 +526,8 @@ async function seedEngineShowcase(workspaceRef: string, smsAgentId: string) {
         externalId,
         fullName,
         phone: phoneFor(scPhone++),
+        // Fictional inbox so the EMAIL autopilot campaign can dispatch (example.test is non-routable).
+        email: `${externalId.toLowerCase()}@example.test`,
         outstandingBalance: 5000,
         daysPastDue: 30,
         ...over

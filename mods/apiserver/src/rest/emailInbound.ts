@@ -17,7 +17,7 @@ import { createEmailAutopilot } from "../services/emailAutopilot.js";
 import { ResendEmailClient } from "../services/resendEmailClient.js";
 
 /** Prisma-backed {@link EmailInboundClient}: load the gestión + email agent config by token. */
-function createPrismaEmailInboundClient(prisma: PrismaClient): EmailInboundClient {
+export function createPrismaEmailInboundClient(prisma: PrismaClient): EmailInboundClient {
   return {
     async loadByProviderRef(token: string): Promise<EmailGestionView | null> {
       const log = await prisma.accountContactLog.findFirst({

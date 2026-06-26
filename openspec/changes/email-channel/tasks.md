@@ -47,10 +47,10 @@
 
 - [x] 8.1 Unit: `dispatchOutreach` EMAIL branch (success + validation-failure asserting no send)
 - [x] 8.2 Unit: `ingestEmailReply` — correlation, autopilot decision, reply-cap (escalate), outcome+Objective capture, auto-reply ignore, uncorrelated `matched:false`, validation-failure (no side effect)
-- [ ] 8.3 Integration: EMAIL campaign dispatches via the engine with the email emulator; inbound reply drives a capped autopilot exchange; assert one gestión + thread + at-most-once
-- [ ] 8.4 `lint`, `typecheck`, full `test` green — **currently green (107/107) for built scope; re-run after webapp/integration**
+- [x] 8.3 Integration (`email.integration.test.ts`): EMAIL campaign dispatches via the engine + email emulator (skips `no_email`); inbound reply drives the autopilot, captures PAYMENT_PROMISE + Objective, and caps replies at maxReplies → escalate
+- [x] 8.4 `lint`, `typecheck` (common/apiserver/webapp), full `test` green — **109/109 apiserver tests pass**
 
 ## 9. Config & seed
 
-- [ ] 9.1 Document the `resend` block + the inbound webhook URL/signing in the README/deploy guide
-- [ ] 9.2 Update the seed: give the EMAIL showcase agent a `systemPrompt` so EMAIL is dispatchable (no longer `channel_not_supported`) when `resend` is configured
+- [x] 9.1 Document the `resend` block + the inbound webhook URL/signing in the README
+- [x] 9.2 Seed: EMAIL showcase agent has a `systemPrompt` + `maxReplies`; showcase accounts have emails; campaign renamed "Showcase · Correo (autopiloto)" — dispatches when Resend configured, else `channel_not_configured`
