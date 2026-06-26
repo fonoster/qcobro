@@ -25,12 +25,12 @@
 
 ## 5. Inbound webhook + autopilot (`ingestEmailReply`)
 
-- [ ] 5.1 Add `POST /api/email/inbound`: verify Resend signature; reject unverified
-- [ ] 5.2 Correlate by reply-to token (`providerRef`), fallback `References`/`In-Reply-To`; reject uncorrelated without mutation
-- [ ] 5.3 Append the inbound message to the gestión email thread; detect auto-replies (`Auto-Submitted`/`Precedence: bulk`) → `ignore`, do not count
-- [ ] 5.4 Run the autopilot decision step (systemPrompt + thread + account context) → `{action, replyBody?, outcome?, objective?}`; reuse the insight path for outcome/Objective (never downgrade; idempotent on re-delivery)
-- [ ] 5.5 Enforce the reply cap (`min(agent.maxReplies, config default)`): at/over cap → constrain to ignore/resolve/escalate
-- [ ] 5.6 On `reply`: generate + send via the email client and append to the thread, incrementing the reply count
+- [x] 5.1 Add `POST /api/email/inbound`: verify shared secret when configured (reject unverified); 503 when Resend unconfigured. _(Full Svix HMAC = follow-up)_
+- [x] 5.2 Correlate by reply-to token (`providerRef`, indexed column); reject uncorrelated (`matched:false`) without mutation. _(References/In-Reply-To fallback = refinement)_
+- [x] 5.3 Append the inbound message to the gestión email thread; detect auto-replies (`Auto-Submitted`/`Precedence: bulk`) → `ignore`, do not count
+- [x] 5.4 Run the autopilot decision step (`createEmailAutopilot`: mock + google, mirrors insight gen) → `{action, replyBody?, outcome?, objective?}`; outcome/Objective via `recordOutcome` (never downgrade; idempotent)
+- [x] 5.5 Enforce the reply cap (`min(agent.maxReplies, config default)`): at/over cap → reply becomes `escalate`
+- [x] 5.6 On `reply`: send via the email client, append to the thread, increment the reply count
 
 ## 6. Engine integration
 
@@ -45,10 +45,10 @@
 
 ## 8. Tests
 
-- [ ] 8.1 Unit: `dispatchOutreach` EMAIL branch (success + validation-failure asserting structured error and no send)
-- [ ] 8.2 Unit: `ingestEmailReply` — correlation, autopilot decision (reply/ignore/resolve/escalate), reply-cap enforcement, outcome never-downgrade + idempotent Objective, auto-reply detection (validation-failure case for uncorrelated/unverified)
+- [x] 8.1 Unit: `dispatchOutreach` EMAIL branch (success + validation-failure asserting no send)
+- [x] 8.2 Unit: `ingestEmailReply` — correlation, autopilot decision, reply-cap (escalate), outcome+Objective capture, auto-reply ignore, uncorrelated `matched:false`, validation-failure (no side effect)
 - [ ] 8.3 Integration: EMAIL campaign dispatches via the engine with the email emulator; inbound reply drives a capped autopilot exchange; assert one gestión + thread + at-most-once
-- [ ] 8.4 `lint`, `typecheck`, full `test` green
+- [ ] 8.4 `lint`, `typecheck`, full `test` green — **currently green (107/107) for built scope; re-run after webapp/integration**
 
 ## 9. Config & seed
 

@@ -39,6 +39,19 @@ export interface EmailAutopilotDecision {
   objective?: { type: string; amount?: number; dueDate?: string; note?: string };
 }
 
+/** What the autopilot is given to decide on. */
+export interface EmailAutopilotRequest {
+  systemPrompt: string;
+  thread: EmailThreadMessage[];
+  context?: Record<string, unknown>;
+  language?: string;
+}
+
+/** The autopilot decision engine (LLM-backed in prod, deterministic mock offline). */
+export interface EmailAutopilot {
+  decide(req: EmailAutopilotRequest): Promise<EmailAutopilotDecision>;
+}
+
 /** Normalized inbound email as received from the provider webhook. */
 export interface InboundEmail {
   from: string;

@@ -4,7 +4,11 @@ import type { DispatchDeps } from "@qcobro/common";
 import { createDispatchOutreach } from "./dispatchOutreach.js";
 
 function makeDeps(overrides: Partial<DispatchDeps> = {}) {
-  const calls: { sms: unknown[]; voice: unknown[] } = { sms: [], voice: [] };
+  const calls: { sms: unknown[]; voice: unknown[]; email: unknown[] } = {
+    sms: [],
+    voice: [],
+    email: []
+  };
   const deps: DispatchDeps = {
     smsClient: {
       sendMessage: async (input) => {
@@ -18,6 +22,13 @@ function makeDeps(overrides: Partial<DispatchDeps> = {}) {
         return { ref: "call-1" };
       }
     },
+    emailClient: {
+      sendEmail: async (input) => {
+        calls.email.push(input);
+        return { id: "email-1" };
+      }
+    },
+    emailFrom: { email: "cobranza@mikro.do", name: "Mikro", inboundDomain: "inbound.mikro.do" },
     fonosterNumbers: ["+50611111111"],
     twilioFromNumbers: ["+15550001111"],
     // Deterministic selection for assertions.
@@ -86,6 +97,40 @@ describe("dispatchOutreach", () => {
     });
     assert.equal(result.channel, "VOICE_PRERECORDED");
     assert.equal(result.renderedBody, "Hola Eva, este es un recordatorio de pago.");
+  });
+
+  it("sends an EMAIL with rendered subject+body and returns the reply-to token", async () => {
+    const { deps, calls } = makeDeps();
+    const result = await createDispatchOutreach(deps)({
+      channel: "EMAIL",
+      to: "ana@example.com",
+      context: { firstName: "Ana", outstandingBalance: 900 },
+      subject: "Saldo de {{firstName}}",
+      body: "Hola {{firstName}}, debe {{outstandingBalance}}"
+    });
+
+    assert.equal(calls.email.length, 1);
+    const sent = calls.email[0] as { to: string; subject: string; body: string; replyTo: string };
+    assert.equal(sent.to, "ana@example.com");
+    assert.equal(sent.subject, "Saldo de Ana");
+    assert.equal(sent.body, "Hola Ana, debe 900");
+    // providerRef IS the reply-to token, and the reply-to address carries it.
+    assert.equal(result.channel, "EMAIL");
+    assert.ok(result.providerRef.length > 0);
+    assert.equal(sent.replyTo, `reply+${result.providerRef}@inbound.mikro.do`);
+  });
+
+  it("rejects an EMAIL with no subject and never calls the provider (validation)", async () => {
+    const { deps, calls } = makeDeps();
+    await assert.rejects(() =>
+      createDispatchOutreach(deps)({
+        channel: "EMAIL",
+        to: "ana@example.com",
+        context: {},
+        body: "hola"
+      })
+    );
+    assert.equal(calls.email.length, 0);
   });
 
   it("rejects an SMS with no body and never calls the provider (validation)", async () => {

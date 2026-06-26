@@ -7,6 +7,7 @@ import { config } from "./config.js";
 import { prisma } from "./db.js";
 import { createContactLogHandler } from "./rest/contactLogs.js";
 import { createVoiceEventsHandler } from "./rest/voiceEvents.js";
+import { createEmailInboundHandler } from "./rest/emailInbound.js";
 import { createInsightGenerator } from "./services/insightGenerator.js";
 import { synthesizeSpeech } from "./services/elevenLabsTts.js";
 import { startVoiceServer } from "./voice/voiceServer.js";
@@ -34,6 +35,13 @@ app.post(
     generator: createInsightGenerator(config.ai),
     generation: config.ai?.generation ?? "onDemand"
   })
+);
+
+// Resend inbound replies for the EMAIL autopilot — correlate to the gestión by reply-to
+// token and run the autopilot decision loop. Verifies the shared secret when configured.
+app.post(
+  "/api/email/inbound",
+  createEmailInboundHandler(prisma, { resend: config.resend, ai: config.ai })
 );
 
 // Synthesize a pre-recorded agent's script to audio (ElevenLabs) so the Pre-grabada
