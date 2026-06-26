@@ -4,6 +4,7 @@ import {
   type CampaignTickReport,
   type Clock,
   type DispatchOutreachInput,
+  type EmailClient,
   type EngineChannel,
   type OutboundCallClient,
   type PortfolioAccountRecord,
@@ -27,6 +28,12 @@ export interface EngineTemplate {
   } | null;
   voicePrerecordedConfig: { fonosterAppRef: string | null; script: string } | null;
   smsConfig: { messageBody: string } | null;
+  emailConfig: {
+    subject: string;
+    messageBody: string;
+    systemPrompt: string;
+    maxReplies: number | null;
+  } | null;
 }
 
 /** A campaign as the engine loads it (schedule + caps + template + portfolios). */
@@ -42,6 +49,7 @@ export interface EngineCampaign extends WindowCampaign {
 export interface EngineCandidate {
   id: string;
   phone: string | null;
+  email: string | null;
   intentStatus: string | null;
   suppressUntil: Date | null;
   outstandingBalance: number;
@@ -67,6 +75,8 @@ export interface EngineDeps {
   reserveRecordClient: unknown;
   outboundCallClient: OutboundCallClient | null;
   smsClient: SmsClient | null;
+  emailClient?: EmailClient | null;
+  emailFrom?: { email: string; name?: string; inboundDomain: string } | null;
   fonosterNumbers: string[];
   twilioFromNumbers: string[];
   fonosterPrerecordedAppRef: string | null;
@@ -74,6 +84,7 @@ export interface EngineDeps {
   timezone: string;
   voicePerMinute: number;
   smsPerMinute: number;
+  emailPerMinute: number;
   tickSeconds: number;
   /** Hard cap on dispatches per tick across all campaigns (keeps ticks bounded). */
   perTickMax?: number;
@@ -86,7 +97,8 @@ type Readiness =
 const VOICE = new Set(["VOICE_AI", "VOICE_PRERECORDED"]);
 
 function channelOf(type: string | undefined): EngineChannel | null {
-  if (type === "VOICE_AI" || type === "VOICE_PRERECORDED" || type === "SMS") return type;
+  if (type === "VOICE_AI" || type === "VOICE_PRERECORDED" || type === "SMS" || type === "EMAIL")
+    return type;
   return null;
 }
 
@@ -94,6 +106,8 @@ export function createEngine(deps: EngineDeps) {
   const dispatch = createDispatchOutreach({
     outboundCallClient: deps.outboundCallClient,
     smsClient: deps.smsClient,
+    emailClient: deps.emailClient,
+    emailFrom: deps.emailFrom,
     fonosterNumbers: deps.fonosterNumbers,
     twilioFromNumbers: deps.twilioFromNumbers,
     pickNumber: undefined
@@ -109,6 +123,12 @@ export function createEngine(deps: EngineDeps) {
     if (channel === "SMS") {
       if (!deps.smsClient) return { ok: false, reason: "channel_not_configured" };
       if (deps.twilioFromNumbers.length === 0) return { ok: false, reason: "empty_number_pool" };
+      return { ok: true, channel, appRef: null };
+    }
+    if (channel === "EMAIL") {
+      if (!deps.emailClient || !deps.emailFrom) {
+        return { ok: false, reason: "channel_not_configured" };
+      }
       return { ok: true, channel, appRef: null };
     }
     if (!deps.outboundCallClient) return { ok: false, reason: "channel_not_configured" };
@@ -132,6 +152,15 @@ export function createEngine(deps: EngineDeps) {
     const t = c.agentTemplate!;
     if (channel === "SMS") {
       return { channel, to: acc.phone!, context, body: t.smsConfig?.messageBody ?? "" };
+    }
+    if (channel === "EMAIL") {
+      return {
+        channel,
+        to: acc.email!,
+        context,
+        subject: t.emailConfig?.subject ?? "",
+        body: t.emailConfig?.messageBody ?? ""
+      };
     }
     if (channel === "VOICE_AI") {
       return {
@@ -193,6 +222,7 @@ export function createEngine(deps: EngineDeps) {
     return {
       portfolioAccountId: acc.id,
       phone: acc.phone,
+      email: acc.email,
       intentStatus: acc.intentStatus,
       accountSuppressUntil: acc.suppressUntil,
       state
@@ -201,14 +231,16 @@ export function createEngine(deps: EngineDeps) {
 
   async function tick(): Promise<TickReport> {
     const now = deps.clock.now();
-    const buckets: Record<"voice" | "sms", TokenBucket> = {
+    const buckets: Record<"voice" | "sms" | "email", TokenBucket> = {
       voice: createTokenBucket(perTickCapacity(deps.voicePerMinute, deps.tickSeconds)),
-      sms: createTokenBucket(perTickCapacity(deps.smsPerMinute, deps.tickSeconds))
+      sms: createTokenBucket(perTickCapacity(deps.smsPerMinute, deps.tickSeconds)),
+      email: createTokenBucket(perTickCapacity(deps.emailPerMinute, deps.tickSeconds))
     };
     const usage = {
       VOICE_AI: { dispatched: 0, budget: 0 },
       VOICE_PRERECORDED: { dispatched: 0, budget: 0 },
-      SMS: { dispatched: 0, budget: buckets.sms.remaining() }
+      SMS: { dispatched: 0, budget: buckets.sms.remaining() },
+      EMAIL: { dispatched: 0, budget: buckets.email.remaining() }
     };
     const voiceBudget = buckets.voice.remaining();
     usage.VOICE_AI.budget = voiceBudget;
@@ -257,7 +289,8 @@ export function createEngine(deps: EngineDeps) {
         c,
         candidates.map(toFunnelAccount),
         now,
-        deps.timezone
+        deps.timezone,
+        ready.channel === "EMAIL"
       );
       const candidateById = new Map(candidates.map((a) => [a.id, a]));
 
@@ -266,7 +299,11 @@ export function createEngine(deps: EngineDeps) {
         cr.suppressed += 1;
       }
 
-      const bucket = VOICE.has(ready.channel) ? buckets.voice : buckets.sms;
+      const bucket = VOICE.has(ready.channel)
+        ? buckets.voice
+        : ready.channel === "EMAIL"
+          ? buckets.email
+          : buckets.sms;
       for (const fa of eligible) {
         if (deps.perTickMax !== undefined && totalDispatched >= deps.perTickMax) {
           cr.decisions.push({

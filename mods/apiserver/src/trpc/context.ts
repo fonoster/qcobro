@@ -1,10 +1,16 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
-import type { OutboundCallClient, SmsClient, VoiceApplicationClient } from "@qcobro/common";
+import type {
+  EmailClient,
+  OutboundCallClient,
+  SmsClient,
+  VoiceApplicationClient
+} from "@qcobro/common";
 import { prisma } from "../db.js";
 import { createIdentityClient } from "@fonoster/identity-client";
 import { FonosterVoiceApplicationClient } from "../services/fonosterVoiceApplicationClient.js";
 import { FonosterOutboundCallClient } from "../services/fonosterOutboundCallClient.js";
 import { TwilioSmsClient } from "../services/twilioSmsClient.js";
+import { ResendEmailClient } from "../services/resendEmailClient.js";
 import { createInsightGenerator } from "../services/insightGenerator.js";
 import { config } from "../config.js";
 
@@ -38,8 +44,17 @@ const outboundCallClient: OutboundCallClient | null = config.fonoster
   ? new FonosterOutboundCallClient(config.fonoster)
   : null;
 const smsClient: SmsClient | null = config.twilio ? new TwilioSmsClient(config.twilio) : null;
+const emailClient: EmailClient | null = config.resend ? new ResendEmailClient(config.resend) : null;
 const fonosterNumbers = config.fonoster?.numbers ?? [];
 const twilioFromNumbers = config.twilio?.fromNumbers ?? [];
+// Sending identity + inbound domain for email; null when Resend is unconfigured.
+const emailFrom = config.resend
+  ? {
+      email: config.resend.fromEmail,
+      name: config.resend.fromName,
+      inboundDomain: config.resend.inboundDomain
+    }
+  : null;
 // Shared EXTERNAL app ref for all pre-recorded voice dispatch (points at the
 // embedded VoiceServer). Voz IA uses each template's own AUTOPILOT ref instead.
 const fonosterPrerecordedAppRef = config.fonoster?.prerecordedAppRef ?? null;
@@ -90,6 +105,8 @@ export async function createContext(opts: CreateExpressContextOptions) {
     voiceApplications,
     outboundCallClient,
     smsClient,
+    emailClient,
+    emailFrom,
     fonosterNumbers,
     twilioFromNumbers,
     fonosterPrerecordedAppRef,

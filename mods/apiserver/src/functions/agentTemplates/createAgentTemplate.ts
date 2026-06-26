@@ -71,7 +71,9 @@ export function createCreateAgentTemplate(
               subject: params.subject,
               messageBody: params.messageBody,
               fromName: params.fromName,
-              fromEmail: params.fromEmail
+              fromEmail: params.fromEmail,
+              systemPrompt: params.systemPrompt,
+              maxReplies: params.maxReplies ?? null
             }
           });
           break;

@@ -73,6 +73,7 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
       timezone: TZ,
       voicePerMinute: 0,
       smsPerMinute: 60,
+      emailPerMinute: 0,
       tickSeconds: 60
     });
   }

@@ -13,7 +13,12 @@ export function createPrismaEngineClient(prisma: PrismaClient): EngineClient {
         where: { status: "ACTIVE" },
         include: {
           agentTemplate: {
-            include: { voiceAiConfig: true, voicePrerecordedConfig: true, smsConfig: true }
+            include: {
+              voiceAiConfig: true,
+              voicePrerecordedConfig: true,
+              smsConfig: true,
+              emailConfig: true
+            }
           },
           portfolios: { select: { portfolioId: true } }
         },
@@ -48,6 +53,14 @@ export function createPrismaEngineClient(prisma: PrismaClient): EngineClient {
                 : null,
               smsConfig: c.agentTemplate.smsConfig
                 ? { messageBody: c.agentTemplate.smsConfig.messageBody }
+                : null,
+              emailConfig: c.agentTemplate.emailConfig
+                ? {
+                    subject: c.agentTemplate.emailConfig.subject,
+                    messageBody: c.agentTemplate.emailConfig.messageBody,
+                    systemPrompt: c.agentTemplate.emailConfig.systemPrompt,
+                    maxReplies: c.agentTemplate.emailConfig.maxReplies
+                  }
                 : null
             }
           : null,
@@ -67,6 +80,7 @@ export function createPrismaEngineClient(prisma: PrismaClient): EngineClient {
       return rows.map((a) => ({
         id: a.id,
         phone: a.phone,
+        email: a.email,
         intentStatus: a.intentStatus,
         suppressUntil: a.suppressUntil,
         outstandingBalance: a.outstandingBalance,

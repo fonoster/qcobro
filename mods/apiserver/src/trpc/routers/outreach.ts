@@ -104,6 +104,8 @@ export const outreachRouter = router({
     const dispatch = createDispatchOutreach({
       outboundCallClient: ctx.outboundCallClient,
       smsClient: ctx.smsClient,
+      emailClient: ctx.emailClient,
+      emailFrom: ctx.emailFrom,
       fonosterNumbers: ctx.fonosterNumbers,
       twilioFromNumbers: ctx.twilioFromNumbers
     });

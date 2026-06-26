@@ -13,7 +13,7 @@ export interface Clock {
 }
 
 /** Channels the engine can dispatch (the subset `dispatchOutreach` supports). */
-export type EngineChannel = "VOICE_AI" | "VOICE_PRERECORDED" | "SMS";
+export type EngineChannel = "VOICE_AI" | "VOICE_PRERECORDED" | "SMS" | "EMAIL";
 
 /** Why a campaign was not dispatched at all this tick. */
 export type CampaignSkipReason =
@@ -29,6 +29,7 @@ export type AccountDecision =
   | "dispatched"
   | "dispatch_failed"
   | "no_phone"
+  | "no_email"
   | "intent_suppressed"
   | "account_suppressed"
   | "promise_suppressed"

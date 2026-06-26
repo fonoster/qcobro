@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import {
   dispatchOutreachSchema,
   pickRandomNumber,
@@ -32,6 +33,27 @@ export function createDispatchOutreach(deps: DispatchDeps) {
       const renderedBody = renderTemplate(params.body ?? "", params.context);
       const { sid } = await deps.smsClient.sendMessage({ from, to: params.to, body: renderedBody });
       return { channel: "SMS", providerRef: sid, from, to: params.to, renderedBody };
+    }
+
+    if (params.channel === "EMAIL") {
+      if (!deps.emailClient || !deps.emailFrom) {
+        throw new Error("Email dispatch is not configured (missing Resend settings)");
+      }
+      // The per-attempt reply-to token IS the providerRef — inbound replies correlate by it.
+      const token = randomUUID();
+      const from = params.from ?? deps.emailFrom.email;
+      const subject = renderTemplate(params.subject ?? "", params.context);
+      const renderedBody = renderTemplate(params.body ?? "", params.context);
+      const replyTo = `reply+${token}@${deps.emailFrom.inboundDomain}`;
+      await deps.emailClient.sendEmail({
+        from,
+        fromName: deps.emailFrom.name,
+        to: params.to,
+        subject,
+        body: renderedBody,
+        replyTo
+      });
+      return { channel: "EMAIL", providerRef: token, from, to: params.to, renderedBody };
     }
 
     // VOICE_AI | VOICE_PRERECORDED — originate a call to the synced application.

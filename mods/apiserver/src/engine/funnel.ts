@@ -18,6 +18,7 @@ export interface FunnelAccountState {
 export interface FunnelAccount {
   portfolioAccountId: string;
   phone: string | null;
+  email: string | null;
   /** Global, cross-campaign suppression. */
   intentStatus: string | null;
   accountSuppressUntil: Date | null;
@@ -45,7 +46,9 @@ export function runFunnel(
   campaign: FunnelCampaign,
   accounts: FunnelAccount[],
   now: Date,
-  timeZone: string
+  timeZone: string,
+  /** EMAIL campaigns require an email address; all other channels require a phone. */
+  requiresEmail = false
 ): FunnelResult {
   const eligible: FunnelAccount[] = [];
   const decisions: AccountDecisionEntry[] = [];
@@ -54,8 +57,8 @@ export function runFunnel(
     decisions.push({ portfolioAccountId, decision });
 
   for (const a of accounts) {
-    if (!a.phone) {
-      exclude(a.portfolioAccountId, "no_phone");
+    if (requiresEmail ? !a.email : !a.phone) {
+      exclude(a.portfolioAccountId, requiresEmail ? "no_email" : "no_phone");
       continue;
     }
     if (a.intentStatus && GLOBAL_SUPPRESSED.has(a.intentStatus)) {

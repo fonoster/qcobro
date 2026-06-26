@@ -103,6 +103,7 @@ model PortfolioAccount {
   externalId         String
   fullName           String
   phone              String?
+  email              String?
   preferredLanguage  String?
   bestTimeToCall     String?
   customerSegment    String?
@@ -187,12 +188,16 @@ model SmsConfig {
 }
 
 model EmailConfig {
-  templateId  String        @id
-  subject     String
-  messageBody String
-  fromName    String
-  fromEmail   String
-  template    AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  templateId   String        @id
+  subject      String
+  messageBody  String
+  fromName     String
+  fromEmail    String
+  // Autopilot decision brain: governs reply/ignore/resolve/escalate on each inbound reply.
+  systemPrompt String        @default("")
+  // Per-agent cap on autopilot replies per collection attempt; null → deployment default.
+  maxReplies   Int?
+  template     AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@map("email_configs")
 }

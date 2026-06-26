@@ -11,6 +11,7 @@ function acct(id: string, over: Partial<FunnelAccount> = {}): FunnelAccount {
   return {
     portfolioAccountId: id,
     phone: "+50670000000",
+    email: null,
     intentStatus: null,
     accountSuppressUntil: null,
     state: null,

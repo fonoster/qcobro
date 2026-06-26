@@ -1,4 +1,10 @@
-import type { OutboundCallClient, SmsClient, OutboundCallInput } from "@qcobro/common";
+import type {
+  OutboundCallClient,
+  SmsClient,
+  EmailClient,
+  EmailSendInput,
+  OutboundCallInput
+} from "@qcobro/common";
 
 /**
  * Channel emulators — TEST SUPPORT ONLY. They stand in for the real Fonoster/Twilio
@@ -11,15 +17,18 @@ import type { OutboundCallClient, SmsClient, OutboundCallInput } from "@qcobro/c
 
 /** A single recorded would-be dispatch. */
 export interface EmulatedDispatch {
-  channel: "voice" | "sms";
+  channel: "voice" | "sms" | "email";
   to: string;
   from: string;
   ref: string;
   /** Voice only: the application ref + per-call metadata. */
   appRef?: string;
   metadata?: Record<string, string>;
-  /** SMS only: the rendered body. */
+  /** SMS / EMAIL: the rendered body. */
   body?: string;
+  /** EMAIL only: subject + the per-attempt reply-to address. */
+  subject?: string;
+  replyTo?: string;
 }
 
 /** Emulated Fonoster outbound-call client. */
@@ -62,5 +71,28 @@ export class EmulatedSmsClient implements SmsClient {
       ref: sid
     });
     return { sid };
+  }
+}
+
+/** Emulated Resend email client. */
+export class EmulatedEmailClient implements EmailClient {
+  readonly emails: EmulatedDispatch[] = [];
+  private seq = 0;
+
+  constructor(private readonly opts: { fail?: boolean } = {}) {}
+
+  async sendEmail(input: EmailSendInput): Promise<{ id: string }> {
+    if (this.opts.fail) throw new Error("emulated email dispatch failure");
+    const id = `sim-email-${++this.seq}`;
+    this.emails.push({
+      channel: "email",
+      to: input.to,
+      from: input.from,
+      subject: input.subject,
+      body: input.body,
+      replyTo: input.replyTo,
+      ref: id
+    });
+    return { id };
   }
 }

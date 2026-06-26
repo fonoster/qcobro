@@ -15,28 +15,42 @@ import { config } from "../src/config.js";
 import { prisma } from "../src/db.js";
 import { createEngine } from "../src/engine/engine.js";
 import { createPrismaEngineClient } from "../src/engine/prismaEngineClient.js";
-import { EmulatedOutboundCallClient, EmulatedSmsClient } from "../src/engine/emulators.js";
+import {
+  EmulatedOutboundCallClient,
+  EmulatedSmsClient,
+  EmulatedEmailClient
+} from "../src/engine/emulators.js";
 
 async function main(): Promise<void> {
   const voice = new EmulatedOutboundCallClient();
   const sms = new EmulatedSmsClient();
+  const email = new EmulatedEmailClient();
 
   const engine = createEngine({
     db: createPrismaEngineClient(prisma),
     reserveRecordClient: prisma,
-    // Emulators in place of Fonoster/Twilio — records would-be dispatches, sends nothing.
+    // Emulators in place of Fonoster/Twilio/Resend — records would-be dispatches, sends nothing.
     outboundCallClient: voice,
     smsClient: sms,
-    // Non-empty pools so readiness passes; the emulator ignores the actual numbers.
+    emailClient: email,
+    // Non-empty pools/identity so readiness passes; the emulator ignores the actual values.
     fonosterNumbers: config.fonoster?.numbers?.length ? config.fonoster.numbers : ["+10000000000"],
     twilioFromNumbers: config.twilio?.fromNumbers?.length
       ? config.twilio.fromNumbers
       : ["+10000000001"],
+    emailFrom: config.resend
+      ? {
+          email: config.resend.fromEmail,
+          name: config.resend.fromName,
+          inboundDomain: config.resend.inboundDomain
+        }
+      : { email: "cobranza@sim.local", inboundDomain: "sim.local" },
     fonosterPrerecordedAppRef: config.fonoster?.prerecordedAppRef ?? "sim-prerecorded-app",
     clock: { now: () => new Date() },
     timezone: config.timezone,
     voicePerMinute: config.fonoster?.maxCallsPerMinute ?? 6,
     smsPerMinute: config.twilio?.maxSmsPerMinute ?? 60,
+    emailPerMinute: config.resend?.maxEmailsPerMinute ?? 60,
     tickSeconds: config.engine.tickSeconds
   });
 
@@ -81,10 +95,15 @@ async function main(): Promise<void> {
     }
   }
 
-  const dispatches = [...voice.calls, ...sms.messages];
+  const dispatches = [...voice.calls, ...sms.messages, ...email.emails];
   console.log(`\nWould-be dispatches (EMULATED — nothing was actually sent): ${dispatches.length}`);
   for (const d of dispatches) {
-    const detail = d.channel === "sms" ? JSON.stringify(d.body) : `appRef=${d.appRef}`;
+    const detail =
+      d.channel === "voice"
+        ? `appRef=${d.appRef}`
+        : d.channel === "email"
+          ? `subj=${JSON.stringify(d.subject)} reply-to=${d.replyTo}`
+          : JSON.stringify(d.body);
     console.log(`    [${d.channel}] ${d.ref} -> ${d.to}  ${detail}`);
   }
   console.log("");

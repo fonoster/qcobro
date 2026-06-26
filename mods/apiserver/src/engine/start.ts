@@ -2,6 +2,7 @@ import { config } from "../config.js";
 import { prisma } from "../db.js";
 import { FonosterOutboundCallClient } from "../services/fonosterOutboundCallClient.js";
 import { TwilioSmsClient } from "../services/twilioSmsClient.js";
+import { ResendEmailClient } from "../services/resendEmailClient.js";
 import { createEngine } from "./engine.js";
 import { createPrismaEngineClient } from "./prismaEngineClient.js";
 import { createEngineRunner, type EngineRunner } from "./runner.js";
@@ -22,6 +23,14 @@ export function startEngine(): EngineRunner | null {
     reserveRecordClient: prisma,
     outboundCallClient: config.fonoster ? new FonosterOutboundCallClient(config.fonoster) : null,
     smsClient: config.twilio ? new TwilioSmsClient(config.twilio) : null,
+    emailClient: config.resend ? new ResendEmailClient(config.resend) : null,
+    emailFrom: config.resend
+      ? {
+          email: config.resend.fromEmail,
+          name: config.resend.fromName,
+          inboundDomain: config.resend.inboundDomain
+        }
+      : null,
     fonosterNumbers: config.fonoster?.numbers ?? [],
     twilioFromNumbers: config.twilio?.fromNumbers ?? [],
     fonosterPrerecordedAppRef: config.fonoster?.prerecordedAppRef ?? null,
@@ -29,6 +38,7 @@ export function startEngine(): EngineRunner | null {
     timezone: config.timezone,
     voicePerMinute: config.fonoster?.maxCallsPerMinute ?? 0,
     smsPerMinute: config.twilio?.maxSmsPerMinute ?? 0,
+    emailPerMinute: config.resend?.maxEmailsPerMinute ?? 0,
     tickSeconds: config.engine.tickSeconds
   });
 

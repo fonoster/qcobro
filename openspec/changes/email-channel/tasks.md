@@ -8,20 +8,20 @@
 
 ## 2. Data model (Prisma)
 
-- [ ] 2.1 Add `EmailConfig.systemPrompt` (String) and optional `EmailConfig.maxReplies` (Int)
-- [ ] 2.2 Confirm the gestión stores the email thread + reply count in `channelData` (no new table); reuse `providerRef` for correlation
-- [ ] 2.3 Generate + write the migration; run `db:generate`
+- [x] 2.1 Add `EmailConfig.systemPrompt` (String) and optional `EmailConfig.maxReplies` (Int)
+- [x] 2.2 Email thread + reply count stored in the gestión `channelData` (no new table); correlate by `providerRef`. **Also added `PortfolioAccount.email`** (EMAIL needs the recipient address)
+- [x] 2.3 Generate + apply migrations (`email_autopilot_config`, `account_email`); `db:generate`
 
 ## 3. Agent templates (EMAIL autopilot config)
 
-- [ ] 3.1 Update `createAgentTemplate` EMAIL branch to persist `systemPrompt` + `maxReplies`
-- [ ] 3.2 Surface EMAIL config (incl. systemPrompt) wherever templates are read for dispatch
+- [x] 3.1 Update `createAgentTemplate` EMAIL branch to persist `systemPrompt` + `maxReplies`
+- [x] 3.2 Surface EMAIL config (incl. systemPrompt) for dispatch (engine `prismaEngineClient` loads `emailConfig`)
 
 ## 4. Outbound dispatch (Resend)
 
-- [ ] 4.1 Add a `ResendEmailClient` service implementing `EmailClient.send` (sets per-attempt reply-to token); provide an `EmulatedEmailClient` (test-support, "emulator")
-- [ ] 4.2 Add the `EMAIL` branch to `dispatchOutreach`: render subject+body, send via injected client, return `providerRef` = token
-- [ ] 4.3 Wire the email client into the tRPC/engine context from the `resend` config (null when absent)
+- [x] 4.1 Add a `ResendEmailClient` service (REST, no SDK) implementing `EmailClient.sendEmail` (sets per-attempt reply-to token); `EmulatedEmailClient` (test-support, "emulator")
+- [x] 4.2 Add the `EMAIL` branch to `dispatchOutreach`: render subject+body, send via injected client, return `providerRef` = token
+- [x] 4.3 Wire the email client + `emailFrom` into the tRPC context + engine from the `resend` config (null when absent)
 
 ## 5. Inbound webhook + autopilot (`ingestEmailReply`)
 
@@ -34,9 +34,9 @@
 
 ## 6. Engine integration
 
-- [ ] 6.1 Add `EMAIL` to `EngineChannel`/`channelOf`; readiness passes when `resend` configured, else `channel_not_configured`
-- [ ] 6.2 Add an `email` token bucket sized from `resend.maxEmailsPerMinute`; route EMAIL dispatch through it; include EMAIL in `channelUsage`
-- [ ] 6.3 `buildRequest` EMAIL branch (subject + body from the EMAIL config)
+- [x] 6.1 Add `EMAIL` to `EngineChannel`/`channelOf`; readiness passes when `resend` configured, else `channel_not_configured`. Funnel made channel-aware (EMAIL requires `email` → `no_email`, else `no_phone`)
+- [x] 6.2 Add an `email` token bucket sized from `resend.maxEmailsPerMinute`; route EMAIL dispatch through it; include EMAIL in `channelUsage`
+- [x] 6.3 `buildRequest` EMAIL branch (subject + body from the EMAIL config; recipient = account email)
 
 ## 7. Webapp
 
