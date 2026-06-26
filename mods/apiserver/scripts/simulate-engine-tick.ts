@@ -42,21 +42,42 @@ async function main(): Promise<void> {
 
   const report = await engine.tick();
 
+  // Resolve names so the report reads clearly (the TickReport carries only IDs).
+  const campaignIds = report.campaigns.map((c) => c.campaignId);
+  const accountIds = [
+    ...new Set(report.campaigns.flatMap((c) => c.decisions.map((d) => d.portfolioAccountId)))
+  ];
+  const campaignName = new Map(
+    (
+      await prisma.campaign.findMany({
+        where: { id: { in: campaignIds } },
+        select: { id: true, name: true }
+      })
+    ).map((c) => [c.id, c.name])
+  );
+  const accountName = new Map(
+    (
+      await prisma.portfolioAccount.findMany({
+        where: { id: { in: accountIds } },
+        select: { id: true, fullName: true }
+      })
+    ).map((a) => [a.id, a.fullName])
+  );
+
   console.log(`\n=== Engine simulation tick @ ${report.at}  (tz ${config.timezone}) ===`);
   if (report.campaigns.length === 0) {
-    console.log("No ACTIVE campaigns found. Create one in the console, then re-run.\n");
+    console.log("No ACTIVE campaigns found. Seed one (npm run db:seed), then re-run.\n");
   }
   for (const c of report.campaigns) {
     const head = c.completed
       ? "→ auto-completed (past endDate)"
-      : c.inWindow
-        ? `in-window  dispatched=${c.dispatched} suppressed=${c.suppressed} skipped=${c.skipped}`
-        : `skipped: ${c.skipReason}`;
-    console.log(`\ncampaign ${c.campaignId}  ${head}`);
+      : c.skipReason
+        ? `skipped: ${c.skipReason}`
+        : `in-window  dispatched=${c.dispatched} suppressed=${c.suppressed} skipped=${c.skipped}`;
+    console.log(`\n${campaignName.get(c.campaignId) ?? c.campaignId}  ${head}`);
     for (const d of c.decisions) {
-      console.log(
-        `    ${d.portfolioAccountId}: ${d.decision}${d.providerRef ? ` (${d.providerRef})` : ""}`
-      );
+      const who = accountName.get(d.portfolioAccountId) ?? d.portfolioAccountId;
+      console.log(`    ${who}: ${d.decision}${d.providerRef ? ` (${d.providerRef})` : ""}`);
     }
   }
 

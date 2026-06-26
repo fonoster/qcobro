@@ -401,6 +401,165 @@ async function seedGestiones(
   log(`Voz pregrabada · NO_ANSWER (${preAccount.fullName})`);
 }
 
+const SHOWCASE_PORTFOLIO = "Casos del motor (showcase)";
+
+type AcctOver = {
+  phone?: string | null;
+  intentStatus?: "INTENT_MET" | "WRONG_NUMBER" | "OPT_OUT";
+  suppressUntil?: Date;
+};
+
+/**
+ * Self-resetting engine showcase: one `npm run engine:sim` then exercises every
+ * decision. A dedicated portfolio whose accounts are each crafted to hit a different
+ * eligibility reason, plus campaigns that demonstrate the campaign-level skips. Re-run
+ * `db:seed` to reset it (the sim mutates state as it dispatches/reserves).
+ */
+async function seedEngineShowcase(workspaceRef: string, smsAgentId: string) {
+  const days = (n: number) => new Date(Date.now() + n * 86_400_000);
+
+  // Reset so each db:seed yields a clean, deterministic showcase.
+  await prisma.campaign.deleteMany({ where: { workspaceRef, name: { startsWith: "Showcase" } } });
+  await prisma.portfolio.deleteMany({ where: { workspaceRef, name: SHOWCASE_PORTFOLIO } });
+
+  const pf = await prisma.portfolio.create({
+    data: { workspaceRef, name: SHOWCASE_PORTFOLIO, clientId: "SHOWCASE", currency: "DOP" }
+  });
+
+  // EMAIL has no dispatcher yet → its campaign hits channel_not_supported.
+  let email = await prisma.agentTemplate.findFirst({
+    where: { workspaceRef, name: "Correo Demo", type: "EMAIL" }
+  });
+  if (!email) {
+    email = await prisma.agentTemplate.create({
+      data: {
+        workspaceRef,
+        name: "Correo Demo",
+        type: "EMAIL",
+        emailConfig: {
+          create: {
+            subject: "Su cuenta",
+            messageBody: "Hola {{firstName}}",
+            fromName: "Mikro Créditos",
+            fromEmail: "no-reply@mikro.do"
+          }
+        }
+      }
+    });
+  }
+
+  const sched = {
+    daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+    startTime: "00:00",
+    endTime: "23:59",
+    maxAttemptsPerAccount: 5,
+    maxAttemptsPerDay: 2
+  };
+  const link = { create: [{ portfolioId: pf.id }] };
+
+  // In-window 24/7 SMS campaign — the per-account funnel showcase.
+  const sms = await prisma.campaign.create({
+    data: {
+      workspaceRef,
+      name: "Showcase · SMS",
+      agentTemplateId: smsAgentId,
+      status: "ACTIVE",
+      startDate: days(-7),
+      endDate: days(60),
+      ...sched,
+      portfolios: link
+    }
+  });
+  // Campaign-level cases (also target the showcase portfolio):
+  await prisma.campaign.create({
+    data: {
+      workspaceRef,
+      name: "Showcase · Correo (no soportado)",
+      agentTemplateId: email.id,
+      status: "ACTIVE",
+      startDate: days(-7),
+      endDate: days(60),
+      ...sched,
+      portfolios: link
+    }
+  }); // → channel_not_supported
+  await prisma.campaign.create({
+    data: {
+      workspaceRef,
+      name: "Showcase · Futuro (fuera de ventana)",
+      agentTemplateId: smsAgentId,
+      status: "ACTIVE",
+      startDate: days(30),
+      endDate: days(60),
+      ...sched,
+      portfolios: link
+    }
+  }); // → out_of_window
+  await prisma.campaign.create({
+    data: {
+      workspaceRef,
+      name: "Showcase · Vencida (autocompleta)",
+      agentTemplateId: smsAgentId,
+      status: "ACTIVE",
+      startDate: days(-30),
+      endDate: days(-1),
+      ...sched,
+      portfolios: link
+    }
+  }); // → auto-completes (past endDate)
+
+  // Accounts, each crafted to hit one decision under "Showcase · SMS".
+  const PHONE = "+17853178070";
+  const mk = (externalId: string, fullName: string, over: AcctOver = {}) =>
+    prisma.portfolioAccount.create({
+      data: {
+        portfolioId: pf.id,
+        externalId,
+        fullName,
+        phone: PHONE,
+        outstandingBalance: 5000,
+        daysPastDue: 30,
+        ...over
+      }
+    });
+
+  await mk("SC01", "Ana Dispatch"); // dispatched
+  await mk("SC02", "Beto Dispatch"); // dispatched
+  await mk("SC03", "Sin Teléfono", { phone: null }); // no_phone
+  await mk("SC04", "Número Errado", { intentStatus: "WRONG_NUMBER" }); // intent_suppressed
+  await mk("SC05", "Optó por Salir", { intentStatus: "OPT_OUT" }); // intent_suppressed
+  await mk("SC06", "Deuda Saldada", { intentStatus: "INTENT_MET" }); // intent_suppressed
+  await mk("SC07", "Suprimido Global", { suppressUntil: days(3) }); // account_suppressed
+  const promise = await mk("SC08", "Promesa de Pago"); // promise_suppressed
+  const lifetime = await mk("SC09", "Tope de Intentos"); // lifetime_cap
+  const daily = await mk("SC10", "Tope Diario"); // daily_cap
+
+  // Campaign-local state for "Showcase · SMS".
+  await prisma.campaignAccountState.create({
+    data: {
+      campaignId: sms.id,
+      portfolioAccountId: promise.id,
+      attemptCount: 1,
+      attemptsToday: 0,
+      suppressUntil: days(5)
+    }
+  });
+  await prisma.campaignAccountState.create({
+    data: { campaignId: sms.id, portfolioAccountId: lifetime.id, attemptCount: 5, attemptsToday: 0 }
+  });
+  await prisma.campaignAccountState.create({
+    data: {
+      campaignId: sms.id,
+      portfolioAccountId: daily.id,
+      attemptCount: 2,
+      attemptsToday: 2,
+      lastAttemptAt: new Date()
+    }
+  });
+
+  log(`portfolio "${SHOWCASE_PORTFOLIO}" + 4 campaigns + 10 crafted accounts (one per decision)`);
+}
+
 // --- Seed -------------------------------------------------------------------
 
 async function main() {
@@ -556,6 +715,12 @@ async function main() {
       prerecorded: premoraId
     });
   }
+
+  // 7. Engine showcase ----------------------------------------------------
+  // A dedicated portfolio + campaigns crafted so one `npm run engine:sim` tick
+  // exercises every engine decision (eligibility reasons + campaign-level skips).
+  console.log("Engine showcase");
+  await seedEngineShowcase(workspaceRef, smsId);
 
   console.log("\nDone. Log in at the webapp with demo@qcobro.com / password123.");
 }
