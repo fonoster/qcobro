@@ -39,7 +39,10 @@ COPY mods/apiserver mods/apiserver
 RUN npm run build --workspace=mods/apiserver
 
 # ── build-webapp ──────────────────────────────────────────────────────────────
-FROM build-common AS build-webapp
+# Based on build-apiserver (not build-common): the webapp's type-check imports
+# the tRPC AppRouter type from apiserver's source, which transitively references
+# the generated Prisma client — both of which exist in the build-apiserver stage.
+FROM build-apiserver AS build-webapp
 COPY mods/webapp mods/webapp
 RUN npm run build --workspace=mods/webapp
 
@@ -53,9 +56,11 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV QCOBRO_CONFIG=/config/qcobro.json
 
-# Node modules (includes prisma CLI needed for migrate deploy at startup)
-COPY --from=deps /app/node_modules              ./node_modules
-COPY --from=deps /app/mods/apiserver/node_modules ./mods/apiserver/node_modules
+# Node modules, copied from build-apiserver so they include the generated
+# Prisma client (the entrypoint runs migrate deploy but not generate) plus the
+# prisma CLI. npm hoists all workspace deps to the root node_modules, so there
+# is no per-workspace node_modules to copy.
+COPY --from=build-apiserver /app/node_modules ./node_modules
 
 # Built artifacts
 COPY --from=build-apiserver /app/mods/common/dist    ./mods/common/dist
