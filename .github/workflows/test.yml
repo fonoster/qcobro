@@ -32,18 +32,14 @@ jobs:
       - name: Write CI qcobro.json
         run: echo '{"database":{"url":"postgresql://user:pass@localhost:5432/db?schema=public"}}' > qcobro.json
 
-      - name: Build common (provides types for downstream packages)
-        run: npm run build --workspace=mods/common
-
-      # Generate the Prisma client so apiserver's types resolve during typecheck.
-      - name: Generate Prisma client
-        run: npm run db:generate --workspace=mods/apiserver
+      # Build everything first: this generates the Prisma client and builds
+      # each project's declaration outputs, which the cross-project typecheck
+      # requires (e.g. mods/sdk references mods/apiserver's built types).
+      - name: Build
+        run: npm run build
 
       - name: Typecheck
         run: npm run typecheck
 
       - name: Lint
         run: npm run lint
-
-      - name: Build
-        run: npm run build
