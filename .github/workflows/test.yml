@@ -32,9 +32,15 @@ jobs:
       - name: Write CI qcobro.json
         run: echo '{"database":{"url":"postgresql://user:pass@localhost:5432/db?schema=public"}}' > qcobro.json
 
-      # Build everything first: this generates the Prisma client and builds
-      # each project's declaration outputs, which the cross-project typecheck
-      # requires (e.g. mods/sdk references mods/apiserver's built types).
+      # Generate the Prisma client before building. The webapp resolves
+      # apiserver's types from source (which reference Prisma model types), so
+      # the client must exist before any project builds — not left to the
+      # apiserver build step, which Nx may run in parallel with the webapp.
+      - name: Generate Prisma client
+        run: npm run db:generate --workspace=mods/apiserver
+
+      # Build everything: produces each project's declaration outputs, which the
+      # cross-project typecheck requires (e.g. mods/sdk references apiserver).
       - name: Build
         run: npm run build
 
