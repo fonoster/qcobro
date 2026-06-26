@@ -6,7 +6,7 @@
  */
 
 /** Channels the dispatch layer can trigger. */
-export type DispatchChannel = "VOICE_AI" | "VOICE_PRERECORDED" | "SMS";
+export type DispatchChannel = "VOICE_AI" | "VOICE_PRERECORDED" | "SMS" | "EMAIL";
 
 /** Inputs for originating an outbound voice call (Fonoster). */
 export interface OutboundCallInput {
@@ -33,13 +33,31 @@ export interface SmsClient {
   sendMessage(input: { from: string; to: string; body: string }): Promise<{ sid: string }>;
 }
 
+/** Inputs for sending an email (Resend). */
+export interface EmailSendInput {
+  from: string;
+  fromName?: string;
+  to: string;
+  subject: string;
+  body: string;
+  /** Per-attempt reply-to address carrying the correlation token. */
+  replyTo: string;
+  /** When this is a reply within a thread, the upstream Message-ID to thread under. */
+  inReplyTo?: string;
+}
+
+export interface EmailClient {
+  /** Send an email; resolves with the provider message id. */
+  sendEmail(input: EmailSendInput): Promise<{ id: string }>;
+}
+
 /** Picks a sending number from a configured pool. Injectable for determinism. */
 export type NumberSelector = (numbers: string[]) => string;
 
 /** Structured result of a single dispatch — what was sent, where, and the provider ref. */
 export interface DispatchResult {
   channel: DispatchChannel;
-  /** Provider call ref (voice) or message sid (sms). */
+  /** Provider call ref (voice), message sid (sms), or reply-to token (email). */
   providerRef: string;
   /** The sending number used. */
   from: string;
@@ -53,10 +71,14 @@ export interface DispatchResult {
 export interface DispatchDeps {
   outboundCallClient: OutboundCallClient | null;
   smsClient: SmsClient | null;
+  /** Email provider client; null/omitted when email is unconfigured. */
+  emailClient?: EmailClient | null;
   /** E.164 caller-ID pool for voice. */
   fonosterNumbers: string[];
   /** E.164 sender pool for SMS. */
   twilioFromNumbers: string[];
+  /** Sending identity for email (from `resend` config); null/omitted when unconfigured. */
+  emailFrom?: { email: string; name?: string; inboundDomain: string } | null;
   /** Number selector; defaults to a random pick when omitted by the caller. */
   pickNumber?: NumberSelector;
 }

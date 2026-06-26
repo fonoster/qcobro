@@ -39537,6 +39537,132 @@
                           "fontWeight": "normal"
                         }
                       ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Ixonh",
+                      "name": "replyIn",
+                      "width": "fill_container",
+                      "fill": "#F8FAFC",
+                      "stroke": "#E2E8F0",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "layout": "vertical",
+                      "gap": 6,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ICkZ9",
+                          "name": "meta",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "w29v4z",
+                              "fill": "#0F172A",
+                              "content": "Diego Fernández respondió",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "k4Ddo",
+                              "name": "sp",
+                              "width": "fill_container",
+                              "height": 1
+                            },
+                            {
+                              "type": "text",
+                              "id": "VLzBd",
+                              "fill": "#94A3B8",
+                              "content": "Hoy, 10:05",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "G5TDVS",
+                          "fill": "#475569",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Buenas, sí puedo pagar el viernes cuando reciba mi salario. ¿Me reenvían el enlace de pago, por favor?",
+                          "lineHeight": 1.5,
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DIjFZ",
+                      "name": "replyAgent",
+                      "width": "fill_container",
+                      "fill": "#ECFDF5",
+                      "stroke": "#E2E8F0",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "layout": "vertical",
+                      "gap": 6,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Y6AOE",
+                          "name": "meta",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "YqwQ9",
+                              "fill": "#047857",
+                              "content": "Equipo de Cobranza · IA",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "RZyYc",
+                              "name": "sp",
+                              "width": "fill_container",
+                              "height": 1
+                            },
+                            {
+                              "type": "text",
+                              "id": "uYfUX",
+                              "fill": "#94A3B8",
+                              "content": "Hoy, 10:07",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "YChUS",
+                          "fill": "#475569",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Claro, Diego. Registramos su compromiso para el viernes y le reenviamos el enlace de pago a este correo. ¡Gracias!",
+                          "lineHeight": 1.5,
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 }
@@ -39586,7 +39712,7 @@
                   "fill": "#475569",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Correo de recordatorio con detalle de saldo y enlace de pago entregado y abierto por el cliente. Buen momento para un seguimiento por Voz IA que confirme la intención de pago.",
+                  "content": "El cliente respondió comprometiéndose a pagar el viernes. El agente registró la promesa, confirmó el monto y reenvió el enlace de pago. Respuestas del agente: 1 de 3.",
                   "lineHeight": 1.5,
                   "fontFamily": "Inter",
                   "fontSize": 13,
@@ -39627,8 +39753,8 @@
                       "type": "text",
                       "id": "y60f9",
                       "name": "v",
-                      "fill": "#334155",
-                      "content": "Abierto",
+                      "fill": "#047857",
+                      "content": "Promesa de pago",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "500"
@@ -44416,6 +44542,37 @@
                             },
                             "GsIQy": {
                               "content": "Estimado/a {{firstName}}, le recordamos que mantiene un saldo \npendiente de {{outstandingBalance}}. Le invitamos a comunicarse con \nnosotros para coordinar su pago."
+                            }
+                          }
+                        },
+                        {
+                          "id": "UKuyF",
+                          "type": "ref",
+                          "ref": "uJnVk",
+                          "name": "Prompt del sistema",
+                          "width": "fill_container",
+                          "descendants": {
+                            "MV9CA": {
+                              "content": "Prompt del sistema (autopiloto)"
+                            },
+                            "GsIQy": {
+                              "content": "Eres un agente de cobranza cordial y profesional. Si el cliente promete pagar, registra la promesa con monto y fecha. Si pide más tiempo u opciones, ofrécelas. Si el asunto no corresponde o ya está resuelto, no respondas. Sé breve."
+                            }
+                          }
+                        },
+                        {
+                          "id": "XhHO6",
+                          "type": "ref",
+                          "ref": "BoM07",
+                          "name": "Máximo de respuestas",
+                          "width": "fill_container",
+                          "descendants": {
+                            "hTkn4": {
+                              "content": "Máximo de respuestas del agente por gestión"
+                            },
+                            "KmeTM": {
+                              "content": "3",
+                              "fill": "$--foreground"
                             }
                           }
                         }

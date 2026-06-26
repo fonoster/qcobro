@@ -160,6 +160,38 @@ export const twilioConfigSchema = z
 export type TwilioConfig = z.infer<typeof twilioConfigSchema>;
 
 /**
+ * Resend connection for the bidirectional EMAIL channel. Optional — when absent, EMAIL
+ * dispatch is inert (the engine reports EMAIL campaigns as not-configured) and the inbound
+ * webhook rejects everything. Outbound uses `apiKey` + `fromEmail`/`fromName`; inbound
+ * replies arrive at `reply+<token>@<inboundDomain>` and are verified with
+ * `inboundSigningSecret`. The per-attempt reply cap defaults to `maxRepliesDefault`.
+ */
+export const resendConfigSchema = z
+  .object({
+    apiKey: z.string().min(1),
+    fromEmail: z.string().email(),
+    fromName: z.string().min(1).optional(),
+    /** Domain the per-attempt reply-to token addresses are minted on (inbound). */
+    inboundDomain: z.string().min(1),
+    /** Shared secret used to verify inbound webhook signatures. */
+    inboundSigningSecret: z.string().min(1).optional(),
+    /**
+     * Campaigns-engine pacing: the maximum number of emails the engine will send per
+     * minute, deployment-wide. Reserve `0` to pause email dispatch.
+     */
+    maxEmailsPerMinute: z.number().int().nonnegative().default(60),
+    /**
+     * Default cap on autopilot replies per collection attempt (per gestión) when an EMAIL
+     * agent does not set its own `maxReplies`. Bounds the back-and-forth so a debtor can't
+     * keep the AI talking indefinitely.
+     */
+    maxRepliesDefault: z.number().int().nonnegative().default(3)
+  })
+  .optional();
+
+export type ResendConfig = z.infer<typeof resendConfigSchema>;
+
+/**
  * AI-insight generation. Produces a gestión's structured analysis from its
  * conversation transcript. Optional — when absent or `enabled:false`, no LLM is
  * called and gestiones keep their unanalyzed / generic-insight state.
@@ -291,6 +323,7 @@ export const qcobroConfigSchema = z.object({
     }),
   fonoster: fonosterConfigSchema,
   twilio: twilioConfigSchema,
+  resend: resendConfigSchema,
   ai: aiConfigSchema,
   tts: ttsConfigSchema,
   announcement: announcementConfigSchema,

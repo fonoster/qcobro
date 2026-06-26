@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-/** The three channels the dispatch layer triggers (subset of AgentType). */
-export const dispatchChannelSchema = z.enum(["VOICE_AI", "VOICE_PRERECORDED", "SMS"]);
+/** The channels the dispatch layer triggers (subset of AgentType). */
+export const dispatchChannelSchema = z.enum(["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL"]);
 
 /**
  * A normalized dispatch request: a channel, a destination, the render context
@@ -24,17 +24,29 @@ export const dispatchOutreachSchema = z
     firstMessage: z.string().optional(),
     /** Voz IA: system prompt/persona template. */
     systemPrompt: z.string().optional(),
-    /** SMS: message body template. */
-    body: z.string().optional()
+    /** SMS / EMAIL: message body template. */
+    body: z.string().optional(),
+    /** EMAIL: subject line template. */
+    subject: z.string().optional()
   })
   .superRefine((value, ctx) => {
     if (value.channel === "SMS" && (value.body ?? "").length === 0) {
       ctx.addIssue({ code: "custom", path: ["body"], message: "SMS requires a message body" });
     }
+    if (value.channel === "EMAIL") {
+      if ((value.subject ?? "").length === 0) {
+        ctx.addIssue({ code: "custom", path: ["subject"], message: "Email requires a subject" });
+      }
+      if ((value.body ?? "").length === 0) {
+        ctx.addIssue({ code: "custom", path: ["body"], message: "Email requires a body" });
+      }
+    }
     // Voice dispatch needs the synced application ref. Neither voice channel requires a
     // `firstMessage`: VOICE_AI may open silently (the autopilot places the call and waits
     // for the customer to speak first), and pre-recorded has no first message at all.
-    if (value.channel !== "SMS" && !value.appRef) {
+    // EMAIL and SMS are not voice and need no appRef.
+    const isVoice = value.channel === "VOICE_AI" || value.channel === "VOICE_PRERECORDED";
+    if (isVoice && !value.appRef) {
       ctx.addIssue({
         code: "custom",
         path: ["appRef"],
