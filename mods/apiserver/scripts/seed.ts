@@ -39,8 +39,13 @@ import { createIngestVoiceEvent } from "../src/functions/voice/ingestVoiceEvent.
 const HERE = dirname(fileURLToPath(import.meta.url));
 // Voz IA autopilot config (system prompt + voice + language), kept as a repo asset.
 const YAML_PATH = process.env.SEED_AUTOPILOT_YAML ?? resolve(HERE, "assets/autopilot.yaml");
-// Every account's phone is forced to this number so demo calls/SMS always reach the operator.
-const DEMO_PHONE = process.env.SEED_DEMO_PHONE ?? "+17853178070";
+// For LIVE demos set SEED_DEMO_PHONE so every account routes to the operator. Otherwise
+// each account gets a distinct fictional (555-01xx, non-routable) number so the console
+// and engine sim show variety.
+const FORCE_PHONE = process.env.SEED_DEMO_PHONE;
+/** Phone for a 4-digit suffix (`+1 809 555 NNNN`), or the forced operator number.
+ * Callers pass suffixes in the reserved-fictional 0100–0199 range so nothing is routable. */
+const phoneFor = (suffix: number) => FORCE_PHONE ?? `+1809555${String(suffix).padStart(4, "0")}`;
 
 const USER = { name: "Demo User", email: "demo@qcobro.com", password: "password123" };
 const WORKSPACE_NAME = "Mikro Créditos";
@@ -49,8 +54,8 @@ const JUAN_FIRST_MESSAGE = "";
 
 /**
  * Demo portfolio accounts (the example Mikro Créditos client list, inlined). `phone`
- * is omitted on purpose — it's set to DEMO_PHONE for every account in `main`, so all
- * demo calls/SMS reach the operator regardless of the real numbers.
+ * is omitted on purpose — `main` assigns a distinct fictional number per account (or
+ * SEED_DEMO_PHONE for every account when set, for live demos).
  */
 const ACCOUNTS: Omit<AccountRowInput, "phone">[] = [
   {
@@ -335,7 +340,7 @@ async function seedGestiones(
   for (let i = 0; i < VOZ_SCENARIOS.length; i++) {
     const s = VOZ_SCENARIOS[i];
     const callRef = `seed-voz-${Date.now()}-${i}`;
-    const to = vozAccount.phone ?? DEMO_PHONE;
+    const to = vozAccount.phone ?? phoneFor(100);
     await contactLog({
       portfolioAccountId: vozAccount.id,
       campaignId: campaigns.voiceAi,
@@ -375,7 +380,7 @@ async function seedGestiones(
     channelData: {
       messageBody: renderTemplate(SMS_BODY, smsAccount),
       from: "+19842051452",
-      to: smsAccount.phone ?? DEMO_PHONE
+      to: smsAccount.phone ?? phoneFor(100)
     }
   });
   log(`SMS · OTHER (${smsAccount.fullName})`);
@@ -395,7 +400,7 @@ async function seedGestiones(
       "Mensaje pregrabado reproducido en el buzón del cliente. Canal de una vía; sin respuesta capturada.",
     channelData: {
       messageBody: renderTemplate(SOFIA_SCRIPT, preAccount),
-      to: preAccount.phone ?? DEMO_PHONE
+      to: preAccount.phone ?? phoneFor(100)
     }
   });
   log(`Voz pregrabada · NO_ANSWER (${preAccount.fullName})`);
@@ -509,14 +514,14 @@ async function seedEngineShowcase(workspaceRef: string, smsAgentId: string) {
   }); // → auto-completes (past endDate)
 
   // Accounts, each crafted to hit one decision under "Showcase · SMS".
-  const PHONE = "+17853178070";
+  let scPhone = 150; // distinct fictional numbers (+1 809 555 0150…), separate from the demo range
   const mk = (externalId: string, fullName: string, over: AcctOver = {}) =>
     prisma.portfolioAccount.create({
       data: {
         portfolioId: pf.id,
         externalId,
         fullName,
-        phone: PHONE,
+        phone: phoneFor(scPhone++),
         outstandingBalance: 5000,
         daysPastDue: 30,
         ...over
@@ -613,9 +618,11 @@ async function main() {
   } else {
     log(`"${PORTFOLIO.name}" already exists — reusing`);
   }
-  const rows: AccountRowInput[] = ACCOUNTS.map((a) => ({ ...a, phone: DEMO_PHONE }));
+  const rows: AccountRowInput[] = ACCOUNTS.map((a, i) => ({ ...a, phone: phoneFor(100 + i) }));
   const sync = await createSyncAccounts(db)({ portfolioId: portfolio.id, mode: "REPLACE", rows });
-  log(`accounts synced (all phones → ${DEMO_PHONE}): ${JSON.stringify(sync)}`);
+  log(
+    `accounts synced (${FORCE_PHONE ? `all → ${FORCE_PHONE}` : "distinct fictional phones"}): ${JSON.stringify(sync)}`
+  );
 
   // 4. Agents ---------------------------------------------------------------
   console.log("Agents");
