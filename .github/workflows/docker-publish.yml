@@ -42,23 +42,26 @@ jobs:
         id: meta
         run: |
           P="${{ env.PREFIX }}"
+          ADD_LATEST=true
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            VER="${GITHUB_REF#refs/tags/}"
-            echo "apiserver_tags=${P}/qcobro-apiserver:${VER}
-          ${P}/qcobro-apiserver:latest" >> "$GITHUB_OUTPUT"
-            echo "webapp_tags=${P}/qcobro-webapp:${VER}
-          ${P}/qcobro-webapp:latest" >> "$GITHUB_OUTPUT"
+            T="${GITHUB_REF#refs/tags/}"
           elif [[ "$GITHUB_REF" == refs/heads/main ]]; then
-            SHA="${GITHUB_SHA:0:7}"
-            echo "apiserver_tags=${P}/qcobro-apiserver:main-${SHA}
-          ${P}/qcobro-apiserver:latest" >> "$GITHUB_OUTPUT"
-            echo "webapp_tags=${P}/qcobro-webapp:main-${SHA}
-          ${P}/qcobro-webapp:latest" >> "$GITHUB_OUTPUT"
+            T="main-${GITHUB_SHA:0:7}"
           else
-            TAG="${{ inputs.tag }}"
-            echo "apiserver_tags=${P}/qcobro-apiserver:${TAG}" >> "$GITHUB_OUTPUT"
-            echo "webapp_tags=${P}/qcobro-webapp:${TAG}" >> "$GITHUB_OUTPUT"
+            T="${{ inputs.tag }}"
+            ADD_LATEST=false
           fi
+          # Multi-line outputs require the name<<DELIMITER heredoc form.
+          emit() {
+            {
+              echo "$1<<__TAGS_EOF__"
+              echo "$2:${T}"
+              [ "$ADD_LATEST" = true ] && echo "$2:latest"
+              echo "__TAGS_EOF__"
+            } >> "$GITHUB_OUTPUT"
+          }
+          emit apiserver_tags "${P}/qcobro-apiserver"
+          emit webapp_tags    "${P}/qcobro-webapp"
 
       - name: Build and push apiserver
         uses: docker/build-push-action@v5

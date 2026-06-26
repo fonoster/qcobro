@@ -25,6 +25,13 @@ jobs:
 
       - run: npm ci
 
+      # The Prisma wrapper (scripts/prisma.mjs) and the apiserver build read
+      # database.url from qcobro.json, which is gitignored and absent in CI.
+      # Write a minimal config — no DB connection is made during
+      # generate/typecheck/build, so a placeholder URL is sufficient.
+      - name: Write CI qcobro.json
+        run: echo '{"database":{"url":"postgresql://user:pass@localhost:5432/db?schema=public"}}' > qcobro.json
+
       - name: Build common (provides types for downstream packages)
         run: npm run build --workspace=mods/common
 
