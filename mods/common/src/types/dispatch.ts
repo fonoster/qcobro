@@ -46,9 +46,31 @@ export interface EmailSendInput {
   inReplyTo?: string;
 }
 
+/**
+ * A received inbound email fetched from the provider. The inbound webhook is
+ * metadata-only (Resend's `email.received`), so the body must be retrieved
+ * separately by provider id before it can be ingested.
+ */
+export interface ReceivedEmail {
+  id: string;
+  from: string;
+  to: string[];
+  subject?: string;
+  text?: string | null;
+  html?: string | null;
+  messageId?: string;
+  headers?: Record<string, string>;
+}
+
 export interface EmailClient {
   /** Send an email; resolves with the provider message id. */
   sendEmail(input: EmailSendInput): Promise<{ id: string }>;
+  /**
+   * Fetch a received inbound email's full content by provider id. Optional because
+   * not every provider/emulator supports inbound retrieval; the inbound handler
+   * uses it to hydrate the body the webhook omits.
+   */
+  getReceivedEmail?(id: string): Promise<ReceivedEmail | null>;
 }
 
 /** Picks a sending number from a configured pool. Injectable for determinism. */

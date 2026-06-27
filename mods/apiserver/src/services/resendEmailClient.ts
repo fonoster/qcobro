@@ -1,4 +1,4 @@
-import type { EmailClient, EmailSendInput, ResendConfig } from "@qcobro/common";
+import type { EmailClient, EmailSendInput, ReceivedEmail, ResendConfig } from "@qcobro/common";
 
 type ResendSettings = NonNullable<ResendConfig>;
 
@@ -41,5 +41,42 @@ export class ResendEmailClient implements EmailClient {
     const data = (await res.json()) as { id?: string };
     if (!data.id) throw new Error("Resend send returned no message id");
     return { id: data.id };
+  }
+
+  /**
+   * Fetch a received inbound email by id. The `email.received` webhook is metadata-only
+   * (no body), so the inbound handler calls this to retrieve `text`/`html` before
+   * ingesting the reply. Returns null on 404 (not yet retrievable / unknown id).
+   */
+  async getReceivedEmail(id: string): Promise<ReceivedEmail | null> {
+    const res = await fetch(`https://api.resend.com/emails/receiving/${id}`, {
+      headers: { Authorization: `Bearer ${this.settings.apiKey}` },
+      signal: AbortSignal.timeout(SEND_TIMEOUT_MS)
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      throw new Error(`Resend receive fetch failed (${res.status}): ${detail}`);
+    }
+    const d = (await res.json()) as {
+      id?: string;
+      from?: string;
+      to?: string[];
+      subject?: string;
+      text?: string | null;
+      html?: string | null;
+      message_id?: string;
+      headers?: Record<string, string>;
+    };
+    return {
+      id: d.id ?? id,
+      from: d.from ?? "",
+      to: Array.isArray(d.to) ? d.to : [],
+      subject: d.subject,
+      text: d.text ?? null,
+      html: d.html ?? null,
+      messageId: d.message_id,
+      headers: d.headers
+    };
   }
 }

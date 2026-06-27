@@ -61,6 +61,52 @@ function addr(v: unknown): string {
   return "";
 }
 
+/** Strip tags + collapse whitespace from an HTML body into plain text. */
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Trim quoted reply history and the signature block so only the customer's new message
+ * is kept. Cuts at the first quote/separator marker (Gmail/Apple "On … wrote:" / Spanish
+ * "El … escribió:", Outlook header block, `>`-quoted lines, the `--` signature
+ * delimiter). Falls back to the full text if stripping would leave nothing.
+ */
+export function stripQuotedReply(text: string): string {
+  const lines = text.split(/\r?\n/);
+  const markers = [
+    /^\s*On .+ wrote:\s*$/i,
+    /^\s*El .+ escribió:\s*$/i,
+    /^\s*-{2,}\s*Original Message\s*-{2,}/i,
+    /^\s*-{2,}\s*Mensaje original\s*-{2,}/i,
+    /^\s*_{5,}\s*$/,
+    /^\s*From:\s.+/i,
+    /^\s*De:\s.+/i,
+    /^\s*>/,
+    /^\s*--\s*$/
+  ];
+  let end = lines.length;
+  for (let i = 0; i < lines.length; i++) {
+    if (markers.some((re) => re.test(lines[i]))) {
+      end = i;
+      break;
+    }
+  }
+  const stripped = lines.slice(0, end).join("\n").trim();
+  return stripped || text.trim();
+}
+
+/** Pull the received-email id out of the webhook payload (Resend `email.received`). */
+function extractReceivedEmailId(body: unknown): string | null {
+  const root = (body ?? {}) as Record<string, unknown>;
+  const d = (root.data ?? root) as Record<string, unknown>;
+  const id = d.email_id ?? d.emailId ?? d.id ?? root.email_id;
+  return typeof id === "string" ? id : null;
+}
+
 /** Normalise Resend's headers field — either a Record or an array of {name,value} objects. */
 function normalizeHeaders(raw: unknown): Record<string, string> | undefined {
   if (!raw) return undefined;
@@ -103,10 +149,7 @@ function normalize(body: unknown): {
         : typeof d.plain === "string" && d.plain
           ? d.plain
           : typeof d.html === "string"
-            ? d.html
-                .replace(/<[^>]+>/g, " ")
-                .replace(/\s+/g, " ")
-                .trim()
+            ? stripHtml(d.html)
             : "",
     messageId:
       (d.message_id as string) ?? (d.messageId as string) ?? headers?.["message-id"] ?? undefined,
@@ -171,11 +214,12 @@ export function createEmailInboundHandler(prisma: PrismaClient, deps: EmailInbou
       }
     }
 
+    const emailClient = new ResendEmailClient(resend);
     const ingest = createIngestEmailReply({
       client: createPrismaEmailInboundClient(prisma),
       autopilot: createEmailAutopilot(deps.ai),
       recordOutcome: createRecordOutcome(prisma as never),
-      emailClient: new ResendEmailClient(resend),
+      emailClient,
       emailFrom: {
         email: resend.fromEmail,
         name: resend.fromName,
@@ -195,6 +239,26 @@ export function createEmailInboundHandler(prisma: PrismaClient, deps: EmailInbou
         res.status(200).json({ ignored: true, reason: "not_a_reply" });
         return;
       }
+
+      // Resend's `email.received` webhook is metadata-only — no body. When the payload
+      // carries no text, hydrate it from the Received Emails API by email id before
+      // ingesting, so the customer's actual reply is captured (not an empty message).
+      if (!normalized.text) {
+        const emailId = extractReceivedEmailId(req.body);
+        if (emailId && emailClient.getReceivedEmail) {
+          const full = await emailClient.getReceivedEmail(emailId);
+          if (full) {
+            normalized.text =
+              (full.text && full.text.trim()) || (full.html ? stripHtml(full.html) : "");
+            if (!normalized.subject && full.subject) normalized.subject = full.subject;
+            if (!normalized.messageId && full.messageId) normalized.messageId = full.messageId;
+            if (!normalized.from && full.from) normalized.from = full.from;
+          }
+        }
+      }
+
+      // Keep only the customer's new message — drop quoted history + signature.
+      if (normalized.text) normalized.text = stripQuotedReply(normalized.text);
 
       console.log("[email/inbound] reply received:", JSON.stringify(normalized));
       const result = await ingest(normalized);
