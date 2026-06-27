@@ -22,7 +22,8 @@
     "db:migrate:deploy": "node scripts/prisma.mjs migrate deploy",
     "db:reset": "node scripts/prisma.mjs migrate reset --force --skip-seed",
     "db:studio": "node scripts/prisma.mjs studio",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "email:smoke": "tsx scripts/smoke-test-email.ts"
   },
   "dependencies": {
     "@fonoster/identity-client": "0.22.0",
