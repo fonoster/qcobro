@@ -40,8 +40,8 @@
 
 ## 7. Webapp
 
-- [ ] 7.1 EMAIL agent form: add the **System prompt** field + **reply cap** (i18n), per the Pencil design
-- [ ] 7.2 Gestión detail: render the email **thread** (inbound + autopilot replies) + outcome + reply-count, per the Pencil design
+- [x] 7.1 EMAIL agent form: add the **System prompt** field + **reply cap** (i18n), per the Pencil design
+- [x] 7.2 Gestión detail: render the email **thread** (inbound + autopilot replies) + outcome + reply-count, per the Pencil design
 
 ## 8. Tests
 
