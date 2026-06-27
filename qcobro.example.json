@@ -55,6 +55,15 @@
     "fromNumbers": ["+15550000000"],
     "maxSmsPerMinute": 60
   },
+  "resend": {
+    "apiKey": "re_CHANGE_ME",
+    "fromEmail": "cobranza@yourdomain.com",
+    "fromName": "QCobro",
+    "inboundDomain": "inbound.yourdomain.com",
+    "inboundSigningSecret": "CHANGE_ME",
+    "maxEmailsPerMinute": 60,
+    "maxRepliesDefault": 3
+  },
   "engine": {
     "enabled": true,
     "tickSeconds": 60

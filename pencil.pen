@@ -44553,7 +44553,7 @@
                           "width": "fill_container",
                           "descendants": {
                             "MV9CA": {
-                              "content": "Prompt del sistema (autopiloto)"
+                              "content": "Prompt del sistema"
                             },
                             "GsIQy": {
                               "content": "Eres un agente de cobranza cordial y profesional. Si el cliente promete pagar, registra la promesa con monto y fecha. Si pide más tiempo u opciones, ofrécelas. Si el asunto no corresponde o ya está resuelto, no respondas. Sé breve."
