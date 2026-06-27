@@ -13,5 +13,14 @@ export const configRouter = router({
    * Deployment-wide announcement banner config (or null). Title/message may be
    * localized maps; the console resolves them against the active UI language.
    */
-  announcement: protectedProcedure.query(() => config.announcement ?? null)
+  announcement: protectedProcedure.query(() => config.announcement ?? null),
+  /**
+   * Which outbound/inbound channel integrations are configured in qcobro.json.
+   * The console uses this to show status badges without exposing secrets.
+   */
+  channels: protectedProcedure.query(() => ({
+    fonoster: !!config.fonoster,
+    twilio: !!config.twilio,
+    resend: !!config.resend
+  }))
 });

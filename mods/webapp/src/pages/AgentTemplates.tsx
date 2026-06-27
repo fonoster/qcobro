@@ -266,8 +266,6 @@ function CreateAgentTemplateModal({
         payload = {
           ...base,
           type,
-          fromName: fields.fromName ?? "",
-          fromEmail: fields.fromEmail ?? "",
           subject: fields.subject ?? "",
           messageBody: fields.messageBody ?? "",
           systemPrompt: fields.systemPrompt ?? "",
@@ -393,18 +391,6 @@ function CreateAgentTemplateModal({
 
         {type === "EMAIL" && (
           <>
-            <InputGroup
-              label={t("agents.form.fromName")}
-              id="a-fromname"
-              value={fields.fromName ?? ""}
-              onChange={(e) => set("fromName", e.target.value)}
-            />
-            <InputGroup
-              label={t("agents.form.fromEmail")}
-              id="a-fromemail"
-              value={fields.fromEmail ?? ""}
-              onChange={(e) => set("fromEmail", e.target.value)}
-            />
             <InputGroup
               label={t("agents.form.subject")}
               id="a-subject"

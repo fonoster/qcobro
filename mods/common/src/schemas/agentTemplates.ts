@@ -48,8 +48,6 @@ export const createAgentTemplateSchema = z.discriminatedUnion("type", [
     type: z.literal("EMAIL"),
     subject: z.string().min(1),
     messageBody: z.string().min(1),
-    fromName: z.string().min(1),
-    fromEmail: z.string().email(),
     /** Autopilot decision brain: governs reply/ignore/resolve/escalate on each inbound reply. */
     systemPrompt: z.string().min(1),
     /** Per-agent cap on autopilot replies per collection attempt; falls back to the

@@ -70,8 +70,8 @@ export function createCreateAgentTemplate(
               templateId: base.id,
               subject: params.subject,
               messageBody: params.messageBody,
-              fromName: params.fromName,
-              fromEmail: params.fromEmail,
+              fromName: "",
+              fromEmail: "",
               systemPrompt: params.systemPrompt,
               maxReplies: params.maxReplies ?? null
             }
