@@ -1,7 +1,7 @@
 # Ship checkpoint — email-channel
 
 Started: 2026-06-26
-Current stage: 5 → Sync (build + test done, all green) — awaiting sync gate
+Current stage: 6 → Archive — DONE. Shipped + archived as 2026-06-27-email-channel.
 
 **Scope:** Add EMAIL as a real, bidirectional channel — outbound collection notices via
 **Resend** plus an **inbound webhook** that brings replies back, correlated to the
