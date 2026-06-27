@@ -95,6 +95,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
     | undefined;
 
   const messageBody = g?.channelData?.messageBody as string | undefined;
+  const fromEmail = g?.channelData?.from as string | undefined;
   const subject = g?.channelData?.subject as string | undefined;
   const recordingUrl = g?.channelData?.recordingUrl as string | undefined;
   const transcript = (g?.channelData?.transcript as TranscriptLine[] | undefined) ?? [];
@@ -257,13 +258,10 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
           >
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
               {/* Email header: De / Para / Asunto */}
-              {(g?.channelData?.from || toNumber || subject) && (
+              {(fromEmail || toNumber || subject) && (
                 <div className="flex flex-col gap-2 border-b border-slate-200 bg-slate-50 px-3.5 py-3">
-                  {g?.channelData?.from && (
-                    <EmailHeaderRow
-                      label={t("gestiones.detail.emailFrom")}
-                      value={g.channelData.from as string}
-                    />
+                  {fromEmail && (
+                    <EmailHeaderRow label={t("gestiones.detail.emailFrom")} value={fromEmail} />
                   )}
                   {toNumber && (
                     <EmailHeaderRow label={t("gestiones.detail.emailTo")} value={toNumber} />
