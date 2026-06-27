@@ -39,8 +39,6 @@ export function AgentTemplateDetail() {
     | undefined;
 
   const { data: voices } = trpc.config.voices.useQuery();
-  const { data: channels } = trpc.config.channels.useQuery();
-
   const [syncError, setSyncError] = useState(false);
   const sync = trpc.agentTemplates.sync.useMutation({
     onMutate: () => setSyncError(false),
@@ -53,7 +51,6 @@ export function AgentTemplateDetail() {
   // Only VOICE_AI agents sync to Fonoster (as AUTOPILOT apps). Pre-recorded and the
   // text channels are managed locally and have no per-agent sync.
   const syncsWithFonoster = tmpl?.type === "VOICE_AI";
-  const isEmail = tmpl?.type === "EMAIL";
 
   // Resolve the stored voice id to its catalog label (name, language, gender).
   const voiceEntry = voices?.find((v) => v.id === voiceCfg?.voice);
@@ -98,10 +95,6 @@ export function AgentTemplateDetail() {
                 {t("agents.sync.action")}
               </Button>
             </div>
-          ) : isEmail ? (
-            <Badge variant={channels?.resend ? "success" : "orange"}>
-              {channels?.resend ? t("agents.resend.configured") : t("agents.resend.notConfigured")}
-            </Badge>
           ) : undefined
         }
       />

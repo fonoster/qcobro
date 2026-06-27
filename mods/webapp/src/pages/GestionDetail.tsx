@@ -39,6 +39,15 @@ function Section({
   );
 }
 
+function EmailHeaderRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-14 shrink-0 text-xs text-slate-400">{label}</span>
+      <span className="text-xs font-medium text-slate-600">{value}</span>
+    </div>
+  );
+}
+
 function MetaItem({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null;
   return (
@@ -239,48 +248,125 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
           </Section>
         )}
 
-        {/* EMAIL: bidirectional autopilot thread (initial notice + replies) */}
+        {/* EMAIL: email-client card — initial notice header/body + reply thread */}
         {isEmail && (
           <Section
             icon={Mail}
             iconClass="text-emerald-700"
             title={t("gestiones.detail.emailThread")}
           >
-            <div className="flex flex-col gap-2">
-              {messageBody && (
-                <div className="flex justify-end">
-                  <div className="max-w-[85%] rounded-2xl rounded-br-sm border border-emerald-100 bg-emerald-50 px-3.5 py-2.5">
-                    {subject && (
-                      <p className="text-[11px] font-semibold text-emerald-700">{subject}</p>
-                    )}
-                    <p className="text-sm leading-relaxed text-emerald-900">{messageBody}</p>
-                  </div>
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+              {/* Email header: De / Para / Asunto */}
+              {(g?.channelData?.from || toNumber || subject) && (
+                <div className="flex flex-col gap-2 border-b border-slate-200 bg-slate-50 px-3.5 py-3">
+                  {g?.channelData?.from && (
+                    <EmailHeaderRow
+                      label={t("gestiones.detail.emailFrom")}
+                      value={g.channelData.from as string}
+                    />
+                  )}
+                  {toNumber && (
+                    <EmailHeaderRow label={t("gestiones.detail.emailTo")} value={toNumber} />
+                  )}
+                  {subject && (
+                    <EmailHeaderRow label={t("gestiones.detail.emailSubject")} value={subject} />
+                  )}
                 </div>
               )}
+              {/* Original email body — split on double-newlines into paragraphs */}
+              {messageBody ? (
+                <div className="flex flex-col gap-2.5 px-4 py-4">
+                  {messageBody.split(/\n{2,}/).map((para, i) => (
+                    <p
+                      key={i}
+                      className="whitespace-pre-line text-sm leading-relaxed text-slate-600"
+                    >
+                      {para.trim()}
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <p className="px-4 py-4 text-sm text-slate-400">
+                  {t("gestiones.detail.noMessage")}
+                </p>
+              )}
+              {/* Reply thread messages */}
               {emailThread?.messages.map((m, i) =>
-                m.direction === "outbound" ? (
-                  <div key={i} className="flex justify-end">
-                    <div className="max-w-[85%] rounded-2xl rounded-br-sm border border-emerald-100 bg-emerald-50 px-3.5 py-2.5">
-                      <span className="text-[11px] font-semibold text-emerald-700">
-                        {t("gestiones.detail.agentSpeaker")}
+                m.direction === "inbound" ? (
+                  <div
+                    key={i}
+                    className="flex flex-col gap-1.5 border-t border-slate-200 bg-slate-50 px-4 py-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-slate-700">
+                        {g?.portfolioAccount.fullName} {t("gestiones.detail.emailReplied")}
                       </span>
-                      <p className="text-sm leading-relaxed text-emerald-900">{m.body}</p>
+                      <span className="ml-auto text-[11px] text-slate-400">
+                        {new Date(m.at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })}
+                      </span>
                     </div>
+                    {m.body ? (
+                      <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">
+                        {m.body}
+                      </p>
+                    ) : (
+                      <p className="text-sm italic text-slate-400">
+                        {t("gestiones.detail.noMessage")}
+                      </p>
+                    )}
                   </div>
                 ) : (
-                  <div key={i} className="flex justify-start">
-                    <div className="max-w-[85%] rounded-2xl rounded-bl-sm border border-slate-200 bg-slate-100 px-3.5 py-2.5">
-                      <span className="text-[11px] font-semibold text-slate-400">
-                        {t("gestiones.detail.customerSpeaker")}
+                  <div
+                    key={i}
+                    className="flex flex-col gap-1.5 border-t border-slate-200 bg-emerald-50 px-4 py-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-emerald-700">
+                        {t("gestiones.detail.emailAgentName")}
                       </span>
-                      <p className="text-sm leading-relaxed text-slate-700">{m.body}</p>
+                      <span className="ml-auto text-[11px] text-slate-400">
+                        {new Date(m.at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })}
+                      </span>
                     </div>
+                    <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">
+                      {m.body}
+                    </p>
                   </div>
                 )
               )}
-              {!messageBody && !emailThread && (
-                <p className="text-sm text-slate-500">{t("gestiones.detail.noMessage")}</p>
+              {/* Awaiting reply placeholder when no replies yet */}
+              {(!emailThread || emailThread.messages.length === 0) && (
+                <div className="border-t border-slate-200 px-4 py-3">
+                  <p className="text-xs text-slate-400">{t("gestiones.detail.emailNoReply")}</p>
+                </div>
               )}
+            </div>
+          </Section>
+        )}
+
+        {/* EMAIL: AI insights — outcome + optional LLM summary */}
+        {isEmail && g && (
+          <Section
+            icon={Sparkles}
+            iconClass="text-violet-600"
+            title={t("gestiones.detail.emailAnalysis")}
+          >
+            <div className="flex flex-col gap-3">
+              {g.aiSummary && (
+                <p className="text-sm leading-relaxed text-slate-600">{g.aiSummary}</p>
+              )}
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
+                <span className="text-sm text-slate-500">{t("gestiones.detail.result")}</span>
+                <span className="text-sm font-medium text-slate-700">
+                  {t(`gestiones.outcome.${g.outcome}` as Parameters<typeof t>[0])}
+                </span>
+              </div>
             </div>
           </Section>
         )}
@@ -436,7 +522,10 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                 value={g.portfolioAccount.externalId}
               />
               <MetaItem label={t("gestiones.col.campaign")} value={g.campaign?.name} />
-              <MetaItem label={t("gestiones.detail.phone")} value={toNumber} />
+              <MetaItem
+                label={isEmail ? t("gestiones.detail.email") : t("gestiones.detail.phone")}
+                value={toNumber}
+              />
             </div>
           </div>
         )}

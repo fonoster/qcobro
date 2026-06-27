@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Request, Response } from "express";
 import type { PrismaClient } from "@prisma/client";
 import {
@@ -60,6 +61,23 @@ function addr(v: unknown): string {
   return "";
 }
 
+/** Normalise Resend's headers field — either a Record or an array of {name,value} objects. */
+function normalizeHeaders(raw: unknown): Record<string, string> | undefined {
+  if (!raw) return undefined;
+  if (Array.isArray(raw)) {
+    return Object.fromEntries(
+      raw
+        .filter(
+          (h): h is { name: string; value: string } =>
+            h && typeof h === "object" && "name" in h && "value" in h
+        )
+        .map((h) => [h.name.toLowerCase(), h.value])
+    );
+  }
+  if (typeof raw === "object") return raw as Record<string, string>;
+  return undefined;
+}
+
 /** Map Resend's inbound payload (defensively) to the normalized inbound-email shape. */
 function normalize(body: unknown): {
   from: string;
@@ -73,13 +91,23 @@ function normalize(body: unknown): {
 } {
   const root = (body ?? {}) as Record<string, unknown>;
   const d = (root.data ?? root) as Record<string, unknown>;
-  const headers = (d.headers as Record<string, string> | undefined) ?? undefined;
+  const headers = normalizeHeaders(d.headers);
   const toRaw = d.to;
   return {
     from: addr(d.from),
     to: Array.isArray(toRaw) ? toRaw.map(addr) : toRaw ? [addr(toRaw)] : [],
     subject: typeof d.subject === "string" ? d.subject : undefined,
-    text: typeof d.text === "string" ? d.text : typeof d.plain === "string" ? d.plain : "",
+    text:
+      typeof d.text === "string" && d.text
+        ? d.text
+        : typeof d.plain === "string" && d.plain
+          ? d.plain
+          : typeof d.html === "string"
+            ? d.html
+                .replace(/<[^>]+>/g, " ")
+                .replace(/\s+/g, " ")
+                .trim()
+            : "",
     messageId:
       (d.message_id as string) ?? (d.messageId as string) ?? headers?.["message-id"] ?? undefined,
     inReplyTo: (d.in_reply_to as string) ?? headers?.["in-reply-to"] ?? undefined,
@@ -94,13 +122,39 @@ export interface EmailInboundDeps {
 }
 
 /**
+ * Verify a Svix-signed webhook (standard-webhooks spec used by Resend).
+ * Secret format: `whsec_<base64>`. Signs `{svix-id}.{svix-timestamp}.{rawBody}` with
+ * HMAC-SHA256 and compares against the `svix-signature` header (space-separated `v1,<b64>`
+ * entries). Uses timing-safe comparison to prevent timing attacks.
+ */
+function verifySvixSignature(req: Request, secret: string): boolean {
+  const msgId = req.headers["svix-id"];
+  const msgTs = req.headers["svix-timestamp"];
+  const sigHeader = req.headers["svix-signature"];
+  if (!msgId || !msgTs || !sigHeader) return false;
+
+  const stored = (req as { rawBody?: unknown }).rawBody;
+  const rawBody: string = typeof stored === "string" ? stored : JSON.stringify(req.body);
+
+  const keyBytes = Buffer.from(secret.replace(/^whsec_/, ""), "base64");
+  const toSign = `${msgId}.${msgTs}.${rawBody}`;
+  const expected = createHmac("sha256", keyBytes).update(toSign).digest("base64");
+
+  const expectedBuf = Buffer.from(expected);
+  const signatures = String(sigHeader).split(" ");
+  return signatures.some((sig) => {
+    const b64 = sig.startsWith("v1,") ? sig.slice(3) : sig;
+    const candidate = Buffer.from(b64);
+    if (candidate.length !== expectedBuf.length) return false;
+    return timingSafeEqual(candidate, expectedBuf);
+  });
+}
+
+/**
  * Builds the `POST /api/email/inbound` handler for Resend inbound replies. Verifies the
- * shared secret (when configured), correlates the reply to its gestión by the reply-to
- * token, and runs the EMAIL autopilot ({@link createIngestEmailReply}). Inert (503) when
- * Resend is unconfigured.
- *
- * NOTE(security): when `inboundSigningSecret` is set we require it on the `x-webhook-secret`
- * header. Full Svix HMAC verification of Resend's signed headers is a follow-up.
+ * Svix HMAC-SHA256 signature (when `inboundSigningSecret` is configured), correlates the
+ * reply to its gestión by the reply-to token, and runs the EMAIL autopilot. Inert (503)
+ * when Resend is unconfigured.
  */
 export function createEmailInboundHandler(prisma: PrismaClient, deps: EmailInboundDeps) {
   const resend = deps.resend;
@@ -111,8 +165,7 @@ export function createEmailInboundHandler(prisma: PrismaClient, deps: EmailInbou
       return;
     }
     if (resend.inboundSigningSecret) {
-      const provided = req.headers["x-webhook-secret"];
-      if (provided !== resend.inboundSigningSecret) {
+      if (!verifySvixSignature(req, resend.inboundSigningSecret)) {
         res.status(401).json({ error: "Invalid webhook signature" });
         return;
       }
@@ -133,13 +186,26 @@ export function createEmailInboundHandler(prisma: PrismaClient, deps: EmailInbou
     });
 
     try {
-      const result = await ingest(normalize(req.body));
+      const normalized = normalize(req.body);
+
+      // Ignore non-reply events (e.g. delivery notifications for outbound emails).
+      // A real inbound reply will have our reply+<token>@<inboundDomain> in the `to` list.
+      const isReply = normalized.to.some((t) => t.includes(`@${resend.inboundDomain}`));
+      if (!isReply) {
+        res.status(200).json({ ignored: true, reason: "not_a_reply" });
+        return;
+      }
+
+      console.log("[email/inbound] reply received:", JSON.stringify(normalized));
+      const result = await ingest(normalized);
       res.status(200).json(result);
     } catch (err) {
       if (err instanceof ValidationError) {
+        console.error("[email/inbound] 400:", JSON.stringify(err.toJSON()));
         res.status(400).json(err.toJSON());
         return;
       }
+      console.error("[email/inbound] unexpected error:", err);
       res.status(500).json({ error: "Failed to ingest email reply" });
     }
   };

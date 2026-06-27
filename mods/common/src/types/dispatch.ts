@@ -65,6 +65,8 @@ export interface DispatchResult {
   to: string;
   /** The rendered body actually delivered (SMS body / voice first line or script). */
   renderedBody: string;
+  /** The rendered subject line — present for EMAIL only. */
+  renderedSubject?: string;
 }
 
 /** Dependencies injected into the dispatch functions. */

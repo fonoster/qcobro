@@ -1,25 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bot } from "lucide-react";
 import { renderTemplate, buildOutreachContext, type PortfolioAccountRecord } from "@qcobro/common";
 import { trpc } from "../../lib/trpc.js";
 import { useI18n } from "../../lib/i18n.js";
 import { Dialog } from "../ui/dialog.js";
 import { SelectGroup } from "../ui/select.js";
+import { InputGroup } from "../ui/input.js";
+import { TextareaGroup } from "../ui/textarea.js";
 
-type Account = Record<string, unknown> & { id: string; fullName: string; phone?: string | null };
-
-const PREVIEW_TYPES = ["VOICE_AI", "VOICE_PRERECORDED", "SMS"] as const;
-type PreviewType = (typeof PREVIEW_TYPES)[number];
-
-function bodyFor(type: string, cfg: Record<string, unknown> | undefined): string | null {
-  if (!cfg) return null;
-  if (type === "VOICE_AI")
-    return (cfg.voiceAiConfig as { firstMessage?: string })?.firstMessage ?? null;
-  if (type === "VOICE_PRERECORDED")
-    return (cfg.voicePrerecordedConfig as { script?: string })?.script ?? null;
-  if (type === "SMS") return (cfg.smsConfig as { messageBody?: string })?.messageBody ?? null;
-  return null;
-}
+type Account = Record<string, unknown> & {
+  id: string;
+  fullName: string;
+  phone?: string | null;
+  email?: string | null;
+};
 
 export function ReachOutModal({
   account,
@@ -35,6 +29,9 @@ export function ReachOutModal({
   const { t } = useI18n();
   const [campaignId, setCampaignId] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [editSubject, setEditSubject] = useState("");
+  const [editBody, setEditBody] = useState("");
+  const [editFirstMessage, setEditFirstMessage] = useState("");
 
   const campaignsQuery = trpc.campaigns.list.useQuery();
   const campaigns = (campaignsQuery.data ?? []).filter(
@@ -54,6 +51,36 @@ export function ReachOutModal({
     { enabled: !!selected }
   );
 
+  const tmpl = templateQuery.data as Record<string, unknown> | undefined;
+
+  // Reset editable fields when campaign changes.
+  useEffect(() => {
+    setEditSubject("");
+    setEditBody("");
+    setEditFirstMessage("");
+  }, [campaignId]);
+
+  // Populate editable fields with rendered template values once loaded.
+  useEffect(() => {
+    if (!tmpl || !agentType) return;
+    const ctx = buildOutreachContext(account as unknown as PortfolioAccountRecord, portfolio);
+
+    if (agentType === "EMAIL") {
+      const ec = tmpl.emailConfig as { subject?: string; messageBody?: string } | undefined;
+      setEditSubject(ec?.subject ? renderTemplate(ec.subject, ctx) : "");
+      setEditBody(ec?.messageBody ? renderTemplate(ec.messageBody, ctx) : "");
+    } else if (agentType === "SMS") {
+      const sc = tmpl.smsConfig as { messageBody?: string } | undefined;
+      setEditBody(sc?.messageBody ? renderTemplate(sc.messageBody, ctx) : "");
+    } else if (agentType === "VOICE_AI") {
+      const vc = tmpl.voiceAiConfig as { firstMessage?: string | null } | undefined;
+      setEditFirstMessage(vc?.firstMessage ? renderTemplate(vc.firstMessage, ctx) : "");
+    } else if (agentType === "VOICE_PRERECORDED") {
+      const vc = tmpl.voicePrerecordedConfig as { script?: string } | undefined;
+      setEditFirstMessage(vc?.script ? renderTemplate(vc.script, ctx) : "");
+    }
+  }, [tmpl, agentType]);
+
   const dispatch = trpc.outreach.dispatch.useMutation({
     onSuccess,
     onError: (err) => setError(err.message)
@@ -63,27 +90,24 @@ export function ReachOutModal({
     return type ? t(`agents.type.${type}` as Parameters<typeof t>[0]) : "";
   }
 
-  let preview: { label: string; body: string; muted?: boolean } | null = null;
-  if (selected && agentType && (PREVIEW_TYPES as readonly string[]).includes(agentType)) {
-    const raw = bodyFor(agentType, templateQuery.data as Record<string, unknown> | undefined);
-    const label = t(
-      `portfolios.reachOut.preview.${agentType as PreviewType}` as Parameters<typeof t>[0]
-    );
-    if (raw) {
-      const ctx = buildOutreachContext(account as unknown as PortfolioAccountRecord, portfolio);
-      preview = { label, body: renderTemplate(raw, ctx) };
-    } else if (agentType === "VOICE_AI") {
-      // VOICE_AI has no scripted first message — the agent waits for the customer.
-      preview = { label, body: t("portfolios.reachOut.firstMessageNotSet"), muted: true };
-    }
+  function handleConfirm() {
+    if (!campaignId) return setError(t("portfolios.reachOut.noCampaign"));
+    if (agentType === "EMAIL" && !account.email) return setError(t("portfolios.reachOut.noEmail"));
+    if (agentType !== "EMAIL" && !account.phone) return setError(t("portfolios.reachOut.noPhone"));
+    setError(null);
+    dispatch.mutate({
+      portfolioAccountId: account.id,
+      campaignId,
+      subject: agentType === "EMAIL" ? editSubject : undefined,
+      body: agentType === "EMAIL" || agentType === "SMS" ? editBody : undefined,
+      firstMessage:
+        agentType === "VOICE_AI" || agentType === "VOICE_PRERECORDED"
+          ? editFirstMessage || undefined
+          : undefined
+    });
   }
 
-  function handleConfirm() {
-    if (!account.phone) return setError(t("portfolios.reachOut.noPhone"));
-    if (!campaignId) return setError(t("portfolios.reachOut.noCampaign"));
-    setError(null);
-    dispatch.mutate({ portfolioAccountId: account.id, campaignId });
-  }
+  const isLoading = !!selected && templateQuery.isLoading;
 
   return (
     <Dialog
@@ -94,7 +118,7 @@ export function ReachOutModal({
       confirmLabel={dispatch.isPending ? "…" : t("portfolios.reachOut.send")}
       onConfirm={handleConfirm}
     >
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="mt-4 flex flex-col gap-4">
         <SelectGroup
           label={t("portfolios.reachOut.campaign")}
           id="reach-campaign"
@@ -119,19 +143,53 @@ export function ReachOutModal({
           </div>
         )}
 
-        {preview && (
-          <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold text-slate-500">{preview.label}</span>
-            <div
-              className={
-                preview.muted
-                  ? "rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm italic leading-relaxed text-slate-400"
-                  : "rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm leading-relaxed text-slate-700"
-              }
-            >
-              {preview.body}
-            </div>
-          </div>
+        {!isLoading && agentType === "EMAIL" && (
+          <>
+            <InputGroup
+              id="reach-subject"
+              label={t("portfolios.reachOut.preview.subject")}
+              value={editSubject}
+              onChange={(e) => setEditSubject(e.target.value)}
+            />
+            <TextareaGroup
+              id="reach-body"
+              label={t("portfolios.reachOut.preview.body")}
+              value={editBody}
+              rows={5}
+              onChange={(e) => setEditBody(e.target.value)}
+            />
+          </>
+        )}
+
+        {!isLoading && agentType === "SMS" && (
+          <TextareaGroup
+            id="reach-sms-body"
+            label={t("portfolios.reachOut.preview.SMS")}
+            value={editBody}
+            rows={3}
+            onChange={(e) => setEditBody(e.target.value)}
+          />
+        )}
+
+        {!isLoading && agentType === "VOICE_PRERECORDED" && (
+          <TextareaGroup
+            id="reach-script"
+            label={t("portfolios.reachOut.preview.VOICE_PRERECORDED")}
+            value={editFirstMessage}
+            rows={4}
+            onChange={(e) => setEditFirstMessage(e.target.value)}
+          />
+        )}
+
+        {!isLoading && agentType === "VOICE_AI" && (
+          <TextareaGroup
+            id="reach-first-message"
+            label={t("portfolios.reachOut.preview.VOICE_AI")}
+            value={editFirstMessage}
+            rows={3}
+            placeholder={t("portfolios.reachOut.firstMessageNotSet")}
+            onChange={(e) => setEditFirstMessage(e.target.value)}
+          />
         )}
 
         <p className="text-xs text-slate-400">{t("portfolios.reachOut.footnote")}</p>

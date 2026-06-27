@@ -57,9 +57,9 @@
   },
   "resend": {
     "apiKey": "re_CHANGE_ME",
-    "fromEmail": "cobranza@yourdomain.com",
+    "fromEmail": "cobranza@notices.yourdomain.com",
     "fromName": "QCobro",
-    "inboundDomain": "inbound.yourdomain.com",
+    "inboundDomain": "notices.yourdomain.com",
     "inboundSigningSecret": "CHANGE_ME",
     "maxEmailsPerMinute": 60,
     "maxRepliesDefault": 3

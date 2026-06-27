@@ -16,7 +16,7 @@ export const emailAutopilotDecisionSchema = z.object({
       dueDate: z.string().optional(),
       note: z.string().optional()
     })
-    .optional()
+    .nullish()
 });
 
 /**

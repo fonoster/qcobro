@@ -1,3 +1,4 @@
+import type { ComponentType } from "react";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState } from "react";
 import { Ellipsis } from "lucide-react";
@@ -7,6 +8,7 @@ export interface RowAction {
   label: string;
   onClick: () => void;
   variant?: "default" | "destructive";
+  icon?: ComponentType<{ className?: string }>;
 }
 
 export function RowActionsMenu({ items }: { items: RowAction[] }) {
@@ -52,24 +54,30 @@ export function RowActionsMenu({ items }: { items: RowAction[] }) {
           <div
             ref={menuRef}
             style={{ position: "fixed", top: pos.top, right: pos.right }}
-            className="z-50 w-44 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+            className="z-50 w-60 overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-md"
           >
-            {items.map((item) => (
-              <button
-                key={item.label}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpen(false);
-                  item.onClick();
-                }}
-                className={cn(
-                  "w-full px-3 py-2 text-left text-sm hover:bg-slate-50",
-                  item.variant === "destructive" ? "text-red-600 hover:bg-red-50" : "text-slate-700"
-                )}
-              >
-                {item.label}
-              </button>
-            ))}
+            {items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.label}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpen(false);
+                    item.onClick();
+                  }}
+                  className={cn(
+                    "flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-[9px] text-left text-[13px] font-medium",
+                    item.variant === "destructive"
+                      ? "text-red-600 hover:bg-red-50"
+                      : "bg-slate-100 text-slate-900 hover:bg-slate-200"
+                  )}
+                >
+                  {Icon && <Icon className="h-4 w-4 shrink-0 text-slate-600" />}
+                  {item.label}
+                </button>
+              );
+            })}
           </div>,
           document.body
         )}

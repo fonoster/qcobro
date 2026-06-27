@@ -17,7 +17,7 @@
  *   Reply to the email from Step 1; the autopilot should process the reply.
  */
 
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHmac } from "node:crypto";
 import { config } from "../src/config.js";
 import { ResendEmailClient } from "../src/services/resendEmailClient.js";
 
@@ -81,14 +81,6 @@ try {
 console.log("\n── Step 2: Inbound webhook (synthetic POST) ──");
 console.log(`    Target: POST ${server}/api/email/inbound`);
 
-const webhookHeaders: Record<string, string> = { "Content-Type": "application/json" };
-if (resend.inboundSigningSecret) {
-  webhookHeaders["x-webhook-secret"] = resend.inboundSigningSecret;
-  console.log("    Signing secret: present ✓");
-} else {
-  console.log("    Signing secret: not set (webhook accepts unsigned requests)");
-}
-
 const syntheticPayload = {
   from: to,
   to: [replyTo],
@@ -99,11 +91,29 @@ const syntheticPayload = {
   headers: { "Auto-Submitted": "no" }
 };
 
+const rawBody = JSON.stringify(syntheticPayload);
+const webhookHeaders: Record<string, string> = { "Content-Type": "application/json" };
+
+if (resend.inboundSigningSecret) {
+  const svixId = `msg_smoke_${randomUUID()}`;
+  const svixTs = String(Math.floor(Date.now() / 1000));
+  const keyBytes = Buffer.from(resend.inboundSigningSecret.replace(/^whsec_/, ""), "base64");
+  const sig = createHmac("sha256", keyBytes)
+    .update(`${svixId}.${svixTs}.${rawBody}`)
+    .digest("base64");
+  webhookHeaders["svix-id"] = svixId;
+  webhookHeaders["svix-timestamp"] = svixTs;
+  webhookHeaders["svix-signature"] = `v1,${sig}`;
+  console.log("    Svix signature: computed ✓");
+} else {
+  console.log("    Signing secret: not set (webhook accepts unsigned requests)");
+}
+
 try {
   const res = await fetch(`${server}/api/email/inbound`, {
     method: "POST",
     headers: webhookHeaders,
-    body: JSON.stringify(syntheticPayload)
+    body: rawBody
   });
   const body = (await res.json()) as Record<string, unknown>;
 

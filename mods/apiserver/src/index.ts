@@ -17,7 +17,13 @@ const app = express();
 const port = config.apiserver.port;
 
 app.use(cors());
-app.use(express.json());
+app.use(
+  express.json({
+    verify: (req, _res, buf) => {
+      (req as typeof req & { rawBody: string }).rawBody = buf.toString("utf8");
+    }
+  })
+);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });

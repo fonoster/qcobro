@@ -65,7 +65,13 @@ export type DispatchOutreachInput = z.infer<typeof dispatchOutreachSchema>;
  */
 export const manualOutreachSchema = z.object({
   portfolioAccountId: z.string().min(1),
-  campaignId: z.string().min(1)
+  campaignId: z.string().min(1),
+  /** Operator override for the email subject (rendered, replaces template value). */
+  subject: z.string().optional(),
+  /** Operator override for the message body — SMS, EMAIL, or TTS script (rendered). */
+  body: z.string().optional(),
+  /** Operator override for the voice first message / pre-recorded TTS script (rendered). */
+  firstMessage: z.string().optional()
 });
 
 export type ManualOutreachInput = z.infer<typeof manualOutreachSchema>;

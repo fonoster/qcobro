@@ -9,7 +9,7 @@ import { createDispatchOutreach } from "../../functions/outreach/dispatchOutreac
 import { createReserveAttempt } from "../../functions/campaigns/reserveAttempt.js";
 import { createRecordOutcome } from "../../functions/campaigns/recordOutcome.js";
 
-/** An agent template with its three dispatchable channel configs loaded. */
+/** An agent template with its four dispatchable channel configs loaded. */
 type TemplateWithConfigs = {
   type: string;
   voiceAiConfig: {
@@ -19,6 +19,7 @@ type TemplateWithConfigs = {
   } | null;
   voicePrerecordedConfig: { fonosterAppRef: string | null; script: string } | null;
   smsConfig: { messageBody: string } | null;
+  emailConfig: { subject: string; messageBody: string; systemPrompt: string } | null;
 };
 
 /** Map a resolved template + destination + context into a normalized dispatch request. */
@@ -56,6 +57,16 @@ function buildDispatchRequest(
         appRef: prerecordedAppRef ?? undefined,
         firstMessage: template.voicePrerecordedConfig.script
       };
+    case "EMAIL":
+      if (!template.emailConfig)
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Email config missing" });
+      return {
+        channel: "EMAIL",
+        to,
+        context,
+        subject: template.emailConfig.subject,
+        body: template.emailConfig.messageBody
+      };
     default:
       throw new TRPCError({
         code: "BAD_REQUEST",
@@ -79,8 +90,6 @@ export const outreachRouter = router({
       include: { portfolio: true }
     });
     if (!account) throw new TRPCError({ code: "NOT_FOUND", message: "Account not found" });
-    if (!account.phone)
-      throw new TRPCError({ code: "BAD_REQUEST", message: "Account has no phone number" });
 
     const campaign = await ctx.prisma.campaign.findFirst({
       where: { id: input.campaignId, workspaceRef }
@@ -89,17 +98,34 @@ export const outreachRouter = router({
 
     const template = await ctx.prisma.agentTemplate.findFirst({
       where: { id: campaign.agentTemplateId, workspaceRef },
-      include: { voiceAiConfig: true, voicePrerecordedConfig: true, smsConfig: true }
+      include: {
+        voiceAiConfig: true,
+        voicePrerecordedConfig: true,
+        smsConfig: true,
+        emailConfig: true
+      }
     });
     if (!template) throw new TRPCError({ code: "NOT_FOUND", message: "Agent template not found" });
 
+    const isEmail = template.type === "EMAIL";
+
+    if (isEmail && !account.email)
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Account has no email address" });
+    if (!isEmail && !account.phone)
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Account has no phone number" });
+
+    const to = isEmail ? account.email! : account.phone!;
+
     const context = buildOutreachContext(account, account.portfolio);
-    const request = buildDispatchRequest(
-      template,
-      account.phone,
-      context,
-      ctx.fonosterPrerecordedAppRef
-    );
+    const base = buildDispatchRequest(template, to, context, ctx.fonosterPrerecordedAppRef);
+
+    // Apply operator overrides (pre-rendered on the client — safe to use as-is).
+    const request: DispatchOutreachInput = {
+      ...base,
+      ...(input.subject != null && { subject: input.subject }),
+      ...(input.body != null && { body: input.body }),
+      ...(input.firstMessage != null && { firstMessage: input.firstMessage })
+    };
 
     const dispatch = createDispatchOutreach({
       outboundCallClient: ctx.outboundCallClient,
@@ -135,7 +161,8 @@ export const outreachRouter = router({
       channelData: {
         from: result.from,
         to: result.to,
-        messageBody: result.renderedBody
+        messageBody: result.renderedBody,
+        ...(result.renderedSubject != null && { subject: result.renderedSubject })
       }
     });
 

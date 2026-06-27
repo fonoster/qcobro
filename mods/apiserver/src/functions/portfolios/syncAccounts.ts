@@ -27,6 +27,7 @@ export function createSyncAccounts(client: PortfolioClient) {
         const data = {
           fullName: rest.fullName,
           phone: rest.phone ?? null,
+          email: rest.email ?? null,
           preferredLanguage: rest.preferredLanguage ?? null,
           bestTimeToCall: rest.bestTimeToCall ?? null,
           customerSegment: rest.customerSegment ?? null,

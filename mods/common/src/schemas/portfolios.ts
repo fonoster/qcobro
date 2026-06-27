@@ -25,6 +25,7 @@ export const accountRowSchema = z.object({
   externalId: z.string().min(1),
   fullName: z.string().min(1),
   phone: z.string().optional(),
+  email: z.string().email().optional(),
   preferredLanguage: z.string().optional(),
   bestTimeToCall: z.string().optional(),
   customerSegment: z.string().optional(),

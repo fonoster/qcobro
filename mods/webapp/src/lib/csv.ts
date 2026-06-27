@@ -82,6 +82,7 @@ export function parseCsv(text: string): { rows: AccountRowInput[]; errors: strin
       externalId,
       fullName,
       phone: c("phone_number") || undefined,
+      email: c("email") || undefined,
       preferredLanguage: c("preferred_language") || undefined,
       bestTimeToCall: c("best_time_to_call") || undefined,
       customerSegment: c("customer_segment") || undefined,

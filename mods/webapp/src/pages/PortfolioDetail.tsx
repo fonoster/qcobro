@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye, PhoneCall } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { DataTable, TableCellStack } from "../components/ui/data-table.js";
 import { Button } from "../components/ui/button.js";
 import { PageHeader } from "../components/page-header.js";
+import { Dialog } from "../components/ui/dialog.js";
 import { CsvSyncModal } from "../components/portfolios/CsvSyncModal.js";
 import { ReachOutModal } from "../components/portfolios/ReachOutModal.js";
 import { BulkReachOutModal } from "../components/portfolios/BulkReachOutModal.js";
@@ -28,6 +29,7 @@ export function PortfolioDetail() {
   const [page, setPage] = useState(1);
   const [showSync, setShowSync] = useState(false);
   const [reachOut, setReachOut] = useState<Record<string, unknown> | null>(null);
+  const [viewDetail, setViewDetail] = useState<Record<string, unknown> | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [bulkOpen, setBulkOpen] = useState(false);
 
@@ -107,7 +109,13 @@ export function PortfolioDetail() {
               const items: RowAction[] = [
                 {
                   label: t("portfolios.reachOut.action"),
+                  icon: PhoneCall,
                   onClick: () => setReachOut(r)
+                },
+                {
+                  label: t("portfolios.detail.viewDetail"),
+                  icon: Eye,
+                  onClick: () => setViewDetail(r)
                 }
               ];
               return <RowActionsMenu items={items} />;
@@ -116,6 +124,32 @@ export function PortfolioDetail() {
         ]}
       />
 
+      {viewDetail && (
+        <Dialog
+          open
+          onClose={() => setViewDetail(null)}
+          title={String(viewDetail.fullName ?? "—")}
+          description={String(viewDetail.externalId ?? "")}
+        >
+          <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4">
+            {[
+              [
+                t("portfolios.detail.col.balance"),
+                money(viewDetail.outstandingBalance as number, portfolio.data?.currency ?? "USD")
+              ],
+              [t("portfolios.detail.col.dpd"), String(viewDetail.daysPastDue ?? "—")],
+              [t("gestiones.detail.phone"), String(viewDetail.phone ?? "—")],
+              [t("gestiones.detail.email"), String(viewDetail.email ?? "—")]
+            ].map(([label, value]) => (
+              <div key={label} className="flex flex-col gap-0.5">
+                <dt className="text-xs text-slate-400">{label}</dt>
+                <dd className="text-sm font-medium text-slate-700">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </Dialog>
+      )}
+
       {reachOut && portfolio.data && (
         <ReachOutModal
           account={
@@ -123,6 +157,7 @@ export function PortfolioDetail() {
               id: string;
               fullName: string;
               phone?: string | null;
+              email?: string | null;
             }
           }
           portfolio={{ currency: portfolio.data.currency }}

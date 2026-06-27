@@ -53,7 +53,14 @@ export function createDispatchOutreach(deps: DispatchDeps) {
         body: renderedBody,
         replyTo
       });
-      return { channel: "EMAIL", providerRef: token, from, to: params.to, renderedBody };
+      return {
+        channel: "EMAIL",
+        providerRef: token,
+        from,
+        to: params.to,
+        renderedBody,
+        renderedSubject: subject
+      };
     }
 
     // VOICE_AI | VOICE_PRERECORDED — originate a call to the synced application.

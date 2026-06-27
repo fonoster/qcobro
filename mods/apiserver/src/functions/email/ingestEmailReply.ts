@@ -148,13 +148,28 @@ export function createIngestEmailReply(deps: IngestEmailReplyDeps) {
     // When the reply implies an outcome, persist it (+ Objective/suppression) through
     // recordOutcome, which also writes the merged channelData on the same gestión row.
     if (decision.outcome) {
+      const validOutcomes = new Set([
+        "NO_ANSWER",
+        "PAYMENT_PROMISE",
+        "PARTIAL_PAYMENT_AGREED",
+        "CALLBACK_REQUESTED",
+        "RESOLVED",
+        "PAID",
+        "WRONG_NUMBER",
+        "OPT_OUT",
+        "REFUSED",
+        "OTHER"
+      ]);
+      const outcome = validOutcomes.has(decision.outcome)
+        ? (decision.outcome as CreateContactLogInput["outcome"])
+        : "OTHER";
       const obj = decision.objective;
       await deps.recordOutcome({
         portfolioAccountId: g.portfolioAccountId,
         campaignId: g.campaignId ?? undefined,
         agentType: "EMAIL",
         contactedAt: nowIso,
-        outcome: decision.outcome as CreateContactLogInput["outcome"],
+        outcome,
         providerRef: token,
         debtAmountSnapshot: g.debtAmountSnapshot ?? undefined,
         channelData,
