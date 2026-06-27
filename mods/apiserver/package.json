@@ -24,9 +24,7 @@
     "db:studio": "node scripts/prisma.mjs studio",
     "db:seed": "tsx scripts/seed.ts",
     "email:smoke": "tsx scripts/smoke-test-email.ts",
-    "email:smoke-reply": "tsx scripts/smoke-test-email-reply.ts",
-    "email:send-test": "tsx scripts/send-test-email.ts",
-    "email:check": "tsx scripts/check-email-gestion.ts"
+    "email:smoke-reply": "tsx scripts/smoke-test-email-reply.ts"
   },
   "dependencies": {
     "@fonoster/identity-client": "0.22.0",
