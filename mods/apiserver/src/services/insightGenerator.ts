@@ -6,23 +6,31 @@ import {
   type InsightRequest
 } from "@qcobro/common";
 
-/** Render the transcript + light context into the user prompt. */
+/**
+ * Render the transcript + light context into the user prompt. Instructions are written
+ * in English (internal analysis language); the model is told to write the output fields
+ * in the same language the customer used, so the analysis matches the conversation
+ * regardless of deployment language. `req.language` is only a fallback hint when the
+ * conversation language can't be inferred.
+ */
 function buildPrompt(req: InsightRequest): string {
   const lines = req.transcript
-    .map((l) => `${l.role === "agent" ? "Agente" : "Cliente"}: ${l.text}`)
+    .map((l) => `${l.role === "agent" ? "Agent" : "Customer"}: ${l.text}`)
     .join("\n");
   const ctx: string[] = [];
-  if (req.context?.customerName) ctx.push(`Cliente: ${req.context.customerName}`);
+  if (req.context?.customerName) ctx.push(`Customer: ${req.context.customerName}`);
   if (typeof req.context?.outstandingBalance === "number")
-    ctx.push(`Saldo pendiente: ${req.context.outstandingBalance}`);
-  const language = req.language || "es";
+    ctx.push(`Outstanding balance: ${req.context.outstandingBalance}`);
+  const fallback = req.language
+    ? ` If the language cannot be determined, use "${req.language}".`
+    : "";
   return [
-    "Analiza la siguiente conversación de cobranza (puede ser una llamada, un SMS o un correo).",
-    `Devuelve SOLO un objeto JSON con las claves: aiSummary, aiSentiment, aiDebtReason, aiResult, aiNextStep.`,
-    `aiSentiment debe ser uno de: POSITIVE, NEUTRAL, NEGATIVE, HOSTILE.`,
-    `Escribe todos los campos de texto en el idioma: ${language}.`,
-    ctx.length ? `Contexto — ${ctx.join(" · ")}` : "",
-    "Conversación:",
+    "Analyze the following debt-collection conversation (it may be a call, SMS, or email).",
+    "Return ONLY a JSON object with the keys: aiSummary, aiSentiment, aiDebtReason, aiResult, aiNextStep.",
+    "aiSentiment must be one of: POSITIVE, NEUTRAL, NEGATIVE, HOSTILE.",
+    `Write every text field in the same language the customer used in the conversation below.${fallback}`,
+    ctx.length ? `Context — ${ctx.join(" · ")}` : "",
+    "Conversation:",
     lines
   ]
     .filter(Boolean)
@@ -39,23 +47,28 @@ function parseInsight(text: string): GestionInsight {
   return gestionInsightSchema.parse(JSON.parse(raw.slice(start, end + 1)));
 }
 
-/** Offline provider: a deterministic, plausible analysis with no key/network/cost. */
+/**
+ * Offline provider: a deterministic, plausible analysis with no key/network/cost.
+ * Output is in English (internal-analysis language); the heuristic recognizes both
+ * English and Spanish cues since it can't run real language detection.
+ */
 function mockAnalyze(req: InsightRequest): GestionInsight {
   const customerLines = req.transcript.filter((l) => l.role === "customer").map((l) => l.text);
   const last = customerLines[customerLines.length - 1] ?? "";
   const lc = last.toLowerCase();
-  const positive = /(pag|sí|claro|de acuerdo|puedo)/.test(lc);
-  const negative = /(no puedo|no quiero|imposible|reclamo)/.test(lc);
+  const positive = /(pag|pay|sí|yes|claro|sure|de acuerdo|agree|puedo|can)/.test(lc);
+  const negative =
+    /(no puedo|can'?t|cannot|won'?t|no quiero|imposible|impossible|reclamo|dispute)/.test(lc);
   return {
-    aiSummary: `Resumen automático: el cliente ${
+    aiSummary: `Automated summary: the customer ${
       positive
-        ? "muestra disposición a regularizar su saldo"
-        : "fue contactado sobre su saldo pendiente"
-    }. Última intervención: "${last || "sin respuesta registrada"}".`,
+        ? "shows willingness to settle their balance"
+        : "was contacted about their outstanding balance"
+    }. Last message: "${last || "no response recorded"}".`,
     aiSentiment: negative ? "NEGATIVE" : positive ? "POSITIVE" : "NEUTRAL",
-    aiDebtReason: "No determinado a partir de la conversación.",
-    aiResult: positive ? "Disposición a pagar" : "Sin compromiso firme",
-    aiNextStep: positive ? "Enviar enlace de pago y dar seguimiento." : "Reintentar el contacto."
+    aiDebtReason: "Not determined from the conversation.",
+    aiResult: positive ? "Willing to pay" : "No firm commitment",
+    aiNextStep: positive ? "Send payment link and follow up." : "Retry contact."
   };
 }
 
