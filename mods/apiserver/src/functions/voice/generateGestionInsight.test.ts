@@ -25,6 +25,7 @@ function makeGenerator() {
 function makeClient(record: {
   aiSummary: string | null;
   transcript?: { role: "agent" | "customer"; text: string }[];
+  channelData?: Record<string, unknown>;
 }) {
   const cap: { updated?: Record<string, unknown> } = {};
   const prisma = {
@@ -32,7 +33,8 @@ function makeClient(record: {
       findUnique: async () => ({
         id: "g-1",
         aiSummary: record.aiSummary,
-        channelData: record.transcript ? { transcript: record.transcript } : {},
+        channelData:
+          record.channelData ?? (record.transcript ? { transcript: record.transcript } : {}),
         portfolioAccount: { fullName: "Ana", outstandingBalance: 4800, preferredLanguage: "es" }
       }),
       update: async (args: { data: Record<string, unknown> }) => {
@@ -62,6 +64,46 @@ describe("generateGestionInsight", () => {
     assert.equal(state.calls, 1);
     assert.equal(cap.updated?.aiSummary, "Resumen");
     assert.equal(cap.updated?.aiSentiment, "POSITIVE");
+  });
+
+  it("generates analysis for an EMAIL gestión from its notice + reply thread", async () => {
+    const { generator, state } = makeGenerator();
+    const { prisma, cap } = makeClient({
+      aiSummary: null,
+      channelData: {
+        messageBody: "Estimado cliente, su cuenta presenta un saldo pendiente.",
+        emailThread: {
+          messages: [
+            { direction: "inbound", from: "c@x.com", at: "t1", body: "Puedo pagar el viernes." },
+            { direction: "outbound", from: "a@q.com", at: "t2", body: "Perfecto, registrado." }
+          ]
+        }
+      }
+    });
+
+    const result = await createGenerateGestionInsight({ prisma: prisma as never, generator })({
+      id: "g-1"
+    });
+
+    assert.deepEqual(result, { generated: true, insight: INSIGHT });
+    assert.equal(state.calls, 1);
+    assert.equal(cap.updated?.aiSummary, "Resumen");
+  });
+
+  it("skips an EMAIL gestión that has no reply thread yet", async () => {
+    const { generator, state } = makeGenerator();
+    const { prisma, cap } = makeClient({
+      aiSummary: null,
+      channelData: { messageBody: "Notice only, no replies." }
+    });
+
+    const result = await createGenerateGestionInsight({ prisma: prisma as never, generator })({
+      id: "g-1"
+    });
+
+    assert.deepEqual(result, { generated: false, reason: "no_transcript" });
+    assert.equal(state.calls, 0);
+    assert.equal(cap.updated, undefined);
   });
 
   it("skips when already analyzed (cached) without calling the LLM", async () => {

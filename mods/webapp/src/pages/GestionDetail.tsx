@@ -111,21 +111,24 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
   const isEmail = g?.agentType === "EMAIL";
   const ChannelIcon = g ? channelIcon(g.agentType) : channelIcon("SMS");
 
-  // On-demand AI analysis: when a Voz IA gestión has a transcript but no analysis yet,
-  // request generation once. The server no-ops if insights are disabled or already
-  // analyzed; on success we refetch so the analysis renders.
+  // On-demand AI analysis: when a Voz IA call (transcript) or an EMAIL thread that
+  // has at least one customer reply lacks analysis, request generation once. The
+  // server no-ops if insights are disabled or already analyzed; on success we refetch
+  // so the analysis renders.
   const utils = trpc.useUtils();
   const generateInsight = trpc.campaigns.contactLog.generateInsight.useMutation({
     onSuccess: () => utils.campaigns.contactLog.get.invalidate({ id })
   });
   const requestedFor = useRef<string | null>(null);
   useEffect(() => {
-    if (!g || g.agentType !== "VOICE_AI") return;
-    if (transcript.length === 0 || g.aiSummary) return;
+    if (!g || g.aiSummary) return;
+    const hasVoice = g.agentType === "VOICE_AI" && transcript.length > 0;
+    const hasEmailReplies = g.agentType === "EMAIL" && (emailThread?.messages.length ?? 0) > 0;
+    if (!hasVoice && !hasEmailReplies) return;
     if (requestedFor.current === id) return;
     requestedFor.current = id;
     generateInsight.mutate({ id });
-  }, [g, id, transcript.length, generateInsight]);
+  }, [g, id, transcript.length, emailThread, generateInsight]);
 
   const hasAnalysis = !!(
     g &&
@@ -356,9 +359,11 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
             title={t("gestiones.detail.emailAnalysis")}
           >
             <div className="flex flex-col gap-3">
-              {g.aiSummary && (
+              {g.aiSummary ? (
                 <p className="text-sm leading-relaxed text-slate-600">{g.aiSummary}</p>
-              )}
+              ) : generateInsight.isPending ? (
+                <p className="text-sm text-slate-500">{t("gestiones.detail.analysisGenerating")}</p>
+              ) : null}
               <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
                 <span className="text-sm text-slate-500">{t("gestiones.detail.result")}</span>
                 <span className="text-sm font-medium text-slate-700">

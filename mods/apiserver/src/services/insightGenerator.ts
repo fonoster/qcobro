@@ -17,12 +17,12 @@ function buildPrompt(req: InsightRequest): string {
     ctx.push(`Saldo pendiente: ${req.context.outstandingBalance}`);
   const language = req.language || "es";
   return [
-    "Analiza la siguiente transcripción de una llamada de cobranza.",
+    "Analiza la siguiente conversación de cobranza (puede ser una llamada, un SMS o un correo).",
     `Devuelve SOLO un objeto JSON con las claves: aiSummary, aiSentiment, aiDebtReason, aiResult, aiNextStep.`,
     `aiSentiment debe ser uno de: POSITIVE, NEUTRAL, NEGATIVE, HOSTILE.`,
     `Escribe todos los campos de texto en el idioma: ${language}.`,
     ctx.length ? `Contexto — ${ctx.join(" · ")}` : "",
-    "Transcripción:",
+    "Conversación:",
     lines
   ]
     .filter(Boolean)

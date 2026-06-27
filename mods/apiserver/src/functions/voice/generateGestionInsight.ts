@@ -1,11 +1,40 @@
 import {
   generateInsightInputSchema,
   withErrorHandlingAndValidation,
+  type EmailThreadMessage,
   type GenerateInsightInput,
   type GestionInsight,
   type InsightGenerator,
   type TranscriptLine
 } from "@qcobro/common";
+
+/**
+ * Build the conversation transcript an insight needs, from whichever channel record
+ * the gestión carries: a voice `transcript`, or an email thread (the initial notice
+ * plus the reply thread). Email maps outbound→agent, inbound→customer so the same
+ * analysis pipeline serves both channels.
+ */
+function buildTranscript(channelData: unknown): TranscriptLine[] {
+  const cd = (channelData ?? {}) as {
+    transcript?: TranscriptLine[];
+    messageBody?: string;
+    emailThread?: { messages?: EmailThreadMessage[] };
+  };
+  if (cd.transcript && cd.transcript.length > 0) return cd.transcript;
+
+  const thread = cd.emailThread?.messages;
+  if (thread && thread.length > 0) {
+    const lines: TranscriptLine[] = [];
+    // The initial notice lives outside the reply thread; lead with it as the first
+    // agent turn so the analysis sees the full exchange.
+    if (cd.messageBody) lines.push({ role: "agent", text: cd.messageBody });
+    for (const m of thread) {
+      lines.push({ role: m.direction === "inbound" ? "customer" : "agent", text: m.body });
+    }
+    return lines;
+  }
+  return [];
+}
 
 /** Minimal Prisma surface this needs. */
 export interface GenerateInsightClient {
@@ -67,9 +96,8 @@ export function createGenerateGestionInsight(deps: {
     if (!log) return { generated: false, reason: "not_found" };
     if (log.aiSummary) return { generated: false, reason: "cached" };
 
-    const transcript = (log.channelData as { transcript?: TranscriptLine[] } | null)?.transcript;
-    if (!transcript || transcript.length === 0)
-      return { generated: false, reason: "no_transcript" };
+    const transcript = buildTranscript(log.channelData);
+    if (transcript.length === 0) return { generated: false, reason: "no_transcript" };
 
     const insight = await deps.generator.analyze({
       transcript,
