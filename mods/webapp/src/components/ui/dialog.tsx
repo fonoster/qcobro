@@ -36,7 +36,7 @@ export function Dialog({
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div
         className={cn(
-          "relative z-10 w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-xl",
+          "relative z-10 flex max-h-[90vh] w-full max-w-md flex-col rounded-lg border border-slate-200 bg-white p-6 shadow-xl",
           align === "center" && "text-center",
           className
         )}
@@ -52,7 +52,7 @@ export function Dialog({
         )}
         {title && <h2 className="text-base font-semibold text-slate-900">{title}</h2>}
         {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
-        {children}
+        <div className="-mx-6 min-h-0 flex-1 overflow-y-auto px-6">{children}</div>
         <div className={cn("mt-5 flex gap-3", align === "center" && "justify-center")}>
           <Button onClick={onConfirm}>{confirmLabel}</Button>
           <Button variant="outline" onClick={onClose}>

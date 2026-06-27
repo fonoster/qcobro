@@ -126,6 +126,16 @@ export function AgentTemplateDetail() {
                 label={t("agents.form.messageBody")}
                 value={tmpl.emailConfig.messageBody}
               />
+              <ConfigRow
+                label={t("agents.form.systemPrompt")}
+                value={tmpl.emailConfig.systemPrompt}
+              />
+              <ConfigRow
+                label={t("agents.form.maxReplies")}
+                value={
+                  tmpl.emailConfig.maxReplies != null ? String(tmpl.emailConfig.maxReplies) : null
+                }
+              />
             </>
           )}
           {tmpl?.whatsAppConfig && (
