@@ -27,7 +27,7 @@ export class ResendEmailClient implements EmailClient {
         to: input.to,
         subject: input.subject,
         text: input.body,
-        reply_to: input.replyTo,
+        reply_to: [input.replyTo],
         ...(input.inReplyTo
           ? { headers: { "In-Reply-To": input.inReplyTo, References: input.inReplyTo } }
           : {})
