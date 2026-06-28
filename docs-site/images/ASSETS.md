@@ -41,6 +41,8 @@ All assets are **hosted-product, customer-facing** — no internals, infra, or c
 | :----------------------------- | :--------------------- | :------------------ | :------- | :-------------------------- | :---------- | :-- | :----------------------------- |
 | `sdk-overview/architecture`    | diagram (architecture) | customer / SDK      | 1600×900 | `sdk/overview`              | `H9oQOa`    | v1  | `sdk-overview/architecture.md` |
 | `how-qcobro-works/flow`        | diagram (flow)         | customer            | 1600×900 | `concepts/how-qcobro-works` | `fjsng`     | v1  | `how-qcobro-works/flow.md`     |
+| `campaigns-engine/flow`        | diagram (flow)         | customer            | 1600×900 | `concepts/campaigns-engine` | `bDSCq`     | v1  | `campaigns-engine/flow.md`     |
+| `channels/fanout`              | diagram (hub-spoke)    | customer            | 1600×900 | `concepts/channels`         | `mqLe9`     | v1  | `channels/fanout.md`           |
 | `home/hero`                    | illustration (brand)   | customer            | 1600×900 | `index`                     | `r0KBNV`    | —   | `home/hero.md`                 |
 | `guides/portfolios/list`       | screenshot (console)   | customer / operator | 1440×900 | `guides/portfolios`         | `wcl2T`     | —   | —                              |
 | `guides/import-accounts/modal` | screenshot (console)   | customer / operator | modal    | `guides/import-accounts`    | `XeP06`     | —   | —                              |
