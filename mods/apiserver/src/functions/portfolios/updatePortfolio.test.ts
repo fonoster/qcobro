@@ -10,7 +10,6 @@ function record(): PortfolioRecord {
     workspaceRef: "ws1",
     name: "x",
     clientId: "c",
-    currency: "USD",
     accountCount: 0,
     totalOutstandingBalance: 0,
     recoveredAmount: 0,

@@ -30,6 +30,10 @@ export function createPrismaEmailInboundClient(prisma: PrismaClient): EmailInbou
       });
       if (!log || !log.portfolioAccount.email) return null;
       const email = log.campaign?.agentTemplate?.emailConfig ?? null;
+      // Currency is a workspace setting (default USD when unset).
+      const settings = await prisma.workspaceSettings.findUnique({
+        where: { workspaceRef: log.portfolioAccount.portfolio.workspaceRef }
+      });
       return {
         id: log.id,
         portfolioAccountId: log.portfolioAccountId,
@@ -41,7 +45,7 @@ export function createPrismaEmailInboundClient(prisma: PrismaClient): EmailInbou
         agentMaxReplies: email?.maxReplies ?? null,
         accountContext: buildOutreachContext(
           log.portfolioAccount as unknown as PortfolioAccountRecord,
-          log.portfolioAccount.portfolio
+          { currency: settings?.currency ?? "USD" }
         )
       };
     },

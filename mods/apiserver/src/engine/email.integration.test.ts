@@ -40,7 +40,7 @@ describe("email channel (integration)", { skip: !RUN ? "no DATABASE_URL" : false
       }
     });
     const pf = await prisma.portfolio.create({
-      data: { workspaceRef: ws, name: "PF", clientId: `cli-${tag}`, currency: "USD" }
+      data: { workspaceRef: ws, name: "PF", clientId: `cli-${tag}` }
     });
     // One account with an email (dispatchable), one without (→ no_email).
     const withEmail = await prisma.portfolioAccount.create({

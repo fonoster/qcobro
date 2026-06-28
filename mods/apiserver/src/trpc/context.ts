@@ -12,6 +12,7 @@ import { FonosterOutboundCallClient } from "../services/fonosterOutboundCallClie
 import { TwilioSmsClient } from "../services/twilioSmsClient.js";
 import { ResendEmailClient } from "../services/resendEmailClient.js";
 import { createInsightGenerator } from "../services/insightGenerator.js";
+import { createGetWorkspaceSettings } from "../functions/workspaceSettings/getWorkspaceSettings.js";
 import { config } from "../config.js";
 
 export interface AuthedUser {
@@ -96,6 +97,19 @@ export async function createContext(opts: CreateExpressContextOptions) {
     }
   }
 
+  // Per-workspace timezone + currency, seeded from the deployment default on first use.
+  // Falls back to the deployment default when no workspace is active (e.g. auth routes).
+  let timezone = config.timezone;
+  let currency: "USD" | "DOP" = "USD";
+  if (workspace) {
+    const settings = await createGetWorkspaceSettings(
+      prisma as never,
+      config.timezone
+    )(workspace.accessKeyId);
+    timezone = settings.timezone;
+    currency = settings.currency;
+  }
+
   return {
     token,
     user,
@@ -112,7 +126,9 @@ export async function createContext(opts: CreateExpressContextOptions) {
     fonosterPrerecordedAppRef,
     insightGenerator,
     aiGeneration: config.ai?.generation ?? "onDemand",
-    timezone: config.timezone
+    timezone,
+    currency,
+    defaultTimezone: config.timezone
   };
 }
 

@@ -10,7 +10,6 @@ export interface PortfolioRecord {
   workspaceRef: string;
   name: string;
   clientId: string;
-  currency: string;
   accountCount: number;
   totalOutstandingBalance: number;
   recoveredAmount: number;

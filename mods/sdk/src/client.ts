@@ -60,7 +60,7 @@ export interface ClientOptions {
  * await client.login({ email: "me@acme.com", password: "secret" });
  * client.useWorkspace("ws_123");
  *
- * await client.portfolios.create({ name: "Q3 delinquencies", clientId: "acme", currency: "USD" });
+ * await client.portfolios.create({ name: "Q3 delinquencies", clientId: "acme" });
  * const portfolios = await client.portfolios.list();
  * ```
  */

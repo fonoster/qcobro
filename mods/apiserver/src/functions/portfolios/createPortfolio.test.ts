@@ -10,7 +10,6 @@ function record(): PortfolioRecord {
     workspaceRef: "ws1",
     name: "x",
     clientId: "c",
-    currency: "USD",
     accountCount: 0,
     totalOutstandingBalance: 0,
     recoveredAmount: 0,
@@ -56,67 +55,28 @@ describe("createPortfolio", () => {
       }
     });
 
-    await createCreatePortfolio(
-      client as never,
-      "ws_abc"
-    )({ name: "Test", clientId: "acme", currency: "USD" });
+    await createCreatePortfolio(client as never, "ws_abc")({ name: "Test", clientId: "acme" });
 
     const data = calls[0];
     assert.equal(data.name, "Test");
     assert.equal(data.clientId, "acme");
-    assert.equal(data.currency, "USD");
     assert.equal(data.workspaceRef, "ws_abc");
     assert.equal(data.totalOutstandingBalance, 0);
     assert.equal(data.accountCount, 0);
-  });
-
-  it("supports DOP currency", async () => {
-    const calls: Record<string, unknown>[] = [];
-    const client = mockClient({
-      create: async (args) => {
-        const data = args.data as Record<string, unknown>;
-        calls.push(data);
-        return { ...record(), ...data };
-      }
-    });
-
-    await createCreatePortfolio(
-      client as never,
-      "ws1"
-    )({ name: "Cartera DR", clientId: "banco", currency: "DOP" });
-
-    assert.equal(calls[0].currency, "DOP");
+    // Currency is a workspace setting, not a portfolio field.
+    assert.equal("currency" in data, false);
   });
 
   it("throws ValidationError when name is empty", async () => {
     await assert.rejects(
-      () =>
-        createCreatePortfolio(
-          mockClient() as never,
-          "ws1"
-        )({ name: "", clientId: "acme", currency: "USD" }),
+      () => createCreatePortfolio(mockClient() as never, "ws1")({ name: "", clientId: "acme" }),
       ValidationError
     );
   });
 
   it("throws ValidationError when clientId is empty", async () => {
     await assert.rejects(
-      () =>
-        createCreatePortfolio(
-          mockClient() as never,
-          "ws1"
-        )({ name: "Test", clientId: "", currency: "USD" }),
-      ValidationError
-    );
-  });
-
-  it("throws ValidationError for unsupported currency", async () => {
-    await assert.rejects(
-      () =>
-        createCreatePortfolio(
-          mockClient() as never,
-          "ws1"
-        )({ name: "Test", clientId: "acme", currency: "EUR" as never }),
+      () => createCreatePortfolio(mockClient() as never, "ws1")({ name: "Test", clientId: "" }),
       ValidationError
     );
   });

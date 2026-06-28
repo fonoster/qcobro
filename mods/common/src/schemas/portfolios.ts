@@ -2,8 +2,7 @@ import { z } from "zod";
 
 export const createPortfolioSchema = z.object({
   name: z.string().min(1).max(120),
-  clientId: z.string().min(1).max(120),
-  currency: z.enum(["USD", "DOP"])
+  clientId: z.string().min(1).max(120)
 });
 export type CreatePortfolioInput = z.infer<typeof createPortfolioSchema>;
 

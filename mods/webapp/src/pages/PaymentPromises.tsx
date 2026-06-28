@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
+import { useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
 import { PageHeader } from "../components/page-header.js";
 import { DataTable } from "../components/ui/data-table.js";
 import { FilterSelect } from "../components/ui/select.js";
@@ -19,10 +20,10 @@ type PaymentPromise = {
   contactLog?: { agentType: string } | null;
 };
 
-function money(v: number) {
+function money(v: number, currency: string) {
   return new Intl.NumberFormat("es", {
     style: "currency",
-    currency: "USD",
+    currency,
     minimumFractionDigits: 0
   }).format(v);
 }
@@ -46,6 +47,7 @@ function isDue(p: { status: string; dueDate: string }): boolean {
 
 export function PaymentPromises() {
   const { t } = useI18n();
+  const wsCurrency = useWorkspaceCurrency();
   const utils = trpc.useUtils();
   const [statusFilter, setStatusFilter] = useState<"" | Status>("");
 
@@ -87,7 +89,10 @@ export function PaymentPromises() {
       <KpiRow
         cards={[
           { label: t("paymentPromises.kpi.pending"), value: pending.length.toLocaleString() },
-          { label: t("paymentPromises.kpi.pendingAmount"), value: money(pendingAmount) },
+          {
+            label: t("paymentPromises.kpi.pendingAmount"),
+            value: money(pendingAmount, wsCurrency)
+          },
           { label: t("paymentPromises.kpi.dueThisWeek"), value: dueThisWeek.toLocaleString() },
           { label: t("paymentPromises.kpi.fulfillment"), value: `${fulfillment}%` }
         ]}
@@ -133,7 +138,7 @@ export function PaymentPromises() {
           {
             key: "amount",
             header: t("paymentPromises.col.amount"),
-            render: (r) => (r.amount != null ? money(r.amount as number) : "—")
+            render: (r) => (r.amount != null ? money(r.amount as number, wsCurrency) : "—")
           },
           {
             key: "dueDate",

@@ -14,6 +14,7 @@ import {
 import { createDispatchOutreach } from "../functions/outreach/dispatchOutreach.js";
 import { createReserveAttempt } from "../functions/campaigns/reserveAttempt.js";
 import { createRecordOutcome } from "../functions/campaigns/recordOutcome.js";
+import { createGetWorkspaceSettings } from "../functions/workspaceSettings/getWorkspaceSettings.js";
 import { isInWindow, isPastEndDate, type WindowCampaign } from "./window.js";
 import { runFunnel, type FunnelAccount } from "./funnel.js";
 import { createTokenBucket, perTickCapacity, type TokenBucket } from "./buckets.js";
@@ -39,6 +40,7 @@ export interface EngineTemplate {
 /** A campaign as the engine loads it (schedule + caps + template + portfolios). */
 export interface EngineCampaign extends WindowCampaign {
   id: string;
+  workspaceRef: string;
   maxAttemptsPerAccount: number;
   maxAttemptsPerDay: number;
   agentTemplate: EngineTemplate | null;
@@ -53,7 +55,6 @@ export interface EngineCandidate {
   intentStatus: string | null;
   suppressUntil: Date | null;
   outstandingBalance: number;
-  portfolio: { currency: string };
   campaignStates: {
     attemptCount: number;
     attemptsToday: number;
@@ -112,8 +113,10 @@ export function createEngine(deps: EngineDeps) {
     twilioFromNumbers: deps.twilioFromNumbers,
     pickNumber: undefined
   });
-  const reserve = createReserveAttempt(deps.reserveRecordClient as never, deps.timezone);
   const record = createRecordOutcome(deps.reserveRecordClient as never);
+  // Per-workspace timezone + currency, resolved once per campaign per tick. `deps.timezone`
+  // is the deployment default used to seed a workspace that has no setting yet.
+  const getSettings = createGetWorkspaceSettings(deps.reserveRecordClient as never, deps.timezone);
 
   /** Channel readiness for a campaign (Topic 5 tier A — catches config up-front). */
   function readiness(c: EngineCampaign): Readiness {
@@ -146,9 +149,10 @@ export function createEngine(deps: EngineDeps) {
     c: EngineCampaign,
     acc: EngineCandidate,
     channel: EngineChannel,
-    appRef: string | null
+    appRef: string | null,
+    currency: string
   ): DispatchOutreachInput {
-    const context = buildOutreachContext(acc as unknown as PortfolioAccountRecord, acc.portfolio);
+    const context = buildOutreachContext(acc as unknown as PortfolioAccountRecord, { currency });
     const t = c.agentTemplate!;
     if (channel === "SMS") {
       return { channel, to: acc.phone!, context, body: t.smsConfig?.messageBody ?? "" };
@@ -186,14 +190,16 @@ export function createEngine(deps: EngineDeps) {
     c: EngineCampaign,
     acc: EngineCandidate,
     channel: EngineChannel,
-    appRef: string | null
+    appRef: string | null,
+    reserve: ReturnType<typeof createReserveAttempt>,
+    currency: string
   ): Promise<{ decision: AccountDecision; providerRef?: string }> {
     const at = deps.clock.now().toISOString();
     await reserve({ campaignId: c.id, portfolioAccountId: acc.id, at });
 
     let result;
     try {
-      result = await dispatch(buildRequest(c, acc, channel, appRef));
+      result = await dispatch(buildRequest(c, acc, channel, appRef, currency));
     } catch (err) {
       // Attempt stays consumed (at-most-once); no gestión for a failed dispatch.
       // Surface the reason — a swallowed dispatch error is undebuggable in prod.
@@ -259,14 +265,20 @@ export function createEngine(deps: EngineDeps) {
         skipped: 0
       };
 
-      if (isPastEndDate(c, now, deps.timezone)) {
+      // Resolve this campaign's workspace settings once; its timezone drives the
+      // wall-clock window + daily-cap reset, its currency the rendered templates.
+      const ws = await getSettings(c.workspaceRef);
+      const tz = ws.timezone;
+      const reserve = createReserveAttempt(deps.reserveRecordClient as never, tz);
+
+      if (isPastEndDate(c, now, tz)) {
         await deps.db.completeCampaign(c.id);
         cr.completed = true;
         report.campaigns.push(cr);
         continue;
       }
 
-      const win = isInWindow(c, now, deps.timezone);
+      const win = isInWindow(c, now, tz);
       if (!win.ok) {
         cr.skipReason = win.reason;
         report.campaigns.push(cr);
@@ -289,7 +301,7 @@ export function createEngine(deps: EngineDeps) {
         c,
         candidates.map(toFunnelAccount),
         now,
-        deps.timezone,
+        tz,
         ready.channel === "EMAIL"
       );
       const candidateById = new Map(candidates.map((a) => [a.id, a]));
@@ -326,7 +338,9 @@ export function createEngine(deps: EngineDeps) {
           c,
           acc,
           ready.channel,
-          ready.appRef
+          ready.appRef,
+          reserve,
+          ws.currency
         );
         cr.decisions.push({ portfolioAccountId: acc.id, decision, providerRef });
         if (decision === "dispatched") {

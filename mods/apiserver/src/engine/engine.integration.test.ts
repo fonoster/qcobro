@@ -29,7 +29,7 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
       }
     });
     const pf = await prisma.portfolio.create({
-      data: { workspaceRef: ws, name: "PF", clientId: `cli-${tag}`, currency: "USD" }
+      data: { workspaceRef: ws, name: "PF", clientId: `cli-${tag}` }
     });
     for (let i = 0; i < opts.accounts; i++) {
       await prisma.portfolioAccount.create({

@@ -55,7 +55,6 @@ interface StoredPortfolio {
   id: string;
   name: string;
   clientId: string;
-  currency: string;
   archivedAt: string | null;
 }
 const portfolios: StoredPortfolio[] = [];
@@ -327,8 +326,7 @@ test("golden path: login → useWorkspace → create → list → syncAccounts �
 
   const created = await client.portfolios.create({
     name: "Q3 delinquencies",
-    clientId: "acme",
-    currency: "USD"
+    clientId: "acme"
   });
   assert.equal(typeof created.id, "string");
   assert.equal(created.name, "Q3 delinquencies");

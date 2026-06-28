@@ -2,20 +2,49 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
+import { useI18n } from "../lib/i18n.js";
 import { activeRole } from "../lib/workspaceRole.js";
 import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
+import { SelectGroup } from "../components/ui/select.js";
 
 const CONFIRM_WORD = "ELIMINAR";
 
+// Curated IANA timezones for the markets QCobro serves. A stored value outside this
+// list is preserved by prepending it to the options.
+const TIMEZONES = [
+  "America/Santo_Domingo",
+  "America/Costa_Rica",
+  "America/Panama",
+  "America/Bogota",
+  "America/Lima",
+  "America/Mexico_City",
+  "America/New_York",
+  "America/Chicago",
+  "America/Los_Angeles"
+];
+
 export function WorkspaceSettings() {
   const { workspace, accessToken, setWorkspace } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const utils = trpc.useUtils();
   const workspaces = trpc.workspaces.list.useQuery();
   const update = trpc.workspaces.update.useMutation();
   const remove = trpc.workspaces.delete.useMutation();
+
+  // Per-workspace preferences (currency + timezone).
+  const settings = trpc.workspaceSettings.get.useQuery();
+  const saveSettings = trpc.workspaceSettings.update.useMutation();
+  const [prefDraft, setPrefDraft] = useState<{ currency: "USD" | "DOP"; timezone: string } | null>(
+    null
+  );
+  const currency = prefDraft?.currency ?? settings.data?.currency ?? "USD";
+  const timezone = prefDraft?.timezone ?? settings.data?.timezone ?? "";
+  const prefDirty =
+    !!settings.data &&
+    (currency !== settings.data.currency || timezone.trim() !== settings.data.timezone);
 
   const active =
     workspaces.data?.items.find((w) => w.accessKeyId === workspace) ?? workspaces.data?.items[0];
@@ -28,6 +57,8 @@ export function WorkspaceSettings() {
   const name = draft ?? active?.name ?? "";
 
   const dirty = !!active && name.trim().length > 0 && name.trim() !== active.name;
+  const anyDirty = dirty || prefDirty;
+  const saving = update.isPending || saveSettings.isPending;
 
   // Type-to-confirm delete dialog.
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -35,14 +66,21 @@ export function WorkspaceSettings() {
   const [deleteError, setDeleteError] = useState(false);
   const canDelete = confirmText.trim().toUpperCase() === CONFIRM_WORD;
 
-  async function onSubmit(event: FormEvent) {
+  async function onSave(event: FormEvent) {
     event.preventDefault();
-    if (!active || !dirty) return;
+    if (!active || !anyDirty || timezone.trim().length === 0) return;
     setStatus(null);
     try {
-      await update.mutateAsync({ ref: active.ref, name: name.trim() });
-      await utils.workspaces.list.invalidate();
-      setDraft(null);
+      if (dirty) {
+        await update.mutateAsync({ ref: active.ref, name: name.trim() });
+        await utils.workspaces.list.invalidate();
+        setDraft(null);
+      }
+      if (prefDirty) {
+        await saveSettings.mutateAsync({ currency, timezone: timezone.trim() });
+        await utils.workspaceSettings.get.invalidate();
+        setPrefDraft(null);
+      }
       setStatus("ok");
     } catch {
       setStatus("error");
@@ -74,30 +112,51 @@ export function WorkspaceSettings() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-[22px] font-bold text-slate-900">Configuración del espacio</h1>
-        <p className="text-sm text-slate-500">
-          Cambia el nombre de {active?.name ?? "tu espacio de trabajo"}
-        </p>
+        <p className="text-sm text-slate-500">{t("settings.subtitle")}</p>
       </div>
 
       <Card className="max-w-[680px] rounded-xl border-slate-200 shadow-none">
-        <form onSubmit={onSubmit} className="flex flex-col gap-5 p-6">
-          <h2 className="text-[15px] font-semibold text-slate-900">General</h2>
+        <form onSubmit={onSave} className="flex flex-col gap-5 p-6">
+          <h2 className="text-[15px] font-semibold text-slate-900">{t("settings.preferences")}</h2>
           <InputGroup
-            label="Nombre del espacio"
+            label={t("settings.name")}
             required
             value={name}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Nombre del espacio"
+            placeholder={t("settings.name")}
           />
+          <SelectGroup
+            label={t("settings.currency")}
+            id="ws-currency"
+            value={currency}
+            onChange={(e) => setPrefDraft({ currency: e.target.value as "USD" | "DOP", timezone })}
+          >
+            <option value="USD">USD</option>
+            <option value="DOP">DOP</option>
+          </SelectGroup>
+          <SelectGroup
+            label={t("settings.timezone")}
+            id="ws-timezone"
+            value={timezone}
+            onChange={(e) => setPrefDraft({ currency, timezone: e.target.value })}
+          >
+            {(TIMEZONES.includes(timezone) || !timezone ? TIMEZONES : [timezone, ...TIMEZONES]).map(
+              (tz) => (
+                <option key={tz} value={tz}>
+                  {tz}
+                </option>
+              )
+            )}
+          </SelectGroup>
           <div className="flex items-center justify-end gap-3">
             {status === "ok" && (
-              <span className="text-[13px] text-emerald-600">Cambios guardados</span>
+              <span className="text-[13px] text-emerald-600">{t("settings.saved")}</span>
             )}
             {status === "error" && (
-              <span className="text-[13px] text-red-600">No se pudo guardar</span>
+              <span className="text-[13px] text-red-600">{t("settings.saveError")}</span>
             )}
-            <Button type="submit" disabled={!dirty || update.isPending}>
-              Guardar cambios
+            <Button type="submit" disabled={!anyDirty || saving}>
+              {t("settings.save")}
             </Button>
           </div>
         </form>

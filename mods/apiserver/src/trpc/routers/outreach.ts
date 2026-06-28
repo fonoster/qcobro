@@ -111,7 +111,7 @@ export const outreachRouter = router({
 
     const to = isEmail ? account.email! : account.phone!;
 
-    const context = buildOutreachContext(account, account.portfolio);
+    const context = buildOutreachContext(account, { currency: ctx.currency });
     const base = buildDispatchRequest(template, to, context, ctx.fonosterPrerecordedAppRef);
 
     // Apply operator overrides (pre-rendered on the client — safe to use as-is).

@@ -27,6 +27,7 @@ export function createPrismaEngineClient(prisma: PrismaClient): EngineClient {
 
       return rows.map((c) => ({
         id: c.id,
+        workspaceRef: c.workspaceRef,
         status: c.status,
         startDate: c.startDate,
         endDate: c.endDate,
@@ -73,7 +74,6 @@ export function createPrismaEngineClient(prisma: PrismaClient): EngineClient {
       const rows = await prisma.portfolioAccount.findMany({
         where: { portfolioId: { in: portfolioIds }, archivedAt: null },
         include: {
-          portfolio: { select: { currency: true } },
           campaignStates: { where: { campaignId } }
         }
       });
@@ -85,7 +85,6 @@ export function createPrismaEngineClient(prisma: PrismaClient): EngineClient {
         suppressUntil: a.suppressUntil,
         outstandingBalance: a.outstandingBalance,
         fullName: a.fullName,
-        portfolio: { currency: a.portfolio.currency },
         campaignStates: a.campaignStates.map((s) => ({
           attemptCount: s.attemptCount,
           attemptsToday: s.attemptsToday,

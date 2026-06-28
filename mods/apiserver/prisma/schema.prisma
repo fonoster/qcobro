@@ -18,6 +18,18 @@ enum Currency {
   DOP
 }
 
+// Per-workspace settings owned by the app (keyed by the Identity workspaceRef);
+// the Identity service is never modified. Holds the workspace's currency + timezone.
+model WorkspaceSettings {
+  workspaceRef String   @id
+  currency     Currency @default(USD)
+  timezone     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("workspace_settings")
+}
+
 enum AgentType {
   SMS
   VOICE_PRERECORDED
@@ -82,7 +94,6 @@ model Portfolio {
   accountCount            Int                 @default(0)
   totalOutstandingBalance Float               @default(0)
   recoveredAmount         Float               @default(0)
-  currency                Currency            @default(USD)
   archivedAt              DateTime?
   createdAt               DateTime            @default(now())
   updatedAt               DateTime            @updatedAt

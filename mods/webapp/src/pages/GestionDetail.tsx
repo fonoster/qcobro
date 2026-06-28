@@ -5,15 +5,16 @@ import { X, Sparkles, CheckCheck, PhoneCall, MessagesSquare, Target, Mail } from
 import type { EmailThreadMessage, TranscriptLine } from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
+import { useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
 import { channelIcon, type Channel } from "../lib/channelIcon.js";
 
 // EMAIL is bidirectional (autopilot thread); the other two are one-way sends.
 const ONE_WAY: Channel[] = ["SMS", "VOICE_PRERECORDED"];
 
-const currency = (n: number) =>
+const currency = (n: number, code: string) =>
   new Intl.NumberFormat("es", {
     style: "currency",
-    currency: "USD",
+    currency: code,
     minimumFractionDigits: 0
   }).format(n);
 
@@ -67,6 +68,7 @@ function formatDuration(seconds?: number | null): string | null {
 
 export function GestionDetailContent({ id, onClose }: { id: string; onClose: () => void }) {
   const { t } = useI18n();
+  const wsCurrency = useWorkspaceCurrency();
 
   const query = trpc.campaigns.contactLog.get.useQuery({ id });
   const g = query.data as
@@ -425,7 +427,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                       {t("gestiones.detail.paymentPromise")}
                     </span>
                     <span className="text-sm text-emerald-700">
-                      {p.amount != null ? `${currency(p.amount)} · ` : ""}
+                      {p.amount != null ? `${currency(p.amount, wsCurrency)} · ` : ""}
                       {new Date(p.dueDate).toLocaleDateString()}
                     </span>
                   </div>

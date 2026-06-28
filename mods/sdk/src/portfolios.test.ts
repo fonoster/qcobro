@@ -24,29 +24,12 @@ test("create rejects empty name with ValidationError and sends no request", asyn
   const client = authedClient(fetchImpl);
 
   await assert.rejects(
-    () => client.portfolios.create({ name: "", clientId: "acme", currency: "USD" }),
+    () => client.portfolios.create({ name: "", clientId: "acme" }),
     (err: unknown) => {
       assert.ok(err instanceof ValidationError);
       assert.ok(err.fieldErrors.some((f) => f.field === "name"));
       return true;
     }
-  );
-  assert.equal(calls.length, 0);
-});
-
-test("create rejects unsupported currency before any request", async () => {
-  const { calls, fetchImpl } = recordingFetch();
-  const client = authedClient(fetchImpl);
-
-  await assert.rejects(
-    () =>
-      client.portfolios.create({
-        name: "Q3",
-        clientId: "acme",
-        // @ts-expect-error - exercising a runtime-invalid currency
-        currency: "EUR"
-      }),
-    ValidationError
   );
   assert.equal(calls.length, 0);
 });

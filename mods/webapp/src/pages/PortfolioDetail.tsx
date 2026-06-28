@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Eye, PhoneCall } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
+import { useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
 import { DataTable, TableCellStack } from "../components/ui/data-table.js";
 import { Button } from "../components/ui/button.js";
 import { PageHeader } from "../components/page-header.js";
@@ -25,6 +26,7 @@ function money(v: number, currency: string) {
 export function PortfolioDetail() {
   const { id } = useParams<{ id: string }>();
   const { t } = useI18n();
+  const wsCurrency = useWorkspaceCurrency();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [showSync, setShowSync] = useState(false);
@@ -92,7 +94,7 @@ export function PortfolioDetail() {
           {
             key: "outstandingBalance",
             header: t("portfolios.detail.col.balance"),
-            render: (r) => money(r.outstandingBalance as number, portfolio.data?.currency ?? "USD"),
+            render: (r) => money(r.outstandingBalance as number, wsCurrency),
             align: "right"
           },
           {
@@ -135,7 +137,7 @@ export function PortfolioDetail() {
             {[
               [
                 t("portfolios.detail.col.balance"),
-                money(viewDetail.outstandingBalance as number, portfolio.data?.currency ?? "USD")
+                money(viewDetail.outstandingBalance as number, wsCurrency)
               ],
               [t("portfolios.detail.col.dpd"), String(viewDetail.daysPastDue ?? "—")],
               [t("gestiones.detail.phone"), String(viewDetail.phone ?? "—")],
@@ -160,7 +162,7 @@ export function PortfolioDetail() {
               email?: string | null;
             }
           }
-          portfolio={{ currency: portfolio.data.currency }}
+          portfolio={{ currency: wsCurrency }}
           onClose={() => setReachOut(null)}
           onSuccess={() => {
             setReachOut(null);

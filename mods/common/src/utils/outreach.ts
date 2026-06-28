@@ -1,5 +1,5 @@
 import Handlebars from "handlebars";
-import type { PortfolioAccountRecord, PortfolioRecord } from "../types/portfolios.js";
+import type { PortfolioAccountRecord } from "../types/portfolios.js";
 import type { NumberSelector } from "../types/dispatch.js";
 
 /**
@@ -15,18 +15,19 @@ export function renderTemplate(template: string, context: Record<string, unknown
 
 /**
  * Builds the render context exposed to outreach templates: every account field
- * plus derived `firstName` (first token of `fullName`) and `currency` (from the
- * owning portfolio). These are the variables documented in the agent console.
+ * plus derived `firstName` (first token of `fullName`) and `currency` (the
+ * workspace's currency from WorkspaceSettings). These are the variables documented
+ * in the agent console.
  */
 export function buildOutreachContext(
   account: PortfolioAccountRecord,
-  portfolio: Pick<PortfolioRecord, "currency">
+  opts: { currency: string }
 ): Record<string, unknown> {
   const firstName = account.fullName.trim().split(/\s+/)[0] ?? "";
   return {
     ...account,
     firstName,
-    currency: portfolio.currency
+    currency: opts.currency
   };
 }
 

@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
+import { useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
 import { PageHeader } from "../components/page-header.js";
 import { DataTable } from "../components/ui/data-table.js";
 import { Dialog } from "../components/ui/dialog.js";
 import { ConfirmDeleteDialog } from "../components/ui/confirm-delete-dialog.js";
 import { InputGroup } from "../components/ui/input.js";
-import { SelectGroup } from "../components/ui/select.js";
 import { Badge } from "../components/ui/badge.js";
 import { RowActionsMenu } from "../components/ui/row-actions-menu.js";
 import { CsvSyncModal } from "../components/portfolios/CsvSyncModal.js";
@@ -24,7 +24,6 @@ type Portfolio = {
   id: string;
   name: string;
   clientId: string;
-  currency: string;
   accountCount: number;
   totalOutstandingBalance: number;
   recoveredAmount: number;
@@ -34,6 +33,7 @@ type Portfolio = {
 
 export function Portfolios() {
   const { t } = useI18n();
+  const wsCurrency = useWorkspaceCurrency();
   const navigate = useNavigate();
   const utils = trpc.useUtils();
 
@@ -106,12 +106,12 @@ export function Portfolios() {
           {
             key: "totalOutstandingBalance",
             header: t("portfolios.col.balance"),
-            render: (r) => money(r.totalOutstandingBalance as number, r.currency as string)
+            render: (r) => money(r.totalOutstandingBalance as number, wsCurrency)
           },
           {
             key: "recoveredAmount",
             header: t("portfolios.col.recovered"),
-            render: (r) => money(r.recoveredAmount as number, r.currency as string)
+            render: (r) => money(r.recoveredAmount as number, wsCurrency)
           },
           {
             key: "id",
@@ -197,7 +197,6 @@ function CreatePortfolioModal({
   const { t } = useI18n();
   const [name, setName] = useState("");
   const [clientId, setClientId] = useState("");
-  const [currency, setCurrency] = useState<"USD" | "DOP">("USD");
   const [error, setError] = useState<string | null>(null);
 
   const create = trpc.portfolios.create.useMutation({
@@ -215,7 +214,7 @@ function CreatePortfolioModal({
       return;
     }
     setError(null);
-    create.mutate({ name: name.trim(), clientId: clientId.trim(), currency });
+    create.mutate({ name: name.trim(), clientId: clientId.trim() });
   }
 
   return (
@@ -241,15 +240,6 @@ function CreatePortfolioModal({
           onChange={(e) => setClientId(e.target.value)}
           placeholder="ej. bancolombia"
         />
-        <SelectGroup
-          label={t("portfolios.form.currency")}
-          id="p-currency"
-          value={currency}
-          onChange={(e) => setCurrency(e.target.value as "USD" | "DOP")}
-        >
-          <option value="DOP">{t("portfolios.currency.DOP")}</option>
-          <option value="USD">{t("portfolios.currency.USD")}</option>
-        </SelectGroup>
         {error && <p className="text-xs text-red-600">{error}</p>}
         <p className="text-xs text-slate-400">{t("portfolios.form.csvNote")}</p>
       </div>
