@@ -1,8 +1,88 @@
 ---
-title: "Installation"
-description: "Install @qcobro/sdk and construct a Client against your QCobro endpoint."
+title: "Instalación"
+description: "Instala @qcobro/sdk y construye un Client apuntando a tu endpoint de QCobro."
 ---
 
-<Note>
-This page is a placeholder and is being written. Check back soon.
-</Note>
+`@qcobro/sdk` es el cliente oficial de TypeScript para la API de QCobro. Se publica como un
+paquete ESM y funciona en cualquier runtime moderno con `fetch` global (Node ≥ 18 y
+navegadores actuales).
+
+## Instala el paquete
+
+Añade el SDK a tu proyecto con tu gestor de paquetes habitual.
+
+<CodeGroup>
+```bash npm
+npm install @qcobro/sdk
+```
+
+```bash pnpm
+pnpm add @qcobro/sdk
+```
+
+```bash yarn
+yarn add @qcobro/sdk
+```
+</CodeGroup>
+
+## Construye un cliente
+
+Importa `Client` y créalo con la URL base de tu API de QCobro. El SDK añade la ruta `/trpc`
+por su cuenta, así que solo pasas el host.
+
+```ts
+import { Client } from "@qcobro/sdk";
+
+const client = new Client({ endpoint: "https://api.qcobro.com" });
+```
+
+A partir de aquí el flujo siempre es el mismo: **construir** el cliente, **autenticarte**,
+**seleccionar un workspace** y **llamar** a los métodos de cada recurso. Lo ves completo en
+[Visión general del SDK](/sdk/overview).
+
+## Opciones del constructor
+
+`new Client(options)` acepta la URL del endpoint y algunos ajustes opcionales.
+
+<ParamField path="endpoint" type="string" required>
+  URL base de la API de QCobro (por ejemplo `https://api.qcobro.com`). El SDK le añade la
+  ruta `/trpc`.
+</ParamField>
+<ParamField path="fetch" type="function">
+  Implementación de `fetch` a usar. Por defecto toma el `fetch` global; pásala para aportar
+  un polyfill en runtimes antiguos.
+</ParamField>
+<ParamField path="accessToken" type="string">
+  Token de acceso para arrancar ya autenticado, en lugar de llamar a `login`.
+</ParamField>
+<ParamField path="refreshToken" type="string">
+  Token de refresco, que habilita `refresh` sin volver a iniciar sesión.
+</ParamField>
+<ParamField path="workspace" type="string">
+  El `accessKeyId` del workspace en el que actuar. También se fija con `useWorkspace`.
+</ParamField>
+<ParamField path="autoRefresh" type="boolean" default="true">
+  Cuando es `true`, una respuesta `UNAUTHORIZED` dispara un único refresco de token y un
+  reintento de la petición fallida, siempre que haya un token de refresco. Ponlo en `false`
+  para desactivarlo y dejar que `UNAUTHORIZED` aflore directamente.
+</ParamField>
+
+## Requisitos
+
+- **Node.js ≥ 18** o un navegador moderno (se necesita `fetch` global; en su defecto, pasa
+  uno por la opción `fetch`).
+- El SDK se distribuye como **ESM**. Úsalo desde un proyecto ESM o con un bundler que lo
+  soporte.
+- **TypeScript** es opcional pero recomendado: los tipos del SDK te dan autocompletado y
+  validación de extremo a extremo.
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Autenticación y tokens" icon="key" href="/sdk/authentication">
+    Inicia sesión con contraseña o con una API key y gestiona los tokens.
+  </Card>
+  <Card title="Gestionar carteras" icon="folder-open" href="/sdk/portfolios">
+    Crea, actualiza, archiva y lista las carteras de un workspace.
+  </Card>
+</CardGroup>

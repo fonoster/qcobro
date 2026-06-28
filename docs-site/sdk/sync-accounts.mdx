@@ -1,25 +1,26 @@
 ---
-title: "Syncing portfolio accounts"
-description: "Batch-sync account rows into a portfolio with APPEND_ONLY, UPDATE_EXISTING, and REPLACE modes."
+title: "Sincronizar cuentas de una cartera"
+description: "Sincroniza por lotes filas de cuentas en una cartera con los modos APPEND_ONLY, UPDATE_EXISTING y REPLACE."
 ---
 
-Load and maintain a portfolio's debt accounts from your own system of record with
-`client.portfolios.syncAccounts`. You send a batch of account rows and a merge mode; QCobro
-matches each row to an existing account by its `externalId` and applies the mode you chose.
+Carga y mantén las cuentas de deuda de una cartera desde tu propio sistema de origen con
+`client.portfolios.syncAccounts`. Envías un lote de filas de cuentas y un modo de fusión;
+QCobro empareja cada fila con una cuenta existente por su `externalId` y aplica el modo que
+elegiste.
 
-## Prerequisites
+## Requisitos previos
 
 <Note>
-  `syncAccounts` is workspace-scoped. You need an authenticated [`Client`](/sdk/authentication)
-  with an active workspace selected, and the `id` of a portfolio to sync into. Create one first
-  with [`client.portfolios.create`](/sdk/portfolios).
+  `syncAccounts` está acotado a un workspace. Necesitas un [`Client`](/sdk/authentication)
+  autenticado con un workspace activo seleccionado, y el `id` de una cartera donde
+  sincronizar. Crea una antes con [`client.portfolios.create`](/sdk/portfolios).
 </Note>
 
-## Sync a batch
+## Sincroniza un lote
 
 <Steps>
-  <Step title="Authenticate and select a workspace">
-    Construct a client, log in, and choose the workspace the portfolio belongs to.
+  <Step title="Autentícate y selecciona un workspace">
+    Construye un cliente, inicia sesión y elige el workspace al que pertenece la cartera.
 
     ```ts
     import { Client } from "@qcobro/sdk";
@@ -29,9 +30,9 @@ matches each row to an existing account by its `externalId` and applies the mode
     client.useWorkspace("ws_abc123");
     ```
   </Step>
-  <Step title="Send the rows">
-    Pass the `portfolioId`, a `mode`, and at least one row. Each row needs an `externalId`,
-    a `fullName`, and an `outstandingBalance`.
+  <Step title="Envía las filas">
+    Pasa el `portfolioId`, un `mode` y al menos una fila. Cada fila necesita un `externalId`,
+    un `fullName` y un `outstandingBalance`.
 
     ```ts
     const result = await client.portfolios.syncAccounts({
@@ -44,9 +45,9 @@ matches each row to an existing account by its `externalId` and applies the mode
     });
     ```
   </Step>
-  <Step title="Read the counts">
-    The call returns how many accounts were created, updated, and archived, plus the portfolio's
-    new active total.
+  <Step title="Lee los conteos">
+    La llamada devuelve cuántas cuentas se crearon, actualizaron y archivaron, y el nuevo
+    total activo de la cartera.
 
     ```ts
     console.log(result); // { created: 2, updated: 0, archived: 0, total: 2 }
@@ -54,37 +55,38 @@ matches each row to an existing account by its `externalId` and applies the mode
   </Step>
 </Steps>
 
-## Choose a sync mode
+## Elige un modo de sincronización
 
-The `mode` decides what happens to existing accounts. Rows are matched to accounts by `externalId`
-within the portfolio.
+El `mode` decide qué pasa con las cuentas existentes. Las filas se emparejan con las cuentas
+por `externalId` dentro de la cartera.
 
-| Mode | Row with a new `externalId` | Row matching an existing account | Existing account **not** in the batch |
+| Modo | Fila con un `externalId` nuevo | Fila que coincide con una cuenta existente | Cuenta existente **ausente** del lote |
 | --- | --- | --- | --- |
-| `APPEND_ONLY` | Created | Left unchanged | Left unchanged |
-| `UPDATE_EXISTING` | Created | Updated | Left unchanged |
-| `REPLACE` | Created | Updated | Archived |
+| `APPEND_ONLY` | Se crea | Se deja sin cambios | Se deja sin cambios |
+| `UPDATE_EXISTING` | Se crea | Se actualiza | Se deja sin cambios |
+| `REPLACE` | Se crea | Se actualiza | Se archiva |
 
 <Tabs>
   <Tab title="APPEND_ONLY">
-    Add new accounts and never touch ones that already exist. Use it for incremental loads where
-    earlier data is authoritative.
+    Añade cuentas nuevas y nunca toca las que ya existen. Úsalo para cargas incrementales en
+    las que los datos previos son la fuente autoritativa.
 
     ```ts
     await client.portfolios.syncAccounts({ portfolioId: "ptf_123", mode: "APPEND_ONLY", rows });
     ```
   </Tab>
   <Tab title="UPDATE_EXISTING">
-    Add new accounts and refresh ones that already exist — an upsert. Use it for recurring feeds
-    that carry updated balances or contact details.
+    Añade cuentas nuevas y refresca las que ya existen —un upsert. Úsalo para feeds
+    recurrentes que traen saldos o datos de contacto actualizados.
 
     ```ts
     await client.portfolios.syncAccounts({ portfolioId: "ptf_123", mode: "UPDATE_EXISTING", rows });
     ```
   </Tab>
   <Tab title="REPLACE">
-    Make the portfolio mirror the batch: create, update, and archive any account whose `externalId`
-    is absent from `rows`. Use it when the batch is a full snapshot of the portfolio.
+    Haz que la cartera refleje el lote: crea, actualiza y archiva cualquier cuenta cuyo
+    `externalId` no esté en `rows`. Úsalo cuando el lote es una instantánea completa de la
+    cartera.
 
     ```ts
     await client.portfolios.syncAccounts({ portfolioId: "ptf_123", mode: "REPLACE", rows });
@@ -93,91 +95,92 @@ within the portfolio.
 </Tabs>
 
 <Warning>
-  `REPLACE` **archives** every existing account whose `externalId` is missing from the batch, and
-  expires those accounts' pending payment promises. Always send a complete snapshot with `REPLACE`
-  — a partial batch will archive the accounts you left out.
+  `REPLACE` **archiva** toda cuenta existente cuyo `externalId` falte en el lote, y expira las
+  promesas de pago pendientes de esas cuentas. Envía siempre una instantánea completa con
+  `REPLACE` — un lote parcial archivará las cuentas que dejaste fuera.
 </Warning>
 
-## Shape account rows
+## Da forma a las filas de cuenta
 
-Each entry in `rows` is validated against the shared account schema. Only three fields are required;
-the rest are optional, and the numeric fields below default to `0` when omitted.
+Cada entrada de `rows` se valida contra el esquema de cuenta compartido. Solo tres campos son
+obligatorios; el resto es opcional, y los campos numéricos de abajo toman `0` por defecto
+cuando se omiten.
 
 <ParamField body="externalId" type="string" required>
-  Your stable identifier for the account. Accounts are matched across syncs by this value, so it
-  must be unique within the portfolio.
+  Tu identificador estable de la cuenta. Las cuentas se emparejan entre sincronizaciones por
+  este valor, así que debe ser único dentro de la cartera.
 </ParamField>
 <ParamField body="fullName" type="string" required>
-  The account holder's full name.
+  Nombre completo del titular de la cuenta.
 </ParamField>
 <ParamField body="outstandingBalance" type="number" required>
-  The current amount owed. Must be zero or greater.
+  Importe adeudado actual. Debe ser cero o mayor.
 </ParamField>
 <ParamField body="phone" type="string">
-  Contact phone number used for voice and SMS outreach.
+  Teléfono de contacto usado para gestiones por voz y SMS.
 </ParamField>
 <ParamField body="email" type="string">
-  Contact email. Must be a valid email address when provided.
+  Email de contacto. Debe ser una dirección válida cuando se aporta.
 </ParamField>
 <ParamField body="preferredLanguage" type="string">
-  Preferred language for outreach (QCobro is multilingual).
+  Idioma preferido para las gestiones (QCobro es multilingüe).
 </ParamField>
 <ParamField body="bestTimeToCall" type="string">
-  Free-form note on when the account holder prefers to be reached.
+  Nota libre sobre cuándo prefiere ser contactado el titular.
 </ParamField>
 <ParamField body="customerSegment" type="string">
-  Your own segmentation label for the account.
+  Tu propia etiqueta de segmentación de la cuenta.
 </ParamField>
 <ParamField body="principalAmount" type="number" default="0">
-  Original principal owed.
+  Principal original adeudado.
 </ParamField>
 <ParamField body="termsAmount" type="number" default="0">
-  Installment amount under the account's terms.
+  Importe de la cuota según las condiciones de la cuenta.
 </ParamField>
 <ParamField body="termsFrequency" type="string">
-  How often installments are due (e.g. `monthly`).
+  Cada cuánto vencen las cuotas (por ejemplo `monthly`).
 </ParamField>
 <ParamField body="termsLength" type="number" default="0">
-  Number of installments in the term.
+  Número de cuotas del plazo.
 </ParamField>
 <ParamField body="daysPastDue" type="number" default="0">
-  Days the account is past due.
+  Días de mora de la cuenta.
 </ParamField>
 <ParamField body="missedInstallments" type="number" default="0">
-  Count of missed installments.
+  Número de cuotas impagadas.
 </ParamField>
 <ParamField body="lastPaymentDate" type="string">
-  Date of the last payment, as an ISO date string.
+  Fecha del último pago, como cadena de fecha ISO.
 </ParamField>
 <ParamField body="lastPaymentAmount" type="number">
-  Amount of the last payment.
+  Importe del último pago.
 </ParamField>
 <ParamField body="negotiationOptions" type="string">
-  Notes on acceptable negotiation or settlement options for this account.
+  Notas sobre opciones de negociación o acuerdo aceptables para esta cuenta.
 </ParamField>
 
-## Read the result
+## Lee el resultado
 
-`syncAccounts` resolves to a summary of what changed:
+`syncAccounts` resuelve a un resumen de lo que cambió:
 
 <ResponseField name="created" type="number">
-  Accounts inserted because their `externalId` was new to the portfolio.
+  Cuentas insertadas porque su `externalId` era nuevo para la cartera.
 </ResponseField>
 <ResponseField name="updated" type="number">
-  Existing accounts refreshed. Always `0` for `APPEND_ONLY`.
+  Cuentas existentes refrescadas. Siempre `0` en `APPEND_ONLY`.
 </ResponseField>
 <ResponseField name="archived" type="number">
-  Accounts archived because they were absent from the batch. Non-zero only for `REPLACE`.
+  Cuentas archivadas por estar ausentes del lote. Distinto de cero solo en `REPLACE`.
 </ResponseField>
 <ResponseField name="total" type="number">
-  The portfolio's active account count after the sync (archived accounts are excluded).
+  Número de cuentas activas de la cartera tras la sincronización (las archivadas se excluyen).
 </ResponseField>
 
-## Handle validation errors
+## Maneja los errores de validación
 
-Rows are validated **client-side** against the shared QCobro schema before any request is sent. An
-empty batch, an unknown `mode`, or a malformed `email` throws a `ValidationError` with field-level
-detail and makes no network call.
+Las filas se validan **en el cliente** contra el esquema compartido de QCobro antes de enviar
+cualquier petición. Un lote vacío, un `mode` desconocido o un `email` malformado lanza un
+`ValidationError` con detalle por campo y no hace ninguna llamada de red.
 
 ```ts
 import { ValidationError } from "@qcobro/sdk";
@@ -186,7 +189,7 @@ try {
   await client.portfolios.syncAccounts({
     portfolioId: "ptf_123",
     mode: "APPEND_ONLY",
-    rows: [] // empty batches are rejected
+    rows: [] // los lotes vacíos se rechazan
   });
 } catch (err) {
   if (err instanceof ValidationError) {
@@ -195,15 +198,15 @@ try {
 }
 ```
 
-See [Validation & errors](/sdk/errors) for the full error shape.
+Consulta [Validación y errores](/sdk/errors) para la forma completa del error.
 
-## Next steps
+## Siguientes pasos
 
 <CardGroup cols={2}>
-  <Card title="Managing portfolios" icon="folder-open" href="/sdk/portfolios">
-    Create, update, archive, and list the portfolios you sync into.
+  <Card title="Gestionar carteras" icon="folder-open" href="/sdk/portfolios">
+    Crea, actualiza, archiva y lista las carteras donde sincronizas.
   </Card>
-  <Card title="Validation & errors" icon="triangle-exclamation" href="/sdk/errors">
-    Catch client-side validation failures and read field-level details.
+  <Card title="Validación y errores" icon="triangle-exclamation" href="/sdk/errors">
+    Captura los fallos de validación del cliente y lee el detalle por campo.
   </Card>
 </CardGroup>

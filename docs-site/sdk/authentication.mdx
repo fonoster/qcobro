@@ -1,8 +1,113 @@
 ---
-title: "Authentication & tokens"
-description: "Authenticate with email/password or a workspace API key, and manage access and refresh tokens."
+title: "Autenticación y tokens"
+description: "Inicia sesión con email y contraseña o con una API key de workspace, y gestiona los tokens de acceso y de refresco."
 ---
 
-<Note>
-This page is a placeholder and is being written. Check back soon.
-</Note>
+Un mismo `Client` posee todo el ciclo de vida de la autenticación. Te autenticas una vez y el
+cliente adjunta el token de acceso a cada petición posterior. Hay dos formas de iniciar
+sesión: con **email y contraseña** (uso interactivo) o con una **API key de workspace** (para
+integraciones de servidor a servidor, sin intervención humana).
+
+## Inicia sesión con email y contraseña
+
+Usa `login` para autenticar a una persona con sus credenciales. Los tokens emitidos se
+guardan en el cliente y se usan en las llamadas siguientes.
+
+```ts
+import { Client } from "@qcobro/sdk";
+
+const client = new Client({ endpoint: "https://api.qcobro.com" });
+
+await client.login({
+  email: "me@acme.com",
+  password: process.env.QCOBRO_PASSWORD!
+});
+```
+
+## Inicia sesión con una API key
+
+Para procesos automáticos (un backend, un cron, un trabajo de sincronización) usa
+`loginWithApiKey` con el `accessKeyId` y el `accessKeySecret` de una API key de workspace.
+No requiere interacción de una persona.
+
+```ts
+await client.loginWithApiKey({
+  accessKeyId: "ak_workspace_123",
+  accessKeySecret: process.env.QCOBRO_API_SECRET!
+});
+```
+
+<Tip>
+  Guarda el `accessKeySecret` en una variable de entorno o en un gestor de secretos, nunca en
+  el código fuente. La API key de workspace se crea desde la consola de QCobro.
+</Tip>
+
+## Selecciona un workspace
+
+Casi todos los métodos están **acotados a un workspace**: el cliente debe estar autenticado y
+tener un workspace activo seleccionado. Elígelo con `useWorkspace`, pasando su `accessKeyId`.
+
+```ts
+client.useWorkspace("ws_abc123");
+
+// A partir de aquí, las llamadas actúan dentro de ese workspace.
+const portfolios = await client.portfolios.list();
+```
+
+Consulta el workspace activo en cualquier momento con `client.workspace`.
+
+## Refresca el token de acceso
+
+Los tokens de acceso son de corta duración. Por defecto, ante una respuesta `UNAUTHORIZED` el
+cliente **refresca el token una vez y reintenta** la petición de forma transparente, siempre
+que tenga un token de refresco. Puedes desactivarlo con `autoRefresh: false` al construir el
+cliente.
+
+Para refrescar manualmente, llama a `refresh`. Usa el token de refresco que tiene el cliente,
+salvo que le pases uno explícito.
+
+```ts
+const tokens = await client.refresh();
+// El nuevo token de acceso reemplaza al anterior dentro del cliente.
+```
+
+## Gestiona los tokens
+
+Los tokens se mantienen **solo en memoria**. Para que una sesión sobreviva a un reinicio,
+persiste los tokens tú mismo con `getTokens` y restáuralos con `setTokens`.
+
+```ts
+// Guarda los tokens donde prefieras (cifrados).
+const tokens = client.getTokens(); // { accessToken, refreshToken }
+
+// Más tarde, en otro proceso, restaura la sesión sin volver a iniciar sesión.
+client.setTokens(tokens);
+```
+
+También puedes arrancar ya autenticado pasando `accessToken` y/o `refreshToken` directamente
+al constructor — útil cuando ya tienes tokens persistidos.
+
+```ts
+const client = new Client({
+  endpoint: "https://api.qcobro.com",
+  accessToken: savedAccessToken,
+  refreshToken: savedRefreshToken,
+  workspace: "ws_abc123"
+});
+```
+
+<Warning>
+  Los tokens nunca se guardan en disco por el SDK. Si no los persistes con `getTokens`, se
+  pierden al terminar el proceso y tendrás que volver a autenticarte.
+</Warning>
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Gestionar carteras" icon="folder-open" href="/sdk/portfolios">
+    Crea, actualiza, archiva y lista las carteras del workspace activo.
+  </Card>
+  <Card title="Sincronizar cuentas" icon="arrows-rotate" href="/sdk/sync-accounts">
+    Carga lotes de cuentas desde tu sistema de origen con distintos modos de fusión.
+  </Card>
+</CardGroup>

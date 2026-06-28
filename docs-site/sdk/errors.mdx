@@ -1,8 +1,95 @@
 ---
-title: "Validation & errors"
-description: "Client-side validation against shared schemas and handling ValidationError."
+title: "Validación y errores"
+description: "El SDK valida las entradas en el cliente contra los esquemas compartidos y lanza un ValidationError estructurado, con detalle por campo."
 ---
 
+El SDK valida las entradas de cada método **en el cliente**, contra los mismos esquemas de
+`@qcobro/common` que usa la API, **antes** de enviar la petición. Una entrada inválida —un
+lote vacío, un enum desconocido, un email malformado— lanza un `ValidationError` y **no
+realiza ninguna llamada de red**.
+
+## Captura un ValidationError
+
+`ValidationError` se reexporta desde `@qcobro/sdk`, así que puedes capturarlo sin depender de
+`@qcobro/common` directamente.
+
+```ts
+import { Client, ValidationError } from "@qcobro/sdk";
+
+try {
+  await client.portfolios.create({ name: "", clientId: "acme" });
+} catch (err) {
+  if (err instanceof ValidationError) {
+    console.error(err.fieldErrors);
+    // [{ field: "name", message: "...", code: "too_small" }]
+  }
+}
+```
+
+## La forma del error
+
+Un `ValidationError` lleva un código estable, un mensaje legible y una lista de errores por
+campo.
+
+<ResponseField name="code" type="string">
+  Siempre `"VALIDATION_ERROR"`. Úsalo para distinguir los fallos de validación de otros
+  errores.
+</ResponseField>
+<ResponseField name="message" type="string">
+  Resumen legible que combina los errores de campo (por ejemplo `name: ...; clientId: ...`).
+</ResponseField>
+<ResponseField name="fieldErrors" type="FieldError[]">
+  Un elemento por campo inválido. Cada `FieldError` tiene `field`, `message` y `code`.
+</ResponseField>
+
+Cada entrada de `fieldErrors` tiene esta forma:
+
+<ResponseField name="field" type="string">
+  Ruta del campo inválido (por ejemplo `rows.0.email`), o `"root"` si el error no es de un
+  campo concreto.
+</ResponseField>
+<ResponseField name="message" type="string">
+  Descripción legible del fallo de ese campo.
+</ResponseField>
+<ResponseField name="code" type="string">
+  Código del fallo (por ejemplo `too_small`, `invalid_type`), proveniente del esquema.
+</ResponseField>
+
+## Serializa el error
+
+Para devolver el error en tu propia API o registrarlo, usa `toJSON`, que produce una
+representación serializable.
+
+```ts
+try {
+  await client.portfolios.syncAccounts({ portfolioId: "ptf_123", mode: "APPEND_ONLY", rows: [] });
+} catch (err) {
+  if (err instanceof ValidationError) {
+    res.status(400).json(err.toJSON());
+    // { code: "VALIDATION_ERROR", message: "...", fieldErrors: [...] }
+  }
+}
+```
+
+## Errores del servidor frente a errores de validación
+
+La validación en el cliente solo atrapa entradas malformadas. Los errores que devuelve la API
+—como `UNAUTHORIZED` cuando falta o caduca la autenticación— llegan como errores de tRPC, no
+como `ValidationError`.
+
 <Note>
-This page is a placeholder and is being written. Check back soon.
+  Ante un `UNAUTHORIZED`, el cliente intenta por defecto **refrescar el token una vez y
+  reintentar** la petición. Solo si el reintento también falla aflora el error. Consulta
+  [Autenticación y tokens](/sdk/authentication).
 </Note>
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Autenticación y tokens" icon="key" href="/sdk/authentication">
+    Cómo el cliente refresca tokens y cómo aflora `UNAUTHORIZED`.
+  </Card>
+  <Card title="Referencia del SDK" icon="book" href="/sdk/reference">
+    Tipos y métodos exportados por `@qcobro/sdk`.
+  </Card>
+</CardGroup>

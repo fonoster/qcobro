@@ -1,111 +1,113 @@
 ---
-title: "SDK overview"
-description: "@qcobro/sdk is a typed TypeScript client over the QCobro API: construct a Client, authenticate, select a workspace, and call typed resource methods."
+title: "Visión general del SDK"
+description: "@qcobro/sdk es un cliente TypeScript tipado sobre la API de QCobro: construye un Client, autentícate, selecciona un workspace y llama a métodos de recurso tipados."
 ---
 
-`@qcobro/sdk` is the official TypeScript client for the QCobro API. It wraps the same
-tRPC contracts the operator console runs on, so the calls you make from your own backend
-are typed end to end and validated before they ever hit the network. Drive QCobro from
-your system of record — load portfolios, sync accounts, react to outcomes — without
-hand-rolling HTTP.
+`@qcobro/sdk` es el cliente oficial de TypeScript para la API de QCobro. Envuelve los mismos
+contratos tRPC sobre los que corre la consola de operador, así que las llamadas que haces
+desde tu propio backend están tipadas de extremo a extremo y se validan antes de tocar la
+red. Maneja QCobro desde tu sistema de origen —carga carteras, sincroniza cuentas, reacciona
+a los resultados— sin escribir HTTP a mano.
 
-## How it works
+## Cómo funciona
 
-You construct one `Client`, point it at your QCobro endpoint, and call typed resource
-methods on it. The client owns the connection and the authentication lifecycle; it talks
-tRPC over HTTPS to the QCobro API, which is the very same API the operator console uses.
+Construyes un único `Client`, lo apuntas a tu endpoint de QCobro y llamas sobre él a métodos
+de recurso tipados. El cliente posee la conexión y el ciclo de vida de la autenticación;
+habla tRPC sobre HTTPS con la API de QCobro, que es la misma API que usa la consola de
+operador.
 
-<Frame caption="@qcobro/sdk is a typed client over the QCobro API — the same API the console uses.">
-  <img src="/images/sdk-overview/architecture.png" alt="Diagram: your code calls the @qcobro/sdk client, which calls the QCobro API over HTTPS and authenticates; the operator console uses the same API." />
+<Frame caption="@qcobro/sdk es un cliente tipado sobre la API de QCobro — la misma API que usa la consola.">
+  <img src="/images/sdk-overview/architecture.png" alt="Diagrama: tu código llama al cliente @qcobro/sdk, que llama a la API de QCobro sobre HTTPS y se autentica; la consola de operador usa la misma API." />
 </Frame>
 
-## The client model
+## El modelo del cliente
 
-Working with the SDK is always the same four beats: **construct** a client, **authenticate**,
-**select a workspace**, then **call** resource methods. This snippet does all four.
+Trabajar con el SDK son siempre los mismos cuatro pasos: **construir** un cliente,
+**autenticarte**, **seleccionar un workspace** y luego **llamar** a métodos de recurso. Este
+fragmento hace los cuatro.
 
 ```ts
 import { Client } from "@qcobro/sdk";
 
-// 1. Construct — the SDK appends the /trpc path to your endpoint itself.
+// 1. Construye — el SDK añade la ruta /trpc a tu endpoint por su cuenta.
 const client = new Client({ endpoint: "https://api.qcobro.com" });
 
-// 2. Authenticate — the issued tokens are stored on the client.
+// 2. Autentícate — los tokens emitidos se guardan en el cliente.
 await client.login({ email: "me@acme.com", password: process.env.QCOBRO_PASSWORD! });
 
-// 3. Select the workspace to act in.
+// 3. Selecciona el workspace en el que actuar.
 client.useWorkspace("ws_abc123");
 
-// 4. Call typed resource methods.
+// 4. Llama a métodos de recurso tipados.
 const portfolios = await client.portfolios.list();
 ```
 
-Almost every method is **workspace-scoped**: the client must be authenticated and have an
-active workspace selected before you call it. Selecting a workspace is just
-`client.useWorkspace(accessKeyId)` — subsequent calls act within it.
+Casi todos los métodos están **acotados a un workspace**: el cliente debe estar autenticado y
+tener un workspace activo seleccionado antes de llamarlos. Seleccionar un workspace es solo
+`client.useWorkspace(accessKeyId)` — las llamadas siguientes actúan dentro de él.
 
-## What you can do today
+## Qué puedes hacer hoy
 
-The SDK exposes API resources as namespaces of friendly, typed methods. Portfolios are
-wrapped today; everything else on the API is reachable through the `client.trpc` escape
-hatch.
+El SDK expone los recursos de la API como espacios de nombres con métodos tipados y cómodos.
+Las carteras ya están envueltas; todo lo demás de la API es accesible por el escape hatch
+`client.trpc`.
 
 <CardGroup cols={2}>
-  <Card title="Manage portfolios" icon="folder-open" href="/sdk/portfolios">
-    `client.portfolios` — list, get, create, update, archive, and delete the portfolios
-    in a workspace, and list their accounts.
+  <Card title="Gestionar carteras" icon="folder-open" href="/sdk/portfolios">
+    `client.portfolios` — lista, obtén, crea, actualiza, archiva y elimina las carteras de un
+    workspace, y lista sus cuentas.
   </Card>
-  <Card title="Sync accounts" icon="arrows-rotate" href="/sdk/sync-accounts">
-    `client.portfolios.syncAccounts` — batch-load account rows from your system of record
-    with `APPEND_ONLY`, `UPDATE_EXISTING`, or `REPLACE` merge modes.
+  <Card title="Sincronizar cuentas" icon="arrows-rotate" href="/sdk/sync-accounts">
+    `client.portfolios.syncAccounts` — carga por lotes filas de cuentas desde tu sistema de
+    origen con los modos de fusión `APPEND_ONLY`, `UPDATE_EXISTING` o `REPLACE`.
   </Card>
   <Card title="Escape hatch" icon="plug" href="/sdk/reference">
-    `client.trpc` — the underlying typed tRPC proxy, for any procedure the SDK does not
-    yet wrap. Prefer the resource namespaces where they exist.
+    `client.trpc` — el proxy tRPC tipado subyacente, para cualquier procedimiento que el SDK
+    aún no envuelva. Prefiere los espacios de recurso donde existan.
   </Card>
-  <Card title="API reference" icon="book" href="/sdk/reference">
-    The generated TypeScript reference for every exported type and method.
+  <Card title="Referencia del SDK" icon="book" href="/sdk/reference">
+    La referencia de TypeScript de cada tipo y método exportado.
   </Card>
 </CardGroup>
 
-## Validation happens client-side
+## La validación ocurre en el cliente
 
-Method inputs are validated against the shared `@qcobro/common` schemas **before** any
-request is sent. Invalid input — an empty batch, an unknown enum, a malformed email —
-throws a structured `ValidationError` with field-level detail and never reaches the
-network.
+Las entradas de los métodos se validan contra los esquemas compartidos de `@qcobro/common`
+**antes** de enviar cualquier petición. Una entrada inválida —un lote vacío, un enum
+desconocido, un email malformado— lanza un `ValidationError` estructurado, con detalle por
+campo, y nunca llega a la red.
 
 <Note>
-  `ValidationError` is re-exported from `@qcobro/sdk`, so you can catch it without
-  depending on `@qcobro/common` directly. See [Validation & errors](/sdk/errors) for the
-  full error shape.
+  `ValidationError` se reexporta desde `@qcobro/sdk`, así que puedes capturarlo sin depender
+  de `@qcobro/common` directamente. Consulta [Validación y errores](/sdk/errors) para la forma
+  completa del error.
 </Note>
 
-## Tokens and sessions
+## Tokens y sesiones
 
-A single `Client` owns the authentication lifecycle. Authenticate with
-`login` (email and password) or `loginWithApiKey` (a workspace API key, for unattended
-server-to-server integrations); the issued access and refresh tokens are then stored on
-the client and attached to every request.
+Un único `Client` posee el ciclo de vida de la autenticación. Autentícate con `login` (email y
+contraseña) o `loginWithApiKey` (una API key de workspace, para integraciones de servidor a
+servidor sin intervención); los tokens de acceso y de refresco emitidos se guardan entonces en
+el cliente y se adjuntan a cada petición.
 
-Tokens are held **in memory only**. By default the client auto-refreshes once on an
-`UNAUTHORIZED` response and replays the request, provided it holds a refresh token. To
-keep a session alive across restarts, persist the tokens yourself with `client.getTokens()`
-and restore them with `client.setTokens(...)`.
+Los tokens se mantienen **solo en memoria**. Por defecto, el cliente refresca una vez ante una
+respuesta `UNAUTHORIZED` y reintenta la petición, siempre que tenga un token de refresco. Para
+mantener viva una sesión entre reinicios, persiste los tokens tú mismo con `client.getTokens()`
+y restáuralos con `client.setTokens(...)`.
 
-## Next steps
+## Siguientes pasos
 
 <CardGroup cols={2}>
-  <Card title="Installation" icon="download" href="/sdk/installation">
-    Install `@qcobro/sdk` and construct a client against your endpoint.
+  <Card title="Instalación" icon="download" href="/sdk/installation">
+    Instala `@qcobro/sdk` y construye un cliente apuntando a tu endpoint.
   </Card>
-  <Card title="Authentication & tokens" icon="key" href="/sdk/authentication">
-    Log in with a password or API key, and manage access and refresh tokens.
+  <Card title="Autenticación y tokens" icon="key" href="/sdk/authentication">
+    Inicia sesión con contraseña o API key, y gestiona los tokens de acceso y de refresco.
   </Card>
-  <Card title="Managing portfolios" icon="folder-open" href="/sdk/portfolios">
-    Create, update, archive, and list the portfolios in a workspace.
+  <Card title="Gestionar carteras" icon="folder-open" href="/sdk/portfolios">
+    Crea, actualiza, archiva y lista las carteras de un workspace.
   </Card>
-  <Card title="Validation & errors" icon="triangle-exclamation" href="/sdk/errors">
-    Catch client-side validation failures and read field-level details.
+  <Card title="Validación y errores" icon="triangle-exclamation" href="/sdk/errors">
+    Captura los fallos de validación del cliente y lee el detalle por campo.
   </Card>
 </CardGroup>
