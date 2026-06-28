@@ -12,7 +12,7 @@ import { defineConfig, devices } from "@playwright/test";
 // stabilized. `grep` restricts the run to the currently-enabled tests; expand this regex
 // (add `|` alternatives) as more tests are confirmed green, then remove it once all pass.
 // Batch 1: the no-bootstrap smoke test (validates the CI pipeline end to end).
-const ENABLED_TESTS = /unauthenticated \/members redirects to login/;
+const ENABLED_TESTS = /edit name, and delete the account/;
 
 export default defineConfig({
   testDir: "./e2e",

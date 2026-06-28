@@ -48,6 +48,9 @@ export function CreateWorkspace() {
     const list = await utils.workspaces.summaries.fetch();
     const created = list.find((w) => w.ref === ref) ?? list[0];
     if (created) setWorkspace(created.accessKeyId);
+    // AuthedLayout reads workspaces.list (cached empty from the pre-workspace visit to "/").
+    // Invalidate it so the dashboard sees the new workspace instead of bouncing back here.
+    await utils.workspaces.list.invalidate();
     navigate("/");
   }
 
