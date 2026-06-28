@@ -1,0 +1,32 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "QCobro",
+  "description": "Multilingual AI-voice debt-collections platform by Fonoster.",
+  "colors": {
+    "primary": "#047857",
+    "light": "#10B981",
+    "dark": "#064E3B"
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get started",
+        "pages": ["index", "quickstart"]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/fonoster/qcobro"
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/fonoster/qcobro"
+    }
+  }
+}

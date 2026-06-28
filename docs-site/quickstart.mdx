@@ -1,0 +1,46 @@
+---
+title: "Quickstart"
+description: "Run QCobro locally."
+---
+
+## Prerequisites
+
+- Node 22
+- Docker
+
+## Run it locally
+
+<Steps>
+  <Step title="Start backing services">
+    Bring up Postgres, Identity, and Mailpit on `localhost`. The engine stays
+    **off** by default and never auto-dials.
+
+    ```bash
+    docker compose -f compose.dev.yaml up -d
+    ```
+  </Step>
+  <Step title="Configure">
+    Point the app at the dev database.
+
+    ```bash
+    mkdir -p config
+    cp config/qcobro.example.json config/qcobro.json
+    ```
+  </Step>
+  <Step title="Apply migrations">
+    ```bash
+    npm run db:migrate --workspace=mods/apiserver
+    npm run db:seed    --workspace=mods/apiserver   # optional demo seed
+    ```
+  </Step>
+  <Step title="Run the API and console">
+    ```bash
+    npm run start:dev      # apiserver on :3000
+    npm run start:webapp   # console on :5173
+    ```
+  </Step>
+</Steps>
+
+<Check>
+  The operator console is now available at `http://localhost:5173`.
+</Check>
