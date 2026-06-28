@@ -1,8 +1,83 @@
 ---
-title: "Configure agent templates"
-description: "Author the voice, SMS, and email agent templates that drive outreach."
+title: "Plantillas de agente"
+description: "Crea los Agentes IA reutilizables que definen qué dice QCobro en cada canal: voz, SMS, correo y WhatsApp."
 ---
 
+Un **agente** (en la consola, **Agentes IA**) es una configuración reutilizable que define qué
+dice QCobro y por qué canal cuando contacta a una cuenta. Las campañas y el contacto manual
+usan un agente; por eso conviene crearlos antes de lanzar una campaña.
+
+## Crea un agente
+
+<Steps>
+  <Step title="Abre Agentes IA">
+    En el menú lateral, entra en **Agentes IA**. Verás los agentes del espacio de trabajo con
+    su **Nombre** y su **Canal**.
+  </Step>
+  <Step title="Crea uno nuevo">
+    Pulsa **Nuevo agente**, ponle un **Nombre del agente** y elige el **Tipo de canal**.
+  </Step>
+  <Step title="Configura el canal">
+    Completa los campos propios del canal (ver abajo) y guarda con **Crear agente**.
+  </Step>
+</Steps>
+
+## Canales disponibles
+
+| Canal | Para qué sirve |
+| --- | --- |
+| **Voz IA** | Una llamada con un agente de voz por IA que conversa con la cuenta. |
+| **Voz pregrabada** | Una llamada que reproduce un guion grabado. |
+| **SMS** | Un mensaje de texto. |
+| **Correo** | Un email. |
+| **WhatsApp** | Un mensaje de WhatsApp. |
+
+## Configura según el canal
+
+Los campos cambian según el tipo de canal elegido:
+
+- **Voz IA** — elige una **Voz** y un **Idioma**, escribe el **Prompt del sistema** (cómo debe
+  comportarse el agente) y, opcionalmente, un **Primer mensaje**. Si no defines el primer
+  mensaje, el agente espera a que el cliente inicie. Puedes limitar las respuestas del
+  autopiloto por caso.
+- **Voz pregrabada** — define el **Guion** que se reproduce y la **Voz**.
+- **SMS** / **WhatsApp** — escribe el **Cuerpo del mensaje** y, opcionalmente, un **ID de
+  remitente**.
+- **Correo** — define el **Asunto** y el **Cuerpo del mensaje**.
+
+<Tip>
+  Puedes personalizar los mensajes con **variables** (por ejemplo, el nombre del cliente o el
+  saldo). Usa **Ver variables disponibles** en el formulario para consultar cuáles existen.
+</Tip>
+
 <Note>
-This page is a placeholder and is being written. Check back soon.
+  QCobro es multilingüe: el **Idioma** del agente determina en qué idioma se comunica con la
+  cuenta. Crea un agente por idioma cuando lo necesites.
 </Note>
+
+## Agentes de voz y su disponibilidad
+
+Tras crear o editar un agente de voz, QCobro lo prepara con el proveedor de voz. La consola
+muestra su estado —**Sincronizado**, **Sincronización pendiente** o **Error de
+sincronización**— y permite volver a sincronizar si hace falta.
+
+## Edita, archiva o elimina
+
+Abre un agente con **Ver detalle** para ver su **Configuración** y las **Campañas que usan
+este agente**. Puedes **Archivar** un agente (y **Restaurar**lo) o **Eliminar**lo.
+
+<Warning>
+  Las plantillas usadas por campañas activas **no se pueden eliminar**. Archiva el agente o
+  retíralo de las campañas primero.
+</Warning>
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Lanzar una campaña" icon="bullhorn" href="/guides/campaigns">
+    Usa un agente para contactar a las cuentas de tus carteras de forma programada.
+  </Card>
+  <Card title="Canales" icon="signal-stream" href="/concepts/channels">
+    Cómo funciona cada canal de contacto en QCobro.
+  </Card>
+</CardGroup>

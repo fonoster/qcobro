@@ -1,8 +1,69 @@
 ---
-title: "Launch a campaign"
-description: "Configure and launch an outreach campaign across voice, SMS, and email."
+title: "Lanzar una campaña"
+description: "Configura y lanza una campaña de contacto programada sobre tus carteras, con horario y topes de intentos."
 ---
 
+Una **campaña** es un programa de contacto **agendado** sobre una o más carteras: QCobro
+contacta a sus cuentas con un agente, dentro del horario y los límites que definas. Es la forma
+de trabajar muchas cuentas de manera automática y controlada.
+
 <Note>
-This page is a placeholder and is being written. Check back soon.
+  Antes de crear una campaña necesitas al menos una [cartera con cuentas](/guides/import-accounts)
+  y una [plantilla de agente](/guides/agent-templates).
 </Note>
+
+## Crea una campaña
+
+<Steps>
+  <Step title="Abre Campañas">
+    En el menú lateral, entra en **Campañas** y pulsa **Nueva campaña**.
+  </Step>
+  <Step title="Define el alcance">
+    Pon el **Nombre de la campaña**, elige una o más **Carteras** y la **Plantilla de agente**
+    que hará el contacto.
+  </Step>
+  <Step title="Programa el horario">
+    Elige la **Fecha de inicio** (y una **Fecha de fin** opcional), los **Días de operación** y
+    la **Hora de inicio** y **Hora de fin** de cada día.
+  </Step>
+  <Step title="Fija los topes de intentos">
+    Define **Máx. intentos por cuenta** y **Máx. intentos por día** para controlar la presión
+    de contacto. Guarda con **Crear campaña**.
+  </Step>
+</Steps>
+
+## Controla el ciclo de vida
+
+Cada campaña tiene un **Estado** y acciones para moverla entre estados:
+
+| Estado | Significado |
+| --- | --- |
+| **Activa** | En ejecución dentro de su horario. |
+| **Pausada** | Detenida temporalmente; puedes **Activar**la de nuevo. |
+| **Completada** | Terminada por ti. |
+| **Archivada** | Retirada de la vista activa; **Restaurar** la devuelve. |
+
+Desde la lista usa **Activar**, **Pausar**, **Completar**, **Archivar** o **Restaurar**, y
+**Editar** para cambiar su configuración.
+
+<Warning>
+  Las campañas con intentos ya registrados **no se pueden eliminar** — **archívalas** en su
+  lugar. La eliminación no se puede deshacer.
+</Warning>
+
+## Revisa una campaña
+
+Abre una campaña con **Ver detalle** para ver de un vistazo su **Agente**, **Carteras**,
+**Días**, **Fechas**, **Horario** y **Topes de intentos**. Cada intento que realiza queda
+registrado en [Gestiones](/concepts/campaigns-engine).
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Plantillas de agente" icon="robot" href="/guides/agent-templates">
+    Crea o ajusta el agente que usa la campaña.
+  </Card>
+  <Card title="El motor de campañas" icon="gears" href="/concepts/campaigns-engine">
+    Cómo QCobro decide a quién contactar y cuándo.
+  </Card>
+</CardGroup>

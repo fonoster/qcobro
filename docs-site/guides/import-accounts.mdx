@@ -1,8 +1,70 @@
 ---
-title: "Import & sync accounts"
-description: "Bring debt accounts into a portfolio and keep them in sync."
+title: "Importar cuentas"
+description: "Carga las cuentas de deuda de una cartera desde un archivo CSV y mantenlas sincronizadas."
 ---
 
-<Note>
-This page is a placeholder and is being written. Check back soon.
-</Note>
+Las cuentas de una cartera se cargan desde un **archivo CSV**. Cada importación es una
+**sincronización**: QCobro compara las filas del archivo con las cuentas existentes y aplica el
+modo que elijas. Así mantienes la cartera al día con tu sistema de origen.
+
+## Importa un CSV
+
+<Steps>
+  <Step title="Abre el importador">
+    En la lista de **Carteras**, usa la acción **Sincronizar CSV** de la cartera. Se abre
+    **Importar cuentas**.
+  </Step>
+  <Step title="Selecciona el archivo">
+    Pulsa **Seleccionar archivo** y elige tu CSV. La consola valida el archivo y muestra
+    cuántas cuentas están listas para importar.
+  </Step>
+  <Step title="Elige el modo de sincronización">
+    Selecciona cómo tratar las cuentas existentes (ver la tabla de abajo).
+  </Step>
+  <Step title="Importa">
+    Pulsa **Importar**. Al terminar verás el resumen: **Agregadas**, **Actualizadas**,
+    **Archivadas** y **Total activas**.
+  </Step>
+</Steps>
+
+## Modos de sincronización
+
+El modo decide qué pasa con las cuentas existentes al importar.
+
+| Modo | Qué hace |
+| --- | --- |
+| **Solo agregar nuevas** | Agrega cuentas nuevas. No modifica ni elimina las existentes. |
+| **Agregar y actualizar** | Agrega cuentas nuevas y actualiza los campos de las existentes. No elimina. |
+| **Reemplazar todo** | Agrega nuevas, actualiza existentes y **archiva** las que no estén en el archivo. |
+
+<Warning>
+  **Reemplazar todo** archiva toda cuenta que falte en el archivo, así que envía siempre una
+  instantánea completa de la cartera. Un archivo parcial archivará las cuentas que dejaste
+  fuera (y expira sus promesas de pago pendientes).
+</Warning>
+
+## Si el archivo tiene errores
+
+Si alguna fila no es válida, la consola muestra **Errores en el archivo** con el detalle, y no
+importa esas filas. Corrige el CSV y vuelve a sincronizar.
+
+## Sincronizar desde tu propio sistema
+
+¿Prefieres cargar cuentas mediante código en lugar de un CSV? El SDK ofrece la misma operación
+de forma programática, con los mismos modos de fusión.
+
+<Card title="Sincronizar cuentas con el SDK" icon="arrows-rotate" href="/sdk/sync-accounts">
+  `client.portfolios.syncAccounts` — carga lotes de cuentas con `APPEND_ONLY`,
+  `UPDATE_EXISTING` o `REPLACE`.
+</Card>
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Carteras" icon="folder-open" href="/guides/portfolios">
+    Crea y organiza las carteras donde importas cuentas.
+  </Card>
+  <Card title="Lanzar una campaña" icon="bullhorn" href="/guides/campaigns">
+    Contacta a las cuentas que acabas de cargar.
+  </Card>
+</CardGroup>

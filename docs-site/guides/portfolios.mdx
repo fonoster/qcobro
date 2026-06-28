@@ -1,8 +1,67 @@
 ---
-title: "Create & manage portfolios"
-description: "Create portfolios and organize debt accounts in the operator console."
+title: "Carteras"
+description: "Crea y organiza carteras de deuda en la consola de QCobro, y trabaja sus cuentas."
 ---
 
+Una **cartera** agrupa las cuentas de deuda que gestionas para un cliente. Es el punto de
+partida del trabajo en QCobro: creas una cartera, le cargas sus cuentas y luego la trabajas con
+campañas o contacto manual.
+
+## Crea una cartera
+
+<Steps>
+  <Step title="Abre Carteras">
+    En el menú lateral, entra en **Carteras**. Verás la lista de carteras del espacio de
+    trabajo con sus columnas: **Nombre**, **Cliente**, **Cuentas**, **Saldo pendiente** y
+    **Recuperado (est.)**.
+  </Step>
+  <Step title="Crea una nueva">
+    Pulsa **Nueva cartera** y completa el **Nombre de la cartera** y el **ID del cliente** al
+    que pertenece. Guarda con **Crear cartera**.
+  </Step>
+  <Step title="Carga sus cuentas">
+    El **saldo** y el **conteo de cuentas** se calculan automáticamente al importar el CSV de
+    cuentas. Continúa en [Importar cuentas](/guides/import-accounts).
+  </Step>
+</Steps>
+
+## Trabaja una cartera
+
+Abre una cartera con **Ver detalle**. Dentro verás sus cuentas con **Nombre**, **Saldo** y
+**DPD** (días de mora). Desde aquí puedes contactar cuentas:
+
+- **Contactar manualmente** — elige un agente para contactar a una sola cuenta. El contacto
+  queda registrado como una gestión, sin campaña.
+- **Contactar seleccionados** — marca varias cuentas y contáctalas todas con un mismo agente.
+
 <Note>
-This page is a placeholder and is being written. Check back soon.
+  El contacto necesita que la cuenta tenga el dato del canal correspondiente: un teléfono para
+  voz o SMS, un correo para email. La consola te avisa si falta.
 </Note>
+
+## Edita, archiva o elimina
+
+Cada fila de la lista de carteras ofrece estas acciones:
+
+| Acción | Qué hace |
+| --- | --- |
+| **Editar** | Cambia el nombre o el ID del cliente. |
+| **Sincronizar CSV** | Importa o actualiza cuentas desde un archivo. |
+| **Archivar** | Retira la cartera de la vista activa conservando su historial. **Restaurar** la devuelve. |
+| **Eliminar** | Borra de forma permanente la cartera y todos sus registros de cuentas. No se puede deshacer. |
+
+<Tip>
+  Para retirar una cartera del trabajo diario sin perder su historial, prefiere **archivarla**
+  en lugar de eliminarla. Activa **Mostrar archivadas** para verlas y restaurarlas.
+</Tip>
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Importar cuentas" icon="file-csv" href="/guides/import-accounts">
+    Carga las cuentas de una cartera desde un CSV y mantenlas al día.
+  </Card>
+  <Card title="Lanzar una campaña" icon="bullhorn" href="/guides/campaigns">
+    Contacta a las cuentas de una cartera de forma programada.
+  </Card>
+</CardGroup>
