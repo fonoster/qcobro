@@ -49,9 +49,9 @@ Components instanced (in `pencil.pen`, frame `Diagram Kit` = `dkktQ`):
 
 | Component            | id       | Used for                                       |
 | :------------------- | :------- | :--------------------------------------------- |
-| `Diagram/Node`       | `r2OWa2` | Your code, QCobro API, PostgreSQL              |
+| `Diagram/Node`       | `r2OWa2` | Your code, The HTTPS API                       |
 | `Diagram/Service`    | `UvobQ`  | the `@qcobro/sdk` node (Q mark + 2 step chips) |
-| `Diagram/External`   | `M9EyhC` | the Identity card                              |
+| `Diagram/External`   | `M9EyhC` | the Authentication card                        |
 | `Diagram/Edge Label` | `jHda2`  | every edge label pill                          |
 | `Diagram/Step`       | `RApC6`  | the numbered step chips inside Service         |
 | `Diagram/Arrow R`    | `X3UJwx` | rightward arrowheads                           |
