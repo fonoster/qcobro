@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.5](https://github.com/fonoster/qcobro/compare/v1.5.4...v1.5.5) (2026-06-28)
+
+### Bug Fixes
+
+- **webapp:** staleTime 0 so navigating refetches lists ([b559e1e](https://github.com/fonoster/qcobro/commit/b559e1ecc53879f1477c54ff03bc326f8c9718bb))
+
 ## [1.5.4](https://github.com/fonoster/qcobro/compare/v1.5.3...v1.5.4) (2026-06-28)
 
 **Note:** Version bump only for package @qcobro/webapp
