@@ -62,7 +62,7 @@ jobs:
           }
           JSON
 
-          cat > qcobro.json <<'JSON'
+          cat > config/qcobro.json <<'JSON'
           {
             "database": { "url": "postgresql://qcobro:qcobro@localhost:5432/qcobro?schema=public" },
             "identity": { "endpoint": "localhost:50051", "httpBridgeUrl": "http://localhost:9110" },

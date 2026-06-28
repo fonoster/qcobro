@@ -27,10 +27,10 @@ cd qcobro
 ## Step 2 — Configure QCobro
 
 ```bash
-cp qcobro.example.json qcobro.json
+cp qcobro.example.json config/qcobro.json
 ```
 
-Edit `qcobro.json` and fill in all `CHANGE_ME` values. Key fields for
+Edit `config/qcobro.json` and fill in all `CHANGE_ME` values. Key fields for
 production:
 
 ```json
@@ -219,19 +219,19 @@ docker compose up -d
 
 ## Secrets checklist
 
-| Secret                     | Where                                                                  |
-| -------------------------- | ---------------------------------------------------------------------- |
-| `qcobro.json` secrets      | The file at `/opt/qcobro/qcobro.json` on the server (DB URL, API keys) |
-| DigitalOcean API token     | `/etc/letsencrypt/digitalocean/credentials.ini` (mode 600)             |
-| `FONOSTER_REPO_TOKEN` (CI) | GitHub repo secret — PAT with `contents: read` on the fonoster repo    |
+| Secret                     | Where                                                                         |
+| -------------------------- | ----------------------------------------------------------------------------- |
+| `qcobro.json` secrets      | The file at `/opt/qcobro/config/qcobro.json` on the server (DB URL, API keys) |
+| DigitalOcean API token     | `/etc/letsencrypt/digitalocean/credentials.ini` (mode 600)                    |
+| `FONOSTER_REPO_TOKEN` (CI) | GitHub repo secret — PAT with `contents: read` on the fonoster repo           |
 
 ---
 
 ## Troubleshooting
 
-| Symptom                            | Check                                                                                                 |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `curl: (35) SSL handshake failed`  | Cert path in `config/envoy.yaml` — does `/etc/letsencrypt/live/<domain>/fullchain.pem` exist?         |
-| Envoy exits immediately            | Run `docker compose logs envoy` — usually a YAML syntax error or missing cert file                    |
-| Apiserver restarts in a loop       | Migrations failing — check `docker compose logs apiserver` and verify `DATABASE_URL` in `qcobro.json` |
-| `npm ci` fails during Docker build | `.docker-deps/` tarballs missing — re-run `scripts/docker-build.sh`                                   |
+| Symptom                            | Check                                                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `curl: (35) SSL handshake failed`  | Cert path in `config/envoy.yaml` — does `/etc/letsencrypt/live/<domain>/fullchain.pem` exist?                |
+| Envoy exits immediately            | Run `docker compose logs envoy` — usually a YAML syntax error or missing cert file                           |
+| Apiserver restarts in a loop       | Migrations failing — check `docker compose logs apiserver` and verify `DATABASE_URL` in `config/qcobro.json` |
+| `npm ci` fails during Docker build | `.docker-deps/` tarballs missing — re-run `scripts/docker-build.sh`                                          |

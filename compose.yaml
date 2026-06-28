@@ -1,22 +1,9 @@
 services:
-  # openssl genrsa creates private keys with 600 permissions; the identity
-  # container runs as a non-root user and can't read them. This one-shot
-  # service ensures 644 on both key files before identity starts.
-  init-identity-keys:
-    image: alpine:3
-    restart: "no"
-    volumes:
-      - ./config/identity/keys:/keys
-    command: ["chmod", "644", "/keys/private.pem", "/keys/public.pem"]
-
   # Fonoster Identity — configured entirely by a mounted file (no env vars).
   # QCobro reaches it at identity:50051 on the internal Docker network.
   identity:
     image: fonoster/identity:0.22.0
     restart: unless-stopped
-    depends_on:
-      init-identity-keys:
-        condition: service_completed_successfully
     volumes:
       - ./config/identity:/service/config:ro
 

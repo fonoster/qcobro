@@ -13,7 +13,8 @@ outreach.
 docker compose -f compose.dev.yaml up -d
 
 # 2. Config — point at the dev DB. The engine stays OFF by default (never auto-dials)
-cp qcobro.example.json qcobro.json
+mkdir -p config
+cp qcobro.example.json config/qcobro.json
 #   set database.url to:
 #   postgresql://qcobro:qcobro@localhost:5432/qcobro?schema=public
 
