@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.3](https://github.com/fonoster/qcobro/compare/v1.2.2...v1.2.3) (2026-06-28)
+
+### Bug Fixes
+
+- **webapp:** create-workspace region defaults to NYC01, close button cursor ([9196f48](https://github.com/fonoster/qcobro/commit/9196f487fb98d76670eef424ac2fa77344ec0e71))
+
 ## [1.2.1](https://github.com/fonoster/qcobro/compare/v1.2.0...v1.2.1) (2026-06-28)
 
 ### Bug Fixes
