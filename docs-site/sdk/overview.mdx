@@ -11,8 +11,8 @@ a los resultados— sin escribir HTTP a mano.
 
 ## Cómo funciona
 
-Construyes un único `Client`, lo apuntas a tu endpoint de QCobro y llamas sobre él a métodos
-de recurso tipados. El cliente posee la conexión y el ciclo de vida de la autenticación;
+Construyes un único `Client` y llamas sobre él a métodos de recurso tipados. Por defecto
+apunta a `https://api.qcobro.com`. El cliente posee la conexión y el ciclo de vida de la autenticación;
 habla tRPC sobre HTTPS con la API de QCobro, que es la misma API que usa la consola de
 operador.
 
@@ -29,8 +29,8 @@ fragmento hace los cuatro.
 ```ts
 import { Client } from "@qcobro/sdk";
 
-// 1. Construye — el SDK añade la ruta /trpc a tu endpoint por su cuenta.
-const client = new Client({ endpoint: "https://api.qcobro.com" });
+// 1. Construye — apunta a https://api.qcobro.com por defecto.
+const client = new Client();
 
 // 2. Autentícate — los tokens emitidos se guardan en el cliente.
 await client.login({ email: "me@acme.com", password: process.env.QCOBRO_PASSWORD! });
@@ -99,7 +99,7 @@ y restáuralos con `client.setTokens(...)`.
 
 <CardGroup cols={2}>
   <Card title="Instalación" icon="download" href="/sdk/installation">
-    Instala `@qcobro/sdk` y construye un cliente apuntando a tu endpoint.
+    Instala `@qcobro/sdk` y construye tu primer cliente.
   </Card>
   <Card title="Autenticación y tokens" icon="key" href="/sdk/authentication">
     Inicia sesión con contraseña o API key, y gestiona los tokens de acceso y de refresco.

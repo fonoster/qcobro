@@ -176,6 +176,25 @@ after(async () => {
   await new Promise<void>((resolve) => server.close(() => resolve()));
 });
 
+test("defaults the endpoint to https://api.qcobro.com when none is given", async () => {
+  const calls: string[] = [];
+  const fetchImpl = (async (input: unknown) => {
+    calls.push(String(input));
+    throw new Error("stop after recording the URL");
+  }) as unknown as typeof globalThis.fetch;
+
+  const client = new Client({ fetch: fetchImpl })
+    .setTokens({ accessToken: "t" })
+    .useWorkspace("ws_test");
+
+  await client.portfolios.list().catch(() => {});
+  assert.ok(calls.length > 0, "transport was not reached");
+  assert.ok(
+    calls[0].startsWith("https://api.qcobro.com/trpc"),
+    `expected default endpoint, got ${calls[0]}`
+  );
+});
+
 test("login obtains and stores tokens", async () => {
   const client = new Client({ endpoint });
   const tokens = await client.login({ email: "me@acme.com", password: "secret" });

@@ -6,6 +6,9 @@ import { PortfoliosResource } from "./resources/portfolios.js";
 /** Header the apiserver reads to scope a request to a workspace. */
 const WORKSPACE_HEADER = "x-workspace";
 
+/** Default QCobro API base URL, used when no `endpoint` is provided. */
+const DEFAULT_ENDPOINT = "https://api.qcobro.com";
+
 /** Tokens issued by the QCobro Identity service. */
 export interface Tokens {
   /** Short-lived bearer token attached to every authenticated request. */
@@ -19,10 +22,11 @@ export interface Tokens {
 /** Options for constructing a {@link Client}. */
 export interface ClientOptions {
   /**
-   * Base URL of the QCobro API (e.g. `https://api.qcobro.com` or
-   * `http://localhost:3000`). The SDK appends the `/trpc` path itself.
+   * Base URL of the QCobro API. Defaults to `https://api.qcobro.com`; override
+   * only to target another environment (e.g. `http://localhost:3000`). The SDK
+   * appends the `/trpc` path itself.
    */
-  endpoint: string;
+  endpoint?: string;
   /**
    * `fetch` implementation to use. Defaults to the global `fetch` (Node ≥18 and
    * modern browsers). Provide this to supply a polyfill in older runtimes.
@@ -56,7 +60,7 @@ export interface ClientOptions {
  *
  * @example
  * ```ts
- * const client = new Client({ endpoint: "http://localhost:3000" });
+ * const client = new Client();
  * await client.login({ email: "me@acme.com", password: "secret" });
  * client.useWorkspace("ws_123");
  *
@@ -81,13 +85,13 @@ export class Client {
   // Shared in-flight refresh, so concurrent UNAUTHORIZED calls refresh once.
   #refreshInFlight: Promise<void> | null = null;
 
-  constructor(options: ClientOptions) {
+  constructor(options: ClientOptions = {}) {
     this.#accessToken = options.accessToken;
     this.#refreshToken = options.refreshToken;
     this.#workspace = options.workspace;
     this.#autoRefresh = options.autoRefresh ?? true;
 
-    const url = `${options.endpoint.replace(/\/+$/, "")}/trpc`;
+    const url = `${(options.endpoint ?? DEFAULT_ENDPOINT).replace(/\/+$/, "")}/trpc`;
     this.trpc = createTRPCClient<AppRouter>({
       links: [
         httpBatchLink({

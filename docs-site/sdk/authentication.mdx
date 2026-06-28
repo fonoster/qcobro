@@ -16,7 +16,7 @@ guardan en el cliente y se usan en las llamadas siguientes.
 ```ts
 import { Client } from "@qcobro/sdk";
 
-const client = new Client({ endpoint: "https://api.qcobro.com" });
+const client = new Client();
 
 await client.login({
   email: "me@acme.com",
@@ -89,7 +89,6 @@ al constructor — útil cuando ya tienes tokens persistidos.
 
 ```ts
 const client = new Client({
-  endpoint: "https://api.qcobro.com",
   accessToken: savedAccessToken,
   refreshToken: savedRefreshToken,
   workspace: "ws_abc123"
