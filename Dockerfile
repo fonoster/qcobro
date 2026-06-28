@@ -62,9 +62,11 @@ ENV QCOBRO_CONFIG=/config/qcobro.json
 # is no per-workspace node_modules to copy.
 COPY --from=build-apiserver /app/node_modules ./node_modules
 
-# Built artifacts
-COPY --from=build-apiserver /app/mods/common/dist    ./mods/common/dist
-COPY --from=build-apiserver /app/mods/apiserver/dist ./mods/apiserver/dist
+# Built artifacts — package.json is needed alongside dist so the workspace
+# symlink node_modules/@qcobro/common → mods/common resolves correctly.
+COPY --from=build-apiserver /app/mods/common/package.json ./mods/common/package.json
+COPY --from=build-apiserver /app/mods/common/dist         ./mods/common/dist
+COPY --from=build-apiserver /app/mods/apiserver/dist      ./mods/apiserver/dist
 
 # Prisma schema + migrations (needed for migrate deploy)
 COPY mods/apiserver/prisma ./mods/apiserver/prisma

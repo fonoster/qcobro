@@ -5,7 +5,11 @@ import {
   type VoiceApplicationClient,
   type VoiceApplicationInput
 } from "@qcobro/common";
-import autopilotTemplate from "./autopilotTemplate.json";
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+
+const autopilotTemplate =
+  require("./autopilotTemplate.json") as typeof import("./autopilotTemplate.json");
 
 type FonosterSettings = NonNullable<FonosterConfig>;
 
