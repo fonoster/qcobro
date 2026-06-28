@@ -20,6 +20,11 @@ on:
     branches: [main]
     types: [completed]
   workflow_dispatch:
+    inputs:
+      force_bump:
+        description: "Force a release with no mods/* changes: patch|minor|major (empty = normal conventional-commits autobump)"
+        required: false
+        default: ""
 
 # Never run two releases at once; don't cancel an in-flight one mid-push.
 concurrency:
@@ -60,4 +65,13 @@ jobs:
         run: git pull --rebase origin main
 
       - name: Version and tag
-        run: npx lerna version --conventional-commits --yes
+        run: |
+          if [ -n "${{ inputs.force_bump }}" ]; then
+            # Force a release even when no mods/* package changed. Deploy/CI/TLS
+            # changes live outside the lerna packages, so the conventional-commits
+            # autobump finds "No changed packages to version" and never releases
+            # them. --force-publish bumps every package to the requested level.
+            npx lerna version "${{ inputs.force_bump }}" --yes --force-publish
+          else
+            npx lerna version --conventional-commits --yes
+          fi
