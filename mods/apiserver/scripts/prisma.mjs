@@ -10,7 +10,8 @@ import { execFileSync } from "node:child_process";
 // real database exists — fall back to DATABASE_URL from the environment.
 // `generate` never connects, so it works even with no URL at all; commands that
 // do connect (migrate, db push) still require a real URL via either source.
-const configPath = process.env.QCOBRO_CONFIG ?? resolve(process.cwd(), "../../qcobro.json");
+const configPath =
+  process.env.QCOBRO_CONFIG ?? resolve(process.cwd(), "../../config/qcobro.json");
 
 let databaseUrl = process.env.DATABASE_URL;
 try {
