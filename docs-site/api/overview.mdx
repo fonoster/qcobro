@@ -1,8 +1,71 @@
 ---
-title: "API overview"
-description: "The QCobro API: base URL, the tRPC endpoint, and how requests are scoped to a workspace."
+title: "Visión general de la API"
+description: "La API de QCobro: la API tRPC que envuelve el SDK, cómo se acota cada petición a un workspace, y el endpoint REST de gestiones."
 ---
 
-<Note>
-This page is a placeholder and is being written. Check back soon.
-</Note>
+QCobro expone la misma API sobre la que corre la consola de operador. Es una API **tRPC** a la
+que llamas sobre HTTPS, y la forma recomendada de usarla es el [`@qcobro/sdk`](/sdk/overview),
+que la envuelve con métodos tipados de extremo a extremo. Además, hay un endpoint **REST**
+dedicado para registrar gestiones desde integraciones externas.
+
+## Formas de llamar a la API
+
+<CardGroup cols={2}>
+  <Card title="Con el SDK (recomendado)" icon="cube" href="/sdk/overview">
+    `@qcobro/sdk` envuelve la API tRPC con recursos tipados, valida en el cliente y gestiona
+    los tokens por ti. Es la vía recomendada para la mayoría de integraciones.
+  </Card>
+  <Card title="tRPC directo" icon="plug" href="/sdk/reference">
+    Llama a cualquier procedimiento por el proxy tipado `client.trpc` del SDK, incluso a los
+    que aún no tienen método de recurso.
+  </Card>
+  <Card title="Endpoint REST de gestiones" icon="paper-plane" href="/api/contact-log">
+    Un endpoint HTTP sencillo para registrar el resultado de una gestión en un workspace desde
+    un sistema externo.
+  </Card>
+  <Card title="Autenticación" icon="key" href="/api/authentication">
+    Cómo autenticar las peticiones y acotarlas a un workspace.
+  </Card>
+</CardGroup>
+
+## URL base
+
+La API de QCobro está en `https://api.qcobro.com`. La API tRPC vive bajo la ruta `/trpc`; los
+endpoints REST, bajo `/api`. El SDK usa esa base por defecto, así que normalmente no necesitas
+configurarla.
+
+```text
+https://api.qcobro.com/trpc      ← la API tRPC (la que envuelve el SDK)
+https://api.qcobro.com/api/...   ← los endpoints REST
+```
+
+## Cada petición se acota a un workspace
+
+Casi todas las operaciones actúan dentro de un **workspace**. Al llamar a la API tRPC, indicas
+el workspace activo con la cabecera `x-workspace`, cuyo valor es el `accessKeyId` del
+workspace. El SDK la fija por ti cuando llamas a `client.useWorkspace(...)`.
+
+```text
+Authorization: Bearer <accessToken>
+x-workspace: <accessKeyId>
+```
+
+Consulta [Autenticación](/api/authentication) para obtener los tokens y las credenciales.
+
+## Validación y errores
+
+Las entradas se validan contra los esquemas compartidos de QCobro. Una entrada inválida
+produce un error de validación estructurado, con detalle por campo (`code`, `message`,
+`fieldErrors`). El SDK lo expone como [`ValidationError`](/sdk/errors) y, además, valida en el
+cliente **antes** de enviar la petición.
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Autenticación" icon="key" href="/api/authentication">
+    Tokens, la cabecera de workspace y las API keys.
+  </Card>
+  <Card title="Endpoint de gestiones" icon="paper-plane" href="/api/contact-log">
+    Registra el resultado de una gestión vía REST.
+  </Card>
+</CardGroup>
