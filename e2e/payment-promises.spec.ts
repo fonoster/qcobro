@@ -71,9 +71,6 @@ test.describe("payment promises — worklist", () => {
 
     // --- Worklist: row + KPIs render -----------------------------------------
     await page.getByRole("link", { name: "Promesas de pago" }).click();
-    // The promise was seeded out-of-band (API), so the in-memory query cache (staleTime 30s)
-    // doesn't know about it — reload to fetch fresh server state.
-    await page.reload();
     await expect(page.getByRole("heading", { name: "Promesas de pago" })).toBeVisible();
     await expect(page.getByText("Pendientes")).toBeVisible();
     const row = page.getByRole("row", { name: /María E2E/ });

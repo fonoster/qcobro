@@ -6,7 +6,10 @@ import type { AppRouter } from "@qcobro/apiserver";
 export const trpc = createTRPCReact<AppRouter>();
 
 export const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 30_000, retry: false } }
+  // staleTime 0 so navigating to a page refetches its lists — otherwise a list cached
+  // (often empty) by the dashboard is reused for up to its stale window and misses rows
+  // created since (incl. out-of-band writes). retry off keeps failures fast/visible.
+  defaultOptions: { queries: { staleTime: 0, retry: false } }
 });
 
 export const ACCESS_TOKEN_KEY = "accessToken";
