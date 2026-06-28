@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.3](https://github.com/fonoster/qcobro/compare/v1.1.2...v1.1.3) (2026-06-28)
+
+### Bug Fixes
+
+- **docker:** add common/package.json to image and fix JSON import for Node 22 ([da4a0aa](https://github.com/fonoster/qcobro/commit/da4a0aa5301eccfcd36cffa7b6dada1b13951446))
+
 # 1.1.0 (2026-06-28)
 
 ### Bug Fixes
