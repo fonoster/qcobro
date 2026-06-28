@@ -9,6 +9,7 @@ import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
 import { SelectGroup } from "../components/ui/select.js";
+import { TIMEZONES } from "../lib/timezones.js";
 
 export function CreateWorkspace() {
   const { setTokens, setWorkspace, currentUser } = useAuth();
@@ -20,6 +21,8 @@ export function CreateWorkspace() {
 
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [currency, setCurrency] = useState<"USD" | "DOP">("USD");
+  const [timezone, setTimezone] = useState(TIMEZONES[0]);
 
   const items = workspaces.data ?? [];
   const pending = create.isPending || refresh.isPending;
@@ -31,7 +34,7 @@ export function CreateWorkspace() {
 
   async function onCreate(event: FormEvent) {
     event.preventDefault();
-    const { ref } = await create.mutateAsync({ name });
+    const { ref } = await create.mutateAsync({ name, currency, timezone });
 
     const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
     if (refreshToken) {
@@ -136,6 +139,27 @@ export function CreateWorkspace() {
 
               <SelectGroup label="Región" defaultValue="nyc01">
                 <option value="nyc01">NYC01</option>
+              </SelectGroup>
+
+              <SelectGroup
+                label="Moneda"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value as "USD" | "DOP")}
+              >
+                <option value="USD">USD</option>
+                <option value="DOP">DOP</option>
+              </SelectGroup>
+
+              <SelectGroup
+                label="Zona horaria"
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
+              >
+                {TIMEZONES.map((tz) => (
+                  <option key={tz} value={tz}>
+                    {tz}
+                  </option>
+                ))}
               </SelectGroup>
 
               <div className="flex justify-end gap-3">

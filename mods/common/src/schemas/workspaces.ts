@@ -1,7 +1,10 @@
 import { z } from "zod";
+import { currencySchema } from "./workspaceSettings.js";
 
 export const createWorkspaceSchema = z.object({
-  name: z.string().min(1).max(60)
+  name: z.string().min(1).max(60),
+  currency: currencySchema,
+  timezone: z.string().min(1)
 });
 export type CreateWorkspaceInput = z.infer<typeof createWorkspaceSchema>;
 

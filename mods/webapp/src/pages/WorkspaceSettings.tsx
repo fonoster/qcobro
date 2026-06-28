@@ -8,22 +8,9 @@ import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
 import { SelectGroup } from "../components/ui/select.js";
+import { TIMEZONES } from "../lib/timezones.js";
 
 const CONFIRM_WORD = "ELIMINAR";
-
-// Curated IANA timezones for the markets QCobro serves. A stored value outside this
-// list is preserved by prepending it to the options.
-const TIMEZONES = [
-  "America/Santo_Domingo",
-  "America/Costa_Rica",
-  "America/Panama",
-  "America/Bogota",
-  "America/Lima",
-  "America/Mexico_City",
-  "America/New_York",
-  "America/Chicago",
-  "America/Los_Angeles"
-];
 
 export function WorkspaceSettings() {
   const { workspace, accessToken, setWorkspace } = useAuth();

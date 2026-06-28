@@ -17,6 +17,7 @@ import {
   ownerProcedure
 } from "../trpc.js";
 import { identityCall } from "../identityCall.js";
+import { createUpdateWorkspaceSettings } from "../../functions/workspaceSettings/updateWorkspaceSettings.js";
 import { config } from "../../config.js";
 import { TRPCError } from "@trpc/server";
 
@@ -38,12 +39,18 @@ export const workspacesRouter = router({
     return { success: true };
   }),
 
-  // Any authenticated user can create a workspace and becomes its owner.
-  create: protectedProcedure
-    .input(createWorkspaceSchema)
-    .mutation(({ ctx, input }) =>
-      identityCall(() => ctx.identity.createWorkspace(input.name, ctx.token))
-    ),
+  // Any authenticated user can create a workspace and becomes its owner. After
+  // Identity creates the workspace, persist its app-owned settings (currency +
+  // timezone) keyed by the workspace's accessKeyId.
+  create: protectedProcedure.input(createWorkspaceSchema).mutation(async ({ ctx, input }) => {
+    const created = await identityCall(() => ctx.identity.createWorkspace(input.name, ctx.token));
+    const workspace = await identityCall(() => ctx.identity.getWorkspace(created.ref, ctx.token));
+    await createUpdateWorkspaceSettings(
+      ctx.prisma as never,
+      workspace.accessKeyId
+    )({ currency: input.currency, timezone: input.timezone });
+    return created;
+  }),
 
   // Workspaces the caller owns or is an active member of.
   list: protectedProcedure.query(({ ctx }) =>
