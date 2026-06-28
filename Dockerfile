@@ -69,6 +69,10 @@ COPY --from=build-apiserver /app/mods/apiserver/dist ./mods/apiserver/dist
 # Prisma schema + migrations (needed for migrate deploy)
 COPY mods/apiserver/prisma ./mods/apiserver/prisma
 
+# Migration wrapper — reads DB URL from qcobro.json so the entrypoint
+# doesn't need DATABASE_URL in the environment separately.
+COPY mods/apiserver/scripts/prisma.mjs ./mods/apiserver/scripts/prisma.mjs
+
 # Entrypoint runs migrations then starts the server
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh

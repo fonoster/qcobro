@@ -2,7 +2,7 @@
 set -e
 
 echo "→ Running database migrations..."
-node /app/mods/apiserver/scripts/prisma.mjs migrate deploy
+cd /app/mods/apiserver && node scripts/prisma.mjs migrate deploy && cd /app
 
 echo "→ Starting API server..."
 exec node /app/mods/apiserver/dist/index.js
