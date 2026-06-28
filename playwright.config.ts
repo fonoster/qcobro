@@ -15,7 +15,15 @@ const ENABLED_SPECS = [
   "**/profile.spec.ts",
   "**/auth-workspaces.spec.ts",
   "**/delete-workspace.spec.ts",
-  "**/api-keys.spec.ts"
+  "**/api-keys.spec.ts",
+  "**/member-actions.spec.ts",
+  "**/verify-contact.spec.ts",
+  "**/ai-insights.spec.ts",
+  "**/campaigns-core.spec.ts",
+  "**/console-refinements.spec.ts",
+  "**/invite-acceptance.spec.ts",
+  "**/manual-outreach.spec.ts"
+  // Deferred (need seeded fixtures): gestiones-channels, payment-promises.
 ];
 
 export default defineConfig({
