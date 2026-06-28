@@ -1,0 +1,119 @@
+name: Deploy
+
+# Deploys a published qcobro image pair to the DigitalOcean droplet.
+# Human-gated: the deploy only runs from the "Run workflow" button. That click
+# is the approval gate. To roll back, dispatch an older version string.
+#
+# Flow:
+#   1. Resolve the version (input → lerna.json fallback).
+#   2. SSH into the droplet, pin QCOBRO_VERSION in .env, pull and restart.
+#   3. Wait for all compose services to report healthy; roll back on failure.
+#
+# Required repo configuration:
+#   secrets.RELEASE_TOKEN     PAT with contents:read + packages:read
+#                             (the same token used by release.yml)
+#   secrets.DEPLOY_SSH_HOST   droplet IP or hostname
+#   secrets.DEPLOY_SSH_USER   SSH user (e.g. root)
+#   secrets.DEPLOY_SSH_KEY    SSH private key (PEM, no passphrase)
+#   vars.DEPLOY_COMPOSE_DIR   directory on the droplet that contains
+#                             compose.yaml + qcobro.json + .env
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to deploy (e.g. v1.2.0; empty = current lerna.json version)"
+        required: false
+
+# One deploy at a time; queue rather than cancel so a started deploy finishes.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        run: |
+          v="${{ inputs.version }}"
+          [ -n "$v" ] || v="v$(node -p "require('./lerna.json').version")"
+          # Strip leading v for display; keep it for the image tag (compose uses QCOBRO_VERSION as-is).
+          if ! echo "$v" | grep -Eq '^v?[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Could not resolve a semver version from '$v'" >&2
+            exit 1
+          fi
+          # Ensure the tag always has a leading v to match what docker-publish pushes.
+          [[ "$v" == v* ]] || v="v$v"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "Deploying **$v**" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    needs: resolve
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.2
+        env:
+          VERSION: ${{ needs.resolve.outputs.version }}
+          COMPOSE_DIR: ${{ vars.DEPLOY_COMPOSE_DIR }}
+          GHCR_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GHCR_OWNER: ${{ github.repository_owner }}
+        with:
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ secrets.DEPLOY_SSH_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: VERSION,COMPOSE_DIR,GHCR_TOKEN,GHCR_OWNER
+          script: |
+            set -e
+            cd "$COMPOSE_DIR"
+
+            # Authenticate to GHCR so we can pull the new images.
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_OWNER" --password-stdin
+
+            # Pin QCOBRO_VERSION in .env, remembering the previous value for rollback.
+            touch .env
+            prev=$(grep '^QCOBRO_VERSION=' .env | cut -d= -f2- || true)
+            grep -v '^QCOBRO_VERSION=' .env > .env.next || true
+            echo "QCOBRO_VERSION=${VERSION}" >> .env.next
+            mv .env.next .env
+
+            docker compose pull apiserver webapp
+            docker compose up -d
+
+            # Wait up to 60 s for all services to be running.
+            ok=""
+            for i in $(seq 1 30); do
+              stopped=$(docker compose ps --status exited --quiet 2>/dev/null | wc -l)
+              starting=$(docker compose ps --status starting --quiet 2>/dev/null | wc -l)
+              if [ "$stopped" = "0" ] && [ "$starting" = "0" ]; then
+                ok=1
+                break
+              fi
+              sleep 2
+            done
+
+            if [ -z "$ok" ]; then
+              echo "Deploy of ${VERSION} failed — containers did not come up cleanly." >&2
+              docker compose ps
+              docker compose logs --tail 50
+              if [ -n "$prev" ]; then
+                echo "Rolling back to ${prev}." >&2
+                grep -v '^QCOBRO_VERSION=' .env > .env.next || true
+                echo "QCOBRO_VERSION=${prev}" >> .env.next
+                mv .env.next .env
+                docker compose pull apiserver webapp
+                docker compose up -d
+              fi
+              exit 1
+            fi
+
+            echo "Deployed ${VERSION} successfully."
+            docker compose ps
