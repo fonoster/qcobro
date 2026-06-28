@@ -4,7 +4,7 @@
   },
   "identity": {
     "endpoint": "identity:50051",
-    "httpBridgeUrl": "https://identity.example.com"
+    "httpBridgeUrl": "http://identity:9110"
   },
   "apiserver": {
     "port": 3000,
