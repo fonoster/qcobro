@@ -2,8 +2,6 @@ name: Publish Docker Images
 
 on:
   push:
-    branches:
-      - main
     tags:
       - "v*.*.*"
   workflow_dispatch:
@@ -45,8 +43,6 @@ jobs:
           ADD_LATEST=true
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             T="${GITHUB_REF#refs/tags/}"
-          elif [[ "$GITHUB_REF" == refs/heads/main ]]; then
-            T="main-${GITHUB_SHA:0:7}"
           else
             T="${{ inputs.tag }}"
             ADD_LATEST=false

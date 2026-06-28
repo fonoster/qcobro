@@ -1,0 +1,66 @@
+name: Release
+
+# Conventional-commits autobump. On every push to main that touches a mod,
+# lerna inspects commits since the last vX.Y.Z tag and, if any are releasable
+# (feat → minor, fix → patch, BREAKING CHANGE → major), bumps lerna.json +
+# all mods/* packages, writes CHANGELOG, commits
+# "chore(release): publish vX.Y.Z", and pushes the commit and tag. The
+# vX.Y.Z tag then triggers docker-publish.yml.
+#
+# Required secret: RELEASE_TOKEN
+#   A personal access token (classic or fine-grained) with:
+#     contents: write   — push the bump commit + tag
+#     packages: read    — (fine-grained; classic needs read:packages) so the
+#                         deploy workflow can pass it to the droplet for pulls
+#   The default GITHUB_TOKEN cannot be used here: tags pushed by it do NOT
+#   trigger downstream workflows (docker-publish would never fire).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "mods/**"
+      - "package.json"
+      - "package-lock.json"
+      - "lerna.json"
+  workflow_dispatch:
+
+# Never run two releases at once; don't cancel an in-flight one mid-push.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Pull latest (avoid EBEHIND if commits land during runner startup)
+        run: git pull --rebase origin main
+
+      - name: Version and tag
+        run: npx lerna version --conventional-commits --yes
