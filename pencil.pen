@@ -35650,6 +35650,22 @@
                           ]
                         },
                         {
+                          "id": "rgVFl",
+                          "type": "ref",
+                          "ref": "M78oI",
+                          "name": "Language Field",
+                          "width": "fill_container",
+                          "descendants": {
+                            "Jjj3G": {
+                              "content": "Idioma"
+                            },
+                            "q9ZhO": {
+                              "content": "Español",
+                              "fill": "#0F172A"
+                            }
+                          }
+                        },
+                        {
                           "type": "frame",
                           "id": "d9p8SF",
                           "name": "Footer",
