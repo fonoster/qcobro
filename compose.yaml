@@ -24,9 +24,13 @@ services:
   envoy:
     image: envoyproxy/envoy:v1.35.0
     restart: unless-stopped
+    # Certs live in ./config/certs (populated from Let's Encrypt by the certbot
+    # renewal deploy-hook). We don't mount /etc/letsencrypt directly because Docker
+    # userns-remap maps the container's root to an unprivileged host UID that can't
+    # read certbot's 0600 key or traverse its 0700 live/archive dirs.
     volumes:
       - ./config/envoy.yaml:/etc/envoy/envoy.yaml:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./config/certs:/etc/envoy/certs:ro
     ports:
       - "443:443"
     depends_on:

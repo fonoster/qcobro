@@ -56,53 +56,57 @@ Use the `sslmode=require` parameter — DO managed databases require SSL.
 
 ---
 
-## Step 3 — Update the Envoy config with your domain
+## Step 3 — Point the domain's DNS at the Droplet
 
-Replace the placeholder domain in `config/envoy.yaml`:
+Create an `A` record for your domain (e.g. `app`) pointing at the Droplet's
+public IPv4. Confirm it resolves before issuing a cert:
 
 ```bash
-sed -i 's/app\.qcobro\.com/your.actual.domain.com/g' config/envoy.yaml
+dig +short app.qcobro.com A      # must return the Droplet's IP
 ```
+
+The Envoy config (`config/envoy.yaml`) is domain-agnostic — it reads its cert
+from `config/certs/`, which `scripts/deploy/tls.sh` populates (see Step 4). You
+do **not** need to edit `envoy.yaml` per domain.
 
 ---
 
-## Step 4 — Issue a TLS certificate
+## Step 4 — Issue and manage the TLS certificate
 
-Envoy reads the cert files at startup from `/etc/letsencrypt/live/<domain>/`.
-Issue the cert **before** starting the stack.
-
-### Option A — DNS-01 challenge (recommended, no port 80 required)
+TLS is handled by `scripts/deploy/tls.sh`. Set the domain and ACME email in the
+`.env` next to `compose.yaml` (the same file that pins `QCOBRO_VERSION`):
 
 ```bash
-sudo apt update && sudo apt install -y certbot python3-certbot-dns-digitalocean
-
-# Create a DigitalOcean API token at: DigitalOcean → API → Personal access tokens
-# (Domains write scope is sufficient)
-sudo mkdir -p /etc/letsencrypt/digitalocean
-sudo tee /etc/letsencrypt/digitalocean/credentials.ini > /dev/null << 'EOF'
-dns_digitalocean_token = <YOUR_DO_API_TOKEN>
+cat >> .env << 'EOF'
+TLS_DOMAIN=app.qcobro.com
+TLS_EMAIL=team@fonoster.com
 EOF
-sudo chmod 600 /etc/letsencrypt/digitalocean/credentials.ini
 
-sudo certbot certonly \
-  --dns-digitalocean \
-  --dns-digitalocean-credentials /etc/letsencrypt/digitalocean/credentials.ini \
-  --dns-digitalocean-propagation-seconds 30 \
-  -d your.actual.domain.com \
-  --agree-tos -m ops@yourdomain.com --non-interactive
+sudo apt update && sudo apt install -y certbot
+scripts/deploy/tls.sh
 ```
 
-### Option B — HTTP-01 standalone (Envoy not yet running)
+What the script does (and why it's safe to run on every deploy):
 
-Since this is the initial setup, port 443 is free:
+- **First run** — issues the cert via `certbot --standalone` (Envoy uses only
+  443, so port 80 is free for the HTTP-01 challenge) and registers a renewal
+  deploy-hook.
+- **Later runs** — checks days-to-expiry and only calls certbot when inside the
+  renewal window (default 30 days). Far from expiry it's a fast no-op that never
+  touches certbot, so it can't burn Let's Encrypt rate limits.
+- The deploy-hook (`scripts/deploy/refresh-envoy-certs.sh`) copies the cert into
+  `config/certs/` and restarts Envoy — and only runs on an _actual_ renewal.
+
+> **Why copy the certs?** This Droplet runs Docker with **userns-remap**, so the
+> Envoy container's root maps to an unprivileged host UID that cannot read
+> certbot's `0600` key or traverse its `0700` `live`/`archive` dirs. Envoy
+> therefore reads world-readable (`0644`) copies from `config/certs/` instead of
+> mounting `/etc/letsencrypt` directly. `config/certs/` is git-ignored.
+
+To force a renewal regardless of the window (counts against rate limits):
 
 ```bash
-sudo apt update && sudo apt install -y certbot
-
-sudo certbot certonly \
-  --standalone \
-  -d your.actual.domain.com \
-  --agree-tos -m ops@yourdomain.com --non-interactive
+scripts/deploy/tls.sh --force
 ```
 
 ---
@@ -172,27 +176,26 @@ docker compose logs -f apiserver
 
 ## Certificate renewal
 
-Certbot renews automatically via a systemd timer. After renewal, Envoy must
-be restarted to load the new cert files.
+Renewal is automatic and happens on two independent paths — you don't need to do
+anything after Step 4:
 
-Create a deploy hook:
+1. **certbot's systemd timer** runs `certbot renew` twice daily. The deploy-hook
+   registered in Step 4 is persisted into the cert's renewal config, so on an
+   actual renewal it copies the new cert into `config/certs/` and restarts Envoy.
+2. **Every QCobro deploy** runs `scripts/deploy/tls.sh` (see the Deploy
+   workflow), which renews if inside the window and is otherwise a no-op.
 
-```bash
-sudo mkdir -p /etc/letsencrypt/renewal-hooks/deploy
-sudo tee /etc/letsencrypt/renewal-hooks/deploy/restart-envoy.sh > /dev/null << 'EOF'
-#!/bin/sh
-cd /opt/qcobro && docker compose restart envoy
-EOF
-sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/restart-envoy.sh
-```
-
-Test without actually renewing:
+Verify the renewal path end-to-end without issuing a real cert:
 
 ```bash
 sudo certbot renew --dry-run
 ```
 
-Confirm the hook fires and Envoy restarts at the end.
+Check time remaining at any point:
+
+```bash
+scripts/deploy/tls.sh        # prints "expires in N day(s)" and acts only if due
+```
 
 ---
 
@@ -229,9 +232,10 @@ docker compose up -d
 
 ## Troubleshooting
 
-| Symptom                            | Check                                                                                                        |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `curl: (35) SSL handshake failed`  | Cert path in `config/envoy.yaml` — does `/etc/letsencrypt/live/<domain>/fullchain.pem` exist?                |
-| Envoy exits immediately            | Run `docker compose logs envoy` — usually a YAML syntax error or missing cert file                           |
-| Apiserver restarts in a loop       | Migrations failing — check `docker compose logs apiserver` and verify `DATABASE_URL` in `config/qcobro.json` |
-| `npm ci` fails during Docker build | `.docker-deps/` tarballs missing — re-run `scripts/docker-build.sh`                                          |
+| Symptom                                 | Check                                                                                                                                                                                                                         |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `curl: (35) SSL handshake failed`       | Are `config/certs/{fullchain,privkey}.pem` present and non-empty? Re-run `scripts/deploy/tls.sh`.                                                                                                                             |
+| `Failed to load incomplete private key` | Envoy can't read the key. Almost always userns-remap: Envoy reads `config/certs/` (0644 copies), not `/etc/letsencrypt` directly. Re-run `scripts/deploy/tls.sh` and confirm `docker compose config` mounts `./config/certs`. |
+| Envoy exits immediately                 | Run `docker compose logs envoy` — usually a YAML syntax error or missing cert file                                                                                                                                            |
+| Apiserver restarts in a loop            | Migrations failing — check `docker compose logs apiserver` and verify `DATABASE_URL` in `config/qcobro.json`                                                                                                                  |
+| `npm ci` fails during Docker build      | `.docker-deps/` tarballs missing — re-run `scripts/docker-build.sh`                                                                                                                                                           |

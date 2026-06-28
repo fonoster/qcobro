@@ -49,10 +49,13 @@ static_resources:
               "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
               common_tls_context:
                 tls_certificates:
+                  # Certs are copied (dereferenced) into ./config/certs by the
+                  # certbot renewal deploy-hook, because Docker userns-remap means
+                  # the container cannot read Let's Encrypt's 0600/0700 tree directly.
                   - certificate_chain:
-                      filename: "/etc/letsencrypt/live/app.qcobro.com/fullchain.pem"
+                      filename: "/etc/envoy/certs/fullchain.pem"
                     private_key:
-                      filename: "/etc/letsencrypt/live/app.qcobro.com/privkey.pem"
+                      filename: "/etc/envoy/certs/privkey.pem"
 
   clusters:
     - name: apiserver

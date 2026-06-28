@@ -87,6 +87,13 @@ jobs:
             set -e
             cd "$COMPOSE_DIR"
 
+            # Keep config (compose.yaml, envoy.yaml) and scripts current on the
+            # droplet. .env and config/*.json are git-ignored, so this is safe;
+            # --ff-only refuses to merge over local edits (reconcile by hand if so).
+            if [ -d .git ]; then
+              git pull --ff-only || echo "WARNING: git pull --ff-only failed — droplet config may be stale."
+            fi
+
             # Authenticate to GHCR so we can pull the new images.
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_OWNER" --password-stdin
 
@@ -125,6 +132,13 @@ jobs:
                 docker compose up -d
               fi
               exit 1
+            fi
+
+            # Issue the TLS cert on first deploy and renew it when inside the
+            # expiry window. Rate-limit-safe and non-fatal: a cert hiccup must
+            # not fail an otherwise-good app deploy.
+            if [ -x scripts/deploy/tls.sh ]; then
+              scripts/deploy/tls.sh || echo "WARNING: TLS sync failed — check certs/Envoy."
             fi
 
             echo "Deployed ${VERSION} successfully."

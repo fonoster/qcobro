@@ -17,6 +17,10 @@ mods/sdk/docs
 qcobro.json
 !qcobro.example.json
 
+# TLS certs copied from Let's Encrypt for Envoy (see scripts/deploy/tls.sh).
+# Generated per-host; never commit private keys.
+config/certs/
+
 # Local Identity service config + keys (holds dev secrets).
 # Commit config/identity/identity.example.json as the example.
 config/identity/identity.json
