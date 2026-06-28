@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.1](https://github.com/fonoster/qcobro/compare/v1.1.0...v1.1.1) (2026-06-28)
+
+### Bug Fixes
+
+- **docker:** copy prisma.mjs into image and run migrations from apiserver dir ([d7898fe](https://github.com/fonoster/qcobro/commit/d7898fe74b3749fc3bbc79ae50c748a778005539))
+
 # 1.1.0 (2026-06-28)
 
 ### Bug Fixes
