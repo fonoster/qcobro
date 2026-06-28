@@ -62,7 +62,7 @@ export function AuthedLayout() {
     );
   }
   if (!workspaces.isFetching && workspaces.isSuccess && items.length === 0) {
-    return <Navigate to="/create-workspace" replace />;
+    return <Navigate to="/workspaces" replace />;
   }
 
   return (
@@ -71,7 +71,7 @@ export function AuthedLayout() {
       <div className="flex flex-1 overflow-hidden">
         <aside className="flex w-60 shrink-0 flex-col justify-between overflow-y-auto border-r border-slate-200 bg-white px-4 py-5">
           <div className="flex flex-col gap-6">
-            <Link to="/create-workspace" aria-label="Ir a la lista de espacios">
+            <Link to="/workspaces" aria-label="Ir a la lista de espacios">
               <Logo />
             </Link>
             <WorkspaceSwitcher />

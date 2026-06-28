@@ -22,8 +22,8 @@ test.describe("delete workspace", () => {
     await page.getByPlaceholder("ELIMINAR").fill("ELIMINAR");
     await expect(confirm).toBeEnabled();
 
-    // Confirm → only workspace removed → routed back to workspace creation.
+    // Confirm → only workspace removed → routed back to the workspaces list.
     await confirm.click();
-    await expect(page).toHaveURL(/\/create-workspace/);
+    await expect(page).toHaveURL(/\/workspaces/);
   });
 });

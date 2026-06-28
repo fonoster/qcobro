@@ -24,7 +24,7 @@ export function Login() {
     try {
       const res = await login.mutateAsync({ email, password });
       setTokens(res.accessToken, res.refreshToken, res.idToken);
-      navigate("/");
+      navigate("/workspaces");
     } catch {
       setError(t("auth.invalidCredentials"));
     }

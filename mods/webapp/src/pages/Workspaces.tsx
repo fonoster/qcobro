@@ -4,16 +4,14 @@ import { Plus, X, Settings } from "lucide-react";
 import { trpc, REFRESH_TOKEN_KEY } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n } from "../lib/i18n.js";
-import { Logo } from "../components/Logo.js";
-import { AnnouncementBanner } from "../components/AnnouncementBanner.js";
 import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
 import { SelectGroup } from "../components/ui/select.js";
 import { TIMEZONES } from "../lib/timezones.js";
 
-export function CreateWorkspace() {
-  const { setTokens, setWorkspace, currentUser } = useAuth();
+export function Workspaces() {
+  const { setTokens, setWorkspace } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
   const utils = trpc.useUtils();
@@ -55,18 +53,7 @@ export function CreateWorkspace() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <AnnouncementBanner />
-
-      <header className="flex h-[72px] shrink-0 items-center justify-between border-b border-slate-200 bg-white px-10">
-        <Logo />
-        {currentUser && (
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200">
-            <span className="text-[13px] font-bold text-slate-600">{currentUser.initials}</span>
-          </div>
-        )}
-      </header>
-
+    <>
       <div className="flex flex-1 flex-col items-center justify-center gap-8 px-10 py-12">
         <div className="flex flex-col items-center gap-2 text-center">
           <h1 className="text-[28px] font-bold text-slate-900">
@@ -191,6 +178,6 @@ export function CreateWorkspace() {
           </Card>
         </div>
       )}
-    </div>
+    </>
   );
 }

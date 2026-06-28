@@ -46,7 +46,7 @@ export function VerifyContact() {
         value: email,
         verificationCode: code.trim()
       });
-      navigate("/");
+      navigate("/workspaces");
     } catch {
       setError(t("verify.failed"));
     }
@@ -109,7 +109,7 @@ export function VerifyContact() {
             </button>
             <button
               type="button"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/workspaces")}
               className="text-slate-500 hover:underline"
             >
               {t("verify.skip")}
