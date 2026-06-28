@@ -4,29 +4,86 @@
   "name": "QCobro",
   "description": "Multilingual AI-voice debt-collections platform by Fonoster.",
   "colors": {
-    "primary": "#047857",
+    "primary": "#059669",
     "light": "#10B981",
-    "dark": "#064E3B"
+    "dark": "#047857"
   },
+  "favicon": "/favicon.svg",
   "navigation": {
     "groups": [
       {
         "group": "Get started",
-        "pages": ["index", "quickstart"]
+        "pages": ["index", "concepts/how-qcobro-works"]
+      },
+      {
+        "group": "SDK",
+        "pages": [
+          "sdk/overview",
+          "sdk/installation",
+          "sdk/authentication",
+          "sdk/portfolios",
+          "sdk/sync-accounts",
+          "sdk/errors",
+          "sdk/reference"
+        ]
+      },
+      {
+        "group": "Operator guides",
+        "pages": [
+          "guides/portfolios",
+          "guides/import-accounts",
+          "guides/campaigns",
+          "guides/agent-templates",
+          "guides/payment-promises",
+          "guides/ai-insights"
+        ]
+      },
+      {
+        "group": "API reference",
+        "pages": ["api/overview", "api/authentication", "api/contact-log"]
+      },
+      {
+        "group": "Concepts",
+        "pages": ["concepts/workspaces", "concepts/channels", "concepts/campaigns-engine"]
       }
-    ]
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Website",
+          "href": "https://qcobro.com",
+          "icon": "globe"
+        },
+        {
+          "anchor": "Community",
+          "href": "https://discord.gg/4QWgSz4hTC",
+          "icon": "discord"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "appearance": {
+    "default": "light"
   },
   "navbar": {
     "links": [
       {
-        "label": "GitHub",
-        "href": "https://github.com/fonoster/qcobro"
+        "label": "Support",
+        "href": "mailto:support@fonoster.com"
       }
     ]
   },
+  "contextual": {
+    "options": ["copy", "view", "chatgpt", "claude", "perplexity", "mcp", "cursor", "vscode"]
+  },
   "footer": {
     "socials": {
-      "github": "https://github.com/fonoster/qcobro"
+      "x": "https://x.com/fonoster",
+      "linkedin": "https://linkedin.com/company/fonoster"
     }
   }
 }

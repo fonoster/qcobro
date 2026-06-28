@@ -1,0 +1,111 @@
+---
+title: "SDK overview"
+description: "@qcobro/sdk is a typed TypeScript client over the QCobro API: construct a Client, authenticate, select a workspace, and call typed resource methods."
+---
+
+`@qcobro/sdk` is the official TypeScript client for the QCobro API. It wraps the same
+tRPC contracts the operator console runs on, so the calls you make from your own backend
+are typed end to end and validated before they ever hit the network. Drive QCobro from
+your system of record — load portfolios, sync accounts, react to outcomes — without
+hand-rolling HTTP.
+
+## How it works
+
+You construct one `Client`, point it at your QCobro endpoint, and call typed resource
+methods on it. The client owns the connection and the authentication lifecycle; it talks
+tRPC over HTTPS to the QCobro API, which is the very same API the operator console uses.
+
+<Frame caption="@qcobro/sdk is a typed client over the QCobro API — the same API the console uses.">
+  <img src="/images/sdk-overview/architecture.png" alt="Diagram: your code calls the @qcobro/sdk client, which calls the QCobro API over HTTPS and authenticates; the operator console uses the same API." />
+</Frame>
+
+## The client model
+
+Working with the SDK is always the same four beats: **construct** a client, **authenticate**,
+**select a workspace**, then **call** resource methods. This snippet does all four.
+
+```ts
+import { Client } from "@qcobro/sdk";
+
+// 1. Construct — the SDK appends the /trpc path to your endpoint itself.
+const client = new Client({ endpoint: "https://api.qcobro.com" });
+
+// 2. Authenticate — the issued tokens are stored on the client.
+await client.login({ email: "me@acme.com", password: process.env.QCOBRO_PASSWORD! });
+
+// 3. Select the workspace to act in.
+client.useWorkspace("ws_abc123");
+
+// 4. Call typed resource methods.
+const portfolios = await client.portfolios.list();
+```
+
+Almost every method is **workspace-scoped**: the client must be authenticated and have an
+active workspace selected before you call it. Selecting a workspace is just
+`client.useWorkspace(accessKeyId)` — subsequent calls act within it.
+
+## What you can do today
+
+The SDK exposes API resources as namespaces of friendly, typed methods. Portfolios are
+wrapped today; everything else on the API is reachable through the `client.trpc` escape
+hatch.
+
+<CardGroup cols={2}>
+  <Card title="Manage portfolios" icon="folder-open" href="/sdk/portfolios">
+    `client.portfolios` — list, get, create, update, archive, and delete the portfolios
+    in a workspace, and list their accounts.
+  </Card>
+  <Card title="Sync accounts" icon="arrows-rotate" href="/sdk/sync-accounts">
+    `client.portfolios.syncAccounts` — batch-load account rows from your system of record
+    with `APPEND_ONLY`, `UPDATE_EXISTING`, or `REPLACE` merge modes.
+  </Card>
+  <Card title="Escape hatch" icon="plug" href="/sdk/reference">
+    `client.trpc` — the underlying typed tRPC proxy, for any procedure the SDK does not
+    yet wrap. Prefer the resource namespaces where they exist.
+  </Card>
+  <Card title="API reference" icon="book" href="/sdk/reference">
+    The generated TypeScript reference for every exported type and method.
+  </Card>
+</CardGroup>
+
+## Validation happens client-side
+
+Method inputs are validated against the shared `@qcobro/common` schemas **before** any
+request is sent. Invalid input — an empty batch, an unknown enum, a malformed email —
+throws a structured `ValidationError` with field-level detail and never reaches the
+network.
+
+<Note>
+  `ValidationError` is re-exported from `@qcobro/sdk`, so you can catch it without
+  depending on `@qcobro/common` directly. See [Validation & errors](/sdk/errors) for the
+  full error shape.
+</Note>
+
+## Tokens and sessions
+
+A single `Client` owns the authentication lifecycle. Authenticate with
+`login` (email and password) or `loginWithApiKey` (a workspace API key, for unattended
+server-to-server integrations); the issued access and refresh tokens are then stored on
+the client and attached to every request.
+
+Tokens are held **in memory only**. By default the client auto-refreshes once on an
+`UNAUTHORIZED` response and replays the request, provided it holds a refresh token. To
+keep a session alive across restarts, persist the tokens yourself with `client.getTokens()`
+and restore them with `client.setTokens(...)`.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/sdk/installation">
+    Install `@qcobro/sdk` and construct a client against your endpoint.
+  </Card>
+  <Card title="Authentication & tokens" icon="key" href="/sdk/authentication">
+    Log in with a password or API key, and manage access and refresh tokens.
+  </Card>
+  <Card title="Managing portfolios" icon="folder-open" href="/sdk/portfolios">
+    Create, update, archive, and list the portfolios in a workspace.
+  </Card>
+  <Card title="Validation & errors" icon="triangle-exclamation" href="/sdk/errors">
+    Catch client-side validation failures and read field-level details.
+  </Card>
+</CardGroup>

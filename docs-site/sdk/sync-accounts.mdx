@@ -1,0 +1,209 @@
+---
+title: "Syncing portfolio accounts"
+description: "Batch-sync account rows into a portfolio with APPEND_ONLY, UPDATE_EXISTING, and REPLACE modes."
+---
+
+Load and maintain a portfolio's debt accounts from your own system of record with
+`client.portfolios.syncAccounts`. You send a batch of account rows and a merge mode; QCobro
+matches each row to an existing account by its `externalId` and applies the mode you chose.
+
+## Prerequisites
+
+<Note>
+  `syncAccounts` is workspace-scoped. You need an authenticated [`Client`](/sdk/authentication)
+  with an active workspace selected, and the `id` of a portfolio to sync into. Create one first
+  with [`client.portfolios.create`](/sdk/portfolios).
+</Note>
+
+## Sync a batch
+
+<Steps>
+  <Step title="Authenticate and select a workspace">
+    Construct a client, log in, and choose the workspace the portfolio belongs to.
+
+    ```ts
+    import { Client } from "@qcobro/sdk";
+
+    const client = new Client({ endpoint: "https://api.qcobro.com" });
+    await client.login({ email: "me@acme.com", password: process.env.QCOBRO_PASSWORD! });
+    client.useWorkspace("ws_abc123");
+    ```
+  </Step>
+  <Step title="Send the rows">
+    Pass the `portfolioId`, a `mode`, and at least one row. Each row needs an `externalId`,
+    a `fullName`, and an `outstandingBalance`.
+
+    ```ts
+    const result = await client.portfolios.syncAccounts({
+      portfolioId: "ptf_123",
+      mode: "APPEND_ONLY",
+      rows: [
+        { externalId: "A-1", fullName: "Jane Doe", outstandingBalance: 1200.5 },
+        { externalId: "A-2", fullName: "John Roe", outstandingBalance: 845 }
+      ]
+    });
+    ```
+  </Step>
+  <Step title="Read the counts">
+    The call returns how many accounts were created, updated, and archived, plus the portfolio's
+    new active total.
+
+    ```ts
+    console.log(result); // { created: 2, updated: 0, archived: 0, total: 2 }
+    ```
+  </Step>
+</Steps>
+
+## Choose a sync mode
+
+The `mode` decides what happens to existing accounts. Rows are matched to accounts by `externalId`
+within the portfolio.
+
+| Mode | Row with a new `externalId` | Row matching an existing account | Existing account **not** in the batch |
+| --- | --- | --- | --- |
+| `APPEND_ONLY` | Created | Left unchanged | Left unchanged |
+| `UPDATE_EXISTING` | Created | Updated | Left unchanged |
+| `REPLACE` | Created | Updated | Archived |
+
+<Tabs>
+  <Tab title="APPEND_ONLY">
+    Add new accounts and never touch ones that already exist. Use it for incremental loads where
+    earlier data is authoritative.
+
+    ```ts
+    await client.portfolios.syncAccounts({ portfolioId: "ptf_123", mode: "APPEND_ONLY", rows });
+    ```
+  </Tab>
+  <Tab title="UPDATE_EXISTING">
+    Add new accounts and refresh ones that already exist — an upsert. Use it for recurring feeds
+    that carry updated balances or contact details.
+
+    ```ts
+    await client.portfolios.syncAccounts({ portfolioId: "ptf_123", mode: "UPDATE_EXISTING", rows });
+    ```
+  </Tab>
+  <Tab title="REPLACE">
+    Make the portfolio mirror the batch: create, update, and archive any account whose `externalId`
+    is absent from `rows`. Use it when the batch is a full snapshot of the portfolio.
+
+    ```ts
+    await client.portfolios.syncAccounts({ portfolioId: "ptf_123", mode: "REPLACE", rows });
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  `REPLACE` **archives** every existing account whose `externalId` is missing from the batch, and
+  expires those accounts' pending payment promises. Always send a complete snapshot with `REPLACE`
+  — a partial batch will archive the accounts you left out.
+</Warning>
+
+## Shape account rows
+
+Each entry in `rows` is validated against the shared account schema. Only three fields are required;
+the rest are optional, and the numeric fields below default to `0` when omitted.
+
+<ParamField body="externalId" type="string" required>
+  Your stable identifier for the account. Accounts are matched across syncs by this value, so it
+  must be unique within the portfolio.
+</ParamField>
+<ParamField body="fullName" type="string" required>
+  The account holder's full name.
+</ParamField>
+<ParamField body="outstandingBalance" type="number" required>
+  The current amount owed. Must be zero or greater.
+</ParamField>
+<ParamField body="phone" type="string">
+  Contact phone number used for voice and SMS outreach.
+</ParamField>
+<ParamField body="email" type="string">
+  Contact email. Must be a valid email address when provided.
+</ParamField>
+<ParamField body="preferredLanguage" type="string">
+  Preferred language for outreach (QCobro is multilingual).
+</ParamField>
+<ParamField body="bestTimeToCall" type="string">
+  Free-form note on when the account holder prefers to be reached.
+</ParamField>
+<ParamField body="customerSegment" type="string">
+  Your own segmentation label for the account.
+</ParamField>
+<ParamField body="principalAmount" type="number" default="0">
+  Original principal owed.
+</ParamField>
+<ParamField body="termsAmount" type="number" default="0">
+  Installment amount under the account's terms.
+</ParamField>
+<ParamField body="termsFrequency" type="string">
+  How often installments are due (e.g. `monthly`).
+</ParamField>
+<ParamField body="termsLength" type="number" default="0">
+  Number of installments in the term.
+</ParamField>
+<ParamField body="daysPastDue" type="number" default="0">
+  Days the account is past due.
+</ParamField>
+<ParamField body="missedInstallments" type="number" default="0">
+  Count of missed installments.
+</ParamField>
+<ParamField body="lastPaymentDate" type="string">
+  Date of the last payment, as an ISO date string.
+</ParamField>
+<ParamField body="lastPaymentAmount" type="number">
+  Amount of the last payment.
+</ParamField>
+<ParamField body="negotiationOptions" type="string">
+  Notes on acceptable negotiation or settlement options for this account.
+</ParamField>
+
+## Read the result
+
+`syncAccounts` resolves to a summary of what changed:
+
+<ResponseField name="created" type="number">
+  Accounts inserted because their `externalId` was new to the portfolio.
+</ResponseField>
+<ResponseField name="updated" type="number">
+  Existing accounts refreshed. Always `0` for `APPEND_ONLY`.
+</ResponseField>
+<ResponseField name="archived" type="number">
+  Accounts archived because they were absent from the batch. Non-zero only for `REPLACE`.
+</ResponseField>
+<ResponseField name="total" type="number">
+  The portfolio's active account count after the sync (archived accounts are excluded).
+</ResponseField>
+
+## Handle validation errors
+
+Rows are validated **client-side** against the shared QCobro schema before any request is sent. An
+empty batch, an unknown `mode`, or a malformed `email` throws a `ValidationError` with field-level
+detail and makes no network call.
+
+```ts
+import { ValidationError } from "@qcobro/sdk";
+
+try {
+  await client.portfolios.syncAccounts({
+    portfolioId: "ptf_123",
+    mode: "APPEND_ONLY",
+    rows: [] // empty batches are rejected
+  });
+} catch (err) {
+  if (err instanceof ValidationError) {
+    console.error(err.fieldErrors); // [{ field: "rows", message: "...", code: "..." }]
+  }
+}
+```
+
+See [Validation & errors](/sdk/errors) for the full error shape.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Managing portfolios" icon="folder-open" href="/sdk/portfolios">
+    Create, update, archive, and list the portfolios you sync into.
+  </Card>
+  <Card title="Validation & errors" icon="triangle-exclamation" href="/sdk/errors">
+    Catch client-side validation failures and read field-level details.
+  </Card>
+</CardGroup>
