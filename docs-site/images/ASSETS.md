@@ -37,9 +37,9 @@ All diagram color comes from `dgm-*` variables — change a token to re-skin eve
 All assets are **hosted-product, customer-facing** — no internals, infra, or config files
 (see `../CLAUDE.md`).
 
-| Slug                        | Type                   | Audience       | Preset   | Page           | Pencil node | Kit | Build doc                           |
-| :-------------------------- | :--------------------- | :------------- | :------- | :------------- | :---------- | :-- | :---------------------------------- |
-| `sdk-overview/architecture` | diagram (architecture) | customer / SDK | 1600×900 | `sdk/overview` | `H9oQOa`    | v1  | [doc](sdk-overview/architecture.md) |
+| Slug                        | Type                   | Audience       | Preset   | Page           | Pencil node | Kit | Build doc                      |
+| :-------------------------- | :--------------------- | :------------- | :------- | :------------- | :---------- | :-- | :----------------------------- |
+| `sdk-overview/architecture` | diagram (architecture) | customer / SDK | 1600×900 | `sdk/overview` | `H9oQOa`    | v1  | `sdk-overview/architecture.md` |
 
 ## Rebrand at scale
 
