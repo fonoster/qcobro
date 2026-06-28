@@ -77,7 +77,7 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
         config: { model: autopilot.sttModel, languageCode: input.language }
       },
       textToSpeech: {
-        productRef: ttsProductRefForVoice(input.voice, this.settings.voices),
+        productRef: ttsProductRefForVoice(input.voice, this.settings.voices ?? []),
         config: { voice: input.voice }
       },
       intelligence: {

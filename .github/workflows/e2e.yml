@@ -66,13 +66,21 @@ jobs:
           }
           JSON
 
-          cat > config/qcobro.json <<'JSON'
-          {
-            "database": { "url": "postgresql://qcobro:qcobro@localhost:5432/qcobro?schema=public" },
-            "identity": { "endpoint": "localhost:50051", "httpBridgeUrl": "http://localhost:9110" },
-            "ai": { "enabled": true, "provider": "mock", "model": "mock" }
-          }
-          JSON
+          # Derive qcobro.json from the committed example so CI carries the same
+          # fonoster.voices catalog as a real deployment (placeholder creds are fine —
+          # e2e never dials), overriding only the env-specific db/identity/ai bits.
+          node -e '
+            const fs = require("fs");
+            const c = require("./config/qcobro.example.json");
+            c.database.url = "postgresql://qcobro:qcobro@localhost:5432/qcobro?schema=public";
+            c.identity = { endpoint: "localhost:50051", httpBridgeUrl: "http://localhost:9110" };
+            c.ai = { enabled: true, provider: "mock", model: "mock" };
+            // Keep fonoster (its voice catalog) but drop SMS/email — their SDKs validate
+            // placeholder creds eagerly at startup. e2e never dials/sends.
+            delete c.twilio;
+            delete c.resend;
+            fs.writeFileSync("config/qcobro.json", JSON.stringify(c, null, 2));
+          '
 
       # Backing services (db + identity + mailpit) from the dev compose file.
       # db-init creates the `identity` database; Identity migrates its own schema

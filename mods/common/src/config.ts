@@ -74,29 +74,9 @@ export const fonosterConfigSchema = z
      * voices; deployments override in `qcobro.json`. The TTS product ref is
      * derived from each voice's `provider` (see {@link ttsProductRefForVoice}).
      */
-    voices: z.array(voiceCatalogEntrySchema).default([
-      {
-        id: "86V9x9hrQds83qf7zaGn",
-        name: "Sofía",
-        language: "es",
-        gender: "female",
-        provider: "elevenlabs"
-      },
-      {
-        id: "tTQzD8U8Gd5cKQEnxNyf",
-        name: "Carmen",
-        language: "es",
-        gender: "female",
-        provider: "elevenlabs"
-      },
-      {
-        id: "Iowum0gIcGfYE94JArBb",
-        name: "Andrés",
-        language: "es",
-        gender: "male",
-        provider: "elevenlabs"
-      }
-    ]),
+    // Shape only — the actual catalog is supplied by qcobro.json (see config/*.json),
+    // not defaulted in the schema.
+    voices: z.array(voiceCatalogEntrySchema).optional(),
     /**
      * Caller-ID numbers outbound voice dispatch rotates through. Use the format the
      * carrier expects — Fonoster passes the number through as given, so whether a
