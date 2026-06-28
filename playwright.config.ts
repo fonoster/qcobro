@@ -8,31 +8,8 @@ import { defineConfig, devices } from "@playwright/test";
  *
  * Webapp on :5173 (proxies /trpc -> apiserver :3000), Mailpit on :8025.
  */
-// E2E rollout gate: the suite is being re-enabled in small batches while it is stabilized.
-// `testMatch` restricts the run to the currently-enabled specs; add files here as each batch
-// is confirmed green locally, then drop the gate once everything passes.
-const ENABLED_SPECS = [
-  "**/profile.spec.ts",
-  "**/auth-workspaces.spec.ts",
-  "**/delete-workspace.spec.ts",
-  "**/api-keys.spec.ts",
-  "**/member-actions.spec.ts",
-  "**/manual-outreach.spec.ts",
-  "**/campaigns-core.spec.ts",
-  "**/console-refinements.spec.ts",
-  "**/ai-insights.spec.ts",
-  "**/payment-promises.spec.ts",
-  "**/gestiones-channels.spec.ts"
-  // Deferred — blocked on Identity-service email behavior (not this app):
-  //   verify-contact: the verification-code email never reaches mailpit on CI (invite
-  //     emails do), so waitForMail times out. Likely the branded-template/email path.
-  //   invite-acceptance: existing-user accept + role pass; the new-user test fails because
-  //     the one-time-password email format (branded templates) no longer matches the helper.
-];
-
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: ENABLED_SPECS,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
