@@ -1,8 +1,133 @@
 ---
-title: "Contact-log endpoint"
-description: "Post contact events to a workspace via the contact-log REST endpoint."
+title: "Endpoint de gestiones"
+description: "Registra el resultado de una gestión en un workspace con el endpoint REST POST /api/contact-logs, autenticado con HTTP Basic acotado al workspace."
 ---
 
-<Note>
-This page is a placeholder and is being written. Check back soon.
-</Note>
+El endpoint de gestiones registra el **resultado de un contacto** (una _gestión_) con una
+cuenta: una llamada de voz, un SMS, un email. Es un endpoint REST sencillo, pensado para
+sistemas externos que contactan a las cuentas por su cuenta y reportan el desenlace a QCobro.
+
+```text
+POST {baseUrl}/api/contact-logs
+Content-Type: application/json
+Authorization: Basic <credenciales del workspace>
+```
+
+## Autenticación
+
+El endpoint usa **HTTP Basic**, donde el **usuario** es la credencial del workspace (su
+`accessKeyId`) y la contraseña es su secreto. La cuenta referenciada por
+`portfolioAccountId` debe pertenecer a ese mismo workspace; si no, la petición se rechaza con
+`401`.
+
+```bash
+curl -X POST "https://api.qcobro.com/api/contact-logs" \
+  -u "ws_abc123:<secreto>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "portfolioAccountId": "acc_123",
+    "agentType": "VOICE_AI",
+    "contactedAt": "2026-06-28T15:30:00Z",
+    "outcome": "PAYMENT_PROMISE",
+    "notes": "El titular se compromete a pagar el viernes."
+  }'
+```
+
+## Cuerpo de la petición
+
+Solo cuatro campos son obligatorios; el resto es opcional y enriquece la gestión.
+
+<ParamField body="portfolioAccountId" type="string" required>
+  Id de la cuenta contactada. Debe pertenecer al workspace de las credenciales.
+</ParamField>
+<ParamField body="agentType" type="string" required>
+  Canal de la gestión. Uno de `SMS`, `VOICE_PRERECORDED`, `VOICE_AI`, `EMAIL`, `WHATSAPP`.
+</ParamField>
+<ParamField body="contactedAt" type="string" required>
+  Momento del contacto, como cadena de fecha-hora ISO.
+</ParamField>
+<ParamField body="outcome" type="string" required>
+  Resultado de la gestión. Uno de `DELIVERED`, `NOT_DELIVERED`, `NO_ANSWER`,
+  `PAYMENT_PROMISE`, `PARTIAL_PAYMENT_AGREED`, `NEW_TERMS`, `CALLBACK_REQUESTED`,
+  `DISPUTE_RAISED`, `INFORMATION_REQUEST`, `RESOLVED`, `PAID`, `WRONG_NUMBER`, `OPT_OUT`,
+  `REFUSED`, `OTHER`.
+</ParamField>
+<ParamField body="campaignId" type="string">
+  Campaña a la que pertenece la gestión, si proviene de una campaña.
+</ParamField>
+<ParamField body="agentTemplateId" type="string">
+  Plantilla de agente usada en la gestión.
+</ParamField>
+<ParamField body="paymentPromiseId" type="string">
+  Promesa de pago concreta sobre la que es un seguimiento esta gestión.
+</ParamField>
+<ParamField body="durationSeconds" type="number">
+  Duración del contacto en segundos (para gestiones de voz).
+</ParamField>
+<ParamField body="notes" type="string">
+  Notas libres sobre la gestión.
+</ParamField>
+<ParamField body="debtAmountSnapshot" type="number">
+  Importe adeudado en el momento de la gestión.
+</ParamField>
+<ParamField body="aiSummary" type="string">
+  Resumen de la conversación generado por IA.
+</ParamField>
+<ParamField body="aiSentiment" type="string">
+  Sentimiento detectado. Uno de `POSITIVE`, `NEUTRAL`, `NEGATIVE`, `HOSTILE`.
+</ParamField>
+<ParamField body="aiDebtReason" type="string">
+  Motivo de la deuda inferido por IA.
+</ParamField>
+<ParamField body="aiResult" type="string">
+  Resultado de la conversación según la IA.
+</ParamField>
+<ParamField body="aiNextStep" type="string">
+  Próximo paso sugerido por la IA.
+</ParamField>
+<ParamField body="providerRef" type="string">
+  Referencia del proveedor para este intento (ref de la llamada o sid del mensaje). Cuando se
+  envía, la gestión se asocia a ese intento en lugar de duplicarse.
+</ParamField>
+
+## Respuesta
+
+En éxito, el endpoint responde `201 Created` con la gestión registrada.
+
+```json
+{
+  "id": "log_123",
+  "portfolioAccountId": "acc_123",
+  "outcome": "PAYMENT_PROMISE",
+  "contactedAt": "2026-06-28T15:30:00Z"
+}
+```
+
+## Errores
+
+| Código | Cuándo |
+| --- | --- |
+| `400` | El cuerpo no pasa la validación, o `portfolioAccountId` no existe. La respuesta incluye el detalle por campo. |
+| `401` | Faltan las credenciales de workspace, son inválidas, o no están acotadas al workspace de la cuenta. |
+| `500` | No se pudo registrar la gestión. |
+
+Una respuesta de validación tiene la misma forma estructurada que el resto de la API:
+
+```json
+{
+  "code": "VALIDATION_ERROR",
+  "message": "...",
+  "fieldErrors": [{ "field": "outcome", "message": "...", "code": "invalid_enum_value" }]
+}
+```
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Autenticación y API keys" icon="key" href="/api/authentication">
+    Credenciales de workspace y autenticación de la API.
+  </Card>
+  <Card title="Canales" icon="signal-stream" href="/concepts/channels">
+    Los canales por los que QCobro contacta a las cuentas.
+  </Card>
+</CardGroup>

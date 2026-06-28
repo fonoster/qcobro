@@ -1,8 +1,124 @@
 ---
-title: "Managing portfolios"
-description: "List, create, update, archive, and delete portfolios with the SDK."
+title: "Gestionar carteras"
+description: "Lista, obtén, crea, actualiza, archiva y elimina carteras, y lista sus cuentas con client.portfolios."
 ---
 
-<Note>
-This page is a placeholder and is being written. Check back soon.
-</Note>
+Una **cartera** agrupa las cuentas de deuda que QCobro gestiona para un cliente. El recurso
+`client.portfolios` expone las operaciones sobre carteras como métodos tipados.
+
+Todos los métodos están **acotados al workspace activo**: necesitas un `Client` autenticado
+con un workspace seleccionado. Las entradas se validan en el cliente contra los esquemas
+compartidos de `@qcobro/common` **antes** de enviar la petición: una entrada inválida lanza un
+`ValidationError` y nunca llega a la red.
+
+## Lista las carteras
+
+`list` devuelve las carteras del workspace activo. Por defecto omite las archivadas; pasa
+`includeArchived: true` para incluirlas.
+
+```ts
+const portfolios = await client.portfolios.list();
+
+// Incluye también las archivadas.
+const all = await client.portfolios.list({ includeArchived: true });
+```
+
+## Obtén una cartera
+
+`get` devuelve una sola cartera por su `id` dentro del workspace activo.
+
+```ts
+const portfolio = await client.portfolios.get({ id: "ptf_123" });
+```
+
+## Crea una cartera
+
+`create` necesita un `name` y un `clientId` (tu identificador del cliente al que pertenece la
+cartera).
+
+```ts
+const portfolio = await client.portfolios.create({
+  name: "Morosidad Q3",
+  clientId: "acme"
+});
+```
+
+<ParamField body="name" type="string" required>
+  Nombre visible de la cartera (1–120 caracteres).
+</ParamField>
+<ParamField body="clientId" type="string" required>
+  Tu identificador del cliente al que pertenece la cartera (1–120 caracteres).
+</ParamField>
+
+## Actualiza o archiva una cartera
+
+`update` cambia el nombre de una cartera o alterna su estado de archivado. Pon
+`archived: true` para archivarla y `archived: false` para restaurarla.
+
+```ts
+// Renombra una cartera.
+await client.portfolios.update({ id: "ptf_123", name: "Morosidad Q4" });
+
+// Archívala.
+await client.portfolios.update({ id: "ptf_123", archived: true });
+
+// Restáurala.
+await client.portfolios.update({ id: "ptf_123", archived: false });
+```
+
+<ParamField body="id" type="string" required>
+  Id de la cartera a actualizar.
+</ParamField>
+<ParamField body="name" type="string">
+  Nuevo nombre (1–120 caracteres).
+</ParamField>
+<ParamField body="archived" type="boolean">
+  `true` archiva la cartera; `false` la restaura.
+</ParamField>
+
+## Elimina una cartera
+
+`delete` elimina una cartera del workspace activo.
+
+```ts
+await client.portfolios.delete({ id: "ptf_123" });
+```
+
+<Tip>
+  Para retirar una cartera de la vista operativa conservando su historial, prefiere
+  **archivarla** (`update` con `archived: true`) en lugar de eliminarla.
+</Tip>
+
+## Lista las cuentas de una cartera
+
+`listAccounts` devuelve una página de las cuentas de una cartera junto con el total. Acota la
+página con `limit` (1–200) y `offset`.
+
+```ts
+const { accounts, total } = await client.portfolios.listAccounts({
+  portfolioId: "ptf_123",
+  limit: 50,
+  offset: 0
+});
+```
+
+<ParamField body="portfolioId" type="string" required>
+  Id de la cartera cuyas cuentas listar.
+</ParamField>
+<ParamField body="limit" type="number">
+  Número máximo de cuentas a devolver (1–200).
+</ParamField>
+<ParamField body="offset" type="number">
+  Número de cuentas a omitir desde el inicio (para paginar).
+</ParamField>
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Sincronizar cuentas" icon="arrows-rotate" href="/sdk/sync-accounts">
+    Carga y mantiene las cuentas de una cartera por lotes desde tu sistema de origen.
+  </Card>
+  <Card title="Validación y errores" icon="triangle-exclamation" href="/sdk/errors">
+    Captura los fallos de validación del cliente y lee el detalle por campo.
+  </Card>
+</CardGroup>

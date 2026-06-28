@@ -1,8 +1,85 @@
 ---
-title: "Auth & API keys"
-description: "Authenticate API requests and manage workspace API keys."
+title: "Autenticación y API keys"
+description: "Autentica las peticiones a la API de QCobro con tokens de portador y la cabecera de workspace, y usa API keys para integraciones de servidor a servidor."
 ---
 
-<Note>
-This page is a placeholder and is being written. Check back soon.
-</Note>
+Las peticiones a la API de QCobro van **autenticadas** y **acotadas a un workspace**. En la
+práctica, eso son dos cosas en cada petición a la API tRPC: un **token de acceso** de portador
+y la cabecera **`x-workspace`** con el `accessKeyId` del workspace.
+
+```text
+Authorization: Bearer <accessToken>
+x-workspace: <accessKeyId>
+```
+
+<Tip>
+  El [`@qcobro/sdk`](/sdk/authentication) gestiona ambas cosas por ti: adjunta el token y la
+  cabecera de workspace a cada petición, y refresca el token cuando caduca. Si integras en
+  TypeScript, usa el SDK en lugar de construir las cabeceras a mano.
+</Tip>
+
+## Obtén tokens
+
+Hay dos formas de obtener tokens, según el tipo de integración.
+
+<Tabs>
+  <Tab title="Email y contraseña">
+    Para acceso en nombre de una persona. Con el SDK:
+
+    ```ts
+    await client.login({ email: "me@acme.com", password: process.env.QCOBRO_PASSWORD! });
+    ```
+
+    A bajo nivel, corresponde al procedimiento tRPC `auth.login`, que devuelve un token de
+    acceso y uno de refresco.
+  </Tab>
+  <Tab title="API key de workspace">
+    Para integraciones de **servidor a servidor**, sin intervención de una persona. Con el SDK:
+
+    ```ts
+    await client.loginWithApiKey({
+      accessKeyId: "ak_workspace_123",
+      accessKeySecret: process.env.QCOBRO_API_SECRET!
+    });
+    ```
+
+    A bajo nivel, corresponde al procedimiento tRPC `auth.exchangeApiKey`, que cambia el par
+    `accessKeyId` + `accessKeySecret` por tokens.
+  </Tab>
+</Tabs>
+
+## Refresca el token de acceso
+
+Los tokens de acceso son de corta duración. Cambia un token de refresco por uno nuevo con el
+procedimiento `auth.refresh`; con el SDK basta `client.refresh()`, y por defecto el cliente lo
+hace de forma transparente ante un `UNAUTHORIZED`. Consulta
+[Autenticación del SDK](/sdk/authentication).
+
+## API keys de workspace
+
+Una **API key de workspace** (`accessKeyId` + `accessKeySecret`) autentica a una integración,
+no a una persona, y queda acotada a ese workspace. Crea y revoca las API keys desde la consola
+de QCobro.
+
+<Warning>
+  El `accessKeySecret` se muestra una sola vez al crear la API key. Guárdalo en un gestor de
+  secretos o en una variable de entorno; nunca en el código fuente. Si lo pierdes, revoca la
+  key y crea otra.
+</Warning>
+
+## Autenticación del endpoint REST de gestiones
+
+El endpoint REST de gestiones usa un esquema más simple: **HTTP Basic**, donde el usuario es la
+credencial del workspace. La cuenta referenciada en la petición debe pertenecer a ese mismo
+workspace. Los detalles están en [Endpoint de gestiones](/api/contact-log).
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Visión general de la API" icon="book" href="/api/overview">
+    La URL base, la API tRPC y el alcance por workspace.
+  </Card>
+  <Card title="Endpoint de gestiones" icon="paper-plane" href="/api/contact-log">
+    Registra el resultado de una gestión vía REST con Basic auth.
+  </Card>
+</CardGroup>

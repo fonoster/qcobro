@@ -1,8 +1,103 @@
 ---
-title: "API reference"
-description: "Generated TypeScript API reference for @qcobro/sdk."
+title: "Referencia del SDK"
+description: "Tipos y métodos exportados por @qcobro/sdk: Client, ClientOptions, Tokens, PortfoliosResource, ValidationError y FieldError."
 ---
 
+Resumen de lo que exporta `@qcobro/sdk`. Para las guías por tarea, empieza por
+[Visión general del SDK](/sdk/overview).
+
+## Exports
+
+```ts
+import {
+  Client,
+  ValidationError,
+  type ClientOptions,
+  type Tokens,
+  type FieldError,
+  PortfoliosResource
+} from "@qcobro/sdk";
+```
+
+| Export | Tipo | Descripción |
+| --- | --- | --- |
+| `Client` | clase | El cliente de la API. Posee la conexión y el ciclo de autenticación, y expone los recursos. |
+| `ClientOptions` | interfaz | Opciones del constructor de `Client`. |
+| `Tokens` | interfaz | Tokens emitidos (`accessToken`, `refreshToken`, `idToken`). |
+| `PortfoliosResource` | clase | El recurso de carteras, accesible vía `client.portfolios`. |
+| `ValidationError` | clase | Error de validación en cliente, con detalle por campo. |
+| `FieldError` | interfaz | Un fallo de validación por campo (`field`, `message`, `code`). |
+
+## Client
+
+El cliente de la API. Se construye una vez y se reutiliza.
+
+```ts
+const client = new Client(options: ClientOptions);
+```
+
+| Miembro | Firma | Descripción |
+| --- | --- | --- |
+| `portfolios` | `PortfoliosResource` | Operaciones de carteras (ver abajo). |
+| `trpc` | proxy tipado | Acceso directo a la API tRPC subyacente, para procedimientos que el SDK aún no envuelve. Prefiere los recursos cuando existan. |
+| `login` | `(input) => Promise<Tokens>` | Autentica con email y contraseña. |
+| `loginWithApiKey` | `(input) => Promise<Tokens>` | Autentica con una API key de workspace. |
+| `refresh` | `(refreshToken?) => Promise<Tokens>` | Cambia el token de refresco por un nuevo token de acceso. |
+| `useWorkspace` | `(accessKeyId) => this` | Selecciona el workspace activo. |
+| `workspace` | `string \| undefined` | El `accessKeyId` del workspace activo. |
+| `getTokens` | `() => Tokens` | Devuelve los tokens que tiene el cliente (en memoria). |
+| `setTokens` | `(tokens) => this` | Reemplaza los tokens del cliente (para reanudar una sesión). |
+
+Consulta [Autenticación y tokens](/sdk/authentication) para el ciclo completo.
+
+## PortfoliosResource
+
+Accesible vía `client.portfolios`. No se construye directamente. Todos los métodos están
+acotados al workspace activo y validan su entrada en el cliente.
+
+| Método | Firma | Descripción |
+| --- | --- | --- |
+| `list` | `(input?) => Promise<...>` | Lista las carteras del workspace activo. |
+| `get` | `({ id }) => Promise<...>` | Obtiene una cartera por id. |
+| `create` | `({ name, clientId }) => Promise<...>` | Crea una cartera. |
+| `update` | `({ id, name?, archived? }) => Promise<...>` | Actualiza o archiva/restaura una cartera. |
+| `delete` | `({ id }) => Promise<...>` | Elimina una cartera. |
+| `listAccounts` | `({ portfolioId, limit?, offset? }) => Promise<...>` | Lista una página de cuentas de una cartera. |
+| `syncAccounts` | `({ portfolioId, mode, rows }) => Promise<...>` | Sincroniza un lote de cuentas en una cartera. |
+
+Detalle de cada método en [Gestionar carteras](/sdk/portfolios) y
+[Sincronizar cuentas](/sdk/sync-accounts).
+
+## El escape hatch trpc
+
+Cuando un procedimiento de la API todavía no tiene método de recurso, llámalo directamente
+por el proxy tipado `client.trpc`. Sigue beneficiándose de los tipos de extremo a extremo.
+
+```ts
+// Ejemplo: invocar un procedimiento que el SDK aún no envuelve.
+const result = await client.trpc.someRouter.someProcedure.query(input);
+```
+
 <Note>
-This page is a placeholder and is being written. Check back soon.
+  Prefiere los recursos (`client.portfolios`, …) cuando existan; `client.trpc` es la vía para
+  lo que todavía no está envuelto.
 </Note>
+
+## ValidationError y FieldError
+
+Error estructurado que el SDK lanza cuando una entrada no pasa la validación en el cliente.
+Su forma completa está en [Validación y errores](/sdk/errors).
+
+```ts
+class ValidationError extends Error {
+  code: "VALIDATION_ERROR";
+  fieldErrors: FieldError[];
+  toJSON(): { code: string; message: string; fieldErrors: FieldError[] };
+}
+
+interface FieldError {
+  field: string;
+  message: string;
+  code: string;
+}
+```
