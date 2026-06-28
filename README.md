@@ -124,20 +124,18 @@ sudo mkdir -p /opt/qcobro/config/identity/keys && cd /opt/qcobro
 BASE=https://raw.githubusercontent.com/fonoster/qcobro/$REL
 curl -fsSL $BASE/compose.yaml                          -o compose.yaml
 curl -fsSL $BASE/config/envoy.yaml                     -o config/envoy.yaml
-curl -fsSL $BASE/qcobro.example.json                   -o qcobro.example.json
-curl -fsSL $BASE/config/identity/identity.example.json -o config/identity/identity.example.json
+curl -fsSL $BASE/qcobro.example.json                   -o config/qcobro.json
+curl -fsSL $BASE/config/identity/identity.example.json -o config/identity/identity.json
 
-# 2. Configure the app + Identity service (fill every CHANGE_ME / REPLACE_* —
-#    managed-DB urls with `sslmode=require`, keys, SMTP, announcement banner, …)
-cp qcobro.example.json qcobro.json && "$EDITOR" qcobro.json
-cp config/identity/identity.example.json config/identity/identity.json \
-  && "$EDITOR" config/identity/identity.json
+Configure the app + Identity service (fill every CHANGE_ME / REPLACE_* —
+managed-DB urls with `sslmode=require`, keys, SMTP, announcement banner, …)
 
 # 3. Generate Identity's RSA signing keys (referenced by identity.json). The
 #    encryptionKey there is a Cloak key — generate one anywhere with Node via
 #    `npx --yes @47ng/cloak generate`.
 openssl genrsa -out config/identity/keys/private.pem 2048
 openssl rsa -in config/identity/keys/private.pem -pubout -out config/identity/keys/public.pem
+chmod 644 config/identity/keys/private.pem config/identity/keys/public.pem
 
 # 4. Issue a TLS cert (port 443 is free on first run). Envoy already reads the
 #    cert from /etc/letsencrypt/live/app.qcobro.com/ — no config edit needed.
