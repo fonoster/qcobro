@@ -8,15 +8,19 @@ import { defineConfig, devices } from "@playwright/test";
  *
  * Webapp on :5173 (proxies /trpc -> apiserver :3000), Mailpit on :8025.
  */
-// E2E rollout gate: the suite is being re-enabled in small batches while the bootstrap is
-// stabilized. `grep` restricts the run to the currently-enabled tests; expand this regex
-// (add `|` alternatives) as more tests are confirmed green, then remove it once all pass.
-// Batch 1: the no-bootstrap smoke test (validates the CI pipeline end to end).
-const ENABLED_TESTS = /edit name, and delete the account/;
+// E2E rollout gate: the suite is being re-enabled in small batches while it is stabilized.
+// `testMatch` restricts the run to the currently-enabled specs; add files here as each batch
+// is confirmed green locally, then drop the gate once everything passes.
+const ENABLED_SPECS = [
+  "**/profile.spec.ts",
+  "**/auth-workspaces.spec.ts",
+  "**/delete-workspace.spec.ts",
+  "**/api-keys.spec.ts"
+];
 
 export default defineConfig({
   testDir: "./e2e",
-  grep: ENABLED_TESTS,
+  testMatch: ENABLED_SPECS,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
