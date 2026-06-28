@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.6](https://github.com/fonoster/qcobro/compare/v1.5.5...v1.5.6) (2026-06-28)
+
+### Bug Fixes
+
+- **webapp:** show the per-channel insight for email too; enable gestiones-channels ([f2756b3](https://github.com/fonoster/qcobro/commit/f2756b378cf4f0ac6f5d754cf52e4649c9c2b633))
+
 ## [1.5.5](https://github.com/fonoster/qcobro/compare/v1.5.4...v1.5.5) (2026-06-28)
 
 ### Bug Fixes
