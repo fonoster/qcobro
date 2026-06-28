@@ -86,7 +86,7 @@ export function Profile() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 p-8">
       <div>
         <h1 className="text-[22px] font-bold text-slate-900">{t("profile.title")}</h1>
         <p className="text-sm text-slate-500">{t("profile.subtitle")}</p>

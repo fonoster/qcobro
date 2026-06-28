@@ -52,13 +52,13 @@ export async function signUp(page: Page, creds: Credentials) {
   await expect(page).toHaveURL(/\/verify-contact/);
 }
 
-/** Skip contact verification → routes to workspace creation when none exists. */
+/** Skip contact verification → routes to the workspaces list. */
 export async function skipVerification(page: Page) {
   await page.getByRole("button", { name: "Omitir por ahora" }).click();
-  await expect(page).toHaveURL(/\/create-workspace/);
+  await expect(page).toHaveURL(/\/workspaces/);
 }
 
-/** Create the first workspace from the create-workspace screen → dashboard. */
+/** Create the first workspace from the workspaces screen → dashboard. */
 export async function createFirstWorkspace(page: Page, name: string) {
   await page.getByRole("button", { name: "Nuevo espacio" }).click();
   await page.getByPlaceholder("Ej. Cartera Abril").fill(name);

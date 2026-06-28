@@ -1,5 +1,5 @@
 // Curated IANA timezones for the markets QCobro serves. Used by the workspace
-// settings + create-workspace forms. A stored value outside this list is preserved
+// settings + workspaces (create) forms. A stored value outside this list is preserved
 // by prepending it to the options.
 export const TIMEZONES = [
   "America/Santo_Domingo",

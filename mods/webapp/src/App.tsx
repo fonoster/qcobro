@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Login } from "./pages/Login.js";
 import { SignUp } from "./pages/SignUp.js";
-import { CreateWorkspace } from "./pages/CreateWorkspace.js";
+import { Workspaces } from "./pages/Workspaces.js";
 import { VerifyContact } from "./pages/VerifyContact.js";
 import { AcceptInvitation } from "./pages/AcceptInvitation.js";
 import { Home } from "./pages/Home.js";
@@ -20,6 +20,7 @@ import { GestionDetail } from "./pages/GestionDetail.js";
 import { PaymentPromises } from "./pages/PaymentPromises.js";
 import { RequireAuth } from "./components/RequireAuth.js";
 import { AuthedLayout } from "./components/AuthedLayout.js";
+import { AccountLayout } from "./components/AccountLayout.js";
 
 export default function App() {
   return (
@@ -28,13 +29,15 @@ export default function App() {
       <Route path="/signup" element={<SignUp />} />
       <Route path="/accept-invite" element={<AcceptInvitation />} />
       <Route
-        path="/create-workspace"
         element={
           <RequireAuth>
-            <CreateWorkspace />
+            <AccountLayout />
           </RequireAuth>
         }
-      />
+      >
+        <Route path="/workspaces" element={<Workspaces />} />
+        <Route path="/profile" element={<Profile />} />
+      </Route>
       <Route
         path="/verify-contact"
         element={
@@ -55,7 +58,6 @@ export default function App() {
         <Route path="members" element={<Members />} />
         <Route path="settings" element={<WorkspaceSettings />} />
         <Route path="api-keys" element={<ApiKeys />} />
-        <Route path="profile" element={<Profile />} />
         <Route path="portfolios" element={<Portfolios />} />
         <Route path="portfolios/:id" element={<PortfolioDetail />} />
         <Route path="agent-templates" element={<AgentTemplates />} />
