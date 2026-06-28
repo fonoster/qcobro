@@ -18,6 +18,17 @@ function makePrisma(accountWorkspace: Record<string, string>) {
     },
     accountContactLog: {
       create: async (args: { data: Record<string, unknown> }) => ({ id: "log-1", ...args.data })
+    },
+    workspaceSettings: {
+      findUnique: async () => null,
+      upsert: async (args: {
+        where: { workspaceRef: string };
+        create: Record<string, unknown>;
+      }) => ({
+        ...args.create,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
     }
   };
   prisma.$transaction = async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma);
@@ -64,8 +75,7 @@ describe("POST /api/contact-logs handler", () => {
   it("bypasses auth when contactLogAuth is disabled", async () => {
     const prisma = makePrisma({ "acc-1": "ws-1" });
     const handler = createContactLogHandler(prisma as never, {
-      apiserver: { contactLogAuth: { enabled: false } },
-      timezone: "UTC"
+      apiserver: { contactLogAuth: { enabled: false } }
     });
     const { res, state } = makeRes();
 
@@ -77,8 +87,7 @@ describe("POST /api/contact-logs handler", () => {
   it("accepts valid workspace credentials", async () => {
     const prisma = makePrisma({ "acc-1": "ws-1" });
     const handler = createContactLogHandler(prisma as never, {
-      apiserver: { contactLogAuth: { enabled: true } },
-      timezone: "UTC"
+      apiserver: { contactLogAuth: { enabled: true } }
     });
     const { res, state } = makeRes();
 
@@ -93,8 +102,7 @@ describe("POST /api/contact-logs handler", () => {
   it("rejects missing credentials with 401 when enabled", async () => {
     const prisma = makePrisma({ "acc-1": "ws-1" });
     const handler = createContactLogHandler(prisma as never, {
-      apiserver: { contactLogAuth: { enabled: true } },
-      timezone: "UTC"
+      apiserver: { contactLogAuth: { enabled: true } }
     });
     const { res, state } = makeRes();
 
@@ -106,8 +114,7 @@ describe("POST /api/contact-logs handler", () => {
   it("rejects a payload referencing a different workspace", async () => {
     const prisma = makePrisma({ "acc-1": "ws-2" }); // account belongs to ws-2
     const handler = createContactLogHandler(prisma as never, {
-      apiserver: { contactLogAuth: { enabled: true } },
-      timezone: "UTC"
+      apiserver: { contactLogAuth: { enabled: true } }
     });
     const { res, state } = makeRes();
 

@@ -15,8 +15,9 @@ export interface WindowCampaign {
 export type WindowResult = { ok: true } | { ok: false; reason: CampaignSkipReason };
 
 /**
- * Whether a campaign may dispatch at `now`, evaluated in the deployment timezone.
- * In-window means: status ACTIVE, `startDate ≤ today ≤ endDate` (endDate optional),
+ * Whether a campaign may dispatch at `now`, evaluated in the given `timeZone` (the
+ * campaign's workspace timezone). In-window means: status ACTIVE,
+ * `startDate ≤ today ≤ endDate` (endDate optional),
  * the local weekday is in `daysOfWeek`, and the local time is within
  * `startTime`..`endTime`. Windows do not span midnight (`startTime < endTime`).
  */
@@ -36,8 +37,9 @@ export function isInWindow(c: WindowCampaign, now: Date, timeZone: string): Wind
 }
 
 /**
- * Whether the campaign's end date has passed in the deployment timezone — the engine's
- * trigger to auto-complete. Open-ended campaigns (no `endDate`) never pass.
+ * Whether the campaign's end date has passed in the given `timeZone` (the campaign's
+ * workspace timezone) — the engine's trigger to auto-complete. Open-ended campaigns
+ * (no `endDate`) never pass.
  */
 export function isPastEndDate(
   c: Pick<WindowCampaign, "endDate">,

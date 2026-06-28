@@ -106,9 +106,9 @@ on days included in `daysOfWeek`, and within the daily window defined by `startT
 `endTime`.
 
 `startTime` and `endTime` are wall-clock times interpreted in the **workspace's** configured
-timezone (`WorkspaceSettings.timezone`, an IANA zone such as `America/Costa_Rica`). The
-`qcobro.json → apiserver.timezone` value is only the default used to seed a workspace that
-has no timezone set yet; campaigns in different workspaces MAY run on different timezones.
+timezone (`WorkspaceSettings.timezone`, an IANA zone such as `America/Costa_Rica`). A fixed
+application default timezone is only used to seed a workspace that has no timezone set yet;
+campaigns in different workspaces MAY run on different timezones.
 
 `daysOfWeek` is a set of ISO weekday numbers (1 = Monday … 7 = Sunday) and MAY be any
 non-empty combination — e.g. Monday and Friday only. The operator console SHALL present the

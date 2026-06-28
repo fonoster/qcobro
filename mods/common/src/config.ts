@@ -297,12 +297,6 @@ export type AnnouncementConfig = z.infer<typeof announcementConfigSchema>;
 export const qcobroConfigSchema = z.object({
   /** Application (apiserver) database. */
   database: z.object({ url: z.string().min(1) }),
-  /**
-   * Default IANA timezone used to SEED a workspace's timezone the first time it is used.
-   * Per-workspace timezone is the source of truth (WorkspaceSettings); this value only
-   * provides the initial default for new/unset workspaces.
-   */
-  timezone: z.string().default("America/Costa_Rica"),
   identity: identityConfigSchema,
   apiserver: z
     .object({

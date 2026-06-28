@@ -11,8 +11,8 @@ import {
  * (the engine's at-most-once step) — it writes no gestión. Always bumps the account's
  * `lastContactedAt`/`totalAttempts`; when a campaign initiated the contact it also
  * increments `CampaignAccountState`, resetting `attemptsToday` to 1 when the previous
- * attempt was on a different local day (deployment timezone), so the daily cap is
- * correct without a midnight reset job.
+ * attempt was on a different local day (in the caller-provided `timeZone`, normally the
+ * workspace timezone), so the daily cap is correct without a midnight reset job.
  */
 export async function reserveAttemptTx(
   tx: CampaignClient,

@@ -1,5 +1,4 @@
 {
-  "timezone": "America/Costa_Rica",
   "database": {
     "url": "postgresql://qcobro:CHANGE_ME@db:5432/qcobro?schema=public"
   },

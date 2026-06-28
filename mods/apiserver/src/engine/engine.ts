@@ -115,7 +115,7 @@ export function createEngine(deps: EngineDeps) {
   });
   const record = createRecordOutcome(deps.reserveRecordClient as never);
   // Per-workspace timezone + currency, resolved once per campaign per tick. `deps.timezone`
-  // is the deployment default used to seed a workspace that has no setting yet.
+  // is the default (DEFAULT_TIMEZONE) used to seed a workspace that has no setting yet.
   const getSettings = createGetWorkspaceSettings(deps.reserveRecordClient as never, deps.timezone);
 
   /** Channel readiness for a campaign (Topic 5 tier A — catches config up-front). */

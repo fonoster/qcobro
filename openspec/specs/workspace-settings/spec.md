@@ -32,15 +32,14 @@ No setting SHALL be written to or read from the Identity service.
 ### Requirement: Settings default and seed on first use
 
 When no `WorkspaceSettings` row exists for the active workspace, the system SHALL treat the
-workspace as having default settings — `currency` `USD` and `timezone` equal to the
-deployment default (`qcobro.json → apiserver.timezone`) — and SHALL persist that default row
-on first use so subsequent reads are stable.
+workspace as having default settings — `currency` `USD` and `timezone` equal to a fixed
+application default (`DEFAULT_TIMEZONE`) — and SHALL persist that default row on first use so
+subsequent reads are stable.
 
 #### Scenario: Missing settings resolve to defaults
 
 - **WHEN** a workspace with no settings row is used
-- **THEN** its currency resolves to `USD` and its timezone to the configured deployment
-  default
+- **THEN** its currency resolves to `USD` and its timezone to the application default
 - **AND** a settings row is persisted with those values
 
 ### Requirement: Read and update workspace settings

@@ -1,12 +1,11 @@
 import type { Request, Response } from "express";
-import { ValidationError } from "@qcobro/common";
+import { ValidationError, DEFAULT_TIMEZONE } from "@qcobro/common";
 import { createCreateContactLog } from "../functions/campaigns/createContactLog.js";
+import { createGetWorkspaceSettings } from "../functions/workspaceSettings/getWorkspaceSettings.js";
 
 /** Minimal shape of the config slice this module needs. */
 export interface ContactLogAuthConfig {
   apiserver: { contactLogAuth: { enabled: boolean } };
-  /** Deployment timezone, for the daily-cap reset when recording the attempt. */
-  timezone: string;
 }
 
 /** Minimal Prisma surface used to resolve an account's owning workspace. */
@@ -47,23 +46,26 @@ export function parseBasicWorkspace(authHeader: string | undefined): string | nu
  * disabled (local dev) the endpoint accepts unauthenticated requests.
  */
 export function createContactLogHandler(prisma: ContactLogPrisma, config: ContactLogAuthConfig) {
-  const create = createCreateContactLog(prisma as never, config.timezone);
+  const getSettings = createGetWorkspaceSettings(prisma as never, DEFAULT_TIMEZONE);
 
   return async (req: Request, res: Response): Promise<void> => {
+    // Resolve the referenced account's owning workspace up front: it scopes auth AND
+    // provides the timezone used for the daily-cap reset.
+    const accountId =
+      typeof req.body?.portfolioAccountId === "string" ? req.body.portfolioAccountId : null;
+    const account = accountId
+      ? await prisma.portfolioAccount.findUnique({
+          where: { id: accountId },
+          select: { portfolio: { select: { workspaceRef: true } } }
+        })
+      : null;
+
     if (config.apiserver.contactLogAuth.enabled) {
       const credWorkspace = parseBasicWorkspace(req.headers.authorization);
       if (!credWorkspace) {
         res.status(401).json({ error: "Missing or invalid workspace credentials" });
         return;
       }
-      const accountId =
-        typeof req.body?.portfolioAccountId === "string" ? req.body.portfolioAccountId : null;
-      const account = accountId
-        ? await prisma.portfolioAccount.findUnique({
-            where: { id: accountId },
-            select: { portfolio: { select: { workspaceRef: true } } }
-          })
-        : null;
       if (!account || account.portfolio.workspaceRef !== credWorkspace) {
         res.status(401).json({ error: "Credentials are not scoped to this workspace" });
         return;
@@ -71,7 +73,12 @@ export function createContactLogHandler(prisma: ContactLogPrisma, config: Contac
     }
 
     try {
-      const result = await create(req.body);
+      // Reset the daily cap in the account's workspace timezone (DEFAULT_TIMEZONE until set),
+      // matching the engine and tRPC paths.
+      const timeZone = account
+        ? (await getSettings(account.portfolio.workspaceRef)).timezone
+        : DEFAULT_TIMEZONE;
+      const result = await createCreateContactLog(prisma as never, timeZone)(req.body);
       res.status(201).json(result);
     } catch (err) {
       if (err instanceof ValidationError) {
