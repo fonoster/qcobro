@@ -82,6 +82,26 @@ jobs:
             fs.writeFileSync("config/qcobro.json", JSON.stringify(c, null, 2));
           '
 
+      # Cache the backing-service images (postgres/identity/mailpit) so they are only
+      # re-pulled when compose.dev.yaml changes (e.g. a version bump).
+      - name: Cache backing-service images
+        id: img-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.docker-img-cache
+          key: docker-img-${{ hashFiles('compose.dev.yaml') }}
+
+      - name: Load or pull backing-service images
+        run: |
+          if [ -f ~/.docker-img-cache/images.tar ]; then
+            docker load -i ~/.docker-img-cache/images.tar
+          else
+            docker compose -f compose.dev.yaml pull
+            mkdir -p ~/.docker-img-cache
+            docker save $(docker compose -f compose.dev.yaml config --images) \
+              -o ~/.docker-img-cache/images.tar
+          fi
+
       # Backing services (db + identity + mailpit) from the dev compose file.
       # db-init creates the `identity` database; Identity migrates its own schema
       # on startup. The apiserver and webapp run on the host (below).
