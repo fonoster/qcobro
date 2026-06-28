@@ -40,7 +40,7 @@ production:
   },
   "identity": {
     "endpoint": "identity:50051",
-    "httpBridgeUrl": "https://app.qcobro.com"
+    "httpBridgeUrl": "http://identity:9110"
   },
   "apiserver": {
     "port": 3000
@@ -51,6 +51,12 @@ production:
 The database URL comes from your DigitalOcean managed PostgreSQL cluster's
 connection string (found under **Databases → your cluster → Connection details**).
 Use the `sslmode=require` parameter — DO managed databases require SSL.
+
+`identity.httpBridgeUrl` is the **internal** address of the Identity HTTP bridge
+(`http://identity:9110`), not a public URL: the apiserver calls it server-side over
+the Docker network to accept invitations. Identity's port is not exposed publicly.
+See the README's _Production integrations & webhooks_ section for the full URL/webhook
+map (DNS, Resend inbound, Fonoster, and the `identity.json` invite/verification URLs).
 
 > `qcobro.json` is never committed — it's listed in `.gitignore`.
 

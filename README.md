@@ -225,11 +225,76 @@ the agent's system prompt decides reply/ignore/resolve/escalate, capped per case
 }
 ```
 
-Point your Resend **inbound** route at `POST https://<host>/api/email/inbound` and set the
-`x-webhook-secret` header to `inboundSigningSecret`. When `resend` is absent, EMAIL
-campaigns are skipped as `channel_not_configured` and the webhook returns `503`.
+Add a Resend webhook for the **`email.received`** event pointing at
+`POST https://<host>/api/email/inbound`. The handler verifies the **Svix signature**
+(standard-webhooks: `svix-id` / `svix-timestamp` / `svix-signature` headers) using
+`inboundSigningSecret` — copy that secret from the Resend webhook's settings. When
+`resend` is absent, EMAIL campaigns are skipped as `channel_not_configured` and the
+webhook returns `503`; a bad signature returns `401`.
+
+### Production integrations & webhooks
+
+In production, Envoy terminates TLS on the app domain (`:443`) and routes `/trpc` and
+`/api/*` to the apiserver. **Every webhook below is reachable at `https://<host>/api/...`
+with no extra port mapping** — only the app domain needs to resolve publicly.
+
+**DNS** (assuming app domain `app.qcobro.com`, email domain `notices.qcobro.com`):
+
+| Record | Host                 | Value              | Purpose                                             |
+| ------ | -------------------- | ------------------ | --------------------------------------------------- |
+| `A`    | `app.qcobro.com`     | Droplet IP         | Console + all webhooks (Envoy `:443`)               |
+| `MX`   | `notices.qcobro.com` | Resend inbound MX  | Receives debtor replies (`reply+<token>@notices.…`) |
+| `TXT`  | per Resend           | SPF / DKIM / DMARC | Sending-domain auth (shown in the Resend dashboard) |
+
+Two sender identities must be domain-verified in Resend: `cobranza@notices.qcobro.com`
+(collections, `qcobro.json` → `resend.fromEmail`) and `no-reply@qcobro.com` (Identity
+verification/invite emails, sent via Resend SMTP — see below).
+
+**`config/qcobro.json`** — production-specific fields beyond the Email block above:
+
+| Field                                   | Production value         | Notes                                                        |
+| --------------------------------------- | ------------------------ | ------------------------------------------------------------ |
+| `identity.endpoint`                     | `identity:50051`         | internal gRPC over the Docker network                        |
+| `identity.httpBridgeUrl`                | `http://identity:9110`   | internal — the apiserver calls the accept-invite bridge here |
+| `fonoster.webhookBaseUrl`               | `https://app.qcobro.com` | Voz IA events-hook auto-registers at `…/api/voice/events`    |
+| `fonoster.accessKeyId/apiKey/apiSecret` | from Fonoster workspace  | authenticates the autopilot sync                             |
+| `fonoster.numbers`                      | provisioned caller-IDs   | carrier format (no leading `+` for the current pool)         |
+| `twilio.*`                              | from Twilio              | **outbound-only — no Twilio webhook exists**                 |
+| `resend.inboundDomain`                  | `notices.qcobro.com`     | must match the `MX` record                                   |
+| `ai.apiKey` / `tts.apiKey`              | Gemini / ElevenLabs keys | no callbacks                                                 |
+| `engine.enabled`                        | `true`                   | the autonomous outreach loop (off by default)                |
+| `apiserver.contactLogAuth.enabled`      | `true`                   | enforces workspace Basic auth on `POST /api/contact-logs`    |
+
+**`config/identity/identity.json`** — URLs used by the verification/invite emails and the
+accept-invite bridge (this file is install-once on the droplet, like the keys):
+
+| Field                                  | Production value                                                               |
+| -------------------------------------- | ------------------------------------------------------------------------------ |
+| `appUrl`                               | `https://app.qcobro.com`                                                       |
+| `invite.url`                           | `https://app.qcobro.com/accept-invite`                                         |
+| `invite.failUrl`                       | `https://app.qcobro.com/invite-failed`                                         |
+| `smtp`                                 | `smtp.resend.com:465`, `secure:true`, `auth.user:"resend"`, `auth.pass:"re_…"` |
+| `smtp.sender`                          | `QCobro <no-reply@notices.qcobro.com>`                                         |
+| `security.contactVerificationRequired` | `true`                                                                         |
+
+**External dashboards** — only Resend needs a hand-created webhook:
+
+- **Resend** — verify both sender domains; add the inbound `MX`; create the
+  `email.received` webhook → `https://<host>/api/email/inbound` and copy its signing
+  secret into `resend.inboundSigningSecret`.
+- **Fonoster** — no manual webhook. Set `webhookBaseUrl` + credentials + caller-ID
+  numbers; the apiserver registers the Voz IA events-hook when an agent is synced.
+- **Twilio / Gemini / ElevenLabs** — credentials/keys only; no callbacks.
+
+**Known limitations** (as of this writing):
+
+- **Voz IA only.** Pre-recorded voice needs the embedded VoiceServer on gRPC `:50061`,
+  which Envoy/compose do not expose publicly yet. `prerecordedAppRef` can be set, but
+  only the autopilot (Voz IA) path functions.
+- **`POST /api/voice/events` is unauthenticated** (tracked `FIXME(security)` in the
+  handler) — secure it before relying on it in production.
 
 ## More
 
-The complete guide — GHCR images, DNS-01 certificates, renewal hooks, the secrets
+The complete deploy runbook — GHCR images, certificates, renewal hooks, the secrets
 checklist, and troubleshooting — is in **[`docs/deploy.md`](docs/deploy.md)**.
