@@ -8,15 +8,15 @@ import { Badge } from "../components/ui/badge.js";
 import { KpiRow } from "../components/kpi-card.js";
 import { RowActionsMenu } from "../components/ui/row-actions-menu.js";
 
-type Status = "PENDING" | "MET" | "BROKEN" | "CANCELLED";
+type Status = "PENDING" | "MET" | "EXPIRED" | "CANCELLED";
 
-type Objective = {
+type PaymentPromise = {
   id: string;
-  type: string;
   amount: number | null;
   dueDate: string;
   status: Status;
   portfolioAccount?: { fullName: string } | null;
+  contactLog?: { agentType: string } | null;
 };
 
 function money(v: number) {
@@ -29,7 +29,7 @@ function money(v: number) {
 
 function statusVariant(s: string) {
   if (s === "MET") return "success";
-  if (s === "BROKEN") return "destructive";
+  if (s === "EXPIRED") return "secondary";
   if (s === "CANCELLED") return "secondary";
   return "orange";
 }
@@ -39,40 +39,57 @@ function daysUntil(due: string): number {
   return Math.ceil(ms / (1000 * 60 * 60 * 24));
 }
 
-export function Objetivos() {
+/** DUE is derived, never stored: a PENDING promise whose dueDate has passed. */
+function isDue(p: { status: string; dueDate: string }): boolean {
+  return p.status === "PENDING" && new Date(p.dueDate).getTime() < Date.now();
+}
+
+export function PaymentPromises() {
   const { t } = useI18n();
   const utils = trpc.useUtils();
   const [statusFilter, setStatusFilter] = useState<"" | Status>("");
 
-  const { data } = trpc.campaigns.objective.list.useQuery(undefined);
-  const all: Objective[] = (data ?? []) as Objective[];
+  const { data } = trpc.campaigns.paymentPromise.list.useQuery(undefined);
+  const all: PaymentPromise[] = (data ?? []) as PaymentPromise[];
+  const templates = trpc.agentTemplates.list.useQuery();
 
-  const update = trpc.campaigns.objective.updateStatus.useMutation({
-    onSuccess: () => utils.campaigns.objective.list.invalidate()
-  });
+  const invalidate = () => utils.campaigns.paymentPromise.list.invalidate();
+  const resolve = trpc.campaigns.paymentPromise.resolve.useMutation({ onSuccess: invalidate });
+  const followUp = trpc.campaigns.paymentPromise.followUp.useMutation({ onSuccess: invalidate });
 
-  const pending = all.filter((o) => o.status === "PENDING");
-  const pendingAmount = pending.reduce((s, o) => s + (o.amount ?? 0), 0);
-  const dueThisWeek = pending.filter((o) => {
-    const d = daysUntil(o.dueDate);
+  const pending = all.filter((p) => p.status === "PENDING");
+  const pendingAmount = pending.reduce((s, p) => s + (p.amount ?? 0), 0);
+  const dueThisWeek = pending.filter((p) => {
+    const d = daysUntil(p.dueDate);
     return d >= 0 && d <= 7;
   }).length;
-  const closed = all.filter((o) => o.status !== "PENDING");
-  const met = closed.filter((o) => o.status === "MET").length;
-  const fulfillment = closed.length > 0 ? Math.round((met / closed.length) * 100) : 0;
+  // Fulfillment excludes EXPIRED/CANCELLED: kept / (kept + overdue-unresolved).
+  const met = all.filter((p) => p.status === "MET").length;
+  const overdueUnresolved = all.filter(isDue).length;
+  const denom = met + overdueUnresolved;
+  const fulfillment = denom > 0 ? Math.round((met / denom) * 100) : 0;
 
-  const rows = statusFilter ? all.filter((o) => o.status === statusFilter) : all;
+  const rows = statusFilter ? all.filter((p) => p.status === statusFilter) : all;
+
+  const followUpItems = (id: string) =>
+    (templates.data ?? []).map((tpl: { id: string; name: string }) => ({
+      label: `${t("paymentPromises.actions.followUpWith")} ${tpl.name}`,
+      onClick: () => followUp.mutate({ paymentPromiseId: id, agentTemplateId: tpl.id })
+    }));
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={t("objetivos.title")} description={t("objetivos.description")} />
+      <PageHeader
+        title={t("paymentPromises.title")}
+        description={t("paymentPromises.description")}
+      />
 
       <KpiRow
         cards={[
-          { label: t("objetivos.kpi.pending"), value: pending.length.toLocaleString() },
-          { label: t("objetivos.kpi.pendingAmount"), value: money(pendingAmount) },
-          { label: t("objetivos.kpi.dueThisWeek"), value: dueThisWeek.toLocaleString() },
-          { label: t("objetivos.kpi.fulfillment"), value: `${fulfillment}%` }
+          { label: t("paymentPromises.kpi.pending"), value: pending.length.toLocaleString() },
+          { label: t("paymentPromises.kpi.pendingAmount"), value: money(pendingAmount) },
+          { label: t("paymentPromises.kpi.dueThisWeek"), value: dueThisWeek.toLocaleString() },
+          { label: t("paymentPromises.kpi.fulfillment"), value: `${fulfillment}%` }
         ]}
       />
 
@@ -85,10 +102,10 @@ export function Objetivos() {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as "" | Status)}
           >
-            <option value="">{t("objetivos.filter.allStatuses")}</option>
-            {(["PENDING", "MET", "BROKEN", "CANCELLED"] as Status[]).map((s) => (
+            <option value="">{t("paymentPromises.filter.allStatuses")}</option>
+            {(["PENDING", "MET", "EXPIRED", "CANCELLED"] as Status[]).map((s) => (
               <option key={s} value={s}>
-                {t(`objetivos.status.${s}` as Parameters<typeof t>[0])}
+                {t(`paymentPromises.status.${s}` as Parameters<typeof t>[0])}
               </option>
             ))}
           </FilterSelect>
@@ -96,49 +113,44 @@ export function Objetivos() {
         columns={[
           {
             key: "portfolioAccount",
-            header: t("objetivos.col.account"),
+            header: t("paymentPromises.col.account"),
             render: (r) => (r.portfolioAccount as { fullName: string } | undefined)?.fullName ?? "—"
           },
           {
-            key: "type",
-            header: t("objetivos.col.type"),
-            render: (r) => (
-              <Badge variant="secondary">
-                {t(`objetivos.type.${r.type}` as Parameters<typeof t>[0])}
-              </Badge>
-            )
-          },
-          {
-            key: "amount",
-            header: t("objetivos.col.amount"),
-            render: (r) => (r.amount != null ? money(r.amount as number) : "—")
-          },
-          {
-            key: "dueDate",
-            header: t("objetivos.col.dueDate"),
-            render: (r) => new Date(r.dueDate as string).toLocaleDateString()
-          },
-          {
-            key: "daysLeft",
-            header: t("objetivos.col.daysLeft"),
+            key: "channel",
+            header: t("paymentPromises.col.channel"),
             render: (r) => {
-              const d = daysUntil(r.dueDate as string);
-              const overdue = d < 0 && r.status === "PENDING";
-              return overdue ? (
-                <Badge variant="destructive">{t("objetivos.overdue")}</Badge>
+              const ch = (r.contactLog as { agentType: string } | undefined)?.agentType;
+              return ch ? (
+                <span className="text-sm text-slate-600">
+                  {t(`gestiones.agentType.${ch}` as Parameters<typeof t>[0])}
+                </span>
               ) : (
-                <span className="text-sm text-slate-600">{d}</span>
+                "—"
               );
             }
           },
           {
+            key: "amount",
+            header: t("paymentPromises.col.amount"),
+            render: (r) => (r.amount != null ? money(r.amount as number) : "—")
+          },
+          {
+            key: "dueDate",
+            header: t("paymentPromises.col.dueDate"),
+            render: (r) => new Date(r.dueDate as string).toLocaleDateString()
+          },
+          {
             key: "status",
-            header: t("objetivos.col.status"),
-            render: (r) => (
-              <Badge variant={statusVariant(r.status as string)}>
-                {t(`objetivos.status.${r.status}` as Parameters<typeof t>[0])}
-              </Badge>
-            )
+            header: t("paymentPromises.col.status"),
+            render: (r) =>
+              isDue(r as { status: string; dueDate: string }) ? (
+                <Badge variant="destructive">{t("paymentPromises.status.DUE")}</Badge>
+              ) : (
+                <Badge variant={statusVariant(r.status as string)}>
+                  {t(`paymentPromises.status.${r.status}` as Parameters<typeof t>[0])}
+                </Badge>
+              )
           },
           {
             key: "id",
@@ -149,16 +161,13 @@ export function Objetivos() {
                 <RowActionsMenu
                   items={[
                     {
-                      label: t("objetivos.actions.markMet"),
-                      onClick: () => update.mutate({ id: r.id as string, status: "MET" })
+                      label: t("paymentPromises.actions.markPaid"),
+                      onClick: () => resolve.mutate({ id: r.id as string, status: "MET" })
                     },
+                    ...followUpItems(r.id as string),
                     {
-                      label: t("objetivos.actions.markBroken"),
-                      onClick: () => update.mutate({ id: r.id as string, status: "BROKEN" })
-                    },
-                    {
-                      label: t("objetivos.actions.markCancelled"),
-                      onClick: () => update.mutate({ id: r.id as string, status: "CANCELLED" }),
+                      label: t("paymentPromises.actions.markCancelled"),
+                      onClick: () => resolve.mutate({ id: r.id as string, status: "CANCELLED" }),
                       variant: "destructive"
                     }
                   ]}
