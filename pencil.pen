@@ -11533,9 +11533,44 @@
               "id": "U1mAv",
               "name": "BottomRow",
               "width": "fill_container",
-              "justifyContent": "end",
+              "justifyContent": "space_between",
               "alignItems": "center",
               "children": [
+                {
+                  "type": "frame",
+                  "id": "KzOg0",
+                  "name": "IdPill",
+                  "fill": "#F1F5F9",
+                  "cornerRadius": 6,
+                  "gap": 6,
+                  "padding": [
+                    4,
+                    8
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "IAP3L",
+                      "name": "AccessKeyId",
+                      "fill": "#475569",
+                      "content": "WO7f3a92b1c4…",
+                      "fontFamily": "Roboto Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "atzOq",
+                      "name": "Copy",
+                      "width": 13,
+                      "height": 13,
+                      "icon": "copy",
+                      "library": "lucide",
+                      "fill": "#64748B"
+                    }
+                  ]
+                },
                 {
                   "type": "icon",
                   "id": "zWfkx",
@@ -34521,49 +34556,116 @@
                         },
                         {
                           "type": "frame",
-                          "id": "sxX4O",
-                          "name": "Period",
-                          "fill": "#FFFFFF",
-                          "cornerRadius": "$--radius-pill",
-                          "stroke": "#E2E8F0",
-                          "strokeWidth": 1,
-                          "strokeAlignment": "inner",
-                          "gap": 8,
-                          "padding": [
-                            8,
-                            14
-                          ],
+                          "id": "OTUhF",
+                          "name": "HeaderRight",
+                          "gap": 12,
                           "alignItems": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "f2RfQA",
-                              "name": "Cal",
-                              "width": 16,
-                              "height": 16,
-                              "icon": "calendar",
-                              "library": "lucide",
-                              "fill": "#64748B"
+                              "type": "frame",
+                              "id": "gBFYj",
+                              "name": "WorkspaceIdChip",
+                              "fill": "#FFFFFF",
+                              "cornerRadius": "$--radius-pill",
+                              "stroke": "#E2E8F0",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "gap": 8,
+                              "padding": [
+                                8,
+                                14
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "sZ0qQ",
+                                  "name": "Key",
+                                  "width": 15,
+                                  "height": 15,
+                                  "icon": "key-round",
+                                  "library": "lucide",
+                                  "fill": "#64748B"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "y774YY",
+                                  "name": "Label",
+                                  "fill": "#64748B",
+                                  "content": "ID del espacio",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "ojmVH",
+                                  "name": "Value",
+                                  "fill": "#0F172A",
+                                  "content": "WO7f3a92b1c4…",
+                                  "fontFamily": "Roboto Mono",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "cl1ua",
+                                  "name": "Copy",
+                                  "width": 15,
+                                  "height": 15,
+                                  "icon": "copy",
+                                  "library": "lucide",
+                                  "fill": "#64748B"
+                                }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "BoH5X",
-                              "name": "PeriodT",
-                              "fill": "#0F172A",
-                              "content": "Últimos 30 días",
-                              "fontFamily": "Inter",
-                              "fontSize": 13,
-                              "fontWeight": "500"
-                            },
-                            {
-                              "type": "icon",
-                              "id": "JOw3b",
-                              "name": "Chev",
-                              "width": 16,
-                              "height": 16,
-                              "icon": "chevron-down",
-                              "library": "lucide",
-                              "fill": "#64748B"
+                              "type": "frame",
+                              "id": "sxX4O",
+                              "name": "Period",
+                              "fill": "#FFFFFF",
+                              "cornerRadius": "$--radius-pill",
+                              "stroke": "#E2E8F0",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "gap": 8,
+                              "padding": [
+                                8,
+                                14
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "f2RfQA",
+                                  "name": "Cal",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "calendar",
+                                  "library": "lucide",
+                                  "fill": "#64748B"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "BoH5X",
+                                  "name": "PeriodT",
+                                  "fill": "#0F172A",
+                                  "content": "Últimos 30 días",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "JOw3b",
+                                  "name": "Chev",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "chevron-down",
+                                  "library": "lucide",
+                                  "fill": "#64748B"
+                                }
+                              ]
                             }
                           ]
                         }
@@ -39168,7 +39270,15 @@
                       "id": "K3Vfi",
                       "type": "ref",
                       "ref": "zB5yE",
-                      "name": "Workspace"
+                      "name": "Workspace",
+                      "descendants": {
+                        "U1mAv": {
+                          "justifyContent": "space_between"
+                        },
+                        "IAP3L": {
+                          "content": "WO7f3a92b1c4…"
+                        }
+                      }
                     },
                     {
                       "id": "tNh2P",
@@ -39183,7 +39293,10 @@
                           "content": "8 carteras · 2 miembros"
                         },
                         "U1mAv": {
-                          "justifyContent": "end"
+                          "justifyContent": "space_between"
+                        },
+                        "IAP3L": {
+                          "content": "WObe21d09a55…"
                         }
                       }
                     },
@@ -39200,7 +39313,10 @@
                           "content": "5 carteras · 4 miembros"
                         },
                         "U1mAv": {
-                          "justifyContent": "end"
+                          "justifyContent": "space_between"
+                        },
+                        "IAP3L": {
+                          "content": "WO34c8e1f7a9…"
                         }
                       }
                     },
@@ -39336,7 +39452,15 @@
                       "id": "nU8al",
                       "type": "ref",
                       "ref": "zB5yE",
-                      "name": "Workspace"
+                      "name": "Workspace",
+                      "descendants": {
+                        "U1mAv": {
+                          "justifyContent": "space_between"
+                        },
+                        "IAP3L": {
+                          "content": "WO7f3a92b1c4…"
+                        }
+                      }
                     },
                     {
                       "id": "bzf3e",
@@ -39351,7 +39475,10 @@
                           "content": "8 carteras · 2 miembros"
                         },
                         "U1mAv": {
-                          "justifyContent": "end"
+                          "justifyContent": "space_between"
+                        },
+                        "IAP3L": {
+                          "content": "WObe21d09a55…"
                         }
                       }
                     },
@@ -39368,7 +39495,10 @@
                           "content": "5 carteras · 4 miembros"
                         },
                         "U1mAv": {
-                          "justifyContent": "end"
+                          "justifyContent": "space_between"
+                        },
+                        "IAP3L": {
+                          "content": "WO34c8e1f7a9…"
                         }
                       }
                     },

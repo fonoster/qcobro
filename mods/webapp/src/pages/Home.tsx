@@ -1,8 +1,10 @@
+import { KeyRound } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n, type Language } from "../lib/i18n.js";
 import { useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
 import { Card } from "../components/ui/card.js";
+import { CopyField } from "../components/CopyField.js";
 import { channelIcon } from "../lib/channelIcon.js";
 import { cn } from "@/lib/utils.js";
 
@@ -41,6 +43,7 @@ export function Home() {
   const active =
     workspaces.data?.items.find((w) => w.accessKeyId === workspace) ?? workspaces.data?.items[0];
   const wsName = active?.name ?? "tu espacio";
+  const wsAccessKeyId = active?.accessKeyId ?? workspace;
 
   const portfolios = trpc.portfolios.list.useQuery();
   const recent = trpc.campaigns.contactLog.list.useQuery({ limit: 5 });
@@ -96,9 +99,23 @@ export function Home() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-[22px] font-bold text-slate-900">{t("home.title")}</h1>
-        <p className="text-sm text-slate-500">{t("home.subtitle").replace("{name}", wsName)}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-[22px] font-bold text-slate-900">{t("home.title")}</h1>
+          <p className="text-sm text-slate-500">{t("home.subtitle").replace("{name}", wsName)}</p>
+        </div>
+        {wsAccessKeyId && (
+          <div className="flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2">
+            <KeyRound className="h-[15px] w-[15px] shrink-0 text-slate-500" />
+            <span className="text-[13px] font-medium text-slate-500">{t("home.workspaceId")}</span>
+            <CopyField
+              variant="inline"
+              value={wsAccessKeyId}
+              copyAriaLabel={t("home.workspaceIdAria")}
+              className="max-w-[160px] text-slate-900"
+            />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-5 gap-4">
