@@ -9,6 +9,7 @@ on:
       - "package.json"
       - "package-lock.json"
       - "compose.dev.yaml"
+      - "playwright.config.ts"
       - ".github/workflows/e2e.yml"
   pull_request:
     branches: [main]
