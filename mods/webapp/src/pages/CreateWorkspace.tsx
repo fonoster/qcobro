@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Plus, X, Settings } from "lucide-react";
 import { trpc, REFRESH_TOKEN_KEY } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
-import { useI18n } from "../lib/i18n.js";
 import { Logo } from "../components/Logo.js";
 import { AnnouncementBanner } from "../components/AnnouncementBanner.js";
 import { Card } from "../components/ui/card.js";
@@ -13,7 +12,6 @@ import { SelectGroup } from "../components/ui/select.js";
 
 export function CreateWorkspace() {
   const { setTokens, setWorkspace, currentUser } = useAuth();
-  const { t } = useI18n();
   const navigate = useNavigate();
   const utils = trpc.useUtils();
   const workspaces = trpc.workspaces.summaries.useQuery();
@@ -122,7 +120,7 @@ export function CreateWorkspace() {
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="text-slate-400 hover:text-slate-600"
+                  className="cursor-pointer text-slate-400 hover:text-slate-600"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -136,8 +134,7 @@ export function CreateWorkspace() {
                 placeholder="Ej. Cartera Abril"
               />
 
-              <SelectGroup label="Región" disabled hint={t("common.comingSoon")}>
-                <option value="do01">DO01</option>
+              <SelectGroup label="Región" defaultValue="nyc01">
                 <option value="nyc01">NYC01</option>
               </SelectGroup>
 
