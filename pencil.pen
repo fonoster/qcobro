@@ -53066,7 +53066,7 @@
                               "id": "F1NiA",
                               "name": "Sub",
                               "fill": "#64748B",
-                              "content": "Cambia el nombre de tu espacio de trabajo.",
+                              "content": "Administra el nombre, la moneda y la zona horaria de tu espacio.",
                               "fontFamily": "Inter",
                               "fontSize": 14,
                               "fontWeight": "normal"
@@ -53145,7 +53145,7 @@
                                   "id": "AvrJ1",
                                   "name": "Title",
                                   "fill": "#0F172A",
-                                  "content": "General",
+                                  "content": "Preferencias",
                                   "fontFamily": "Inter",
                                   "fontSize": 15,
                                   "fontWeight": "700"
@@ -53200,14 +53200,31 @@
                           "type": "ref",
                           "ref": "M78oI",
                           "name": "Region Field",
-                          "enabled": false,
-                          "width": "fill_container(0)",
+                          "enabled": true,
+                          "width": "fill_container",
                           "descendants": {
                             "Jjj3G": {
-                              "content": "Región"
+                              "content": "Moneda"
                             },
                             "q9ZhO": {
-                              "content": "República Dominicana",
+                              "content": "DOP",
+                              "fill": "#0F172A"
+                            }
+                          }
+                        },
+                        {
+                          "id": "MSNsM",
+                          "type": "ref",
+                          "ref": "M78oI",
+                          "name": "Timezone Field",
+                          "width": "fill_container",
+                          "enabled": true,
+                          "descendants": {
+                            "Jjj3G": {
+                              "content": "Zona horaria"
+                            },
+                            "q9ZhO": {
+                              "content": "America/Santo_Domingo",
                               "fill": "#0F172A"
                             }
                           }
