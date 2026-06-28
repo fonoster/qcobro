@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { Check, Copy, KeyRound } from "lucide-react";
+import { KeyRound } from "lucide-react";
 import { useI18n } from "../lib/i18n.js";
 import { Card } from "./ui/card.js";
 import { Button } from "./ui/button.js";
+import { CopyField } from "./CopyField.js";
 
 export interface ApiKeyCredentials {
   accessKeyId: string;
@@ -13,32 +13,6 @@ export interface ShowSecretDialogProps {
   /** The freshly created/regenerated credentials, or null when hidden. */
   credentials: ApiKeyCredentials | null;
   onClose: () => void;
-}
-
-function CopyRow({ label, value }: { label: string; value: string }) {
-  const { t } = useI18n();
-  const [copied, setCopied] = useState(false);
-
-  async function copy() {
-    await navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium text-slate-700">{label}</span>
-      <div className="flex items-center gap-2">
-        <code className="flex-1 truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-[13px] text-slate-800">
-          {value}
-        </code>
-        <Button type="button" variant="outline" onClick={copy} className="shrink-0">
-          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-          {copied ? t("apiKeys.copied") : t("apiKeys.copy")}
-        </Button>
-      </div>
-    </div>
-  );
 }
 
 /**
@@ -63,8 +37,8 @@ export function ShowSecretDialog({ credentials, onClose }: ShowSecretDialogProps
               <p className="mt-0.5 text-[13px] text-slate-500">{t("apiKeys.secret.description")}</p>
             </div>
           </div>
-          <CopyRow label={t("apiKeys.secret.idLabel")} value={credentials.accessKeyId} />
-          <CopyRow label={t("apiKeys.secret.secretLabel")} value={credentials.accessKeySecret} />
+          <CopyField label={t("apiKeys.secret.idLabel")} value={credentials.accessKeyId} />
+          <CopyField label={t("apiKeys.secret.secretLabel")} value={credentials.accessKeySecret} />
           <div className="flex justify-end">
             <Button onClick={onClose}>{t("apiKeys.secret.done")}</Button>
           </div>

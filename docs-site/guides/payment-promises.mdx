@@ -1,8 +1,56 @@
 ---
-title: "Track payment promises"
-description: "Work the payment-promise worklist and mark promises as paid."
+title: "Promesas de pago"
+description: "Trabaja la lista de promesas de pago surgidas de las gestiones: marca como pagadas, da seguimiento y cancela."
 ---
 
+Una **promesa de pago** es el compromiso de una cuenta de pagar para una fecha. Es el único
+resultado de cobranza que QCobro hace **seguimiento con un ciclo de vida**, porque el pago es
+el único compromiso verificable. Las promesas surgen de las gestiones y se trabajan desde su
+propia lista.
+
+## La lista de promesas
+
+En el menú lateral, entra en **Promesas de pago**. Arriba verás los indicadores del espacio de
+trabajo: **Pendientes**, **Monto pendiente**, **Vencen esta semana** y **Tasa de
+cumplimiento**. La tabla muestra cada promesa con **Cuenta**, **Canal**, **Monto**, **Fecha
+límite** y **Estado**.
+
+## Estados de una promesa
+
+| Estado | Significado |
+| --- | --- |
+| **Pendiente** | Comprometida y aún dentro de plazo. |
+| **Vencida** | Pendiente y pasada su fecha límite. Es un estado derivado, no marcado a mano. |
+| **Cumplida** | Pagada (la marcas tú). |
+| **Cancelada** | Anulada por un operador. |
+| **Expirada** | La fija el sistema cuando la cuenta sale de su cartera. |
+
 <Note>
-This page is a placeholder and is being written. Check back soon.
+  No existe un estado de "incumplida": una promesa sin pagar permanece en la lista de trabajo
+  hasta que un operador la resuelve.
 </Note>
+
+## Trabaja una promesa
+
+Cada promesa ofrece estas acciones:
+
+- **Marcar pagada** — registra que la cuenta pagó. La promesa pasa a **Cumplida**.
+- **Seguimiento con** — contacta a la cuenta con un agente para recordar o renegociar el pago.
+  Queda registrado como una gestión de seguimiento sobre esa promesa.
+- **Cancelar** — anula la promesa cuando ya no aplica.
+
+<Warning>
+  Marcar una promesa como pagada es una acción **manual**: QCobro no confirma el pago por su
+  cuenta. Márcala como pagada cuando tu sistema confirme el cobro.
+</Warning>
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Análisis con IA" icon="wand-magic-sparkles" href="/guides/ai-insights">
+    Lee el análisis de cada gestión que originó una promesa.
+  </Card>
+  <Card title="Lanzar una campaña" icon="bullhorn" href="/guides/campaigns">
+    Genera más promesas contactando a tus carteras.
+  </Card>
+</CardGroup>

@@ -6,6 +6,7 @@ import { useAuth } from "../lib/auth.js";
 import { useI18n } from "../lib/i18n.js";
 import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
+import { CopyField } from "../components/CopyField.js";
 import { InputGroup } from "../components/ui/input.js";
 import { SelectGroup } from "../components/ui/select.js";
 import { TIMEZONES } from "../lib/timezones.js";
@@ -86,18 +87,26 @@ export function Workspaces() {
                   )}
                 </p>
               </div>
-              <button
-                type="button"
-                aria-label={t("settings.title")}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setWorkspace(ws.accessKeyId);
-                  navigate("/settings");
-                }}
-                className="absolute bottom-5 right-5 text-slate-400 transition hover:text-slate-700"
-              >
-                <Settings className="h-[18px] w-[18px]" />
-              </button>
+              <div className="flex items-center justify-between gap-2">
+                <CopyField
+                  variant="inline"
+                  value={ws.accessKeyId}
+                  copyAriaLabel={t("createWorkspace.card.accessKeyIdAria")}
+                  className="max-w-[150px] rounded-md bg-slate-100 px-2 py-1 text-slate-600 hover:bg-slate-200"
+                />
+                <button
+                  type="button"
+                  aria-label={t("settings.title")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setWorkspace(ws.accessKeyId);
+                    navigate("/settings");
+                  }}
+                  className="shrink-0 text-slate-400 transition hover:text-slate-700"
+                >
+                  <Settings className="h-[18px] w-[18px]" />
+                </button>
+              </div>
             </div>
           ))}
 

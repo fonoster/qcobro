@@ -1,8 +1,77 @@
 ---
-title: "How QCobro works"
-description: "A high-level tour of QCobro's portfolios, campaigns, channels, and the AI voice agent."
+title: "Cómo funciona QCobro"
+description: "Un recorrido de alto nivel por QCobro: espacios de trabajo, carteras y cuentas, agentes, campañas, canales, gestiones, análisis con IA y promesas de pago."
 ---
 
-<Note>
-This page is a placeholder and is being written. Check back soon.
-</Note>
+QCobro es una consola de operador que contacta a tus cuentas de deuda por **voz, SMS y correo**,
+y registra cada resultado. Esta página es un recorrido de alto nivel por sus piezas y cómo
+encajan.
+
+<Frame caption="De tus cuentas de deuda a una promesa de pago: el recorrido de QCobro.">
+  <img src="/images/how-qcobro-works/flow.png" alt="Diagrama de flujo: carteras y cuentas → agentes → contacto (campaña o manual) → canales (voz, SMS, correo) → resultado (gestión, análisis con IA y promesa de pago)." />
+</Frame>
+
+## Las piezas
+
+<CardGroup cols={2}>
+  <Card title="Espacio de trabajo" icon="building" href="/concepts/workspaces">
+    El contenedor de todo tu trabajo: carteras, campañas, agentes y equipo.
+  </Card>
+  <Card title="Carteras y cuentas" icon="folder-open" href="/guides/portfolios">
+    Las cuentas de deuda que gestionas, agrupadas por cliente.
+  </Card>
+  <Card title="Agentes" icon="robot" href="/guides/agent-templates">
+    Configuraciones reutilizables que definen qué dice QCobro y por qué canal.
+  </Card>
+  <Card title="Campañas" icon="bullhorn" href="/guides/campaigns">
+    Programas de contacto agendados sobre tus carteras.
+  </Card>
+</CardGroup>
+
+## El flujo de trabajo
+
+<Steps>
+  <Step title="Organiza tus cuentas en carteras">
+    Creas una **cartera** por cliente y le cargas sus **cuentas** de deuda desde un CSV o por
+    el SDK. Cada cuenta lleva el saldo, los datos de contacto y el historial.
+  </Step>
+  <Step title="Define cómo contactar">
+    Creas uno o más **agentes**, cada uno atado a un canal (voz, SMS, correo, WhatsApp), con su
+    mensaje, idioma y comportamiento.
+  </Step>
+  <Step title="Contacta a las cuentas">
+    Lanzas una **campaña** que contacta a las cuentas de forma programada, o contactas
+    **manualmente** a una cuenta concreta. En ambos casos QCobro usa un agente y un canal.
+  </Step>
+  <Step title="QCobro habla con la cuenta">
+    Cada intento de contacto sale por su **canal** —una llamada con voz por IA, un SMS, un
+    correo— en el idioma de la cuenta.
+  </Step>
+  <Step title="Revisa cada gestión">
+    Cada intento queda registrado como una **gestión** con su resultado y un **análisis con
+    IA**: resumen, sentimiento, motivo y siguiente paso.
+  </Step>
+  <Step title="Da seguimiento a los compromisos">
+    Cuando una cuenta se compromete a pagar, la gestión origina una **promesa de pago** que
+    trabajas hasta cobrarla. El **Panel** resume el avance del espacio de trabajo.
+  </Step>
+</Steps>
+
+## Dos formas de usar QCobro
+
+- **La consola de operador** — la interfaz donde tu equipo organiza carteras, lanza campañas y
+  trabaja resultados. Es el tema de las [guías de operador](/guides/portfolios).
+- **El SDK y la API** — para manejar QCobro desde tu propio sistema: cargar carteras,
+  sincronizar cuentas y reaccionar a los resultados mediante código. Empieza por la
+  [visión general del SDK](/sdk/overview).
+
+## Sigue explorando
+
+<CardGroup cols={2}>
+  <Card title="Canales" icon="signal-stream" href="/concepts/channels">
+    Voz, SMS y correo: cómo QCobro llega a tus cuentas.
+  </Card>
+  <Card title="El motor de campañas" icon="gears" href="/concepts/campaigns-engine">
+    Cómo QCobro decide a quién contactar y cuándo.
+  </Card>
+</CardGroup>

@@ -1,8 +1,51 @@
 ---
-title: "Channels: voice, SMS & email"
-description: "How QCobro reaches contacts across the voice, SMS, and email channels."
+title: "Canales: voz, SMS y correo"
+description: "Cómo QCobro contacta a tus cuentas por voz, SMS, correo y WhatsApp, y qué ves de cada interacción."
 ---
 
-<Note>
-This page is a placeholder and is being written. Check back soon.
-</Note>
+QCobro contacta a tus cuentas por varios **canales**. Cada agente está atado a un canal, así
+que al elegir el agente eliges también cómo se llega a la cuenta.
+
+## Los canales
+
+| Canal | Qué es |
+| --- | --- |
+| **Voz IA** | Una llamada con un agente de voz por IA que conversa con la cuenta en tiempo real. |
+| **Voz pregrabada** | Una llamada que reproduce un guion grabado. |
+| **SMS** | Un mensaje de texto. |
+| **Correo** | Un email. |
+| **WhatsApp** | Un mensaje de WhatsApp. |
+
+## Multilingüe por diseño
+
+QCobro es multilingüe: cada agente se comunica en el **idioma** que configures, y puedes tener
+agentes en distintos idiomas dentro del mismo espacio. No hay un idioma privilegiado.
+
+## Qué ves de cada interacción
+
+Cada contacto, por cualquier canal, queda registrado como una **gestión** con su resultado.
+Según el canal, el detalle de la gestión muestra:
+
+- **Voz** — la **transcripción** de la llamada y, cuando está disponible, su grabación.
+- **SMS / WhatsApp** — el **mensaje enviado** y su estado de entrega.
+- **Correo** — la **conversación por correo**, incluida la respuesta del cliente si la hay.
+
+Sobre todos ellos, QCobro añade un [análisis con IA](/guides/ai-insights) con el resumen, el
+sentimiento y el siguiente paso.
+
+## Cómo se elige el canal
+
+El canal lo determina el **agente** que usas al contactar, ya sea desde una campaña o
+manualmente. Para usar un canal, la cuenta debe tener el dato correspondiente: un **teléfono**
+para voz, SMS o WhatsApp, y un **correo** para email.
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Plantillas de agente" icon="robot" href="/guides/agent-templates">
+    Crea los agentes que definen el mensaje de cada canal.
+  </Card>
+  <Card title="Análisis con IA" icon="wand-magic-sparkles" href="/guides/ai-insights">
+    Lo que QCobro extrae de cada interacción.
+  </Card>
+</CardGroup>

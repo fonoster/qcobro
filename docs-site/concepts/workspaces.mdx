@@ -1,8 +1,59 @@
 ---
-title: "Workspaces & multi-tenancy"
-description: "How accounts, workspaces, and tenancy isolate data in QCobro."
+title: "Espacios de trabajo"
+description: "El espacio de trabajo es el contenedor que aísla tus carteras, campañas, agentes y equipo en QCobro."
 ---
 
-<Note>
-This page is a placeholder and is being written. Check back soon.
-</Note>
+Un **espacio de trabajo** agrupa todo tu trabajo en QCobro: carteras, campañas, agentes y el
+equipo que los gestiona. Es también la unidad de **aislamiento**: los datos de un espacio no se
+mezclan con los de otro, y cada acción ocurre dentro de un espacio concreto.
+
+## Qué contiene un espacio
+
+- **Carteras** y sus cuentas de deuda.
+- **Agentes** y **campañas**.
+- **Gestiones** y **promesas de pago**.
+- El **equipo** con acceso, y las **claves de API** de las integraciones.
+- Sus **preferencias**: nombre, moneda y zona horaria.
+
+## El equipo y sus roles
+
+Invitas a personas al espacio desde **Miembros**. Cada miembro tiene un rol que define su nivel
+de acceso:
+
+| Rol | Acceso |
+| --- | --- |
+| **Propietario** | Control total del espacio, incluida su eliminación. |
+| **Admin** | Gestión del espacio y su contenido. |
+| **Miembro** | Trabajo del día a día dentro del espacio. |
+
+Las invitaciones quedan **Pendientes** hasta que la persona las acepta, momento en el que pasan
+a **Activo**.
+
+## Trabajar en varios espacios
+
+Una persona puede pertenecer a varios espacios y cambiar entre ellos. Como todo está acotado al
+espacio activo, al cambiar de espacio cambia por completo el conjunto de carteras, campañas y
+gestiones que ves.
+
+## Preferencias del espacio
+
+En **Configuración** defines el **Nombre**, la **Moneda** y la **Zona horaria** del espacio. La
+zona horaria importa especialmente para las campañas: determina las horas a las que se contacta
+a las cuentas y cuándo se reinician los topes diarios.
+
+## Integraciones y claves de API
+
+Las integraciones de servidor a servidor (como el SDK) se autentican con **claves de API**
+creadas en el espacio, y quedan acotadas a él. Consulta
+[Autenticación y API keys](/api/authentication).
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Cómo funciona QCobro" icon="compass" href="/concepts/how-qcobro-works">
+    El recorrido completo por las piezas de QCobro.
+  </Card>
+  <Card title="Carteras" icon="folder-open" href="/guides/portfolios">
+    Crea las carteras dentro de tu espacio de trabajo.
+  </Card>
+</CardGroup>
