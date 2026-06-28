@@ -9,7 +9,6 @@ import { EmulatedSmsClient } from "./emulators.js";
 // (the dev stack: `docker compose -f compose.dev.yaml up -d db`).
 const RUN = !!process.env.DATABASE_URL;
 
-const TZ = "America/Costa_Rica";
 const NOW = new Date("2026-06-23T15:00:00Z"); // Tue 09:00 local — inside the window
 
 describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : false }, () => {
@@ -70,7 +69,6 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
       twilioFromNumbers: ["+15550009999"],
       fonosterPrerecordedAppRef: null,
       clock: { now: () => NOW },
-      timezone: TZ,
       voicePerMinute: 0,
       smsPerMinute: 60,
       emailPerMinute: 0,

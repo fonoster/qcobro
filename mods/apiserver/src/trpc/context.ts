@@ -5,7 +5,6 @@ import type {
   SmsClient,
   VoiceApplicationClient
 } from "@qcobro/common";
-import { DEFAULT_TIMEZONE } from "@qcobro/common";
 import { prisma } from "../db.js";
 import { createIdentityClient } from "@fonoster/identity-client";
 import { FonosterVoiceApplicationClient } from "../services/fonosterVoiceApplicationClient.js";
@@ -98,15 +97,13 @@ export async function createContext(opts: CreateExpressContextOptions) {
     }
   }
 
-  // Per-workspace timezone + currency, seeded from DEFAULT_TIMEZONE on first use.
-  // Falls back to the default when no workspace is active (e.g. auth routes).
-  let timezone = DEFAULT_TIMEZONE;
+  // Per-workspace timezone + currency, seeded (via column defaults) on first use.
+  // The placeholders below are only used when no workspace is active (e.g. auth routes),
+  // where neither value is consumed.
+  let timezone = "America/Costa_Rica";
   let currency: "USD" | "DOP" = "USD";
   if (workspace) {
-    const settings = await createGetWorkspaceSettings(
-      prisma as never,
-      DEFAULT_TIMEZONE
-    )(workspace.accessKeyId);
+    const settings = await createGetWorkspaceSettings(prisma as never)(workspace.accessKeyId);
     timezone = settings.timezone;
     currency = settings.currency;
   }

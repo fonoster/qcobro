@@ -1,21 +1,18 @@
 import type { WorkspaceSettingsClient, WorkspaceSettingsRecord } from "@qcobro/common";
 
 /**
- * Resolve the active workspace's settings, seeding a default row (currency `USD`,
- * timezone = the deployment default) the first time a workspace is used. This keeps
- * `ctx.timezone`/`ctx.currency` populated for every workspace without ever touching
- * Identity, and makes the `qcobro.json` timezone meaningful only as the seed default.
+ * Resolve the active workspace's settings, seeding a default row the first time a
+ * workspace is used. The defaults (currency `USD`, timezone `America/Costa_Rica`) come
+ * from the `WorkspaceSettings` column defaults, so a fresh workspace is always populated
+ * without ever touching Identity.
  */
-export function createGetWorkspaceSettings(
-  client: WorkspaceSettingsClient,
-  defaultTimezone: string
-) {
+export function createGetWorkspaceSettings(client: WorkspaceSettingsClient) {
   return async (workspaceRef: string): Promise<WorkspaceSettingsRecord> => {
     const existing = await client.workspaceSettings.findUnique({ where: { workspaceRef } });
     if (existing) return existing;
     return client.workspaceSettings.upsert({
       where: { workspaceRef },
-      create: { workspaceRef, currency: "USD", timezone: defaultTimezone },
+      create: { workspaceRef },
       update: {}
     });
   };

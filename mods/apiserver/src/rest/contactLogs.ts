@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { ValidationError, DEFAULT_TIMEZONE } from "@qcobro/common";
+import { ValidationError } from "@qcobro/common";
 import { createCreateContactLog } from "../functions/campaigns/createContactLog.js";
 import { createGetWorkspaceSettings } from "../functions/workspaceSettings/getWorkspaceSettings.js";
 
@@ -46,7 +46,7 @@ export function parseBasicWorkspace(authHeader: string | undefined): string | nu
  * disabled (local dev) the endpoint accepts unauthenticated requests.
  */
 export function createContactLogHandler(prisma: ContactLogPrisma, config: ContactLogAuthConfig) {
-  const getSettings = createGetWorkspaceSettings(prisma as never, DEFAULT_TIMEZONE);
+  const getSettings = createGetWorkspaceSettings(prisma as never);
 
   return async (req: Request, res: Response): Promise<void> => {
     // Resolve the referenced account's owning workspace up front: it scopes auth AND
@@ -72,12 +72,15 @@ export function createContactLogHandler(prisma: ContactLogPrisma, config: Contac
       }
     }
 
+    if (!account) {
+      res.status(400).json({ error: "Unknown portfolioAccountId" });
+      return;
+    }
+
     try {
-      // Reset the daily cap in the account's workspace timezone (DEFAULT_TIMEZONE until set),
-      // matching the engine and tRPC paths.
-      const timeZone = account
-        ? (await getSettings(account.portfolio.workspaceRef)).timezone
-        : DEFAULT_TIMEZONE;
+      // Reset the daily cap in the account's workspace timezone, matching the engine and
+      // tRPC paths. Every workspace has a settings row (seeded on read), so it always resolves.
+      const timeZone = (await getSettings(account.portfolio.workspaceRef)).timezone;
       const result = await createCreateContactLog(prisma as never, timeZone)(req.body);
       res.status(201).json(result);
     } catch (err) {

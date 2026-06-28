@@ -82,7 +82,6 @@ export interface EngineDeps {
   twilioFromNumbers: string[];
   fonosterPrerecordedAppRef: string | null;
   clock: Clock;
-  timezone: string;
   voicePerMinute: number;
   smsPerMinute: number;
   emailPerMinute: number;
@@ -114,9 +113,9 @@ export function createEngine(deps: EngineDeps) {
     pickNumber: undefined
   });
   const record = createRecordOutcome(deps.reserveRecordClient as never);
-  // Per-workspace timezone + currency, resolved once per campaign per tick. `deps.timezone`
-  // is the default (DEFAULT_TIMEZONE) used to seed a workspace that has no setting yet.
-  const getSettings = createGetWorkspaceSettings(deps.reserveRecordClient as never, deps.timezone);
+  // Per-workspace timezone + currency, resolved once per campaign per tick. A workspace
+  // without a settings row is seeded on read via the column defaults.
+  const getSettings = createGetWorkspaceSettings(deps.reserveRecordClient as never);
 
   /** Channel readiness for a campaign (Topic 5 tier A — catches config up-front). */
   function readiness(c: EngineCampaign): Readiness {

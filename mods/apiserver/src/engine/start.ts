@@ -1,4 +1,3 @@
-import { DEFAULT_TIMEZONE } from "@qcobro/common";
 import { config } from "../config.js";
 import { prisma } from "../db.js";
 import { FonosterOutboundCallClient } from "../services/fonosterOutboundCallClient.js";
@@ -36,7 +35,6 @@ export function startEngine(): EngineRunner | null {
     twilioFromNumbers: config.twilio?.fromNumbers ?? [],
     fonosterPrerecordedAppRef: config.fonoster?.prerecordedAppRef ?? null,
     clock: { now: () => new Date() },
-    timezone: DEFAULT_TIMEZONE,
     voicePerMinute: config.fonoster?.maxCallsPerMinute ?? 0,
     smsPerMinute: config.twilio?.maxSmsPerMinute ?? 0,
     emailPerMinute: config.resend?.maxEmailsPerMinute ?? 0,

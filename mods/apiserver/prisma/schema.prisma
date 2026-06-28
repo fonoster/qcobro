@@ -23,7 +23,7 @@ enum Currency {
 model WorkspaceSettings {
   workspaceRef String   @id
   currency     Currency @default(USD)
-  timezone     String
+  timezone     String   @default("America/Costa_Rica")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

@@ -11,7 +11,6 @@ import { createRecordOutcome } from "../functions/campaigns/recordOutcome.js";
 
 // Needs a real Postgres (the dev stack). Skipped unless DATABASE_URL is set.
 const RUN = !!process.env.DATABASE_URL;
-const TZ = "America/Costa_Rica";
 const NOW = new Date("2026-06-23T15:00:00Z"); // Tue 09:00 local — inside a 24/7 window
 
 describe("email channel (integration)", { skip: !RUN ? "no DATABASE_URL" : false }, () => {
@@ -85,7 +84,6 @@ describe("email channel (integration)", { skip: !RUN ? "no DATABASE_URL" : false
       twilioFromNumbers: [],
       fonosterPrerecordedAppRef: null,
       clock: { now: () => NOW },
-      timezone: TZ,
       voicePerMinute: 0,
       smsPerMinute: 0,
       emailPerMinute: 1000, // high so other active campaigns can't starve this test
