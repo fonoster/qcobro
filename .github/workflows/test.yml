@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - "mods/**"
+      - "config/**"
+      - "Dockerfile"
+      - "docker-entrypoint.sh"
       - "package.json"
       - "package-lock.json"
       - "tsconfig.json"
