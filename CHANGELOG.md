@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.4](https://github.com/fonoster/qcobro/compare/v1.1.3...v1.1.4) (2026-06-28)
+
+### Bug Fixes
+
+- **webapp:** update PaymentPromises page content after rename ([89c5e44](https://github.com/fonoster/qcobro/commit/89c5e44edb318a3ccb0a299d913cc947de1bc1b5))
+
 ## [1.1.3](https://github.com/fonoster/qcobro/compare/v1.1.2...v1.1.3) (2026-06-28)
 
 ### Bug Fixes
