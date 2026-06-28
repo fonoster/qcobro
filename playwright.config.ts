@@ -19,12 +19,13 @@ const ENABLED_SPECS = [
   "**/member-actions.spec.ts",
   "**/manual-outreach.spec.ts",
   "**/campaigns-core.spec.ts",
-  "**/console-refinements.spec.ts"
+  "**/console-refinements.spec.ts",
+  "**/ai-insights.spec.ts",
+  "**/payment-promises.spec.ts"
   // Deferred, to fix next:
-  //   ai-insights: gestiones list row race (intermittent)
   //   verify-contact: mailpit code email not received within timeout on CI
   //   invite-acceptance: one assertion (new-user accept) flakes on CI
-  //   gestiones-channels, payment-promises: need seeded fixtures
+  //   gestiones-channels: needs seeded multi-channel fixtures
 ];
 
 export default defineConfig({

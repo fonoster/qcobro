@@ -68,6 +68,9 @@ test.describe("ai-insights", () => {
     });
 
     await page.getByRole("link", { name: "Gestiones" }).click();
+    // The gestión was seeded out-of-band (API); reload so the list query fetches it
+    // (the in-memory cache has staleTime 30s and wouldn't know about the out-of-band write).
+    await page.reload();
     await page.locator("tr", { hasText: "Voz IA" }).first().click();
 
     const panel = page.getByRole("dialog");
