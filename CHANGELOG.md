@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.3](https://github.com/fonoster/qcobro/compare/v1.5.2...v1.5.3) (2026-06-28)
+
+### Bug Fixes
+
+- **release:** remove duplicate v prefix and update identity smtp to Resend ([e3b08ac](https://github.com/fonoster/qcobro/commit/e3b08aca8b98b7d779354040524be794f89d272a))
+- **webapp:** refresh workspaces.list after creating a workspace ([57f750a](https://github.com/fonoster/qcobro/commit/57f750afd10fcc3729c96f83546c9778e122d0a7))
+
 ## [1.5.2](https://github.com/fonoster/qcobro/compare/v1.5.1...v1.5.2) (2026-06-28)
 
 ### Bug Fixes

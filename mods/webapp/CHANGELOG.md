@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.3](https://github.com/fonoster/qcobro/compare/v1.5.2...v1.5.3) (2026-06-28)
+
+### Bug Fixes
+
+- **webapp:** refresh workspaces.list after creating a workspace ([57f750a](https://github.com/fonoster/qcobro/commit/57f750afd10fcc3729c96f83546c9778e122d0a7))
+
 # [1.5.0](https://github.com/fonoster/qcobro/compare/v1.4.1...v1.5.0) (2026-06-28)
 
 ### Features
