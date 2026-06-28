@@ -14,7 +14,7 @@ docker compose -f compose.dev.yaml up -d
 
 # 2. Config — point at the dev DB. The engine stays OFF by default (never auto-dials)
 mkdir -p config
-cp qcobro.example.json config/qcobro.json
+cp config/qcobro.example.json config/qcobro.json
 #   set database.url to:
 #   postgresql://qcobro:qcobro@localhost:5432/qcobro?schema=public
 
@@ -121,12 +121,15 @@ from GHCR. No repo clone and no build are needed on the server.
 REL=v1.0.0   # the release to deploy
 
 # 1. Fetch only the files the stack needs, straight from GitHub (no clone)
-sudo mkdir -p /opt/qcobro/config/identity/keys && cd /opt/qcobro
+sudo mkdir -p /opt/qcobro/config/identity/keys /opt/qcobro/scripts/deploy && cd /opt/qcobro
 BASE=https://raw.githubusercontent.com/fonoster/qcobro/$REL
 curl -fsSL $BASE/compose.yaml                          -o compose.yaml
 curl -fsSL $BASE/config/envoy.yaml                     -o config/envoy.yaml
-curl -fsSL $BASE/qcobro.example.json                   -o config/qcobro.json
+curl -fsSL $BASE/config/qcobro.example.json            -o config/qcobro.json
 curl -fsSL $BASE/config/identity/identity.example.json -o config/identity/identity.json
+curl -fsSL $BASE/scripts/deploy/tls.sh                 -o scripts/deploy/tls.sh
+curl -fsSL $BASE/scripts/deploy/refresh-envoy-certs.sh -o scripts/deploy/refresh-envoy-certs.sh
+chmod +x scripts/deploy/tls.sh scripts/deploy/refresh-envoy-certs.sh
 
 Configure the app + Identity service (fill every CHANGE_ME / REPLACE_* —
 managed-DB urls with `sslmode=require`, keys, SMTP, announcement banner, …)
@@ -138,14 +141,19 @@ openssl genrsa -out config/identity/keys/private.pem 2048
 openssl rsa -in config/identity/keys/private.pem -pubout -out config/identity/keys/public.pem
 chmod 644 config/identity/keys/private.pem config/identity/keys/public.pem
 
-# 4. Issue a TLS cert (port 443 is free on first run). Envoy already reads the
-#    cert from /etc/letsencrypt/live/app.qcobro.com/ — no config edit needed.
-sudo apt update && sudo apt install -y certbot
-sudo certbot certonly --standalone -d app.qcobro.com \
-  --agree-tos -m ops@qcobro.com --non-interactive
+# 4. Pin the version + TLS settings (compose.yaml reads QCOBRO_VERSION from .env;
+#    scripts/deploy/tls.sh reads TLS_DOMAIN/TLS_EMAIL)
+cat > .env << ENV
+QCOBRO_VERSION=$REL
+TLS_DOMAIN=app.qcobro.com
+TLS_EMAIL=team@fonoster.com
+ENV
 
-# 5. Pin the version (compose.yaml reads QCOBRO_VERSION from this .env file)
-echo "QCOBRO_VERSION=$REL" > .env
+# 5. Issue the TLS cert (port 443 is free on first run, so certbot uses port 80).
+#    tls.sh issues it, copies it where Envoy reads it (config/certs — see the
+#    userns-remap note in docs/deploy.md), and wires automatic renewal.
+sudo apt update && sudo apt install -y certbot
+scripts/deploy/tls.sh
 
 # 6. Authenticate to GHCR, pull the pinned images, and launch (migrations run
 #    automatically). No local re-tagging.
@@ -174,18 +182,23 @@ Bump the version in `.env`, then pull and redeploy (migrations run
 automatically):
 
 ```bash
-echo "QCOBRO_VERSION=v1.1.0" > .env   # the new release
+sed -i "s/^QCOBRO_VERSION=.*/QCOBRO_VERSION=v1.1.0/" .env   # the new release
 docker compose pull
 docker compose up -d
 ```
 
-Certbot renews certs via its systemd timer; add a deploy hook to restart Envoy
-after renewal (see the full guide).
+> The CI **Deploy** workflow does this for you on each release (it also re-fetches
+> the version-pinned `compose.yaml`, `config/envoy.yaml`, and `scripts/deploy/*`).
+
+TLS renews automatically: `scripts/deploy/tls.sh` (run at install and on every
+deploy) wires a certbot deploy-hook that copies the renewed cert into
+`config/certs` and restarts Envoy. It also respects Let's Encrypt rate limits —
+it only renews inside the expiry window. See **[`docs/deploy.md`](docs/deploy.md)**.
 
 ## Configuration
 
 All deployment settings live in `qcobro.json` (Zod-validated, never committed).
-`qcobro.example.json` is the documented template. Changes require an apiserver
+`config/qcobro.example.json` is the documented template. Changes require an apiserver
 restart (`docker compose up -d`).
 
 ### Email channel (Resend)

@@ -40,5 +40,11 @@ cp -L "$LINEAGE/privkey.pem"   "$CERT_DIR/privkey.pem"
 chmod 644 "$CERT_DIR"/fullchain.pem "$CERT_DIR"/privkey.pem
 
 cd "$COMPOSE_DIR"
-docker compose restart envoy
-echo "refresh-envoy-certs: refreshed certs and restarted Envoy for $(basename "$LINEAGE")"
+# Restart Envoy only if it's already running. On first install the certs are now
+# in place and the upcoming `docker compose up -d` will start Envoy with them.
+if [ -n "$(docker compose ps -q envoy 2>/dev/null)" ]; then
+  docker compose restart envoy
+  echo "refresh-envoy-certs: refreshed certs and restarted Envoy for $(basename "$LINEAGE")"
+else
+  echo "refresh-envoy-certs: certs placed for $(basename "$LINEAGE"); Envoy not running yet (it will start with them)."
+fi
