@@ -44,12 +44,15 @@ workspace.
 ### Requirement: Create, update, and delete portfolios
 
 `client.portfolios.create`, `update`, and `delete` SHALL create, modify, and remove portfolios in the
-active workspace. Updating a portfolio's archived flag SHALL archive or restore it.
+active workspace. Updating a portfolio's archived flag SHALL archive or restore it. A
+portfolio SHALL NOT carry a currency — currency is a workspace-level setting (see
+`workspace-settings`), so `create` SHALL NOT accept a `currency` argument.
 
 #### Scenario: Create a portfolio
 
-- **WHEN** `create({ name, clientId, currency })` is called with valid input
+- **WHEN** `create({ name, clientId })` is called with valid input
 - **THEN** a new portfolio is created in the active workspace and returned
+- **AND** no currency is accepted or stored on the portfolio
 
 #### Scenario: Archive via update
 
@@ -86,7 +89,7 @@ validation error and SHALL NOT result in a network request.
 #### Scenario: Invalid input rejected before the request
 
 - **WHEN** a portfolio method is called with input that violates the shared schema (e.g. an empty
-  `name`, an unsupported `currency`, or an unknown sync `mode`)
+  `name` or an unknown sync `mode`)
 - **THEN** the call rejects with a structured validation error and no request is sent to the server
 
 #### Scenario: Valid input passes validation and is sent

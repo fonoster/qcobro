@@ -105,10 +105,10 @@ non-empty set of weekdays on which the campaign runs). The engine SHALL only dis
 on days included in `daysOfWeek`, and within the daily window defined by `startTime` and
 `endTime`.
 
-`startTime` and `endTime` are wall-clock times interpreted in the deployment's
-configured timezone (`qcobro.json` → `apiserver.timezone`, an IANA zone such as
-`America/Costa_Rica`). Per-workspace timezones are deferred; for now all campaigns in
-a deployment share one timezone.
+`startTime` and `endTime` are wall-clock times interpreted in the **workspace's** configured
+timezone (`WorkspaceSettings.timezone`, an IANA zone such as `America/Costa_Rica`). The
+`qcobro.json → apiserver.timezone` value is only the default used to seed a workspace that
+has no timezone set yet; campaigns in different workspaces MAY run on different timezones.
 
 `daysOfWeek` is a set of ISO weekday numbers (1 = Monday … 7 = Sunday) and MAY be any
 non-empty combination — e.g. Monday and Friday only. The operator console SHALL present the
@@ -121,6 +121,12 @@ explicit list of days).
 - **WHEN** a campaign is configured with `daysOfWeek` of Monday and Friday
 - **THEN** the engine dispatches only on Mondays and Fridays, within the daily window
 - **AND** the campaign list shows a human-readable label for those days
+
+#### Scenario: Wall-clock window uses the workspace timezone
+
+- **WHEN** the engine evaluates a campaign's daily outreach window
+- **THEN** `startTime`/`endTime` are interpreted in that campaign's workspace timezone
+  (`WorkspaceSettings.timezone`), not the deployment-wide default
 
 #### Scenario: Campaign must run on at least one day
 
