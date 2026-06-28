@@ -274,7 +274,7 @@ accept-invite bridge (this file is install-once on the droplet, like the keys):
 | `invite.url`                           | `https://app.qcobro.com/accept-invite`                                         |
 | `invite.failUrl`                       | `https://app.qcobro.com/invite-failed`                                         |
 | `smtp`                                 | `smtp.resend.com:465`, `secure:true`, `auth.user:"resend"`, `auth.pass:"re_…"` |
-| `smtp.sender`                          | `QCobro <no-reply@qcobro.com>`                                                 |
+| `smtp.sender`                          | `QCobro <no-reply@notices.qcobro.com>`                                         |
 | `security.contactVerificationRequired` | `true`                                                                         |
 
 **External dashboards** — only Resend needs a hand-created webhook:
