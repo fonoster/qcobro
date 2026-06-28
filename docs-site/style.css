@@ -1,0 +1,19 @@
+/* QCobro docs — custom styles
+   Loaded automatically by Mintlify (any .css in the docs root is included). */
+
+/* Image panels --------------------------------------------------------------
+   Give every doc image a light, distinct "container" so screenshots stop
+   bleeding into the page: a light matte, a thin hairline ring, and a soft drop
+   shadow that lifts the panel off the page. Scoped by the `/images/` src path,
+   so logos and icons are untouched. */
+
+img[src*="/images/"] {
+  display: block;
+  margin-inline: auto;
+  border-radius: 12px;
+  border: 6px solid #f1f5f9;
+  background-color: #f1f5f9;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.08),
+    0 8px 24px rgba(15, 23, 42, 0.1);
+}
