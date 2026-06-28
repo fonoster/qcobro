@@ -1,4 +1,3 @@
-import { Calendar, ChevronDown } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n, type Language } from "../lib/i18n.js";
@@ -27,16 +26,10 @@ function formatRelative(date: Date | string, language: Language): string {
   return rtf.format(Math.round(diffHr / 24), "day");
 }
 
-/**
- * Deterministic, stable progress percentage (10–80%) for a cartera. There is no
- * recovery-progress metric yet, so this is simulated from the cartera id so the
- * same cartera always shows the same value across renders. The widget is labelled
- * "sample data" in the UI until a real metric is wired from the backend.
- */
-function simulatedProgress(id: string): number {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return 10 + (h % 71);
+/** Real recovery progress for a cartera: recovered / (recovered + outstanding). */
+function recoveryPct(recovered: number, outstanding: number): number {
+  const denom = recovered + outstanding;
+  return denom > 0 ? Math.min(100, Math.round((recovered / denom) * 100)) : 0;
 }
 
 export function Home() {
@@ -49,31 +42,48 @@ export function Home() {
 
   const portfolios = trpc.portfolios.list.useQuery();
   const recent = trpc.campaigns.contactLog.list.useQuery({ limit: 5 });
+  const promises = trpc.campaigns.paymentPromise.list.useQuery();
+  const contactStats = trpc.portfolios.contactStats.useQuery();
 
   const carteras = portfolios.data ?? [];
   const accountsInManagement = carteras.reduce((sum, p) => sum + p.accountCount, 0);
+  const recoveredTotal = carteras.reduce((sum, p) => sum + (p.recoveredAmount ?? 0), 0);
+  const outstandingTotal = carteras.reduce((sum, p) => sum + (p.totalOutstandingBalance ?? 0), 0);
+  const promisesKept = (promises.data ?? []).filter(
+    (p) => (p as { status: string }).status === "MET"
+  ).length;
+  const cs = contactStats.data;
+  const contactRate = cs && cs.total > 0 ? Math.round((cs.contacted / cs.total) * 100) : 0;
   const activity = (recent.data?.items ?? []) as RecentGestion[];
 
-  // Only "accounts in management" has a real backend source today. The other three
-  // are sample figures, rendered greyed-out so they read as not-yet-implemented.
-  const kpis: { label: string; value: string; meta: string; muted?: boolean }[] = [
+  const money = (v: number) =>
+    new Intl.NumberFormat(language, {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0
+    }).format(v);
+
+  // All KPIs are sourced from live workspace data.
+  const kpis: { label: string; value: string; meta: string }[] = [
     {
       label: t("home.kpi.recovered"),
-      value: "$287,430",
-      meta: t("home.kpi.recoveredMeta"),
-      muted: true
+      value: money(recoveredTotal),
+      meta: t("home.kpi.recoveredMeta")
     },
     {
       label: t("home.kpi.promisesKept"),
-      value: "312",
-      meta: t("home.kpi.promisesKeptMeta"),
-      muted: true
+      value: promisesKept.toLocaleString(),
+      meta: t("home.kpi.promisesKeptMeta")
     },
     {
       label: t("home.kpi.contactRate"),
-      value: "68%",
-      meta: t("home.kpi.contactRateMeta"),
-      muted: true
+      value: `${contactRate}%`,
+      meta: t("home.kpi.contactRateMeta")
+    },
+    {
+      label: t("home.kpi.pendingBalance"),
+      value: money(outstandingTotal),
+      meta: t("home.kpi.pendingBalanceMeta")
     },
     {
       label: t("home.kpi.accountsInManagement"),
@@ -84,34 +94,19 @@ export function Home() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-[22px] font-bold text-slate-900">{t("home.title")}</h1>
-          <p className="text-sm text-slate-500">{t("home.subtitle").replace("{name}", wsName)}</p>
-        </div>
-        <button
-          disabled
-          title={t("common.comingSoon")}
-          className="flex cursor-not-allowed items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-[13px] font-medium text-slate-400 opacity-60"
-        >
-          <Calendar className="h-4 w-4 text-slate-400" />
-          {t("home.dateRange")}
-          <ChevronDown className="h-4 w-4 text-slate-400" />
-        </button>
+      <div>
+        <h1 className="text-[22px] font-bold text-slate-900">{t("home.title")}</h1>
+        <p className="text-sm text-slate-500">{t("home.subtitle").replace("{name}", wsName)}</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-5 gap-4">
         {kpis.map((k) => (
           <Card
             key={k.label}
             className="flex flex-col gap-1 rounded-xl border-slate-200 p-5 shadow-none"
           >
             <span className="text-[13px] font-medium text-slate-500">{k.label}</span>
-            <span
-              className={cn("text-[28px] font-bold", k.muted ? "text-slate-400" : "text-slate-900")}
-            >
-              {k.value}
-            </span>
+            <span className="text-[28px] font-bold text-slate-900">{k.value}</span>
             <span className="text-xs text-slate-400">{k.meta}</span>
           </Card>
         ))}
@@ -162,19 +157,22 @@ export function Home() {
             {t("home.progressByPortfolio")}
           </h2>
           {carteras.length === 0 ? (
-            <p className="py-6 text-sm text-slate-400">{t("gestiones.empty")}</p>
+            <p className="py-6 text-sm text-slate-400">{t("home.noPortfolios")}</p>
           ) : (
             <div className="flex flex-col gap-4">
               {carteras.map((p) => {
-                const pct = simulatedProgress(p.id);
+                const pct = recoveryPct(p.recoveredAmount ?? 0, p.totalOutstandingBalance ?? 0);
                 return (
                   <div key={p.id} className="flex flex-col gap-1.5">
                     <div className="flex justify-between text-[13px]">
                       <span className="text-slate-600">{p.name}</span>
-                      <span className="font-semibold text-slate-400">{pct}%</span>
+                      <span className="font-semibold text-slate-700">{pct}%</span>
                     </div>
                     <div className="h-2 w-full rounded-full bg-slate-100">
-                      <div className="h-2 rounded-full bg-slate-300" style={{ width: `${pct}%` }} />
+                      <div
+                        className="h-2 rounded-full bg-emerald-500"
+                        style={{ width: `${pct}%` }}
+                      />
                     </div>
                   </div>
                 );

@@ -30,6 +30,19 @@ export const portfoliosRouter = router({
     })
   ),
 
+  // Workspace contact-rate inputs: active accounts vs. those contacted at least once.
+  contactStats: workspaceProcedure.query(async ({ ctx }) => {
+    const base = {
+      archivedAt: null,
+      portfolio: { workspaceRef: ctx.workspace.accessKeyId }
+    };
+    const [total, contacted] = await Promise.all([
+      ctx.prisma.portfolioAccount.count({ where: base }),
+      ctx.prisma.portfolioAccount.count({ where: { ...base, lastContactedAt: { not: null } } })
+    ]);
+    return { total, contacted };
+  }),
+
   create: workspaceProcedure
     .input(createPortfolioSchema)
     .mutation(({ input, ctx }) =>

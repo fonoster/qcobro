@@ -37,7 +37,7 @@ const OUTCOMES = [
   "OTHER"
 ] as const;
 
-const AGENT_TYPES = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL", "WHATSAPP"] as const;
+const AGENT_TYPES = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL"] as const;
 
 export function Gestiones() {
   const { t, language } = useI18n();

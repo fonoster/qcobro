@@ -22,7 +22,7 @@ type Template = {
   createdAt: Date | string;
 };
 
-const TYPE_FILTERS: AgentType[] = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL", "WHATSAPP"];
+const TYPE_FILTERS: AgentType[] = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL"];
 
 /** Documentation listing every supported template variable. */
 const VARS_DOC_URL = "https://docs.qcobro.com/agentes/variables";
@@ -199,7 +199,8 @@ export function AgentTemplates() {
   );
 }
 
-const CREATABLE_TYPES: AgentType[] = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL", "WHATSAPP"];
+// WhatsApp has no dispatch implementation yet, so it is not offered for creation.
+const CREATABLE_TYPES: AgentType[] = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL"];
 const LANGUAGES = ["es", "en"] as const;
 
 function CreateAgentTemplateModal({
