@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.2](https://github.com/fonoster/qcobro/compare/v1.5.1...v1.5.2) (2026-06-28)
+
+### Bug Fixes
+
+- **apiserver:** prisma.mjs reads config from config/qcobro.json ([3299872](https://github.com/fonoster/qcobro/commit/32998725c72dbbefcbfdf366d17770ea7f033f43))
+- **apiserver:** prisma.mjs reads config from config/qcobro.json ([60fb33d](https://github.com/fonoster/qcobro/commit/60fb33def6cf0d158f462958c7444a310232a729))
+
 # [1.5.0](https://github.com/fonoster/qcobro/compare/v1.4.1...v1.5.0) (2026-06-28)
 
 ### Features
