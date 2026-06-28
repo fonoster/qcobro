@@ -36,6 +36,13 @@ services:
         condition: service_healthy
     volumes:
       - ./config/identity:/service/config:ro
+      # QCobro-branded email/SMS templates override Identity's stock ones (see
+      # compose.yaml for why this is a per-file bind mount).
+      - ./config/identity/templates/verifyEmail.hbs:/service/mods/identity/dist/templates/verifyEmail.hbs:ro
+      - ./config/identity/templates/verifyPhone.hbs:/service/mods/identity/dist/templates/verifyPhone.hbs:ro
+      - ./config/identity/templates/inviteNewUser.hbs:/service/mods/identity/dist/templates/inviteNewUser.hbs:ro
+      - ./config/identity/templates/inviteExistingUser.hbs:/service/mods/identity/dist/templates/inviteExistingUser.hbs:ro
+      - ./config/identity/templates/resetPassword.hbs:/service/mods/identity/dist/templates/resetPassword.hbs:ro
     ports:
       - "50051:50051"
       - "9110:9110"
