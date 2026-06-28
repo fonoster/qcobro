@@ -8,3 +8,6 @@ mods/identity-service/keys
 **/coverage
 .git
 output
+.github
+openspec
+site
