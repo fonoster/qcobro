@@ -111,8 +111,22 @@ jobs:
           done
           echo "stack failed to start"; tail -n 50 /tmp/apiserver.log /tmp/webapp.log; exit 1
 
+      # Cache the Chromium download (~120MB) across runs, keyed on the lockfile so it
+      # re-fetches only when dependencies (incl. Playwright) change.
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        run: |
+          if [ "${{ steps.pw-cache.outputs.cache-hit }}" = "true" ]; then
+            npx playwright install-deps chromium   # cached browser; just OS deps
+          else
+            npx playwright install --with-deps chromium
+          fi
 
       - name: Run e2e
         run: npm run test:e2e
