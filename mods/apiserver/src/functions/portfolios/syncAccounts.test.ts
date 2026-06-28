@@ -47,6 +47,7 @@ function makeTx(existing: PortfolioAccountRecord[]) {
   let createdCount = 0;
   let updatedCount = 0;
   let archivedCount = 0;
+  let expiredPromiseCount = 0;
 
   const tx = {
     portfolioAccount: {
@@ -103,7 +104,19 @@ function makeTx(existing: PortfolioAccountRecord[]) {
         return { id: args.where.id };
       }
     },
-    _stats: () => ({ portfolioUpdate, createdCount, updatedCount, archivedCount })
+    paymentPromise: {
+      updateMany: async () => {
+        expiredPromiseCount++;
+        return { count: 0 };
+      }
+    },
+    _stats: () => ({
+      portfolioUpdate,
+      createdCount,
+      updatedCount,
+      archivedCount,
+      expiredPromiseCount
+    })
   };
 
   const client: PortfolioClient = {
@@ -118,6 +131,7 @@ function makeTx(existing: PortfolioAccountRecord[]) {
       delete: async () => ({ id: "p1" }) as never
     },
     portfolioAccount: tx.portfolioAccount as never,
+    paymentPromise: tx.paymentPromise as never,
     $transaction: async <T>(fn: (tx: PortfolioClient) => Promise<T>) =>
       fn(tx as unknown as PortfolioClient)
   };
@@ -156,14 +170,16 @@ describe("syncAccounts", () => {
     assert.equal(stats().updatedCount, 1);
   });
 
-  it("archives absent accounts in REPLACE mode", async () => {
-    const { client } = makeTx([makeAccount("C001"), makeAccount("C002")]);
+  it("archives absent accounts in REPLACE mode and expires their payment promises", async () => {
+    const { client, stats } = makeTx([makeAccount("C001"), makeAccount("C002")]);
     const fn = createSyncAccounts(client as never);
 
     const result = await fn({ portfolioId: "p1", mode: "REPLACE", rows: [BASE_ROW] });
 
     assert.equal(result.archived, 1);
     assert.equal(result.total, 1);
+    // PENDING promises of accounts that left the portfolio are expired.
+    assert.equal(stats().expiredPromiseCount, 1);
   });
 
   it("does NOT archive in APPEND_ONLY mode even if accounts are missing from the file", async () => {

@@ -8,10 +8,10 @@ import type {
 } from "../schemas/campaigns.js";
 import type {
   ContactOutcome,
-  ObjectiveType,
-  ObjectiveStatus,
+  PaymentPromiseStatus,
   CreateContactLogInput,
-  UpdateObjectiveInput
+  UpdatePaymentPromiseInput,
+  FollowUpPaymentPromiseInput
 } from "../schemas/contactLog.js";
 
 export interface CampaignRecord {
@@ -72,18 +72,19 @@ export interface AccountContactLogRecord {
   intentMetadata: Record<string, unknown> | null;
   channelData: Record<string, unknown> | null;
   correctedEntryId: string | null;
+  agentTemplateId: string | null;
+  paymentPromiseId: string | null;
   providerRef: string | null;
   createdAt: Date;
 }
 
-export interface ObjectiveRecord {
+export interface PaymentPromiseRecord {
   id: string;
   contactLogId: string;
   portfolioAccountId: string;
-  type: ObjectiveType;
   amount: number | null;
   dueDate: Date;
-  status: ObjectiveStatus;
+  status: PaymentPromiseStatus;
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -160,16 +161,21 @@ export interface CampaignClient {
     }): Promise<AccountContactLogRecord[]>;
   };
 
-  objective: {
-    create(args: { data: Record<string, unknown> }): Promise<ObjectiveRecord>;
+  paymentPromise: {
+    create(args: { data: Record<string, unknown> }): Promise<PaymentPromiseRecord>;
+    findFirst(args: { where: Record<string, unknown> }): Promise<PaymentPromiseRecord | null>;
     update(args: {
       where: { id: string };
-      data: { status: ObjectiveStatus };
-    }): Promise<ObjectiveRecord>;
+      data: Record<string, unknown>;
+    }): Promise<PaymentPromiseRecord>;
+    updateMany(args: {
+      where: Record<string, unknown>;
+      data: { status: PaymentPromiseStatus };
+    }): Promise<{ count: number }>;
     findMany(args: {
       where: Record<string, unknown>;
       orderBy?: { dueDate: "asc" | "desc" };
-    }): Promise<ObjectiveRecord[]>;
+    }): Promise<PaymentPromiseRecord[]>;
   };
 
   portfolioAccount: {
@@ -177,6 +183,10 @@ export interface CampaignClient {
       where: { id: string };
     }): Promise<{ id: string; portfolioId: string; outstandingBalance: number } | null>;
 
+    update(args: { where: { id: string }; data: Record<string, unknown> }): Promise<{ id: string }>;
+  };
+
+  portfolio: {
     update(args: { where: { id: string }; data: Record<string, unknown> }): Promise<{ id: string }>;
   };
 
@@ -189,5 +199,6 @@ export type {
   UpdateCampaignStatusInput,
   DeleteCampaignInput,
   CreateContactLogInput,
-  UpdateObjectiveInput
+  UpdatePaymentPromiseInput,
+  FollowUpPaymentPromiseInput
 };

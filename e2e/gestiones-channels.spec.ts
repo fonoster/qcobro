@@ -161,7 +161,7 @@ test.describe("gestiones — channels", () => {
     await expect(panel.getByText("Transcripción")).toHaveCount(0);
     await closePanel();
 
-    // Voz IA — audio player + transcript + full analysis + linked objetivo
+    // Voz IA — audio player + transcript + full analysis + linked payment promise
     panel = await openPanel("Voz IA");
     await expect(panel.locator("audio")).toHaveCount(1);
     await expect(panel.locator("audio")).toHaveAttribute("src", /voz\.wav/);
@@ -171,7 +171,7 @@ test.describe("gestiones — channels", () => {
     ).toBeVisible();
     await expect(panel.getByText(/reconoce la deuda/)).toBeVisible();
     await expect(panel.getByText("Positivo")).toBeVisible();
-    await expect(panel.getByText("Objetivos")).toBeVisible();
+    await expect(panel.getByText("Promesa de pago")).toBeVisible();
     await expect(panel.getByText("Pendiente")).toBeVisible();
   });
 });

@@ -65,6 +65,16 @@ export function createSyncAccounts(client: PortfolioClient) {
             data: { archivedAt: new Date() }
           });
           archived = result.count;
+
+          // Expire the PENDING payment promises of accounts that left the portfolio so
+          // they stay visible (do-not-reach) but off the active worklist.
+          await tx.paymentPromise.updateMany({
+            where: {
+              status: "PENDING",
+              portfolioAccount: { portfolioId, externalId: { in: toArchive } }
+            },
+            data: { status: "EXPIRED" }
+          });
         }
       }
 

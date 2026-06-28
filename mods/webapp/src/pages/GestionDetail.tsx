@@ -84,9 +84,8 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         channelData: Record<string, unknown> | null;
         portfolioAccount: { fullName: string; externalId: string; phone: string | null };
         campaign: { name: string } | null;
-        objectives: {
+        paymentPromises: {
           id: string;
-          type: string;
           amount: number | null;
           dueDate: string;
           status: string;
@@ -407,31 +406,31 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
           </Section>
         )}
 
-        {/* Voz IA + EMAIL: linked objectives (promises captured by the autopilot) */}
-        {(isVoiceAi || isEmail) && g && g.objectives.length > 0 && (
+        {/* Voz IA + EMAIL: linked payment promise (captured for payment outcomes only) */}
+        {(isVoiceAi || isEmail) && g && g.paymentPromises.length > 0 && (
           <Section
             icon={Target}
             iconClass="text-emerald-700"
-            title={t("gestiones.detail.objectives")}
+            title={t("gestiones.detail.paymentPromise")}
           >
             <div className="flex flex-col gap-2">
-              {g.objectives.map((o) => (
+              {g.paymentPromises.map((p) => (
                 <div
-                  key={o.id}
+                  key={p.id}
                   className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3"
                 >
                   <Target className="h-5 w-5 shrink-0 text-emerald-700" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-emerald-900">
-                      {t(`objetivos.type.${o.type}` as Parameters<typeof t>[0])}
+                      {t("gestiones.detail.paymentPromise")}
                     </span>
                     <span className="text-sm text-emerald-700">
-                      {o.amount != null ? `${currency(o.amount)} · ` : ""}
-                      {new Date(o.dueDate).toLocaleDateString()}
+                      {p.amount != null ? `${currency(p.amount)} · ` : ""}
+                      {new Date(p.dueDate).toLocaleDateString()}
                     </span>
                   </div>
                   <span className="ml-auto rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">
-                    {t(`objetivos.status.${o.status}` as Parameters<typeof t>[0])}
+                    {t(`paymentPromises.status.${p.status}` as Parameters<typeof t>[0])}
                   </span>
                 </div>
               ))}

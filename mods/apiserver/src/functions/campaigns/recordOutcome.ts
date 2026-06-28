@@ -49,6 +49,8 @@ function logData(params: CreateContactLogInput, contactedAt: Date): Record<strin
   return {
     portfolioAccountId: params.portfolioAccountId,
     campaignId: params.campaignId ?? null,
+    agentTemplateId: params.agentTemplateId ?? null,
+    paymentPromiseId: params.paymentPromiseId ?? null,
     agentType: params.agentType,
     contactedAt,
     durationSeconds: params.durationSeconds ?? null,
@@ -66,11 +68,17 @@ function logData(params: CreateContactLogInput, contactedAt: Date): Record<strin
   };
 }
 
+/** Outcomes that imply a payment commitment QCobro can adjudicate (→ a PaymentPromise). */
+function isPaymentOutcome(outcome: ContactOutcome): boolean {
+  return outcome === "PAYMENT_PROMISE" || outcome === "PARTIAL_PAYMENT_AGREED";
+}
+
 /**
  * Applies the outcome-driven effects of a gestión (no attempt counting — that is
  * {@link reserveAttempt}'s job): the global `intentStatus` on hard outcomes, a linked
- * `Objective` for payment outcomes (idempotent via the `@@unique([contactLogId, type])`
- * guard), and the campaign-local `suppressUntil`.
+ * `PaymentPromise` for payment outcomes only (idempotent via the `@@unique([contactLogId])`
+ * guard), and the campaign-local `suppressUntil` (Lever B), fed by the promise due date or
+ * a requested callback time.
  */
 async function applyOutcomeEffectsTx(
   tx: CampaignClient,
@@ -90,36 +98,31 @@ async function applyOutcomeEffectsTx(
     });
   }
 
-  // Objective for payment outcomes — guarded so a re-delivered outcome doesn't duplicate.
+  // PaymentPromise for payment outcomes only — guarded so a re-delivered outcome doesn't
+  // duplicate (one promise per gestión). Non-payment outcomes create no tracked entity.
   let promiseDueDate: Date | null = null;
-  const objectiveType =
-    effectiveOutcome === "PAYMENT_PROMISE"
-      ? "PAYMENT_PROMISE"
-      : effectiveOutcome === "PARTIAL_PAYMENT_AGREED"
-        ? "PARTIAL_PAYMENT"
-        : null;
+  const isPayment = isPaymentOutcome(effectiveOutcome);
 
-  if (objectiveType) {
+  if (isPayment) {
     const amount =
-      objectiveType === "PAYMENT_PROMISE"
+      effectiveOutcome === "PAYMENT_PROMISE"
         ? typeof meta.promisedAmount === "number"
           ? meta.promisedAmount
           : null
         : typeof meta.installmentAmount === "number"
           ? meta.installmentAmount
           : null;
-    const dateStr = objectiveType === "PAYMENT_PROMISE" ? meta.promisedDate : meta.startDate;
+    const dateStr = effectiveOutcome === "PAYMENT_PROMISE" ? meta.promisedDate : meta.startDate;
     promiseDueDate = typeof dateStr === "string" ? new Date(dateStr) : null;
 
-    const existing = await tx.objective.findMany({
-      where: { contactLogId: log.id, type: objectiveType }
+    const existing = await tx.paymentPromise.findFirst({
+      where: { contactLogId: log.id }
     });
-    if (existing.length === 0) {
-      await tx.objective.create({
+    if (!existing) {
+      await tx.paymentPromise.create({
         data: {
           contactLogId: log.id,
           portfolioAccountId: params.portfolioAccountId,
-          type: objectiveType,
           amount,
           dueDate: promiseDueDate ?? contactedAt,
           status: "PENDING"
@@ -128,14 +131,14 @@ async function applyOutcomeEffectsTx(
     }
   }
 
-  // Campaign-local suppression from the outcome.
+  // Campaign-local suppression from the outcome (Lever B).
   if (params.campaignId) {
     const triggers = await tx.campaignTrigger.findMany({
       where: { campaignId: params.campaignId }
     });
 
     let suppressUntil: Date | null = null;
-    if (objectiveType) {
+    if (isPayment) {
       const suppressDays = triggerNumber(triggers, "PAYMENT_PROMISE", "suppressDays", 7);
       suppressUntil = promiseDueDate ?? addDays(contactedAt, suppressDays);
     } else if (effectiveOutcome === "CALLBACK_REQUESTED") {

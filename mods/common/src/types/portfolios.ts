@@ -114,6 +114,15 @@ export interface PortfolioClient {
     }): Promise<{ count: number }>;
   };
 
+  // When accounts leave a portfolio, their PENDING payment promises are expired so
+  // collectors do not chase an account that is no longer theirs.
+  paymentPromise: {
+    updateMany(args: {
+      where: Record<string, unknown>;
+      data: { status: "EXPIRED" };
+    }): Promise<{ count: number }>;
+  };
+
   $transaction<T>(fn: (tx: PortfolioClient) => Promise<T>): Promise<T>;
 }
 

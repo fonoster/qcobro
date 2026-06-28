@@ -40,6 +40,9 @@ function mockClient(onUpdate: (data: Record<string, unknown>) => void): Portfoli
       update: async () => ({ id: "a1" }) as never,
       updateMany: async () => ({ count: 0 })
     },
+    paymentPromise: {
+      updateMany: async () => ({ count: 0 })
+    },
     $transaction: async <T>(fn: (tx: PortfolioClient) => Promise<T>) => fn(mockClient(onUpdate))
   };
 }

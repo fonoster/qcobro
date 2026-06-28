@@ -5,7 +5,7 @@ import { createCreateContactLog } from "./createContactLog.js";
 interface Captured {
   log?: Record<string, unknown>;
   accountUpdate?: Record<string, unknown>;
-  objective?: Record<string, unknown>;
+  promise?: Record<string, unknown>;
   stateCreate?: Record<string, unknown>;
   stateUpdate?: Record<string, unknown>;
 }
@@ -30,12 +30,12 @@ function makeClient() {
         return { id: args.where.id } as never;
       }
     },
-    objective: {
+    paymentPromise: {
       create: async (args: { data: Record<string, unknown> }) => {
-        cap.objective = args.data;
-        return { id: "obj-1", ...args.data } as never;
+        cap.promise = args.data;
+        return { id: "promise-1", ...args.data } as never;
       },
-      findMany: async () => []
+      findFirst: async () => null
     },
     campaignTrigger: {
       findMany: async () => []
@@ -93,9 +93,9 @@ describe("createContactLog (reserve + record)", () => {
     assert.equal(suppress.toISOString(), "2026-07-01T00:00:00.000Z");
     // Global account suppression is NOT set by a payment promise.
     assert.equal("suppressUntil" in (cap.accountUpdate ?? {}), false);
-    // Objective created with the promised amount.
-    assert.equal(cap.objective?.type, "PAYMENT_PROMISE");
-    assert.equal(cap.objective?.amount, 500);
+    // PaymentPromise created with the promised amount.
+    assert.equal(cap.promise?.amount, 500);
+    assert.equal(cap.promise?.status, "PENDING");
   });
 
   it("counts the attempt once at reserve (attemptCount increments, attemptsToday reset-aware)", async () => {

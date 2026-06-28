@@ -6,9 +6,10 @@ import { Dialog } from "../ui/dialog.js";
 import { SelectGroup } from "../ui/select.js";
 
 /**
- * Bulk variant of {@link ReachOutModal}: pick one campaign and dispatch it to every
- * selected account. Reuses the same `outreach.dispatch` mutation per account — no new
- * backend endpoint — so the bulk flow stays consistent with the single-account flow.
+ * Bulk variant of {@link ReachOutModal}: pick one agent template and dispatch it ad-hoc to
+ * every selected account (no campaign). Reuses the same `outreach.dispatch` mutation per
+ * account — no new backend endpoint — so the bulk flow stays consistent with the
+ * single-account flow.
  */
 export function BulkReachOutModal({
   accountIds,
@@ -20,25 +21,25 @@ export function BulkReachOutModal({
   onSuccess: () => void;
 }) {
   const { t } = useI18n();
-  const [campaignId, setCampaignId] = useState("");
+  const [agentTemplateId, setAgentTemplateId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
-  const campaignsQuery = trpc.campaigns.list.useQuery();
-  const campaigns = (campaignsQuery.data ?? []).filter(
-    (c) => (c as { status?: string }).status !== "ARCHIVED"
-  ) as Array<{ id: string; name: string; agentTemplate?: { name: string; type: string } | null }>;
+  const agentsQuery = trpc.agentTemplates.list.useQuery();
+  const agents = (agentsQuery.data ?? []).filter(
+    (a) => !(a as { archivedAt?: string | null }).archivedAt
+  ) as Array<{ id: string; name: string; type: string }>;
 
-  const selected = campaigns.find((c) => c.id === campaignId);
+  const selected = agents.find((a) => a.id === agentTemplateId);
   const dispatch = trpc.outreach.dispatch.useMutation();
 
   async function handleConfirm() {
-    if (!campaignId) return setError(t("portfolios.reachOut.noCampaign"));
+    if (!agentTemplateId) return setError(t("portfolios.reachOut.noAgent"));
     setError(null);
     setSending(true);
     try {
       for (const id of accountIds) {
-        await dispatch.mutateAsync({ portfolioAccountId: id, campaignId });
+        await dispatch.mutateAsync({ portfolioAccountId: id, agentTemplateId });
       }
       onSuccess();
     } catch (err) {
@@ -65,25 +66,23 @@ export function BulkReachOutModal({
     >
       <div className="mt-4 flex flex-col gap-3">
         <SelectGroup
-          label={t("portfolios.reachOut.campaign")}
-          id="bulk-campaign"
-          value={campaignId}
-          onChange={(e) => setCampaignId(e.target.value)}
+          label={t("portfolios.reachOut.agent")}
+          id="bulk-agent"
+          value={agentTemplateId}
+          onChange={(e) => setAgentTemplateId(e.target.value)}
         >
-          <option value="">{t("portfolios.reachOut.campaignPlaceholder")}</option>
-          {campaigns.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
+          <option value="">{t("portfolios.reachOut.agentPlaceholder")}</option>
+          {agents.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
             </option>
           ))}
         </SelectGroup>
 
-        {selected?.agentTemplate && (
+        {selected && (
           <div className="flex items-center gap-2.5 rounded-lg bg-slate-100 px-3 py-2.5">
             <Bot className="h-4 w-4 shrink-0 text-slate-600" />
-            <span className="text-sm text-slate-700">
-              {t("portfolios.reachOut.willUse")} {selected.agentTemplate.name}
-            </span>
+            <span className="text-sm text-slate-700">{selected.name}</span>
           </div>
         )}
 

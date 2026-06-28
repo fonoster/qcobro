@@ -44,10 +44,15 @@ enum TriggerType {
 }
 
 enum ContactOutcome {
+  DELIVERED
+  NOT_DELIVERED
   NO_ANSWER
   PAYMENT_PROMISE
   PARTIAL_PAYMENT_AGREED
+  NEW_TERMS
   CALLBACK_REQUESTED
+  DISPUTE_RAISED
+  INFORMATION_REQUEST
   RESOLVED
   PAID
   WRONG_NUMBER
@@ -62,19 +67,10 @@ enum IntentStatus {
   OPT_OUT
 }
 
-enum ObjectiveType {
-  PAYMENT_PROMISE
-  PARTIAL_PAYMENT
-  CALLBACK_SCHEDULED
-  INFORMATION_REQUEST
-  DISPUTE_RAISED
-  OTHER
-}
-
-enum ObjectiveStatus {
+enum PaymentPromiseStatus {
   PENDING
   MET
-  BROKEN
+  EXPIRED
   CANCELLED
 }
 
@@ -127,7 +123,7 @@ model PortfolioAccount {
   portfolio          Portfolio              @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
   campaignStates     CampaignAccountState[]
   contactLogs        AccountContactLog[]
-  objectives         Objective[]
+  paymentPromises    PaymentPromise[]
 
   @@unique([portfolioId, externalId])
   @@index([portfolioId, archivedAt])
@@ -291,6 +287,10 @@ model AccountContactLog {
   intentMetadata     Json?
   channelData        Json?
   correctedEntryId   String?
+  // Agent template used for the attempt (campaign dispatch or ad-hoc follow-up).
+  agentTemplateId    String?
+  // Set when this gestión is an ad-hoc follow-up on a specific PaymentPromise.
+  paymentPromiseId   String?
   // Provider call ref (voice) / message sid (sms) for the dispatch-time attempt.
   // The engine writes one gestión per attempt keyed by this; the async outcome
   // callback correlates on it to enrich the same row (no duplicate gestiones).
@@ -300,29 +300,27 @@ model AccountContactLog {
   createdAt          DateTime         @default(now())
   portfolioAccount   PortfolioAccount @relation(fields: [portfolioAccountId], references: [id], onDelete: Cascade)
   campaign           Campaign?        @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  objectives         Objective[]
+  paymentPromises    PaymentPromise[]
 
   @@index([portfolioAccountId, createdAt])
   @@map("account_contact_logs")
 }
 
-model Objective {
-  id                 String            @id @default(uuid())
+model PaymentPromise {
+  id                 String               @id @default(uuid())
   contactLogId       String
   portfolioAccountId String
-  type               ObjectiveType
   amount             Float?
   dueDate            DateTime
-  status             ObjectiveStatus   @default(PENDING)
+  status             PaymentPromiseStatus @default(PENDING)
   notes              String?
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-  contactLog         AccountContactLog @relation(fields: [contactLogId], references: [id], onDelete: Cascade)
-  portfolioAccount   PortfolioAccount  @relation(fields: [portfolioAccountId], references: [id], onDelete: Cascade)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  contactLog         AccountContactLog    @relation(fields: [contactLogId], references: [id], onDelete: Cascade)
+  portfolioAccount   PortfolioAccount     @relation(fields: [portfolioAccountId], references: [id], onDelete: Cascade)
 
-  // One objective per (gestión, type): a single contact may yield distinct objective
-  // types, but a re-delivered outcome callback cannot duplicate the same one.
-  @@unique([contactLogId, type])
+  // One promise per gestión: a re-delivered outcome callback cannot duplicate it.
+  @@unique([contactLogId])
   @@index([portfolioAccountId, dueDate])
-  @@map("objectives")
+  @@map("payment_promises")
 }

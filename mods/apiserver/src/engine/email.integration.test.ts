@@ -172,8 +172,8 @@ describe("email channel (integration)", { skip: !RUN ? "no DATABASE_URL" : false
 
     const afterPromise = await prisma.accountContactLog.findUnique({ where: { id: log!.id } });
     assert.equal(afterPromise?.outcome, "PAYMENT_PROMISE", "outcome captured, not downgraded");
-    const objectives = await prisma.objective.findMany({ where: { contactLogId: log!.id } });
-    assert.equal(objectives.length, 1, "one promise Objective");
+    const promises = await prisma.paymentPromise.findMany({ where: { contactLogId: log!.id } });
+    assert.equal(promises.length, 1, "one PaymentPromise");
 
     // 2nd reply (agentReplyCount now 1 < 2): still replies.
     await reply("¿Me reenvían el enlace?");

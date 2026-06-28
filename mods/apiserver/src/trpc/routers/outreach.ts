@@ -6,7 +6,6 @@ import {
 } from "@qcobro/common";
 import { router, workspaceProcedure } from "../trpc.js";
 import { createDispatchOutreach } from "../../functions/outreach/dispatchOutreach.js";
-import { createReserveAttempt } from "../../functions/campaigns/reserveAttempt.js";
 import { createRecordOutcome } from "../../functions/campaigns/recordOutcome.js";
 
 /** An agent template with its four dispatchable channel configs loaded. */
@@ -77,10 +76,11 @@ function buildDispatchRequest(
 
 export const outreachRouter = router({
   /**
-   * Manual one-off outreach to a single customer. Runs the selected campaign's agent
-   * against this account: loads the account + campaign (workspace-scoped), derives the
-   * campaign's agent template, dispatches via the channel-dispatch trigger, and records
-   * the attempt as a gestión of the campaign so it appears in the account's history.
+   * Manual one-off outreach to a single customer — agent-based, not campaign-based. Loads
+   * the account + the chosen agent template (workspace-scoped), dispatches via the
+   * channel-dispatch trigger, and records a campaign-less gestión (`campaignId` null,
+   * `agentTemplateId` set) so it appears in the account's history. No campaign is involved
+   * and no `CampaignAccountState` is touched.
    */
   dispatch: workspaceProcedure.input(manualOutreachSchema).mutation(async ({ input, ctx }) => {
     const workspaceRef = ctx.workspace.accessKeyId;
@@ -91,13 +91,8 @@ export const outreachRouter = router({
     });
     if (!account) throw new TRPCError({ code: "NOT_FOUND", message: "Account not found" });
 
-    const campaign = await ctx.prisma.campaign.findFirst({
-      where: { id: input.campaignId, workspaceRef }
-    });
-    if (!campaign) throw new TRPCError({ code: "NOT_FOUND", message: "Campaign not found" });
-
     const template = await ctx.prisma.agentTemplate.findFirst({
-      where: { id: campaign.agentTemplateId, workspaceRef },
+      where: { id: input.agentTemplateId, workspaceRef },
       include: {
         voiceAiConfig: true,
         voicePrerecordedConfig: true,
@@ -138,20 +133,13 @@ export const outreachRouter = router({
 
     const at = new Date().toISOString();
 
-    // Manual = a first-class campaign attempt, counted like the engine's. Operator
-    // override: we reserve (count) the attempt before dialing, but do not gate on caps.
-    await createReserveAttempt(
-      ctx.prisma as never,
-      ctx.timezone
-    )({ campaignId: input.campaignId, portfolioAccountId: account.id, at });
-
     const result = await dispatch(request);
 
-    // One gestión per attempt, correlated by providerRef (richer outcomes arrive via
-    // callbacks and enrich this same row).
+    // One campaign-less gestión per attempt, correlated by providerRef (richer outcomes
+    // arrive via callbacks and enrich this same row). No campaign → no CampaignAccountState.
     await createRecordOutcome(ctx.prisma as never)({
       portfolioAccountId: account.id,
-      campaignId: input.campaignId,
+      agentTemplateId: input.agentTemplateId,
       agentType: template.type as DispatchOutreachInput["channel"],
       contactedAt: at,
       outcome: "OTHER",

@@ -64,9 +64,9 @@ export function Home() {
       muted: true
     },
     {
-      label: t("home.kpi.objectivesMet"),
+      label: t("home.kpi.promisesKept"),
       value: "312",
-      meta: t("home.kpi.objectivesMetMeta"),
+      meta: t("home.kpi.promisesKeptMeta"),
       muted: true
     },
     {

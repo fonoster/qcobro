@@ -27,38 +27,33 @@ export function ReachOutModal({
   onSuccess: () => void;
 }) {
   const { t } = useI18n();
-  const [campaignId, setCampaignId] = useState("");
+  const [agentTemplateId, setAgentTemplateId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [editSubject, setEditSubject] = useState("");
   const [editBody, setEditBody] = useState("");
   const [editFirstMessage, setEditFirstMessage] = useState("");
 
-  const campaignsQuery = trpc.campaigns.list.useQuery();
-  const campaigns = (campaignsQuery.data ?? []).filter(
-    (c) => (c as { status?: string }).status !== "ARCHIVED"
-  ) as Array<{
-    id: string;
-    name: string;
-    agentTemplateId: string;
-    agentTemplate?: { name: string; type: string } | null;
-  }>;
+  const agentsQuery = trpc.agentTemplates.list.useQuery();
+  const agents = (agentsQuery.data ?? []).filter(
+    (a) => !(a as { archivedAt?: string | null }).archivedAt
+  ) as Array<{ id: string; name: string; type: string }>;
 
-  const selected = campaigns.find((c) => c.id === campaignId);
-  const agentType = selected?.agentTemplate?.type;
+  const selected = agents.find((a) => a.id === agentTemplateId);
+  const agentType = selected?.type;
 
   const templateQuery = trpc.agentTemplates.get.useQuery(
-    { id: selected?.agentTemplateId ?? "" },
-    { enabled: !!selected }
+    { id: agentTemplateId },
+    { enabled: !!agentTemplateId }
   );
 
   const tmpl = templateQuery.data as Record<string, unknown> | undefined;
 
-  // Reset editable fields when campaign changes.
+  // Reset editable fields when the agent changes.
   useEffect(() => {
     setEditSubject("");
     setEditBody("");
     setEditFirstMessage("");
-  }, [campaignId]);
+  }, [agentTemplateId]);
 
   // Populate editable fields with rendered template values once loaded.
   useEffect(() => {
@@ -91,13 +86,13 @@ export function ReachOutModal({
   }
 
   function handleConfirm() {
-    if (!campaignId) return setError(t("portfolios.reachOut.noCampaign"));
+    if (!agentTemplateId) return setError(t("portfolios.reachOut.noAgent"));
     if (agentType === "EMAIL" && !account.email) return setError(t("portfolios.reachOut.noEmail"));
     if (agentType !== "EMAIL" && !account.phone) return setError(t("portfolios.reachOut.noPhone"));
     setError(null);
     dispatch.mutate({
       portfolioAccountId: account.id,
-      campaignId,
+      agentTemplateId,
       subject: agentType === "EMAIL" ? editSubject : undefined,
       body: agentType === "EMAIL" || agentType === "SMS" ? editBody : undefined,
       firstMessage:
@@ -120,25 +115,24 @@ export function ReachOutModal({
     >
       <div className="mt-4 flex flex-col gap-4">
         <SelectGroup
-          label={t("portfolios.reachOut.campaign")}
-          id="reach-campaign"
-          value={campaignId}
-          onChange={(e) => setCampaignId(e.target.value)}
+          label={t("portfolios.reachOut.agent")}
+          id="reach-agent"
+          value={agentTemplateId}
+          onChange={(e) => setAgentTemplateId(e.target.value)}
         >
-          <option value="">{t("portfolios.reachOut.campaignPlaceholder")}</option>
-          {campaigns.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
+          <option value="">{t("portfolios.reachOut.agentPlaceholder")}</option>
+          {agents.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
             </option>
           ))}
         </SelectGroup>
 
-        {selected?.agentTemplate && (
+        {selected && (
           <div className="flex items-center gap-2.5 rounded-lg bg-slate-100 px-3 py-2.5">
             <Bot className="h-4 w-4 shrink-0 text-slate-600" />
             <span className="text-sm text-slate-700">
-              {t("portfolios.reachOut.willUse")} {selected.agentTemplate.name}{" "}
-              {t("portfolios.reachOut.via")} {channelLabel(agentType)}
+              {t("portfolios.reachOut.sendVia")} {channelLabel(agentType)}
             </span>
           </div>
         )}

@@ -8,7 +8,8 @@ import {
   updateCampaignStatusSchema,
   deleteCampaignSchema,
   createContactLogSchema,
-  updateObjectiveSchema,
+  updatePaymentPromiseSchema,
+  followUpPaymentPromiseSchema,
   generateInsightInputSchema
 } from "@qcobro/common";
 import { router, workspaceProcedure } from "../trpc.js";
@@ -17,6 +18,8 @@ import { createUpdateCampaign } from "../../functions/campaigns/updateCampaign.j
 import { createUpdateCampaignStatus } from "../../functions/campaigns/updateCampaignStatus.js";
 import { createDeleteCampaign } from "../../functions/campaigns/deleteCampaign.js";
 import { createCreateContactLog } from "../../functions/campaigns/createContactLog.js";
+import { createResolvePaymentPromise } from "../../functions/campaigns/resolvePaymentPromise.js";
+import { createFollowUpPaymentPromise } from "../../functions/campaigns/followUpPaymentPromise.js";
 import { createGenerateGestionInsight } from "../../functions/voice/generateGestionInsight.js";
 
 /** Gestión (contact-log) procedures scoped to the active workspace. */
@@ -77,7 +80,7 @@ const contactLogRouter = router({
       include: {
         portfolioAccount: true,
         campaign: { select: { name: true, agentTemplateId: true } },
-        objectives: { orderBy: { dueDate: "asc" } }
+        paymentPromises: { orderBy: { dueDate: "asc" } }
       }
     })
   ),
@@ -105,19 +108,19 @@ const contactLogRouter = router({
     })
 });
 
-/** Objective procedures scoped to the active workspace. */
-const objectiveRouter = router({
+/** Payment-promise (worklist) procedures scoped to the active workspace. */
+const paymentPromiseRouter = router({
   list: workspaceProcedure
     .input(
       z
         .object({
-          status: z.enum(["PENDING", "MET", "BROKEN", "CANCELLED"]).optional(),
+          status: z.enum(["PENDING", "MET", "EXPIRED", "CANCELLED"]).optional(),
           portfolioId: z.string().optional()
         })
         .optional()
     )
     .query(({ input, ctx }) =>
-      ctx.prisma.objective.findMany({
+      ctx.prisma.paymentPromise.findMany({
         where: {
           status: input?.status,
           portfolioAccount: {
@@ -126,23 +129,31 @@ const objectiveRouter = router({
           }
         },
         orderBy: { dueDate: "asc" },
-        include: { portfolioAccount: { select: { fullName: true, portfolioId: true } } }
+        include: {
+          portfolioAccount: { select: { fullName: true, externalId: true, portfolioId: true } },
+          contactLog: { select: { agentType: true } }
+        }
       })
     ),
 
-  updateStatus: workspaceProcedure.input(updateObjectiveSchema).mutation(async ({ input, ctx }) => {
+  // Operator resolution: MET (paid — feeds recoveredAmount) or CANCELLED. v1 manual-only.
+  resolve: workspaceProcedure.input(updatePaymentPromiseSchema).mutation(async ({ input, ctx }) => {
     // Workspace-scope the target before mutating.
-    await ctx.prisma.objective.findFirstOrThrow({
+    await ctx.prisma.paymentPromise.findFirstOrThrow({
       where: {
         id: input.id,
         portfolioAccount: { portfolio: { workspaceRef: ctx.workspace.accessKeyId } }
       }
     });
-    return ctx.prisma.objective.update({
-      where: { id: input.id },
-      data: { status: input.status }
-    });
-  })
+    return createResolvePaymentPromise(ctx.prisma as never)(input);
+  }),
+
+  // Follow up via ad-hoc agent dispatch (no campaign attached).
+  followUp: workspaceProcedure
+    .input(followUpPaymentPromiseSchema)
+    .mutation(({ input, ctx }) =>
+      createFollowUpPaymentPromise(ctx.prisma as never, ctx.workspace.accessKeyId)(input)
+    )
 });
 
 export const campaignsRouter = router({
@@ -200,5 +211,5 @@ export const campaignsRouter = router({
     ),
 
   contactLog: contactLogRouter,
-  objective: objectiveRouter
+  paymentPromise: paymentPromiseRouter
 });
