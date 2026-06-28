@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { X } from "lucide-react";
 import { Button } from "./button.js";
+import { useI18n } from "../../lib/i18n.js";
 
 export interface ConfirmDeleteDialogProps {
   open: boolean;
@@ -20,6 +21,7 @@ export function ConfirmDeleteDialog({
   description,
   isPending
 }: ConfirmDeleteDialogProps) {
+  const { t } = useI18n();
   const [value, setValue] = useState("");
 
   if (!open) return null;
@@ -56,8 +58,9 @@ export function ConfirmDeleteDialog({
 
         <div className="mt-4">
           <label className="block text-sm font-medium text-slate-700">
-            Escribe <span className="font-mono font-bold text-slate-900">CONFIRMAR</span> para
-            continuar
+            {t("confirmDialog.labelPre")}
+            <span className="font-mono font-bold text-slate-900">CONFIRMAR</span>
+            {t("confirmDialog.labelPost")}
           </label>
           <input
             type="text"
@@ -72,10 +75,10 @@ export function ConfirmDeleteDialog({
 
         <div className="mt-5 flex gap-3">
           <Button variant="destructive" onClick={handleConfirm} disabled={!confirmed || isPending}>
-            {isPending ? "Eliminando…" : "Eliminar"}
+            {isPending ? t("confirmDialog.deleting") : t("confirmDialog.delete")}
           </Button>
           <Button variant="outline" onClick={handleClose}>
-            Cancelar
+            {t("common.cancel")}
           </Button>
         </div>
       </div>

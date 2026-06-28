@@ -51,7 +51,7 @@ export function SignUp() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Tu nombre"
+              placeholder={t("auth.namePlaceholder")}
             />
             <InputGroup
               label={t("auth.email")}
@@ -59,7 +59,7 @@ export function SignUp() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="tú@empresa.com"
+              placeholder={t("auth.emailPlaceholder")}
             />
             <InputGroup
               label={t("auth.password")}
@@ -68,7 +68,7 @@ export function SignUp() {
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mínimo 8 caracteres"
+              placeholder={t("auth.passwordPlaceholder")}
               error={error ?? undefined}
             />
           </div>

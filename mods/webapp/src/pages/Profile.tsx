@@ -2,17 +2,22 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
+import { useI18n, languages, languageNames, type Language } from "../lib/i18n.js";
 import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
+import { SelectGroup } from "../components/ui/select.js";
 
 const CONFIRM_WORD = "ELIMINAR";
 
 export function Profile() {
   const { logout } = useAuth();
+  const { t, language, setLanguage } = useI18n();
   const navigate = useNavigate();
+  const utils = trpc.useUtils();
   const profile = trpc.profile.get.useQuery();
   const update = trpc.profile.update.useMutation();
+  const setLang = trpc.profile.setLanguage.useMutation();
   const remove = trpc.profile.delete.useMutation();
 
   const serverName = profile.data?.name ?? "";
@@ -52,6 +57,15 @@ export function Profile() {
     }
   }
 
+  // Language applies immediately (UI + cache), and we keep the profile query in sync so the
+  // server-reconcile effect (AuthedLayout) doesn't revert the optimistic change before the
+  // mutation lands. Persist to the profile (source of truth), then refetch to confirm.
+  function onLanguageChange(next: Language) {
+    setLanguage(next);
+    utils.profile.get.setData(undefined, (prev) => (prev ? { ...prev, language: next } : prev));
+    setLang.mutate({ language: next }, { onSettled: () => utils.profile.get.invalidate() });
+  }
+
   function closeConfirm() {
     setConfirmOpen(false);
     setConfirmText("");
@@ -74,45 +88,59 @@ export function Profile() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-[22px] font-bold text-slate-900">Mi perfil</h1>
-        <p className="text-sm text-slate-500">Actualiza tu información personal.</p>
+        <h1 className="text-[22px] font-bold text-slate-900">{t("profile.title")}</h1>
+        <p className="text-sm text-slate-500">{t("profile.subtitle")}</p>
       </div>
 
       <Card className="max-w-[680px] rounded-xl border-slate-200 shadow-none">
         <form onSubmit={onSubmit} className="flex flex-col gap-5 p-6">
-          <h2 className="text-[15px] font-semibold text-slate-900">General</h2>
+          <h2 className="text-[15px] font-semibold text-slate-900">
+            {t("profile.section.general")}
+          </h2>
           <InputGroup
             id="profile-name"
-            label="Nombre"
+            label={t("profile.field.name")}
             required
             value={nameValue}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Tu nombre"
+            placeholder={t("profile.field.namePlaceholder")}
           />
           <InputGroup
             id="profile-email"
-            label="Correo"
+            label={t("profile.field.email")}
             value={email}
             readOnly
             disabled
-            hint="El correo no se puede cambiar."
+            hint={t("profile.field.emailHint")}
           />
           <InputGroup
             id="profile-phone"
-            label="Teléfono"
+            label={t("profile.field.phone")}
             value={phoneValue}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="Opcional"
+            placeholder={t("profile.field.phonePlaceholder")}
           />
+          <SelectGroup
+            id="profile-language"
+            label={t("profile.field.language")}
+            value={language}
+            onChange={(e) => onLanguageChange(e.target.value as Language)}
+          >
+            {languages.map((lng) => (
+              <option key={lng} value={lng}>
+                {languageNames[lng]}
+              </option>
+            ))}
+          </SelectGroup>
           <div className="flex items-center justify-end gap-3">
             {status === "ok" && (
-              <span className="text-[13px] text-emerald-600">Cambios guardados</span>
+              <span className="text-[13px] text-emerald-600">{t("profile.saved")}</span>
             )}
             {status === "error" && (
-              <span className="text-[13px] text-red-600">No se pudo guardar</span>
+              <span className="text-[13px] text-red-600">{t("profile.saveError")}</span>
             )}
             <Button type="submit" disabled={!dirty || update.isPending}>
-              Guardar cambios
+              {t("profile.save")}
             </Button>
           </div>
         </form>
@@ -121,17 +149,17 @@ export function Profile() {
       <Card className="max-w-[680px] rounded-xl border-red-200 shadow-none">
         <div className="flex items-center justify-between gap-6 p-6">
           <div>
-            <h2 className="text-[15px] font-semibold text-slate-900">Eliminar cuenta</h2>
-            <p className="mt-0.5 text-[13px] text-slate-500">
-              Esta acción es permanente. Se eliminará tu cuenta y perderás el acceso.
-            </p>
+            <h2 className="text-[15px] font-semibold text-slate-900">
+              {t("profile.danger.title")}
+            </h2>
+            <p className="mt-0.5 text-[13px] text-slate-500">{t("profile.danger.desc")}</p>
           </div>
           <Button
             variant="outline"
             className="shrink-0 border-red-200 text-red-600 hover:bg-red-50"
             onClick={() => setConfirmOpen(true)}
           >
-            Eliminar cuenta
+            {t("profile.danger.action")}
           </Button>
         </div>
       </Card>
@@ -141,29 +169,27 @@ export function Profile() {
           <Card className="w-full max-w-[440px] rounded-2xl border-slate-200 shadow-xl">
             <div className="flex flex-col gap-5 p-6">
               <div>
-                <h2 className="text-lg font-bold text-slate-900">Eliminar cuenta</h2>
-                <p className="mt-1 text-[13px] text-slate-500">
-                  Esta acción es permanente. Se eliminará tu cuenta y perderás el acceso.
-                </p>
+                <h2 className="text-lg font-bold text-slate-900">{t("profile.danger.title")}</h2>
+                <p className="mt-1 text-[13px] text-slate-500">{t("profile.danger.desc")}</p>
               </div>
               <InputGroup
-                label={`Escribe ${CONFIRM_WORD} para confirmar`}
+                label={t("profile.delete.confirmLabel")}
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
                 placeholder={CONFIRM_WORD}
                 autoFocus
-                error={deleteError ? "No se pudo eliminar la cuenta." : undefined}
+                error={deleteError ? t("profile.delete.error") : undefined}
               />
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={closeConfirm}>
-                  Cancelar
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   variant="destructive"
                   disabled={!canDelete || remove.isPending}
                   onClick={onDelete}
                 >
-                  Eliminar cuenta
+                  {t("profile.danger.action")}
                 </Button>
               </div>
             </div>

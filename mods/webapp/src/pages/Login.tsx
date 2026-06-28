@@ -50,7 +50,7 @@ export function Login() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="tú@empresa.com"
+              placeholder={t("auth.emailPlaceholder")}
             />
             <div className="flex flex-col gap-1.5">
               <InputGroup

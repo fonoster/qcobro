@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
-import { useI18n, type MessageId } from "../lib/i18n.js";
+import { useI18n, type MessageId, type Language } from "../lib/i18n.js";
 import { Logo } from "./Logo.js";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher.js";
 import { UserMenu } from "./UserMenu.js";
@@ -28,11 +28,18 @@ const NAV: { icon: LucideIcon; labelKey: MessageId; to?: string; end?: boolean }
 ];
 
 export function AuthedLayout() {
-  const { t } = useI18n();
+  const { t, language, setLanguage } = useI18n();
   const { workspace, setWorkspace, logout } = useAuth();
   const workspaces = trpc.workspaces.list.useQuery();
   const data = workspaces.data;
   const items = data?.items ?? [];
+
+  // The profile is the source of truth for language; reconcile the cached/default choice
+  // with it once it loads (and whenever it changes elsewhere).
+  const profileLanguage = trpc.profile.get.useQuery().data?.language as Language | undefined;
+  useEffect(() => {
+    if (profileLanguage && profileLanguage !== language) setLanguage(profileLanguage);
+  }, [profileLanguage, language, setLanguage]);
 
   useEffect(() => {
     const list = data?.items;

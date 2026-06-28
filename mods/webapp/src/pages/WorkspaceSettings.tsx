@@ -98,7 +98,7 @@ export function WorkspaceSettings() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-[22px] font-bold text-slate-900">Configuración del espacio</h1>
+        <h1 className="text-[22px] font-bold text-slate-900">{t("settings.title")}</h1>
         <p className="text-sm text-slate-500">{t("settings.subtitle")}</p>
       </div>
 
@@ -153,17 +153,17 @@ export function WorkspaceSettings() {
         <Card className="max-w-[680px] rounded-xl border-red-200 shadow-none">
           <div className="flex items-center justify-between gap-6 p-6">
             <div>
-              <h2 className="text-[15px] font-semibold text-slate-900">Eliminar espacio</h2>
-              <p className="mt-0.5 text-[13px] text-slate-500">
-                Esta acción es permanente. Se eliminarán el espacio y todos sus datos.
-              </p>
+              <h2 className="text-[15px] font-semibold text-slate-900">
+                {t("settings.delete.title")}
+              </h2>
+              <p className="mt-0.5 text-[13px] text-slate-500">{t("settings.delete.desc")}</p>
             </div>
             <Button
               variant="outline"
               className="shrink-0 border-red-200 text-red-600 hover:bg-red-50"
               onClick={() => setConfirmOpen(true)}
             >
-              Eliminar espacio
+              {t("settings.delete.title")}
             </Button>
           </div>
         </Card>
@@ -174,30 +174,27 @@ export function WorkspaceSettings() {
           <Card className="w-full max-w-[440px] rounded-2xl border-slate-200 shadow-xl">
             <div className="flex flex-col gap-5 p-6">
               <div>
-                <h2 className="text-lg font-bold text-slate-900">Eliminar espacio</h2>
-                <p className="mt-1 text-[13px] text-slate-500">
-                  Esta acción es permanente. Se eliminarán <strong>{active.name}</strong> y todos
-                  sus datos.
-                </p>
+                <h2 className="text-lg font-bold text-slate-900">{t("settings.delete.title")}</h2>
+                <p className="mt-1 text-[13px] text-slate-500">{t("settings.delete.desc")}</p>
               </div>
               <InputGroup
-                label={`Escribe ${CONFIRM_WORD} para confirmar`}
+                label={t("settings.delete.confirmLabel")}
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
                 placeholder={CONFIRM_WORD}
                 autoFocus
-                error={deleteError ? "No se pudo eliminar el espacio." : undefined}
+                error={deleteError ? t("settings.delete.error") : undefined}
               />
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={closeConfirm}>
-                  Cancelar
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   variant="destructive"
                   disabled={!canDelete || remove.isPending}
                   onClick={onDelete}
                 >
-                  Eliminar espacio
+                  {t("settings.delete.title")}
                 </Button>
               </div>
             </div>

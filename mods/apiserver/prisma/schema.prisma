@@ -30,6 +30,17 @@ model WorkspaceSettings {
   @@map("workspace_settings")
 }
 
+// Per-user settings owned by the app (keyed by the Identity userRef); the Identity
+// service is never modified. Holds the user's console language preference.
+model UserSettings {
+  userRef   String   @id
+  language  String   @default("es")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_settings")
+}
+
 enum AgentType {
   SMS
   VOICE_PRERECORDED

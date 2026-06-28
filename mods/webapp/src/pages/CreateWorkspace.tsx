@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, X, Settings } from "lucide-react";
 import { trpc, REFRESH_TOKEN_KEY } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
+import { useI18n } from "../lib/i18n.js";
 import { Logo } from "../components/Logo.js";
 import { AnnouncementBanner } from "../components/AnnouncementBanner.js";
 import { Card } from "../components/ui/card.js";
@@ -13,6 +14,7 @@ import { TIMEZONES } from "../lib/timezones.js";
 
 export function CreateWorkspace() {
   const { setTokens, setWorkspace, currentUser } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const utils = trpc.useUtils();
   const workspaces = trpc.workspaces.summaries.useQuery();
@@ -64,10 +66,10 @@ export function CreateWorkspace() {
 
       <div className="flex flex-1 flex-col items-center justify-center gap-8 px-10 py-12">
         <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-[28px] font-bold text-slate-900">Hola, te damos la bienvenida 👋</h1>
-          <p className="text-base text-slate-500">
-            Crea un espacio de trabajo o entra a uno existente.
-          </p>
+          <h1 className="text-[28px] font-bold text-slate-900">
+            {t("createWorkspace.welcome.title")}
+          </h1>
+          <p className="text-base text-slate-500">{t("createWorkspace.welcome.subtitle")}</p>
         </div>
 
         <div className="flex flex-wrap justify-center gap-6">
@@ -80,13 +82,23 @@ export function CreateWorkspace() {
               <div className="flex flex-col gap-1">
                 <p className="text-[17px] font-bold text-slate-900">{ws.name}</p>
                 <p className="text-[13px] text-slate-400">
-                  {ws.portfolioCount} {ws.portfolioCount === 1 ? "cartera" : "carteras"} ·{" "}
-                  {ws.memberCount} {ws.memberCount === 1 ? "miembro" : "miembros"}
+                  {ws.portfolioCount}{" "}
+                  {t(
+                    ws.portfolioCount === 1
+                      ? "createWorkspace.card.portfolio"
+                      : "createWorkspace.card.portfolios"
+                  )}{" "}
+                  · {ws.memberCount}{" "}
+                  {t(
+                    ws.memberCount === 1
+                      ? "createWorkspace.card.member"
+                      : "createWorkspace.card.members"
+                  )}
                 </p>
               </div>
               <button
                 type="button"
-                aria-label="Configuración del espacio"
+                aria-label={t("settings.title")}
                 onClick={(e) => {
                   e.stopPropagation();
                   setWorkspace(ws.accessKeyId);
@@ -104,7 +116,7 @@ export function CreateWorkspace() {
             className="flex h-[200px] w-[280px] cursor-pointer flex-col items-center justify-center gap-3 rounded-[10px] border border-dashed border-slate-300 bg-white text-slate-400 transition hover:border-emerald-400 hover:text-emerald-600"
           >
             <Plus className="h-7 w-7" />
-            <span className="text-[15px] font-semibold">Nuevo espacio</span>
+            <span className="text-[15px] font-semibold">{t("createWorkspace.new")}</span>
           </button>
         </div>
       </div>
@@ -115,9 +127,11 @@ export function CreateWorkspace() {
             <form onSubmit={onCreate} className="flex flex-col gap-5 p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-[18px] font-bold text-slate-900">Crear espacio de trabajo</h2>
+                  <h2 className="text-[18px] font-bold text-slate-900">
+                    {t("createWorkspace.modal.title")}
+                  </h2>
                   <p className="text-[13px] text-slate-500">
-                    Un espacio agrupa tus carteras, campañas y equipo.
+                    {t("createWorkspace.modal.subtitle")}
                   </p>
                 </div>
                 <button
@@ -130,19 +144,19 @@ export function CreateWorkspace() {
               </div>
 
               <InputGroup
-                label="Nombre del espacio"
+                label={t("createWorkspace.field.name")}
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ej. Cartera Abril"
+                placeholder={t("createWorkspace.field.namePlaceholder")}
               />
 
-              <SelectGroup label="Región" defaultValue="nyc01">
+              <SelectGroup label={t("createWorkspace.field.region")} defaultValue="nyc01">
                 <option value="nyc01">NYC01</option>
               </SelectGroup>
 
               <SelectGroup
-                label="Moneda"
+                label={t("settings.currency")}
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value as "USD" | "DOP")}
               >
@@ -151,7 +165,7 @@ export function CreateWorkspace() {
               </SelectGroup>
 
               <SelectGroup
-                label="Zona horaria"
+                label={t("settings.timezone")}
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
               >
@@ -164,10 +178,10 @@ export function CreateWorkspace() {
 
               <div className="flex justify-end gap-3">
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                  Cancelar
+                  {t("common.cancel")}
                 </Button>
                 <Button type="submit" disabled={pending}>
-                  Crear espacio
+                  {pending ? t("createWorkspace.creating") : t("createWorkspace.create")}
                 </Button>
               </div>
             </form>

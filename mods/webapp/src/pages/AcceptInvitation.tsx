@@ -3,38 +3,40 @@ import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
+import { useI18n } from "../lib/i18n.js";
 
 export function AcceptInvitation() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { t } = useI18n();
 
   const inviteToken = params.get("token");
-  const workspace = params.get("workspace") ?? "este espacio";
+  const workspace = params.get("workspace") ?? t("members.wsFallback");
   const inviter = params.get("inviter");
-  const role = params.get("role") ?? "Miembro";
+  const role = params.get("role") ?? t("members.role.WORKSPACE_MEMBER");
 
   const accept = trpc.workspaces.acceptInvitation.useMutation({
     onSuccess: () => navigate(isAuthenticated ? "/" : "/login")
   });
 
   const subtitle = inviter
-    ? `${inviter} te invitó a unirte como ${role}.`
-    : `Fuiste invitado a unirte como ${role}.`;
+    ? t("acceptInvitation.subtitleInviter").replace("{inviter}", inviter).replace("{role}", role)
+    : t("acceptInvitation.subtitle").replace("{role}", role);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <Card className="w-full max-w-[440px] rounded-2xl border-slate-200 p-8 shadow-none">
         <div className="flex flex-col gap-7">
           <div className="flex flex-col items-center gap-1.5 text-center">
-            <h1 className="text-[22px] font-bold text-slate-900">Te invitaron a {workspace}</h1>
+            <h1 className="text-[22px] font-bold text-slate-900">
+              {t("acceptInvitation.title").replace("{ws}", workspace)}
+            </h1>
             <p className="text-sm text-slate-500">{subtitle}</p>
           </div>
 
           {accept.isError && (
-            <p className="text-center text-sm text-red-500">
-              No se pudo aceptar la invitación. Es posible que el enlace haya expirado.
-            </p>
+            <p className="text-center text-sm text-red-500">{t("acceptInvitation.error")}</p>
           )}
 
           <div className="flex flex-col gap-2.5">
@@ -46,7 +48,7 @@ export function AcceptInvitation() {
                 if (inviteToken) accept.mutate({ token: inviteToken });
               }}
             >
-              {accept.isPending ? "Procesando…" : "Aceptar invitación"}
+              {accept.isPending ? t("auth.processing") : t("auth.acceptInvitation")}
             </Button>
             <Button
               size="lg"
@@ -54,7 +56,7 @@ export function AcceptInvitation() {
               className="w-full text-slate-500"
               onClick={() => navigate("/")}
             >
-              Rechazar
+              {t("acceptInvitation.reject")}
             </Button>
           </div>
         </div>

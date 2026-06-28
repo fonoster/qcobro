@@ -6,14 +6,8 @@ import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
 import { SelectGroup } from "../components/ui/select.js";
+import { useI18n, type MessageId } from "../lib/i18n.js";
 import { cn } from "@/lib/utils.js";
-
-const ROLE_LABEL: Record<string, string> = {
-  WORKSPACE_OWNER: "Propietario",
-  WORKSPACE_ADMIN: "Admin",
-  WORKSPACE_MEMBER: "Miembro"
-};
-const STATUS_LABEL: Record<string, string> = { ACTIVE: "Activo", PENDING: "Pendiente" };
 
 type Row = {
   ref: string;
@@ -24,11 +18,11 @@ type Row = {
   removable: boolean;
 };
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, label }: { status: string; label: string }) {
   const active = status === "ACTIVE";
   return (
     <span className={cn("text-[13px] font-medium", active ? "text-slate-600" : "text-slate-400")}>
-      {STATUS_LABEL[status] ?? status}
+      {label}
     </span>
   );
 }
@@ -61,6 +55,7 @@ function initialsOf(name: string, email: string) {
 }
 
 export function Members() {
+  const { t } = useI18n();
   const { workspace, currentUser } = useAuth();
   const utils = trpc.useUtils();
   const workspaces = trpc.workspaces.list.useQuery();
@@ -83,7 +78,8 @@ export function Members() {
   }>(null);
 
   const wsName =
-    workspaces.data?.items.find((w) => w.accessKeyId === workspace)?.name ?? "este espacio";
+    workspaces.data?.items.find((w) => w.accessKeyId === workspace)?.name ??
+    t("members.wsFallback");
 
   // The owner isn't a member row in Identity — show the current user as owner first.
   const ownerRow: Row | null = currentUser
@@ -123,7 +119,7 @@ export function Members() {
       setEmail("");
       setRole("WORKSPACE_MEMBER");
     } catch {
-      setError("No se pudo enviar la invitación.");
+      setError(t("members.invite.error"));
     }
   }
 
@@ -138,18 +134,18 @@ export function Members() {
 
   function askRemove(r: Row) {
     setConfirm({
-      title: "¿Quitar a este miembro?",
-      message: `${r.name} perderá acceso a ${wsName}. Esta acción no se puede deshacer.`,
-      confirmLabel: "Quitar",
+      title: t("members.remove.title"),
+      message: t("members.remove.message").replace("{name}", r.name).replace("{ws}", wsName),
+      confirmLabel: t("members.remove.confirm"),
       run: () => onRemove(r.ref)
     });
   }
 
   function askCancel(r: Row) {
     setConfirm({
-      title: "¿Cancelar invitación?",
-      message: `Se cancelará la invitación de ${r.name}.`,
-      confirmLabel: "Cancelar invitación",
+      title: t("members.cancelInvite.title"),
+      message: t("members.cancelInvite.message").replace("{name}", r.name),
+      confirmLabel: t("members.action.cancelInvite"),
       run: () => onRemove(r.ref)
     });
   }
@@ -158,24 +154,24 @@ export function Members() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-bold text-slate-900">Miembros</h1>
-          <p className="text-sm text-slate-500">Gestiona quién tiene acceso a {wsName}</p>
+          <h1 className="text-[22px] font-bold text-slate-900">{t("members.title")}</h1>
+          <p className="text-sm text-slate-500">{t("members.subtitle").replace("{ws}", wsName)}</p>
         </div>
         <Button onClick={() => setOpen(true)}>
           <Plus className="h-4 w-4" />
-          Invitar miembro
+          {t("members.invite")}
         </Button>
       </div>
 
       <Card className="rounded-xl border-slate-200 shadow-none">
         <div className="flex items-center rounded-t-xl border-b border-slate-200 bg-slate-50 px-5 py-3 text-[11px] font-semibold tracking-wide text-slate-400">
-          <span className="flex-1">MIEMBRO</span>
-          <span className="w-40">ROL</span>
-          <span className="w-32">ESTADO</span>
+          <span className="flex-1">{t("members.col.member")}</span>
+          <span className="w-40">{t("members.col.role")}</span>
+          <span className="w-32">{t("members.col.status")}</span>
           <span className="w-10" />
         </div>
         {members.isLoading ? (
-          <p className="px-5 py-6 text-sm text-slate-400">Cargando…</p>
+          <p className="px-5 py-6 text-sm text-slate-400">{t("common.loading")}</p>
         ) : (
           rows.map((r, i) => (
             <div
@@ -196,11 +192,14 @@ export function Members() {
               </div>
               <div className="w-40">
                 <span className="text-sm font-medium text-slate-600">
-                  {ROLE_LABEL[r.role] ?? r.role}
+                  {t(`members.role.${r.role}` as MessageId)}
                 </span>
               </div>
               <div className="w-32">
-                <StatusBadge status={r.status} />
+                <StatusBadge
+                  status={r.status}
+                  label={t(`members.status.${r.status}` as MessageId)}
+                />
               </div>
               <div className="relative flex w-10 justify-center">
                 {r.removable && (
@@ -209,7 +208,7 @@ export function Members() {
                       type="button"
                       onClick={() => setOpenMenu(openMenu === r.ref ? null : r.ref)}
                       className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                      title="Acciones"
+                      title={t("members.actions")}
                     >
                       <MoreHorizontal className="h-[18px] w-[18px]" />
                     </button>
@@ -221,7 +220,7 @@ export function Members() {
                             <>
                               <MenuItem
                                 icon={Mail}
-                                label="Reenviar invitación"
+                                label={t("members.action.resend")}
                                 onClick={() => {
                                   setOpenMenu(null);
                                   onResend(r.ref);
@@ -229,7 +228,7 @@ export function Members() {
                               />
                               <MenuItem
                                 icon={Ban}
-                                label="Cancelar invitación"
+                                label={t("members.action.cancelInvite")}
                                 onClick={() => {
                                   setOpenMenu(null);
                                   askCancel(r);
@@ -239,7 +238,7 @@ export function Members() {
                           ) : (
                             <MenuItem
                               icon={UserMinus}
-                              label="Quitar miembro"
+                              label={t("members.action.remove")}
                               onClick={() => {
                                 setOpenMenu(null);
                                 askRemove(r);
@@ -263,9 +262,9 @@ export function Members() {
             <form onSubmit={onInvite} className="flex flex-col gap-5 p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900">Invitar miembro</h2>
+                  <h2 className="text-lg font-bold text-slate-900">{t("members.invite")}</h2>
                   <p className="text-[13px] text-slate-500">
-                    Enviaremos una invitación a {wsName}.
+                    {t("members.inviteModal.desc").replace("{ws}", wsName)}
                   </p>
                 </div>
                 <button
@@ -277,31 +276,35 @@ export function Members() {
                 </button>
               </div>
               <InputGroup
-                label="Nombre"
+                label={t("members.field.name")}
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Nombre de la persona"
+                placeholder={t("members.field.namePlaceholder")}
               />
               <InputGroup
-                label="Correo electrónico"
+                label={t("members.field.email")}
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="persona@empresa.com"
+                placeholder={t("members.field.emailPlaceholder")}
                 error={error ?? undefined}
               />
-              <SelectGroup label="Rol" value={role} onChange={(e) => setRole(e.target.value)}>
-                <option value="WORKSPACE_MEMBER">Miembro</option>
-                <option value="WORKSPACE_ADMIN">Admin</option>
+              <SelectGroup
+                label={t("members.field.role")}
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+              >
+                <option value="WORKSPACE_MEMBER">{t("members.role.WORKSPACE_MEMBER")}</option>
+                <option value="WORKSPACE_ADMIN">{t("members.role.WORKSPACE_ADMIN")}</option>
               </SelectGroup>
               <div className="flex justify-end gap-3">
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                  Cancelar
+                  {t("common.cancel")}
                 </Button>
                 <Button type="submit" disabled={invite.isPending}>
-                  Enviar invitación
+                  {t("members.inviteSubmit")}
                 </Button>
               </div>
             </form>

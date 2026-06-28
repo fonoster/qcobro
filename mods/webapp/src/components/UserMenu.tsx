@@ -60,7 +60,7 @@ export function UserMenu() {
   const profile = trpc.profile.get.useQuery();
   const initials = currentUser?.initials ?? "QC";
   const email = currentUser?.email ?? "";
-  const name = profile.data?.name?.trim() || currentUser?.name || "Usuario";
+  const name = profile.data?.name?.trim() || currentUser?.name || t("userMenu.fallbackName");
 
   const popup = open
     ? createPortal(
@@ -80,20 +80,20 @@ export function UserMenu() {
               </div>
             </div>
             <div className="my-1 h-px bg-slate-100" />
-            <MenuItem icon={User} label="Mi perfil" onClick={() => go("/profile")} />
+            <MenuItem icon={User} label={t("profile.title")} onClick={() => go("/profile")} />
             <MenuItem
               icon={SlidersHorizontal}
-              label="Configuración del espacio"
+              label={t("settings.title")}
               onClick={() => go("/settings")}
             />
-            <MenuItem icon={Users} label="Miembros" onClick={() => go("/members")} />
+            <MenuItem icon={Users} label={t("userMenu.members")} onClick={() => go("/members")} />
             {canManageKeys && (
               <MenuItem icon={KeyRound} label={t("nav.apiKeys")} onClick={() => go("/api-keys")} />
             )}
             <div className="my-1 h-px bg-slate-100" />
             <MenuItem
               icon={LogOut}
-              label="Cerrar sesión"
+              label={t("userMenu.logout")}
               danger
               onClick={() => {
                 setOpen(false);
@@ -114,7 +114,7 @@ export function UserMenu() {
       <button
         ref={buttonRef}
         type="button"
-        aria-label="Menú de usuario"
+        aria-label={t("userMenu.aria")}
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-slate-50"
       >
