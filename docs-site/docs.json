@@ -16,6 +16,17 @@
         "pages": ["index", "concepts/how-qcobro-works"]
       },
       {
+        "group": "Operator guides",
+        "pages": [
+          "guides/portfolios",
+          "guides/import-accounts",
+          "guides/campaigns",
+          "guides/agent-templates",
+          "guides/payment-promises",
+          "guides/ai-insights"
+        ]
+      },
+      {
         "group": "SDK",
         "pages": [
           "sdk/overview",
@@ -28,17 +39,6 @@
         ]
       },
       {
-        "group": "Operator guides",
-        "pages": [
-          "guides/portfolios",
-          "guides/import-accounts",
-          "guides/campaigns",
-          "guides/agent-templates",
-          "guides/payment-promises",
-          "guides/ai-insights"
-        ]
-      },
-      {
         "group": "API reference",
         "pages": ["api/overview", "api/authentication", "api/contact-log"]
       },
@@ -48,13 +48,7 @@
       }
     ],
     "global": {
-      "anchors": [
-        {
-          "anchor": "Website",
-          "href": "https://qcobro.com",
-          "icon": "globe"
-        }
-      ]
+      "anchors": []
     }
   },
   "logo": {

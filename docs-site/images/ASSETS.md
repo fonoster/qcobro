@@ -37,10 +37,20 @@ All diagram color comes from `dgm-*` variables — change a token to re-skin eve
 All assets are **hosted-product, customer-facing** — no internals, infra, or config files
 (see `../CLAUDE.md`).
 
-| Slug                        | Type                   | Audience       | Preset   | Page                        | Pencil node | Kit | Build doc                      |
-| :-------------------------- | :--------------------- | :------------- | :------- | :-------------------------- | :---------- | :-- | :----------------------------- |
-| `sdk-overview/architecture` | diagram (architecture) | customer / SDK | 1600×900 | `sdk/overview`              | `H9oQOa`    | v1  | `sdk-overview/architecture.md` |
-| `how-qcobro-works/flow`     | diagram (flow)         | customer       | 1600×900 | `concepts/how-qcobro-works` | `fjsng`     | v1  | `how-qcobro-works/flow.md`     |
+| Slug                           | Type                   | Audience            | Preset   | Page                        | Pencil node | Kit | Build doc                      |
+| :----------------------------- | :--------------------- | :------------------ | :------- | :-------------------------- | :---------- | :-- | :----------------------------- |
+| `sdk-overview/architecture`    | diagram (architecture) | customer / SDK      | 1600×900 | `sdk/overview`              | `H9oQOa`    | v1  | `sdk-overview/architecture.md` |
+| `how-qcobro-works/flow`        | diagram (flow)         | customer            | 1600×900 | `concepts/how-qcobro-works` | `fjsng`     | v1  | `how-qcobro-works/flow.md`     |
+| `home/hero`                    | illustration (brand)   | customer            | 1600×900 | `index`                     | `r0KBNV`    | —   | `home/hero.md`                 |
+| `guides/portfolios/list`       | screenshot (console)   | customer / operator | 1440×900 | `guides/portfolios`         | `wcl2T`     | —   | —                              |
+| `guides/import-accounts/modal` | screenshot (console)   | customer / operator | modal    | `guides/import-accounts`    | `XeP06`     | —   | —                              |
+| `guides/agent-templates/list`  | screenshot (console)   | customer / operator | 1440×900 | `guides/agent-templates`    | `pbtC9`     | —   | —                              |
+| `guides/campaigns/list`        | screenshot (console)   | customer / operator | 1440×900 | `guides/campaigns`          | `g1JZe`     | —   | —                              |
+| `guides/payment-promises/list` | screenshot (console)   | customer / operator | 1440×900 | `guides/payment-promises`   | `WPPyE`     | —   | —                              |
+| `guides/ai-insights/detail`    | screenshot (console)   | customer / operator | panel    | `guides/ai-insights`        | `UJhkV`     | —   | —                              |
+
+Screenshots are exported straight from the console screens in `pencil.pen` (no build doc, no
+Diagram Kit): re-export the listed node id via `export_nodes` and rename to its slug.
 
 ## Rebrand at scale
 
