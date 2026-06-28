@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.6.0](https://github.com/fonoster/qcobro/compare/v1.5.6...v1.6.0) (2026-06-28)
+
+### Features
+
+- **webapp:** account menu on workspaces hub + account-level profile ([#10](https://github.com/fonoster/qcobro/issues/10)) ([14cb064](https://github.com/fonoster/qcobro/commit/14cb064cf2746cf20f782aefa67c387faf74085c)), closes [#9](https://github.com/fonoster/qcobro/issues/9)
+
 ## [1.5.6](https://github.com/fonoster/qcobro/compare/v1.5.5...v1.5.6) (2026-06-28)
 
 ### Bug Fixes
