@@ -2,7 +2,10 @@
 
 ## Purpose
 
-TBD — created by syncing change campaigns-core. Update Purpose after archive.
+The gestión (contact log) is the append-only record of every outreach attempt against a
+`PortfolioAccount`. Each gestión carries a single structured `outcome`; a payment-commitment
+outcome creates a linked `PaymentPromise` (the only tracked outcome), and future-dated
+outcomes feed campaign-local re-contact suppression.
 
 ## Requirements
 
@@ -10,24 +13,29 @@ TBD — created by syncing change campaigns-core. Update Purpose after archive.
 
 A **Gestión** SHALL be the system record of a single outreach attempt against a
 `PortfolioAccount`. The gestión log is append-only and is the authoritative record of
-all contact history, AI conversation analysis, channel metadata, and resulting
-Objectives.
+all contact history, AI conversation analysis, channel metadata, and the single structured
+`outcome` of the attempt.
 
 The gestión list view (sidebar: "Gestiones") shows all interactions across the active
 workspace — filterable by result, agent, portfolio, and campaign. The gestión detail
-view shows the full interaction including transcript, AI analysis, metadata, and any
-Objectives created from that interaction.
+view shows the full interaction including transcript, AI analysis, metadata, the
+`outcome`, and — only when the outcome is a payment commitment — the linked
+`PaymentPromise`.
 
 Each `AccountContactLog` entry SHALL capture:
 
 **Core fields**
 
 - `portfolioAccountId` — which account was contacted
-- `campaignId?` — which campaign initiated the contact (nullable for manual contacts)
+- `campaignId?` — which campaign initiated the contact (null for manual contacts and for
+  ad-hoc payment-promise follow-ups)
+- `agentTemplateId?` — the agent template used (set for campaign dispatches and for ad-hoc
+  follow-ups; identifies the channel + script/voice configuration)
+- `paymentPromiseId?` — set when this gestión is a follow-up on a specific `PaymentPromise`
 - `agentType` — channel used: SMS, VOICE_PRERECORDED, VOICE_AI, EMAIL, WHATSAPP
 - `contactedAt` — timestamp when the attempt began
 - `durationSeconds?` — call duration in seconds (voice channels only)
-- `outcome` — AI or system-classified result (see ContactOutcome enum below)
+- `outcome` — the single AI- or system-classified result (see ContactOutcome enum below)
 - `notes?` — human-entered free-text notes added during or after the interaction
 - `debtAmountSnapshot?` — the account's outstanding balance at time of contact
   (snapshot; live balance stays on `PortfolioAccount.outstandingBalance`)
@@ -48,7 +56,7 @@ Each `AccountContactLog` entry SHALL capture:
 - `intentMetadata Json?` — structured data extracted from the conversation:
   - For `PAYMENT_PROMISE`: `{ promisedAmount: number, promisedDate: string (ISO) }`
   - For `CALLBACK_REQUESTED`: `{ requestedDate: string, requestedTime?: string }`
-  - For `PARTIAL_PAYMENT_AGREED`: `{ installmentAmount: number, frequency: string, startDate: string }`
+  - For `NEW_TERMS`: `{ installmentAmount?: number, frequency?: string, startDate?: string }`
 
 **Channel-specific metadata**
 
@@ -64,8 +72,16 @@ Each `AccountContactLog` entry SHALL capture:
 - `createdAt`
 
 **ContactOutcome enum:**
-`NO_ANSWER` · `PAYMENT_PROMISE` · `PARTIAL_PAYMENT_AGREED` · `CALLBACK_REQUESTED` ·
-`RESOLVED` · `PAID` · `WRONG_NUMBER` · `OPT_OUT` · `REFUSED` · `OTHER`
+`DELIVERED` · `NOT_DELIVERED` · `NO_ANSWER` · `PAYMENT_PROMISE` · `PARTIAL_PAYMENT_AGREED` ·
+`NEW_TERMS` · `CALLBACK_REQUESTED` · `DISPUTE_RAISED` · `INFORMATION_REQUEST` · `RESOLVED` ·
+`PAID` · `WRONG_NUMBER` · `OPT_OUT` · `REFUSED` · `OTHER`
+
+A payment commitment outcome (`PAYMENT_PROMISE` or `PARTIAL_PAYMENT_AGREED`) creates a
+`PaymentPromise`; all other outcomes create no tracked entity.
+
+The channel physically bounds which outcomes are possible: `SMS` and `VOICE_PRERECORDED`
+are fire-and-forget and SHALL only produce `DELIVERED` or `NOT_DELIVERED`; `VOICE_AI`,
+`EMAIL`, and `WHATSAPP` MAY produce the full conversational set.
 
 #### Scenario: Engine writes gestión on dispatch completion
 
@@ -73,6 +89,12 @@ Each `AccountContactLog` entry SHALL capture:
 - **THEN** a gestión entry is written via the `accountContactLog.create` procedure
 - **AND** the entry includes at minimum: campaignId, portfolioAccountId, agentType,
   contactedAt, and outcome
+
+#### Scenario: Fire-and-forget channels record delivery as the outcome
+
+- **WHEN** an `SMS` or `VOICE_PRERECORDED` dispatch completes
+- **THEN** the gestión `outcome` is `DELIVERED` or `NOT_DELIVERED`
+- **AND** no payment promise or other tracked entity is created
 
 #### Scenario: Voice gestión includes AI insight fields and transcript
 
@@ -90,7 +112,8 @@ Each `AccountContactLog` entry SHALL capture:
   as a conversation (agent messages vs account holder messages differentiated)
 - **AND** the AI insight section shows aiSummary, aiSentiment, aiDebtReason,
   aiResult, and aiNextStep
-- **AND** any Objectives created from this gestión are shown below the AI analysis
+- **AND** if the outcome is a payment commitment, the linked `PaymentPromise` is shown
+  below the AI analysis
 
 #### Scenario: Gestión is append-only
 
@@ -98,65 +121,12 @@ Each `AccountContactLog` entry SHALL capture:
 - **THEN** it SHALL NOT be updatable or deletable through the API
 - **AND** corrections are expressed by writing a new entry referencing `correctedEntryId`
 
-### Requirement: Objective entity — actionable outcome of a gestión
+#### Scenario: Campaign-less follow-up gestión on a payment promise
 
-An **Objective** SHALL be an actionable commitment or goal that results from a gestión.
-Objectives generalize what was previously called "payment promises" or "commitments" —
-they capture any outcome where the account holder agreed to a specific action by a
-specific date.
-
-An `Objective` SHALL have:
-
-- `id`
-- `contactLogId` — FK to `AccountContactLog` (the gestión that created it)
-- `portfolioAccountId` — denormalized for direct querying
-- `type` — classification of the objective (see ObjectiveType enum)
-- `amount Float?` — agreed amount (applicable for PAYMENT_PROMISE, PARTIAL_PAYMENT)
-- `dueDate DateTime` — the date by which the account holder committed to act
-- `status` — `PENDING` → `MET` | `BROKEN` | `CANCELLED`
-- `notes?` — additional context from the agent or operator
-- `createdAt`, `updatedAt`
-
-**ObjectiveType enum:**
-
-- `PAYMENT_PROMISE` — account holder promised to pay a specific amount by `dueDate`
-- `PARTIAL_PAYMENT` — account holder agreed to a partial payment or installment plan
-- `CALLBACK_SCHEDULED` — account holder requested a callback on `dueDate`
-- `INFORMATION_REQUEST` — account holder requested documentation be sent by `dueDate`
-- `DISPUTE_RAISED` — account holder disputes the debt; follow-up required by `dueDate`
-- `OTHER` — any other trackable commitment
-
-Objective status is tracked independently over time. Met objectives feed into
-`recoveredAmount` on the portfolio. Broken objectives are surfaced in the campaign
-detail view as escalation signals for the engine.
-
-#### Scenario: Objective created on actionable outcome
-
-- **WHEN** a gestión entry is written with outcome `PAYMENT_PROMISE`
-- **AND** `intentMetadata` contains `promisedAmount` and `promisedDate`
-- **THEN** an `Objective` of type `PAYMENT_PROMISE` is created linked to the gestión
-- **AND** `amount` is set to `promisedAmount` and `dueDate` to `promisedDate`
-- **AND** `CampaignAccountState.suppressUntil` is set to `dueDate` (campaign-local)
-
-#### Scenario: Objective status updated when met
-
-- **WHEN** a payment event or subsequent gestión confirms the account holder paid
-- **THEN** `Objective.status` is updated to `MET`
-- **AND** this does NOT require a new gestión entry
-
-#### Scenario: Broken objectives surfaced in campaign detail
-
-- **WHEN** an operator views the campaign detail page
-- **THEN** Objectives with status `BROKEN` whose `dueDate` has passed are surfaced
-  alongside the gestión log as escalation signals
-
-#### Scenario: Objectives page shows all active and recent objectives
-
-- **WHEN** an operator navigates to the Objectives section
-- **THEN** all PENDING objectives for the workspace are listed with: account name,
-  type, amount (if applicable), due date, status, days until/past due
-- **AND** KPIs show: total pending, total amount pending, objectives due this week,
-  fulfillment rate (MET / total closed)
+- **WHEN** an operator follows up on a payment promise by dispatching an agent template
+- **THEN** a gestión is written with `campaignId` null, the chosen `agentTemplateId`, and
+  `paymentPromiseId` set to the promise
+- **AND** no `CampaignAccountState` record is created or modified for any campaign
 
 ### Requirement: Gestión log triggers hot-path field updates
 
@@ -170,12 +140,21 @@ corresponding `PortfolioAccount` hot-path fields and `CampaignAccountState`.
 - **AND** `PortfolioAccount.totalAttempts` is incremented by 1
 - **AND** `CampaignAccountState.attemptCount` and `attemptsToday` are incremented
 
-#### Scenario: Campaign-local `suppressUntil` set from Objective dueDate
+#### Scenario: Campaign-local `suppressUntil` set from any future-dated outcome (Lever B)
 
-- **WHEN** a gestión entry creates an Objective with a `dueDate`
+- **WHEN** a gestión entry carries a future-dated outcome — a `PAYMENT_PROMISE` `dueDate`,
+  a `CALLBACK_REQUESTED` requested time, or a `NEW_TERMS` grace window
 - **AND** the campaign has a matching trigger configured
-- **THEN** `CampaignAccountState.suppressUntil` is set to `dueDate`
-  (falls back to `contactedAt + suppressDays` if no `dueDate` is present)
+- **THEN** `CampaignAccountState.suppressUntil` is set to that future date
+  (falls back to `contactedAt + suppressDays` if no future date is present)
+- **AND** this re-contact suppression is independent of whether a tracked `PaymentPromise`
+  was created
+
+#### Scenario: Callback sets suppression without creating a tracked entity
+
+- **WHEN** a gestión is written with outcome `CALLBACK_REQUESTED` and a requested time
+- **THEN** `CampaignAccountState.suppressUntil` is set to the requested time
+- **AND** no `PaymentPromise` (or other tracked entity) is created
 
 #### Scenario: Global `intentStatus` set on hard outcomes
 
@@ -192,7 +171,8 @@ corresponding `PortfolioAccount` hot-path fields and `CampaignAccountState`.
 The API server SHALL expose a REST endpoint `POST /api/contact-logs` for external callers —
 notably the Fonoster voice service posting call outcomes via callback — in addition to the
 tRPC `accountContactLog.create` procedure used by the operator console. The endpoint accepts
-the same payload as the tRPC procedure and runs the same hot-path updates and Objective creation.
+the same payload as the tRPC procedure and runs the same hot-path updates and payment-promise
+creation.
 
 Authentication is **workspace-scoped HTTP Basic auth**: the credential identifies and
 authorizes writes for exactly one workspace, matching the system's tenancy boundary
@@ -207,7 +187,7 @@ this spec fixes only the auth _scope_ (workspace level) and _scheme_ (HTTP Basic
 - **WHEN** the Fonoster service posts a contact-log payload to `POST /api/contact-logs`
   with valid Basic credentials for workspace W
 - **THEN** the entry is written for an account in workspace W with the same hot-path
-  updates and Objective creation as the tRPC path
+  updates and payment-promise creation as the tRPC path
 
 #### Scenario: Credentials are scoped to a single workspace
 

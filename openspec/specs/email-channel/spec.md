@@ -61,16 +61,16 @@ decision step over the thread and account context, governed by the agent `system
 producing a structured action — `reply`, `ignore`, `resolve`, or `escalate`. When the
 action is `reply`, the system SHALL generate a reply, send it via the provider, and append
 it to the thread. When the action is `resolve` or `escalate`, the system SHALL stop
-auto-replying. Outcome and `Objective` capture from the thread SHALL reuse the existing
+auto-replying. Outcome and `PaymentPromise` capture from the thread SHALL reuse the existing
 insight path: a real outcome SHALL NOT be downgraded, and re-delivered webhooks SHALL NOT
-create duplicate `Objective`s.
+create duplicate `PaymentPromise`s.
 
 #### Scenario: A promise is captured and acknowledged
 
 - **WHEN** the customer's reply states an intent to pay
-- **THEN** the decision is `reply` with a `PAYMENT_PROMISE` outcome and a promise `Objective`
+- **THEN** the decision is `reply` with a `PAYMENT_PROMISE` outcome and a `PaymentPromise`
 - **AND** an acknowledgement reply is sent and threaded
-- **AND** re-delivery of the same inbound event does not create a second `Objective`
+- **AND** re-delivery of the same inbound event does not create a second `PaymentPromise`
 
 #### Scenario: Resolve stops the conversation
 

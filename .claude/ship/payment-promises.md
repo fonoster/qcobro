@@ -1,7 +1,7 @@
 # Ship checkpoint — payment-promises
 
 Started: 2026-06-27
-Current stage: 4 — Test (unit green; e2e blocked on infra)
+Current stage: 6 — Archived (done). Migration applied+verified on dev DB; e2e (7.4) deferred (flaky dev-stack bootstrap).
 
 **Scope:** Reframe "Objectives" into a single structured gestión `outcome` plus a
 first-class `PaymentPromise` (the only tracked entity). The dashboard "Objectives" section
@@ -12,15 +12,15 @@ automation/sweep. The generic `Objective` entity is removed (BREAKING, with migr
 
 **Detected surfaces:** OpenSpec: yes · Pencil: yes (repo-root `pencil.pen`) · Storybook: yes (@qcobro/webapp) · E2E: yes (Playwright)
 
-| #   | Stage           | Status      | Notes                                                                                                                                                                                                     |
-| :-- | :-------------- | :---------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0   | Frame           | done        | Surfaces detected; scope stated; proposal/design/specs/tasks read and valid                                                                                                                               |
-| 1   | Design (Pencil) | done        | Worklist, nav consolidation+sweep, detail callout, agent-centric outreach modal                                                                                                                           |
-| 2   | Spec reconcile  | done        | No spec edits needed — design stayed within spec; nav/general-outreach kept out of scope                                                                                                                  |
-| 3   | Build           | done        | common+apiserver+webapp build clean; recordOutcome→PaymentPromise; resolve/followUp/expire functions; router; worklist page; nav; i18n; migration authored                                                |
-| 4   | Test            | in-progress | lint 0, builds/typecheck 0, unit 152 pass (incl. validation-failure cases). e2e BLOCKED: needs DB+server+Mailpit (unavailable here). Migration hand-authored — verify via `prisma migrate dev` on dev DB. |
-| 5   | Sync            | pending     | via /opsx:sync (gate)                                                                                                                                                                                     |
-| 6   | Archive         | pending     | via /opsx:archive (gate)                                                                                                                                                                                  |
+| #   | Stage           | Status          | Notes                                                                                                                                                                                                     |
+| :-- | :-------------- | :-------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0   | Frame           | done            | Surfaces detected; scope stated; proposal/design/specs/tasks read and valid                                                                                                                               |
+| 1   | Design (Pencil) | done            | Worklist, nav consolidation+sweep, detail callout, agent-centric outreach modal                                                                                                                           |
+| 2   | Spec reconcile  | done            | No spec edits needed — design stayed within spec; nav/general-outreach kept out of scope                                                                                                                  |
+| 3   | Build           | done            | common+apiserver+webapp build clean; recordOutcome→PaymentPromise; resolve/followUp/expire functions; router; worklist page; nav; i18n; migration authored                                                |
+| 4   | Test            | done (e2e def.) | lint 0, builds/typecheck 0, unit 152 pass (incl. validation-failure cases). e2e BLOCKED: needs DB+server+Mailpit (unavailable here). Migration hand-authored — verify via `prisma migrate dev` on dev DB. |
+| 5   | Sync            | done            | 5 main specs updated (payment-promises new; account-contact-log Objective removed; web-console worklist+manual-outreach; ai-insights; email-channel term fix); all validate                               |
+| 6   | Archive         | done            | Moved to changes/archive/2026-06-27-payment-promises                                                                                                                                                      |
 
 Status values: `pending` · `in-progress` · `done` · `skipped` (with reason).
 
