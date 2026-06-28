@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QCobro — Invitación</title>
+  <style>
+    body { margin: 0; padding: 0; background-color: #f4f5f7; }
+    .wrap { width: 100%; background-color: #f4f5f7; padding: 32px 0; }
+    .card {
+      max-width: 480px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 32px;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #111827;
+      line-height: 1.6;
+    }
+    .button {
+      display: inline-block;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+      color: #ffffff !important;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+    .muted { color: #6b7280; font-size: 13px; }
+    .hr { height: 1px; background: #eef0f2; border: 0; margin: 24px 0; }
+    @media (prefers-color-scheme: dark) {
+      body, .wrap { background-color: #0b0f0d !important; }
+      .card { background: #14181a !important; border-color: #23292c !important; color: #e5e7eb !important; }
+      .qcobro-name { color: #f8fafc !important; }
+      .muted { color: #9ca3af !important; }
+      .hr { background: #23292c !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="width:38px;height:38px;background:#047857;border-radius:9px;text-align:center;vertical-align:middle;">
+            <span style="color:#ffffff;font-size:21px;font-weight:800;font-family:Arial,Helvetica,sans-serif;line-height:38px;">Q</span>
+          </td>
+          <td style="padding-left:10px;vertical-align:middle;">
+            <div class="qcobro-name" style="font-size:18px;font-weight:800;color:#0f172a;letter-spacing:-0.3px;line-height:1.1;">QCobro</div>
+            <div style="font-size:10px;font-weight:500;color:#64748b;letter-spacing:0.4px;line-height:1.4;">by Fonoster</div>
+          </td>
+        </tr>
+      </table>
+
+      <hr class="hr" />
+
+      <p style="margin:0 0 12px;">Te invitaron a unirte al espacio de trabajo <b>{{workspaceName}}</b> en <b>QCobro</b>.</p>
+      <p style="margin:0 0 20px;">Para aceptar la invitación, usa el botón de abajo:</p>
+      <p style="margin:0 0 8px;"><a href="{{inviteUrl}}" class="button">Unirme al espacio</a></p>
+      <p class="muted" style="margin:16px 0 0;">Si no esperabas esta invitación, puedes ignorar este mensaje.</p>
+    </div>
+  </div>
+</body>
+</html>

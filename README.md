@@ -121,7 +121,7 @@ from GHCR. No repo clone and no build are needed on the server.
 REL=v1.0.0   # the release to deploy
 
 # 1. Fetch only the files the stack needs, straight from GitHub (no clone)
-sudo mkdir -p /opt/qcobro/config/identity/keys /opt/qcobro/scripts/deploy && cd /opt/qcobro
+sudo mkdir -p /opt/qcobro/config/identity/keys /opt/qcobro/config/identity/templates /opt/qcobro/scripts/deploy && cd /opt/qcobro
 BASE=https://raw.githubusercontent.com/fonoster/qcobro/$REL
 curl -fsSL $BASE/compose.yaml                          -o compose.yaml
 curl -fsSL $BASE/config/envoy.yaml                     -o config/envoy.yaml
@@ -130,6 +130,11 @@ curl -fsSL $BASE/config/identity/identity.example.json -o config/identity/identi
 curl -fsSL $BASE/scripts/deploy/tls.sh                 -o scripts/deploy/tls.sh
 curl -fsSL $BASE/scripts/deploy/refresh-envoy-certs.sh -o scripts/deploy/refresh-envoy-certs.sh
 chmod +x scripts/deploy/tls.sh scripts/deploy/refresh-envoy-certs.sh
+# QCobro-branded Identity email/SMS templates (bind-mounted by compose.yaml;
+# refreshed on every deploy by the Deploy workflow).
+for t in verifyEmail verifyPhone inviteNewUser inviteExistingUser resetPassword; do
+  curl -fsSL $BASE/config/identity/templates/$t.hbs -o config/identity/templates/$t.hbs
+done
 
 Configure the app + Identity service (fill every CHANGE_ME / REPLACE_* —
 managed-DB urls with `sslmode=require`, keys, SMTP, announcement banner, …)
@@ -188,7 +193,8 @@ docker compose up -d
 ```
 
 > The CI **Deploy** workflow does this for you on each release (it also re-fetches
-> the version-pinned `compose.yaml`, `config/envoy.yaml`, and `scripts/deploy/*`).
+> the version-pinned `compose.yaml`, `config/envoy.yaml`, `scripts/deploy/*`, and
+> the QCobro-branded `config/identity/templates/*.hbs`).
 
 TLS renews automatically: `scripts/deploy/tls.sh` (run at install and on every
 deploy) wires a certbot deploy-hook that copies the renewed cert into

@@ -6,6 +6,16 @@ services:
     restart: unless-stopped
     volumes:
       - ./config/identity:/service/config:ro
+      # Override Identity's stock (Fonoster-branded) email/SMS templates with the
+      # QCobro-branded ones. v0.22.0 has no config option for a custom template
+      # dir on the verification path, so we bind-mount each .hbs over the baked-in
+      # file at /service/mods/identity/dist/templates. These are version-pinned
+      # brand assets (refreshed on every deploy), not install-once secrets.
+      - ./config/identity/templates/verifyEmail.hbs:/service/mods/identity/dist/templates/verifyEmail.hbs:ro
+      - ./config/identity/templates/verifyPhone.hbs:/service/mods/identity/dist/templates/verifyPhone.hbs:ro
+      - ./config/identity/templates/inviteNewUser.hbs:/service/mods/identity/dist/templates/inviteNewUser.hbs:ro
+      - ./config/identity/templates/inviteExistingUser.hbs:/service/mods/identity/dist/templates/inviteExistingUser.hbs:ro
+      - ./config/identity/templates/resetPassword.hbs:/service/mods/identity/dist/templates/resetPassword.hbs:ro
 
   # Image versions are pinned via QCOBRO_VERSION (set it in a .env file next to
   # this compose.yaml, e.g. `QCOBRO_VERSION=v1.0.0`). To deploy/upgrade, change

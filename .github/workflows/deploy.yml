@@ -92,18 +92,26 @@ jobs:
             # copies files), so we curl exactly the files the stack needs, pinned
             # to the deployed tag.
             #
-            # ONLY these four files are overwritten. Never add the local config or
-            # secrets here — config/qcobro.json, config/identity/identity.json, and
-            # config/identity/keys/* are written once at install and must survive
-            # every deploy untouched. .env is preserved too: only its
-            # QCOBRO_VERSION line is rewritten below (TLS_DOMAIN/TLS_EMAIL stay).
+            # ONLY the files listed below are overwritten. The QCobro-branded
+            # Identity email/SMS templates (config/identity/templates/*.hbs) are
+            # brand assets — version-pinned and refreshed here like compose.yaml.
+            # Never add the local config or secrets here — config/qcobro.json,
+            # config/identity/identity.json, and config/identity/keys/* are written
+            # once at install and must survive every deploy untouched. .env is
+            # preserved too: only its QCOBRO_VERSION line is rewritten below
+            # (TLS_DOMAIN/TLS_EMAIL stay).
             BASE="https://raw.githubusercontent.com/${GHCR_OWNER}/qcobro/${VERSION}"
-            mkdir -p config scripts/deploy
+            mkdir -p config/identity/templates scripts/deploy
             curl -fsSL "$BASE/compose.yaml"                          -o compose.yaml
             curl -fsSL "$BASE/config/envoy.yaml"                     -o config/envoy.yaml
             curl -fsSL "$BASE/scripts/deploy/tls.sh"                 -o scripts/deploy/tls.sh
             curl -fsSL "$BASE/scripts/deploy/refresh-envoy-certs.sh" -o scripts/deploy/refresh-envoy-certs.sh
             chmod +x scripts/deploy/tls.sh scripts/deploy/refresh-envoy-certs.sh
+
+            # QCobro-branded Identity templates (bind-mounted by compose.yaml).
+            for t in verifyEmail verifyPhone inviteNewUser inviteExistingUser resetPassword; do
+              curl -fsSL "$BASE/config/identity/templates/${t}.hbs" -o "config/identity/templates/${t}.hbs"
+            done
 
             # Authenticate to GHCR so we can pull the new images.
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_OWNER" --password-stdin
