@@ -1,24 +1,31 @@
 name: Deploy
 
 # Deploys a published qcobro image pair to the DigitalOcean droplet.
-# Human-gated: the deploy only runs from the "Run workflow" button. That click
-# is the approval gate. To roll back, dispatch an older version string.
+#
+# Triggers automatically after "Publish Docker Images" succeeds (workflow_run),
+# or manually via "Run workflow" for rollbacks or forced re-deploys.
 #
 # Flow:
-#   1. Resolve the version (input → lerna.json fallback).
-#   2. SSH into the droplet, pin QCOBRO_VERSION in .env, pull and restart.
-#   3. Wait for all compose services to report healthy; roll back on failure.
+#   1. resolve — determine the version from the triggering tag or manual input.
+#   2. deploy  — pauses for a human approval in the "production" environment,
+#                then SSHes in, pins QCOBRO_VERSION, pulls and restarts.
+#                Rolls back automatically if containers don't come up.
 #
 # Required repo configuration:
 #   secrets.RELEASE_TOKEN     PAT with contents:read + packages:read
-#                             (the same token used by release.yml)
 #   secrets.DEPLOY_SSH_HOST   droplet IP or hostname
-#   secrets.DEPLOY_SSH_USER   SSH user (e.g. root)
+#   secrets.DEPLOY_SSH_USER   SSH user
 #   secrets.DEPLOY_SSH_KEY    SSH private key (PEM, no passphrase)
-#   vars.DEPLOY_COMPOSE_DIR   directory on the droplet that contains
-#                             compose.yaml + qcobro.json + .env
+#   vars.DEPLOY_COMPOSE_DIR   directory on the droplet with compose.yaml + .env
+#
+# Environment: add psanders (or the relevant team) as a required reviewer on
+# the "production" environment in Settings → Environments so the deploy job
+# pauses for approval before touching the server.
 
 on:
+  workflow_run:
+    workflows: ["Publish Docker Images"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       version:
@@ -32,25 +39,30 @@ concurrency:
 
 jobs:
   resolve:
+    # Skip entirely when the upstream publish run failed or was cancelled.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Resolve version
         id: version
         run: |
-          v="${{ inputs.version }}"
-          [ -n "$v" ] || v="v$(node -p "require('./lerna.json').version")"
-          # Strip leading v for display; keep it for the image tag (compose uses QCOBRO_VERSION as-is).
-          if ! echo "$v" | grep -Eq '^v?[0-9]+\.[0-9]+\.[0-9]+$'; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            v="${{ inputs.version }}"
+            [ -n "$v" ] || v="v$(node -p "require('./lerna.json').version")"
+          else
+            # docker-publish runs on vX.Y.Z tags; head_branch carries the tag name.
+            v="${{ github.event.workflow_run.head_branch }}"
+          fi
+          [[ "$v" == v* ]] || v="v$v"
+          if ! echo "$v" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
             echo "Could not resolve a semver version from '$v'" >&2
             exit 1
           fi
-          # Ensure the tag always has a leading v to match what docker-publish pushes.
-          [[ "$v" == v* ]] || v="v$v"
           echo "version=$v" >> "$GITHUB_OUTPUT"
           echo "Deploying **$v**" >> "$GITHUB_STEP_SUMMARY"
 
