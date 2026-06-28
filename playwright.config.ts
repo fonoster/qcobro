@@ -21,11 +21,11 @@ const ENABLED_SPECS = [
   "**/campaigns-core.spec.ts",
   "**/console-refinements.spec.ts",
   "**/ai-insights.spec.ts",
-  "**/payment-promises.spec.ts"
+  "**/payment-promises.spec.ts",
+  "**/gestiones-channels.spec.ts"
   // Deferred, to fix next:
   //   verify-contact: mailpit code email not received within timeout on CI
   //   invite-acceptance: one assertion (new-user accept) flakes on CI
-  //   gestiones-channels: needs seeded multi-channel fixtures
 ];
 
 export default defineConfig({

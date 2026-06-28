@@ -110,6 +110,9 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
   const oneWay = !!g && ONE_WAY.includes(g.agentType);
   const isVoiceAi = g?.agentType === "VOICE_AI";
   const isEmail = g?.agentType === "EMAIL";
+  // Every channel except the Voz IA call (which has a transcript-derived analysis) shows a
+  // generic per-channel insight line. Email is two-way, so this is not the one-way set.
+  const hasGenericInsight = !!g && !isVoiceAi;
   const ChannelIcon = g ? channelIcon(g.agentType) : channelIcon("SMS");
 
   // On-demand AI analysis: when a Voz IA call (transcript) or an EMAIL thread that
@@ -149,10 +152,10 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
       ].filter(Boolean) as [string, string][])
     : [];
 
-  // One-way insight: real AI summary when present, otherwise a generic per-channel line.
+  // Per-channel insight: real AI summary when present, otherwise a generic per-channel line.
   const insight = g
     ? (g.aiSummary ??
-      (oneWay ? t(`gestiones.insight.${g.agentType}` as Parameters<typeof t>[0]) : null))
+      (hasGenericInsight ? t(`gestiones.insight.${g.agentType}` as Parameters<typeof t>[0]) : null))
     : null;
 
   const sentTitle = g
@@ -485,8 +488,8 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
           </Section>
         )}
 
-        {/* One-way channels: AI insight */}
-        {oneWay && g && insight && (
+        {/* Per-channel insight (all channels except the Voz IA transcript analysis) */}
+        {hasGenericInsight && insight && (
           <Section
             icon={Sparkles}
             iconClass="text-violet-600"

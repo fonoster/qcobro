@@ -155,7 +155,7 @@ test.describe("gestiones — channels", () => {
 
     // Email — communication card + body + generic insight; no transcript
     panel = await openPanel("Correo");
-    await expect(panel.getByText("Comunicación Email")).toBeVisible();
+    await expect(panel.getByText("Conversación por correo")).toBeVisible();
     await expect(panel.getByText(emailBody)).toBeVisible();
     await expect(panel.getByText(/correo de recordatorio/i)).toBeVisible();
     await expect(panel.getByText("Transcripción")).toHaveCount(0);
@@ -171,7 +171,7 @@ test.describe("gestiones — channels", () => {
     ).toBeVisible();
     await expect(panel.getByText(/reconoce la deuda/)).toBeVisible();
     await expect(panel.getByText("Positivo")).toBeVisible();
-    await expect(panel.getByText("Promesa de pago")).toBeVisible();
-    await expect(panel.getByText("Pendiente")).toBeVisible();
+    await expect(panel.getByText("Promesa de pago").first()).toBeVisible();
+    await expect(panel.getByText("Pendiente").first()).toBeVisible();
   });
 });
