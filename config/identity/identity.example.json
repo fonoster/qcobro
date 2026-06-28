@@ -19,13 +19,13 @@
     "failUrl": "https://app.qcobro.com/invite-failed"
   },
   "smtp": {
-    "host": "smtp.your-provider.com",
-    "port": 587,
+    "host": "smtp.resend.com",
+    "port": 465,
     "secure": true,
     "sender": "QCobro <no-reply@qcobro.com>",
     "auth": {
-      "user": "apikey",
-      "pass": "REPLACE_WITH_SMTP_PASSWORD"
+      "user": "resend",
+      "pass": "re_REPLACE_WITH_RESEND_API_KEY"
     }
   }
 }
