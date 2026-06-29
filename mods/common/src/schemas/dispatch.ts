@@ -22,8 +22,6 @@ export const dispatchOutreachSchema = z
     appRef: z.string().min(1).optional(),
     /** Voice: opening line template (Voz IA) or the whole spoken script (pre-recorded). */
     firstMessage: z.string().optional(),
-    /** Voz IA: system prompt/persona template. */
-    systemPrompt: z.string().optional(),
     /** SMS / EMAIL: message body template. */
     body: z.string().optional(),
     /** EMAIL: subject line template. */

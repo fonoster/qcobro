@@ -171,8 +171,7 @@ export function createEngine(deps: EngineDeps) {
         to: acc.phone!,
         context,
         appRef: appRef ?? undefined,
-        firstMessage: t.voiceAiConfig?.firstMessage ?? undefined,
-        systemPrompt: t.voiceAiConfig?.systemPrompt
+        firstMessage: t.voiceAiConfig?.firstMessage ?? undefined
       };
     }
     return {

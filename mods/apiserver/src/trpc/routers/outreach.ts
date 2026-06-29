@@ -41,8 +41,7 @@ function buildDispatchRequest(
         to,
         context,
         appRef: template.voiceAiConfig.fonosterAppRef ?? undefined,
-        firstMessage: template.voiceAiConfig.firstMessage ?? undefined,
-        systemPrompt: template.voiceAiConfig.systemPrompt
+        firstMessage: template.voiceAiConfig.firstMessage ?? undefined
       };
     case "VOICE_PRERECORDED":
       if (!template.voicePrerecordedConfig)

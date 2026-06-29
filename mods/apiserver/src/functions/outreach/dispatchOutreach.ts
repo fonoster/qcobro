@@ -78,15 +78,14 @@ export function createDispatchOutreach(deps: DispatchDeps) {
     const renderedBody = renderTemplate(params.firstMessage ?? "", params.context);
 
     // Pre-recorded → EXTERNAL VoiceServer: the only metadata is the ready message.
-    // Voz IA → AUTOPILOT: pass the conversation settings (first message + prompt).
+    // Voz IA → AUTOPILOT: the system prompt is already stored on the synced Fonoster
+    // application, so we never resend it as call metadata — that would duplicate it
+    // and pollute the agent's context. We pass only the opening line.
     let metadata: Record<string, string>;
     if (params.channel === "VOICE_PRERECORDED") {
       metadata = { message: renderedBody };
     } else {
       metadata = { firstMessage: renderedBody };
-      if (params.systemPrompt) {
-        metadata.systemPrompt = renderTemplate(params.systemPrompt, params.context);
-      }
     }
 
     const { ref } = await deps.outboundCallClient.createCall({

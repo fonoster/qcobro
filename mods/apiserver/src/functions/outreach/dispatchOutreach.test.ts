@@ -56,23 +56,23 @@ describe("dispatchOutreach", () => {
     assert.equal(result.renderedBody, "Hola Ana, debe 900");
   });
 
-  it("places a voice call to the app ref with rendered metadata", async () => {
+  it("places a voice call to the app ref with only the rendered opening line as metadata", async () => {
     const { deps, calls } = makeDeps();
     const result = await createDispatchOutreach(deps)({
       channel: "VOICE_AI",
       to: "+50670000000",
       context: { firstName: "Luis" },
       appRef: "app-9",
-      firstMessage: "Hola {{firstName}}",
-      systemPrompt: "Sé amable con {{firstName}}"
+      firstMessage: "Hola {{firstName}}"
     });
 
     assert.equal(calls.voice.length, 1);
+    // The system prompt lives on the synced Fonoster app, so it is never resent here.
     assert.deepEqual(calls.voice[0], {
       from: "+50611111111",
       to: "+50670000000",
       appRef: "app-9",
-      metadata: { firstMessage: "Hola Luis", systemPrompt: "Sé amable con Luis" }
+      metadata: { firstMessage: "Hola Luis" }
     });
     assert.equal(result.providerRef, "call-1");
     assert.equal(result.renderedBody, "Hola Luis");
