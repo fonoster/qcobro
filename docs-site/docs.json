@@ -61,10 +61,19 @@
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:support@fonoster.com"
+        "label": "Sitio web",
+        "href": "https://qcobro.com"
+      },
+      {
+        "label": "Soporte",
+        "href": "mailto:team@fonoster.com"
       }
-    ]
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Ir al panel",
+      "href": "https://app.qcobro.com"
+    }
   },
   "contextual": {
     "options": ["copy", "view", "chatgpt", "claude", "perplexity", "mcp", "cursor", "vscode"]
