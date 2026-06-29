@@ -1,6 +1,6 @@
 {
   "name": "@qcobro/common",
-  "version": "1.5.4",
+  "version": "1.9.0",
   "private": true,
   "type": "module",
   "exports": {

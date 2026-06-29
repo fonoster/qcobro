@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.9.0](https://github.com/fonoster/qcobro/compare/v1.8.0...v1.9.0) (2026-06-29)
+
+### Bug Fixes
+
+- **api:** stop resending Voz IA system prompt as call metadata ([0d66d18](https://github.com/fonoster/qcobro/commit/0d66d18b34d0f353f02d96599d8784f0f372a547))
+
+### Features
+
+- **common:** add isDue outreach variable and document template variables ([ed7a511](https://github.com/fonoster/qcobro/commit/ed7a51161b758d2337055028f7adf52f22f7ae56))
+
 ## [1.5.4](https://github.com/fonoster/qcobro/compare/v1.5.3...v1.5.4) (2026-06-28)
 
 ### Bug Fixes
