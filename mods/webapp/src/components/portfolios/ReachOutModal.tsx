@@ -95,10 +95,8 @@ export function ReachOutModal({
       agentTemplateId,
       subject: agentType === "EMAIL" ? editSubject : undefined,
       body: agentType === "EMAIL" || agentType === "SMS" ? editBody : undefined,
-      firstMessage:
-        agentType === "VOICE_AI" || agentType === "VOICE_PRERECORDED"
-          ? editFirstMessage || undefined
-          : undefined
+      firstMessage: agentType === "VOICE_AI" ? editFirstMessage || undefined : undefined,
+      script: agentType === "VOICE_PRERECORDED" ? editFirstMessage || undefined : undefined
     });
   }
 

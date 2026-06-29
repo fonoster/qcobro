@@ -20,8 +20,10 @@ export const dispatchOutreachSchema = z
     from: z.string().min(1).optional(),
     /** Voice: the provider application ref to drive the call. */
     appRef: z.string().min(1).optional(),
-    /** Voice: opening line template (Voz IA) or the whole spoken script (pre-recorded). */
+    /** Voz IA: opening line template (the autopilot may also open silently). */
     firstMessage: z.string().optional(),
+    /** Voz pregrabada: the whole spoken script template (locuted via TTS). */
+    script: z.string().optional(),
     /** SMS / EMAIL: message body template. */
     body: z.string().optional(),
     /** EMAIL: subject line template. */
@@ -68,10 +70,12 @@ export const manualOutreachSchema = z.object({
   agentTemplateId: z.string().min(1),
   /** Operator override for the email subject (rendered, replaces template value). */
   subject: z.string().optional(),
-  /** Operator override for the message body — SMS, EMAIL, or TTS script (rendered). */
+  /** Operator override for the message body — SMS or EMAIL (rendered). */
   body: z.string().optional(),
-  /** Operator override for the voice first message / pre-recorded TTS script (rendered). */
-  firstMessage: z.string().optional()
+  /** Operator override for the Voz IA opening line (rendered). */
+  firstMessage: z.string().optional(),
+  /** Operator override for the Voz pregrabada spoken script (rendered). */
+  script: z.string().optional()
 });
 
 export type ManualOutreachInput = z.infer<typeof manualOutreachSchema>;

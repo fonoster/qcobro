@@ -179,7 +179,7 @@ export function createEngine(deps: EngineDeps) {
       to: acc.phone!,
       context,
       appRef: appRef ?? undefined,
-      firstMessage: t.voicePrerecordedConfig?.script
+      script: t.voicePrerecordedConfig?.script
     };
   }
 

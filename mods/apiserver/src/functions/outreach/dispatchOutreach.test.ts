@@ -78,14 +78,14 @@ describe("dispatchOutreach", () => {
     assert.equal(result.renderedBody, "Hola Luis");
   });
 
-  it("pre-recorded passes only the ready message as metadata (no systemPrompt)", async () => {
+  it("pre-recorded renders its script and passes it as the ready message", async () => {
     const { deps, calls } = makeDeps();
     const result = await createDispatchOutreach(deps)({
       channel: "VOICE_PRERECORDED",
       to: "+50670000000",
       context: { firstName: "Eva" },
       appRef: "ext-app-1",
-      firstMessage: "Hola {{firstName}}, este es un recordatorio de pago."
+      script: "Hola {{firstName}}, este es un recordatorio de pago."
     });
 
     assert.equal(calls.voice.length, 1);
@@ -178,7 +178,7 @@ describe("dispatchOutreach", () => {
         channel: "VOICE_PRERECORDED",
         to: "+50670000000",
         context: {},
-        firstMessage: "Hola"
+        script: "Hola"
       })
     );
     assert.equal(calls.voice.length, 0);

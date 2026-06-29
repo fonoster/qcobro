@@ -53,7 +53,7 @@ function buildDispatchRequest(
         to,
         context,
         appRef: prerecordedAppRef ?? undefined,
-        firstMessage: template.voicePrerecordedConfig.script
+        script: template.voicePrerecordedConfig.script
       };
     case "EMAIL":
       if (!template.emailConfig)
@@ -118,7 +118,8 @@ export const outreachRouter = router({
       ...base,
       ...(input.subject != null && { subject: input.subject }),
       ...(input.body != null && { body: input.body }),
-      ...(input.firstMessage != null && { firstMessage: input.firstMessage })
+      ...(input.firstMessage != null && { firstMessage: input.firstMessage }),
+      ...(input.script != null && { script: input.script })
     };
 
     const dispatch = createDispatchOutreach({
