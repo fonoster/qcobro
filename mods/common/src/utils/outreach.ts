@@ -15,9 +15,12 @@ export function renderTemplate(template: string, context: Record<string, unknown
 
 /**
  * Builds the render context exposed to outreach templates: every account field
- * plus derived `firstName` (first token of `fullName`) and `currency` (the
- * workspace's currency from WorkspaceSettings). These are the variables documented
- * in the agent console.
+ * plus derived `firstName` (first token of `fullName`), `currency` (the
+ * workspace's currency from WorkspaceSettings), and `isDue` (whether the account
+ * is past due, i.e. `daysPastDue > 0`). `isDue` is a boolean so templates can
+ * branch on it with Handlebars conditionals, e.g.
+ * `{{#if isDue}}su pago está vencido{{else}}gracias por estar al día{{/if}}`.
+ * These are the variables documented in the agent console.
  */
 export function buildOutreachContext(
   account: PortfolioAccountRecord,
@@ -27,7 +30,8 @@ export function buildOutreachContext(
   return {
     ...account,
     firstName,
-    currency: opts.currency
+    currency: opts.currency,
+    isDue: account.daysPastDue > 0
   };
 }
 

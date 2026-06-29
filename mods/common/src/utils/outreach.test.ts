@@ -52,6 +52,27 @@ describe("renderTemplate + buildOutreachContext", () => {
     });
     assert.equal(ctx.firstName, "Juan");
   });
+
+  it("derives isDue from daysPastDue", () => {
+    const overdue = buildOutreachContext(makeAccount({ daysPastDue: 30 }), { currency: "CRC" });
+    const current = buildOutreachContext(makeAccount({ daysPastDue: 0 }), { currency: "CRC" });
+    assert.equal(overdue.isDue, true);
+    assert.equal(current.isDue, false);
+  });
+
+  it("branches a template on the isDue conditional", () => {
+    const tpl = "{{#if isDue}}Su pago está vencido{{else}}Gracias por estar al día{{/if}}";
+    const overdue = renderTemplate(
+      tpl,
+      buildOutreachContext(makeAccount({ daysPastDue: 5 }), { currency: "CRC" })
+    );
+    const current = renderTemplate(
+      tpl,
+      buildOutreachContext(makeAccount({ daysPastDue: 0 }), { currency: "CRC" })
+    );
+    assert.equal(overdue, "Su pago está vencido");
+    assert.equal(current, "Gracias por estar al día");
+  });
 });
 
 describe("pickRandomNumber", () => {

@@ -25,7 +25,7 @@ type Template = {
 const TYPE_FILTERS: AgentType[] = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL"];
 
 /** Documentation listing every supported template variable. */
-const VARS_DOC_URL = "https://docs.qcobro.com/agentes/variables";
+const VARS_DOC_URL = "https://docs.qcobro.com/guides/agent-templates#variables-disponibles";
 const EXAMPLE_VARS = ["{{firstName}}", "{{principalAmount}}", "{{outstandingBalance}}"];
 
 /** Example template variables + a link to the full reference, under the page header. */

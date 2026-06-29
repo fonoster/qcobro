@@ -51,13 +51,103 @@ Los campos cambian según el tipo de canal elegido:
 
 <Tip>
   Puedes personalizar los mensajes con **variables** (por ejemplo, el nombre del cliente o el
-  saldo). Usa **Ver variables disponibles** en el formulario para consultar cuáles existen.
+  saldo). En el formulario, **Ver variables disponibles** te trae a esta misma lista.
 </Tip>
 
 <Note>
   QCobro es multilingüe: el **Idioma** del agente determina en qué idioma se comunica con la
   cuenta. Crea un agente por idioma cuando lo necesites.
 </Note>
+
+## Variables disponibles
+
+En los campos de texto del agente puedes insertar **variables** escribiéndolas entre llaves
+dobles. Al contactar a una cuenta, QCobro las reemplaza por los datos de esa cuenta. Por
+ejemplo, `Hola {{firstName}}, su saldo es {{outstandingBalance}} {{currency}}` se convierte
+en `Hola María, su saldo es 1500 CRC`.
+
+### Dónde funcionan
+
+Las variables se procesan en los canales cuyo texto se redacta y se renderiza antes de
+enviarse:
+
+| Canal | ¿Variables? | Dónde escribirlas |
+| --- | --- | --- |
+| **SMS** y **WhatsApp** | Sí | Cuerpo del mensaje |
+| **Correo** | Sí | Asunto y Cuerpo del mensaje |
+| **Voz pregrabada** | Sí | Guion (se locuta por voz, así que pasa por el mismo reemplazo) |
+| **Voz IA** | No | Se personaliza distinto — ver [Personalizar Voz IA](#personalizar-voz-ia) |
+
+<Warning>
+  En **Voz IA** las llaves dobles `{{...}}` **no** se reemplazan. No escribas variables en su
+  **Prompt del sistema** ni en su **Primer mensaje**; en su lugar, redacta el prompt para que
+  el agente use los datos que ya tiene (ver más abajo).
+</Warning>
+
+### Lista de variables
+
+| Variable | Qué inserta |
+| --- | --- |
+| `{{firstName}}` | El primer nombre de la cuenta. |
+| `{{fullName}}` | El nombre completo. |
+| `{{principalAmount}}` | El monto principal de la deuda. |
+| `{{outstandingBalance}}` | El saldo pendiente. |
+| `{{currency}}` | La moneda del espacio de trabajo (por ejemplo, `CRC`). |
+| `{{daysPastDue}}` | Los días de atraso. |
+| `{{missedInstallments}}` | El número de cuotas vencidas. |
+| `{{termsAmount}}` | El monto de cada cuota. |
+| `{{termsFrequency}}` | La frecuencia de pago (por ejemplo, mensual). |
+| `{{termsLength}}` | El número total de cuotas. |
+| `{{lastPaymentAmount}}` | El monto del último pago registrado. |
+| `{{lastPaymentDate}}` | La fecha del último pago registrado. |
+| `{{customerSegment}}` | El segmento de la cuenta. |
+| `{{negotiationOptions}}` | Las opciones de negociación de la cuenta. |
+| `{{bestTimeToCall}}` | La mejor hora para llamar. |
+| `{{phone}}` | El teléfono de la cuenta. |
+| `{{externalId}}` | Tu identificador externo de la cuenta. |
+| `{{isDue}}` | Si la cuenta está vencida (`daysPastDue` mayor que cero). |
+
+<Note>
+  Si una cuenta no tiene un dato, su variable se reemplaza por texto vacío y el mensaje sigue
+  enviándose; no se interrumpe el contacto.
+</Note>
+
+### Mensajes condicionales
+
+`{{isDue}}` es un valor de sí/no, así que en SMS, WhatsApp, correo y voz pregrabada puedes
+adaptar el mensaje según si la cuenta está vencida. Encierra cada versión entre `{{#if isDue}}`
+y `{{/if}}`, con un `{{else}}` opcional para el caso contrario:
+
+```handlebars
+Hola {{firstName}}, {{#if isDue}}su pago está vencido.{{else}}gracias por estar al día.{{/if}}
+```
+
+Para una cuenta vencida esto produce «Hola María, su pago está vencido.»; para una al día,
+«Hola María, gracias por estar al día.».
+
+Algunos ejemplos por canal:
+
+```handlebars SMS / WhatsApp
+{{firstName}}, {{#if isDue}}registra {{daysPastDue}} días de atraso por {{outstandingBalance}} {{currency}}.{{else}}gracias por mantener su cuenta al día.{{/if}}
+```
+
+```handlebars Correo (cuerpo)
+Estimado/a {{fullName}}:{{#if isDue}} Su saldo de {{outstandingBalance}} {{currency}} está vencido y le ofrecemos opciones de pago.{{/if}}
+```
+
+QCobro usa **Handlebars** para el reemplazo; para condicionales más avanzados, consulta la
+[guía de Handlebars](https://handlebarsjs.com/guide/).
+
+### Personalizar Voz IA
+
+En **Voz IA** no se usan variables `{{...}}`. Durante la llamada, el agente ya dispone de los
+datos de la cuenta, así que en lugar de insertar variables redactas el **Prompt del sistema**
+para que los aproveche en lenguaje natural. Por ejemplo:
+
+> Saluda a la persona por su nombre, menciona su saldo pendiente y, si su cuenta está
+> vencida, ofrécele opciones de pago con un tono amable.
+
+El agente conversa de forma dinámica y adapta lo que dice a cada cuenta, sin plantillas.
 
 ## Agentes de voz y su disponibilidad
 
