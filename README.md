@@ -147,10 +147,13 @@ openssl rsa -in config/identity/keys/private.pem -pubout -out config/identity/ke
 chmod 644 config/identity/keys/private.pem config/identity/keys/public.pem
 
 # 4. Pin the version + TLS settings (compose.yaml reads QCOBRO_VERSION from .env;
-#    scripts/deploy/tls.sh reads TLS_DOMAIN/TLS_EMAIL)
+#    scripts/deploy/tls.sh reads TLS_DOMAIN/TLS_API_DOMAIN/TLS_EMAIL).
+#    TLS_API_DOMAIN adds api.qcobro.com as a SAN on the same cert so the SDK
+#    endpoint (https://api.qcobro.com) is also TLS-terminated by Envoy.
 cat > .env << ENV
 QCOBRO_VERSION=$REL
 TLS_DOMAIN=app.qcobro.com
+TLS_API_DOMAIN=api.qcobro.com
 TLS_EMAIL=team@fonoster.com
 ENV
 
@@ -234,15 +237,16 @@ webhook returns `503`; a bad signature returns `401`.
 
 ### Production integrations & webhooks
 
-In production, Envoy terminates TLS on the app domain (`:443`) and routes `/trpc` and
-`/api/*` to the apiserver. **Every webhook below is reachable at `https://<host>/api/...`
-with no extra port mapping** — only the app domain needs to resolve publicly.
+In production, Envoy terminates TLS on port 443 and routes `/trpc` and `/api/*` to the
+apiserver. **Every webhook and the SDK endpoint are reachable on the same Envoy listener
+with no extra port mapping** — both app and API domains must resolve to the same IP.
 
 **DNS** (assuming app domain `app.qcobro.com`, email domain `notices.qcobro.com`):
 
 | Record | Host                 | Value              | Purpose                                             |
 | ------ | -------------------- | ------------------ | --------------------------------------------------- |
-| `A`    | `app.qcobro.com`     | Droplet IP         | Console + all webhooks (Envoy `:443`)               |
+| `A`    | `app.qcobro.com`     | Droplet IP         | Console + webhooks (Envoy `:443`)                   |
+| `A`    | `api.qcobro.com`     | Droplet IP         | SDK endpoint (same Envoy listener, SAN on TLS cert) |
 | `MX`   | `notices.qcobro.com` | Resend inbound MX  | Receives debtor replies (`reply+<token>@notices.…`) |
 | `TXT`  | per Resend           | SPF / DKIM / DMARC | Sending-domain auth (shown in the Resend dashboard) |
 

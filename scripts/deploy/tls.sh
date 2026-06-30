@@ -11,17 +11,21 @@
 #     inside the renewal window (default 30 days). This keeps us well clear of
 #     Let's Encrypt rate limits — far from expiry it's a fast no-op that never
 #     touches certbot or restarts Envoy.
+#   - If TLS_API_DOMAIN is set and the existing cert does not yet cover it, an
+#     --expand issuance is run once to add the SAN (e.g. api.qcobro.com). After
+#     that, normal renewals preserve the full SAN list automatically.
 #
 # Envoy is only restarted when the cert actually changes, because the copy +
 # restart live in the certbot deploy-hook, which fires solely on real renewals.
 #
 # Usage:
-#   scripts/deploy/tls.sh [--domain <d>] [--email <e>] [--days <n>] [--force]
+#   scripts/deploy/tls.sh [--domain <d>] [--api-domain <d>] [--email <e>] [--days <n>] [--force]
 #
 # Config resolution (first wins): CLI flag → environment → .env in repo root.
-#   TLS_DOMAIN   domain to certify         (e.g. app.qcobro.com)
-#   TLS_EMAIL    ACME account / notices    (e.g. ops@qcobro.com)
-#   TLS_DAYS     renewal window in days    (default 30)
+#   TLS_DOMAIN      primary domain to certify  (e.g. app.qcobro.com)
+#   TLS_API_DOMAIN  optional extra SAN          (e.g. api.qcobro.com)
+#   TLS_EMAIL       ACME account / notices      (e.g. ops@qcobro.com)
+#   TLS_DAYS        renewal window in days      (default 30)
 #
 # Requires: root (or passwordless sudo), certbot, docker compose. Linux/GNU date.
 # ─────────────────────────────────────────────────────────────────────────────
@@ -37,18 +41,20 @@ if [ -f .env ]; then
 fi
 
 DOMAIN="${TLS_DOMAIN:-}"
+API_DOMAIN="${TLS_API_DOMAIN:-}"
 EMAIL="${TLS_EMAIL:-}"
 RENEW_DAYS="${TLS_DAYS:-30}"
 FORCE=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --domain) DOMAIN="$2"; shift 2 ;;
-    --email)  EMAIL="$2";  shift 2 ;;
-    --days)   RENEW_DAYS="$2"; shift 2 ;;
-    --force)  FORCE=1; shift ;;
+    --domain)     DOMAIN="$2";     shift 2 ;;
+    --api-domain) API_DOMAIN="$2"; shift 2 ;;
+    --email)      EMAIL="$2";      shift 2 ;;
+    --days)       RENEW_DAYS="$2"; shift 2 ;;
+    --force)      FORCE=1;         shift ;;
     -h|--help)
-      sed -n '2,30p' "$0"; exit 0 ;;
+      sed -n '2,33p' "$0"; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; exit 1 ;;
   esac
 done
@@ -64,14 +70,33 @@ LIVE_DIR="/etc/letsencrypt/live/$DOMAIN"
 HOOK="$REPO_DIR/scripts/deploy/refresh-envoy-certs.sh"
 chmod +x "$HOOK" "$SCRIPT_DIR/tls.sh" 2>/dev/null || true
 
+# Build the domain flags for certbot (primary + optional API domain).
+DOMAIN_FLAGS="-d $DOMAIN"
+[ -n "$API_DOMAIN" ] && DOMAIN_FLAGS="$DOMAIN_FLAGS -d $API_DOMAIN"
+
 # ── First issuance ───────────────────────────────────────────────────────────
 if [ ! -f "$LIVE_DIR/privkey.pem" ]; then
   echo "tls.sh: no certificate for $DOMAIN yet — issuing (standalone, port 80)…"
-  $SUDO certbot certonly --standalone -d "$DOMAIN" \
+  # shellcheck disable=SC2086
+  $SUDO certbot certonly --standalone $DOMAIN_FLAGS \
     --agree-tos -m "$EMAIL" --non-interactive \
     --deploy-hook "$HOOK"
   echo "tls.sh: issued and installed into Envoy."
   exit 0
+fi
+
+# ── SAN expansion (add API domain to existing cert, one-time) ────────────────
+if [ -n "$API_DOMAIN" ]; then
+  if ! $SUDO openssl x509 -noout -text -in "$LIVE_DIR/fullchain.pem" 2>/dev/null \
+       | grep -q "DNS:$API_DOMAIN"; then
+    echo "tls.sh: cert does not yet cover $API_DOMAIN — expanding (adds a SAN)…"
+    # shellcheck disable=SC2086
+    $SUDO certbot certonly --standalone --expand $DOMAIN_FLAGS \
+      --agree-tos -m "$EMAIL" --non-interactive \
+      --deploy-hook "$HOOK"
+    echo "tls.sh: expanded and installed into Envoy."
+    exit 0
+  fi
 fi
 
 # ── Renewal window check (rate-limit-safe) ───────────────────────────────────
