@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.10.0](https://github.com/fonoster/qcobro/compare/v1.9.0...v1.10.0) (2026-06-30)
+
+### Features
+
+- **webapp:** agent edit modal, table actions right-aligned, docs realistic IDs ([38a5031](https://github.com/fonoster/qcobro/commit/38a5031011c17a968d7eb762367054b4d8d2d21e))
+
 # [1.9.0](https://github.com/fonoster/qcobro/compare/v1.8.0...v1.9.0) (2026-06-29)
 
 ### Features

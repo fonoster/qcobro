@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.10.0](https://github.com/fonoster/qcobro/compare/v1.9.0...v1.10.0) (2026-06-30)
+
+### Features
+
+- **site:** add brand kit page with mobile nav hamburger menu ([ff4d0c6](https://github.com/fonoster/qcobro/commit/ff4d0c6a8e25e096e1049e37e39eb84ef45f3c21))
+- **webapp:** agent edit modal, table actions right-aligned, docs realistic IDs ([38a5031](https://github.com/fonoster/qcobro/commit/38a5031011c17a968d7eb762367054b4d8d2d21e))
+- **whatsapp:** add WhatsApp channel server foundation (§2–§6.1) ([51211f3](https://github.com/fonoster/qcobro/commit/51211f3b8af1cd7fb45e0b2ded40262915606548)), closes [#5](https://github.com/fonoster/qcobro/issues/5)
+
 # [1.9.0](https://github.com/fonoster/qcobro/compare/v1.8.0...v1.9.0) (2026-06-29)
 
 ### Bug Fixes
