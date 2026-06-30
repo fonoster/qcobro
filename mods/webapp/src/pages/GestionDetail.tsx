@@ -1,8 +1,17 @@
 import type { ComponentType, ReactNode } from "react";
 import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { X, Sparkles, CheckCheck, PhoneCall, MessagesSquare, Target, Mail } from "lucide-react";
-import type { EmailThreadMessage, TranscriptLine } from "@qcobro/common";
+import {
+  X,
+  Sparkles,
+  CheckCheck,
+  PhoneCall,
+  MessagesSquare,
+  Target,
+  Mail,
+  MessageSquare
+} from "lucide-react";
+import type { EmailThreadMessage, TranscriptLine, WhatsAppThread } from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
@@ -110,9 +119,11 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
   const oneWay = !!g && ONE_WAY.includes(g.agentType);
   const isVoiceAi = g?.agentType === "VOICE_AI";
   const isEmail = g?.agentType === "EMAIL";
-  // Every channel except the Voz IA call (which has a transcript-derived analysis) shows a
-  // generic per-channel insight line. Email is two-way, so this is not the one-way set.
-  const hasGenericInsight = !!g && !isVoiceAi;
+  const isWhatsApp = g?.agentType === "WHATSAPP";
+  const whatsAppThread = (g?.channelData?.whatsAppThread as WhatsAppThread | undefined) ?? null;
+  // Every channel except Voz IA and WhatsApp (both have dedicated sections) shows a
+  // generic per-channel insight line via the shared hasGenericInsight block.
+  const hasGenericInsight = !!g && !isVoiceAi && !isEmail && !isWhatsApp;
   const ChannelIcon = g ? channelIcon(g.agentType) : channelIcon("SMS");
 
   // On-demand AI analysis: when a Voz IA call (transcript) or an EMAIL thread that
@@ -128,7 +139,9 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
     if (!g || g.aiSummary) return;
     const hasVoice = g.agentType === "VOICE_AI" && transcript.length > 0;
     const hasEmailReplies = g.agentType === "EMAIL" && (emailThread?.messages.length ?? 0) > 0;
-    if (!hasVoice && !hasEmailReplies) return;
+    const hasWhatsAppReplies =
+      g.agentType === "WHATSAPP" && (whatsAppThread?.messages.length ?? 0) > 0;
+    if (!hasVoice && !hasEmailReplies && !hasWhatsAppReplies) return;
     if (requestedFor.current === id) return;
     requestedFor.current = id;
     generateInsight.mutate({ id });
@@ -351,6 +364,141 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                   <p className="text-xs text-slate-400">{t("gestiones.detail.emailNoReply")}</p>
                 </div>
               )}
+            </div>
+          </Section>
+        )}
+
+        {/* WHATSAPP: conversation thread — template opener + customer/agent replies */}
+        {isWhatsApp && (
+          <Section
+            icon={MessageSquare}
+            iconClass="text-emerald-700"
+            title={t("gestiones.detail.whatsAppThread")}
+          >
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+              {/* Initial template message */}
+              {messageBody && (
+                <div className="flex flex-col gap-2.5 border-b border-slate-200 bg-emerald-50 px-4 py-4">
+                  <span className="text-[11px] font-semibold text-emerald-700">
+                    {t("gestiones.detail.whatsAppAgent")}
+                  </span>
+                  {messageBody.split(/\n{2,}/).map((para, i) => (
+                    <p
+                      key={i}
+                      className="whitespace-pre-line text-sm leading-relaxed text-slate-600"
+                    >
+                      {para.trim()}
+                    </p>
+                  ))}
+                </div>
+              )}
+
+              {/* Reply thread messages */}
+              {whatsAppThread?.messages.map((m, i) =>
+                m.direction === "inbound" ? (
+                  <div
+                    key={i}
+                    className="flex flex-col gap-1.5 border-t border-slate-200 bg-slate-50 px-4 py-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-slate-700">
+                        {g?.portfolioAccount.fullName}
+                      </span>
+                      <span className="ml-auto text-[11px] text-slate-400">
+                        {new Date(m.at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })}
+                      </span>
+                    </div>
+                    <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">
+                      {m.body}
+                    </p>
+                  </div>
+                ) : (
+                  <div
+                    key={i}
+                    className="flex flex-col gap-1.5 border-t border-slate-200 bg-emerald-50 px-4 py-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-emerald-700">
+                        {t("gestiones.detail.whatsAppAgent")}
+                      </span>
+                      <span className="ml-auto text-[11px] text-slate-400">
+                        {new Date(m.at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })}
+                      </span>
+                    </div>
+                    <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">
+                      {m.body}
+                    </p>
+                  </div>
+                )
+              )}
+
+              {/* No replies placeholder */}
+              {(!whatsAppThread || whatsAppThread.messages.length === 0) && (
+                <div className="border-t border-slate-200 px-4 py-3">
+                  <p className="text-xs text-slate-400">{t("gestiones.detail.whatsAppNoReply")}</p>
+                </div>
+              )}
+            </div>
+          </Section>
+        )}
+
+        {/* WHATSAPP: AI insights */}
+        {isWhatsApp && g && (
+          <Section
+            icon={Sparkles}
+            iconClass="text-violet-600"
+            title={t("gestiones.detail.emailAnalysis")}
+          >
+            <div className="flex flex-col gap-3">
+              {g.aiSummary ? (
+                <p className="text-sm leading-relaxed text-slate-600">{g.aiSummary}</p>
+              ) : generateInsight.isPending ? (
+                <p className="text-sm text-slate-500">{t("gestiones.detail.analysisGenerating")}</p>
+              ) : null}
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
+                <span className="text-sm text-slate-500">{t("gestiones.detail.result")}</span>
+                <span className="text-sm font-medium text-slate-700">
+                  {t(`gestiones.outcome.${g.outcome}` as Parameters<typeof t>[0])}
+                </span>
+              </div>
+            </div>
+          </Section>
+        )}
+
+        {/* WHATSAPP: payment promise */}
+        {isWhatsApp && g && g.paymentPromises.length > 0 && (
+          <Section
+            icon={Target}
+            iconClass="text-emerald-700"
+            title={t("gestiones.detail.paymentPromise")}
+          >
+            <div className="flex flex-col gap-2">
+              {g.paymentPromises.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3"
+                >
+                  <Target className="h-5 w-5 shrink-0 text-emerald-700" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-emerald-900">
+                      {t("gestiones.detail.paymentPromise")}
+                    </span>
+                    <span className="text-sm text-emerald-700">
+                      {p.amount != null ? `${currency(p.amount, wsCurrency)} · ` : ""}
+                      {new Date(p.dueDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <span className="ml-auto rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">
+                    {t(`paymentPromises.status.${p.status}` as Parameters<typeof t>[0])}
+                  </span>
+                </div>
+              ))}
             </div>
           </Section>
         )}

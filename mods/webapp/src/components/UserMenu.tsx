@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { User, SlidersHorizontal, Users, KeyRound, LogOut } from "lucide-react";
+import { User, SlidersHorizontal, Users, KeyRound, Plug, LogOut } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n } from "../lib/i18n.js";
@@ -55,6 +55,13 @@ export function UserMenu() {
             <MenuItem icon={Users} label={t("userMenu.members")} onClick={() => go("/members")} />
             {canManageKeys && (
               <MenuItem icon={KeyRound} label={t("nav.apiKeys")} onClick={() => go("/api-keys")} />
+            )}
+            {canManageKeys && (
+              <MenuItem
+                icon={Plug}
+                label={t("userMenu.integrations")}
+                onClick={() => go("/integrations")}
+              />
             )}
             <MenuDivider />
             <MenuItem

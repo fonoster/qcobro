@@ -81,8 +81,11 @@ export function createCreateAgentTemplate(
           await tx.whatsAppConfig.create({
             data: {
               templateId: base.id,
+              metaTemplateId: params.templateId,
               templateName: params.templateName,
-              messageBody: params.messageBody
+              messageBody: params.messageBody,
+              systemPrompt: params.systemPrompt,
+              maxReplies: params.maxReplies ?? null
             }
           });
           break;

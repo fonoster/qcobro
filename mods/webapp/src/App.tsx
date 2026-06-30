@@ -18,6 +18,7 @@ import { CampaignDetail } from "./pages/CampaignDetail.js";
 import { Gestiones } from "./pages/Gestiones.js";
 import { GestionDetail } from "./pages/GestionDetail.js";
 import { PaymentPromises } from "./pages/PaymentPromises.js";
+import { Integrations } from "./pages/Integrations.js";
 import { RequireAuth } from "./components/RequireAuth.js";
 import { AuthedLayout } from "./components/AuthedLayout.js";
 import { AccountLayout } from "./components/AccountLayout.js";
@@ -67,6 +68,7 @@ export default function App() {
         <Route path="gestiones" element={<Gestiones />} />
         <Route path="gestiones/:id" element={<GestionDetail />} />
         <Route path="payment-promises" element={<PaymentPromises />} />
+        <Route path="integrations" element={<Integrations />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

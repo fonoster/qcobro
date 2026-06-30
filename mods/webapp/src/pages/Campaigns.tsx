@@ -351,6 +351,7 @@ function CreateCampaignModal({
   const [name, setName] = useState("");
   const [portfolioIds, setPortfolioIds] = useState<string[]>([]);
   const [agentTemplateId, setAgentTemplateId] = useState("");
+  const [whatsAppSenderNumberId, setWhatsAppSenderNumberId] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [daysOfWeek, setDaysOfWeek] = useState<number[]>([1, 2, 3, 4, 5]);
@@ -362,6 +363,13 @@ function CreateCampaignModal({
 
   const portfolios = trpc.portfolios.list.useQuery();
   const agents = trpc.agentTemplates.list.useQuery();
+  const selectedAgent = (agents.data ?? []).find((a) => a.id === agentTemplateId) as
+    | { id: string; name: string; type: string }
+    | undefined;
+  const isWhatsApp = selectedAgent?.type === "WHATSAPP";
+  const senders = trpc.whatsAppIntegration.listSenders.useQuery(undefined, {
+    enabled: isWhatsApp
+  });
 
   const create = trpc.campaigns.create.useMutation({
     onSuccess,
@@ -384,6 +392,9 @@ function CreateCampaignModal({
     if (!agentTemplateId) return setError(t("campaigns.form.noAgents"));
     if (!startDate) return setError(t("campaigns.form.startDate"));
     if (daysOfWeek.length === 0) return setError(t("campaigns.form.noDays"));
+    if (isWhatsApp && !whatsAppSenderNumberId) {
+      return setError(t("campaigns.form.noWhatsAppSender"));
+    }
     setError(null);
     create.mutate({
       name: name.trim(),
@@ -395,7 +406,8 @@ function CreateCampaignModal({
       startTime,
       endTime,
       maxAttemptsPerAccount: maxPerAccount,
-      maxAttemptsPerDay: maxPerDay
+      maxAttemptsPerDay: maxPerDay,
+      ...(isWhatsApp && whatsAppSenderNumberId ? { whatsAppSenderNumberId } : {})
     });
   }
 
@@ -437,7 +449,10 @@ function CreateCampaignModal({
           label={t("campaigns.form.agent")}
           id="c-agent"
           value={agentTemplateId}
-          onChange={(e) => setAgentTemplateId(e.target.value)}
+          onChange={(e) => {
+            setAgentTemplateId(e.target.value);
+            setWhatsAppSenderNumberId("");
+          }}
         >
           <option value="">—</option>
           {(agents.data ?? []).map((a) => (
@@ -446,6 +461,27 @@ function CreateCampaignModal({
             </option>
           ))}
         </SelectGroup>
+
+        {isWhatsApp && (
+          <SelectGroup
+            label={t("campaigns.form.whatsAppSender")}
+            id="c-wa-sender"
+            value={whatsAppSenderNumberId}
+            onChange={(e) => setWhatsAppSenderNumberId(e.target.value)}
+          >
+            <option value="">—</option>
+            {((senders.data ?? []) as { id: string; displayNumber: string; label: string }[]).map(
+              (s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label} ({s.displayNumber})
+                </option>
+              )
+            )}
+          </SelectGroup>
+        )}
+        {isWhatsApp && !senders.isLoading && (senders.data ?? []).length === 0 && (
+          <p className="text-xs text-amber-700">{t("campaigns.form.noWhatsAppSender")}</p>
+        )}
 
         <div className="flex flex-col gap-1">
           <span className="text-sm font-medium text-slate-700">{t("campaigns.form.days")}</span>

@@ -46,11 +46,11 @@
 
 ## 8. Web console
 
-- [ ] 8.1 Build the Workspace Integrations settings area: connect WABA, manage sender numbers, and set the workspace template-send language (i18n strings, no hardcoded copy)
-- [ ] 8.2 Add WhatsApp sender selection to campaign creation when the agent template is `WHATSAPP`
-- [ ] 8.3 In the `WHATSAPP` agent-template modal: Meta **template-id** input + a **read-only** preview textarea populated by `WhatsAppClient.fetchTemplate`, plus editable **Prompt del sistema** + **Máximo de respuestas** fields (like the email modal); block creation when no workspace integration exists
-- [ ] 8.4 Add the **Integraciones** entry to the avatar menu (`Comp/User Menu`), next to Miembros / Configuración del espacio, routing to the Integrations area
-- [ ] 8.5 Render the WhatsApp gestión detail as a conversation thread (template opener → customer/agent replies → AI Insights → metadata)
+- [x] 8.1 Build the Workspace Integrations settings area: connect WABA, manage sender numbers, and set the workspace template-send language (i18n strings, no hardcoded copy)
+- [x] 8.2 Add WhatsApp sender selection to campaign creation when the agent template is `WHATSAPP`
+- [x] 8.3 In the `WHATSAPP` agent-template modal: Meta **template-id** input + a **read-only** preview textarea populated by `WhatsAppClient.fetchTemplate`, plus editable **Prompt del sistema** + **Máximo de respuestas** fields (like the email modal); block creation when no workspace integration exists
+- [x] 8.4 Add the **Integraciones** entry to the avatar menu (`Comp/User Menu`), next to Miembros / Configuración del espacio, routing to the Integrations area
+- [x] 8.5 Render the WhatsApp gestión detail as a conversation thread (template opener → customer/agent replies → AI Insights → metadata)
 
 ## 9. Tests
 

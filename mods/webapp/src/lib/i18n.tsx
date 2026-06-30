@@ -482,7 +482,51 @@ export const messages = {
     "apiKeys.regenerate.error": "Could not regenerate the key.",
     "apiKeys.delete.title": "Delete this API key?",
     "apiKeys.delete.description":
-      "This permanently removes the key and revokes its access. This cannot be undone."
+      "This permanently removes the key and revokes its access. This cannot be undone.",
+
+    "userMenu.integrations": "Integrations",
+
+    "integrations.title": "Integrations",
+    "integrations.subtitle": "Connect WhatsApp (Meta Cloud API) to send and receive messages.",
+    "integrations.waba.section": "WhatsApp Business Account",
+    "integrations.waba.connected": "Connected",
+    "integrations.waba.notConnected": "Not connected",
+    "integrations.waba.wabaId": "WABA ID",
+    "integrations.waba.accessToken": "Access token",
+    "integrations.waba.accessTokenHint": "Leave blank to keep the current token.",
+    "integrations.waba.verifyToken": "Webhook verify token",
+    "integrations.waba.defaultLanguage": "Default template language (e.g. es_DO)",
+    "integrations.waba.save": "Save",
+    "integrations.waba.saving": "Saving…",
+    "integrations.waba.saved": "Saved",
+    "integrations.waba.error": "Could not save the integration.",
+    "integrations.waba.noCloak":
+      "Workspace integrations are disabled — no encryption key is configured on this deployment.",
+    "integrations.senders.section": "Sender numbers",
+    "integrations.senders.empty": "No sender numbers added yet.",
+    "integrations.senders.phoneNumberId": "Phone number ID",
+    "integrations.senders.displayNumber": "Display number (E.164)",
+    "integrations.senders.label": "Label",
+    "integrations.senders.add": "Add sender",
+    "integrations.senders.adding": "Adding…",
+    "integrations.senders.remove": "Remove",
+    "integrations.senders.removeError": "Could not remove sender.",
+    "integrations.senders.addError": "Could not add sender.",
+    "integrations.senders.noIntegration": "Connect a WABA first.",
+
+    "agents.form.templateId": "Meta template ID",
+    "agents.form.templatePreview": "Template preview (read-only)",
+    "agents.form.templatePreviewLoading": "Fetching template…",
+    "agents.form.templatePreviewEmpty": "Enter a template ID above to preview.",
+    "agents.form.noIntegrationWarning":
+      "No WhatsApp integration configured. Connect one in Integrations before creating this agent.",
+
+    "gestiones.detail.whatsAppThread": "WhatsApp conversation",
+    "gestiones.detail.whatsAppAgent": "Collections Team · AI",
+    "gestiones.detail.whatsAppNoReply": "No customer reply yet.",
+    "gestiones.insight.WHATSAPP": "WhatsApp template sent. Customer replies handled by AI agent.",
+    "campaigns.form.whatsAppSender": "WhatsApp sender number",
+    "campaigns.form.noWhatsAppSender": "Add a sender number in Integrations first."
   },
   es: {
     "language.label": "Idioma",
@@ -962,7 +1006,52 @@ export const messages = {
     "apiKeys.regenerate.error": "No se pudo regenerar la clave.",
     "apiKeys.delete.title": "¿Eliminar esta clave de API?",
     "apiKeys.delete.description":
-      "Esto elimina la clave de forma permanente y revoca su acceso. No se puede deshacer."
+      "Esto elimina la clave de forma permanente y revoca su acceso. No se puede deshacer.",
+
+    "userMenu.integrations": "Integraciones",
+
+    "integrations.title": "Integraciones",
+    "integrations.subtitle": "Conecta WhatsApp (Meta Cloud API) para enviar y recibir mensajes.",
+    "integrations.waba.section": "Cuenta de WhatsApp Business",
+    "integrations.waba.connected": "Conectada",
+    "integrations.waba.notConnected": "Sin conectar",
+    "integrations.waba.wabaId": "WABA ID",
+    "integrations.waba.accessToken": "Token de acceso",
+    "integrations.waba.accessTokenHint": "Deja en blanco para conservar el token actual.",
+    "integrations.waba.verifyToken": "Token de verificación del webhook",
+    "integrations.waba.defaultLanguage": "Idioma de plantilla por defecto (p. ej. es_DO)",
+    "integrations.waba.save": "Guardar",
+    "integrations.waba.saving": "Guardando…",
+    "integrations.waba.saved": "Guardado",
+    "integrations.waba.error": "No se pudo guardar la integración.",
+    "integrations.waba.noCloak":
+      "Las integraciones del espacio están deshabilitadas — no hay clave de cifrado configurada en este despliegue.",
+    "integrations.senders.section": "Números remitentes",
+    "integrations.senders.empty": "Aún no hay números remitentes.",
+    "integrations.senders.phoneNumberId": "ID de número de teléfono",
+    "integrations.senders.displayNumber": "Número visible (E.164)",
+    "integrations.senders.label": "Etiqueta",
+    "integrations.senders.add": "Agregar remitente",
+    "integrations.senders.adding": "Agregando…",
+    "integrations.senders.remove": "Eliminar",
+    "integrations.senders.removeError": "No se pudo eliminar el remitente.",
+    "integrations.senders.addError": "No se pudo agregar el remitente.",
+    "integrations.senders.noIntegration": "Conecta una WABA primero.",
+
+    "agents.form.templateId": "ID de plantilla Meta",
+    "agents.form.templatePreview": "Vista previa de la plantilla (solo lectura)",
+    "agents.form.templatePreviewLoading": "Cargando plantilla…",
+    "agents.form.templatePreviewEmpty": "Ingresa un ID de plantilla para ver la vista previa.",
+    "agents.form.noIntegrationWarning":
+      "Sin integración de WhatsApp configurada. Conéctala en Integraciones antes de crear este agente.",
+
+    "gestiones.detail.whatsAppThread": "Conversación por WhatsApp",
+    "gestiones.detail.whatsAppAgent": "Equipo de Cobranza · IA",
+    "gestiones.detail.whatsAppNoReply": "Sin respuesta del cliente aún.",
+    "gestiones.insight.WHATSAPP":
+      "Plantilla de WhatsApp enviada. Respuestas del cliente gestionadas por agente IA.",
+    "campaigns.form.whatsAppSender": "Número remitente de WhatsApp",
+    "campaigns.form.noWhatsAppSender": "Agrega un número remitente en Integraciones primero."
   }
 } as const;
 
