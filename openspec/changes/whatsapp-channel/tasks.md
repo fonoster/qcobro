@@ -40,7 +40,7 @@
 ## 7. Inbound webhook, AI replies & opt-out
 
 - [x] 7.1 Implement the Meta webhook route: verify-token handshake + signature verification, rejecting unverified requests
-- [ ] 7.2 Resolve inbound events to a workspace/sender by `phoneNumberId`; map block/opt-out to `IntentStatus.OPT_OUT`; update `qualityRating` from quality callbacks
+- [x] 7.2 Resolve inbound events to a workspace/sender by `phoneNumberId`; map block/opt-out to `IntentStatus.OPT_OUT`; update `qualityRating` from quality callbacks
 - [ ] 7.3 On an inbound customer message, record it on the gestión and trigger the smart agent: reuse the email agent's AI-reply mechanism (`systemPrompt`), send the reply via `WhatsAppClient.sendText`, cap at `maxReplies`, and refuse free-form replies once Meta's 24h window has closed
 - [ ] 7.4 Detect opt-out intent and payment-promise registration from the conversation (consistent with the email agent)
 
@@ -56,6 +56,6 @@
 
 - [x] 9.1 Unit tests for the WHATSAPP dispatch branch (named-param rendering, missing-integration error) with the emulator
 - [x] 9.2 Unit tests for integration storage (token encrypted at rest, never returned; duplicate phoneNumberId rejected) and campaign sender-selection validation
-- [ ] 9.3 Tests for the inbound webhook (signature rejection, opt-out → suppression, quality-rating update)
+- [x] 9.3 Tests for the inbound webhook (signature rejection, opt-out → suppression, quality-rating update)
 - [ ] 9.4 Unit tests for the smart-agent reply path: reply generated within the window, `maxReplies` cap halts further replies, closed 24h window forbids free-form text, opt-out intent in conversation suppresses the account
 - [ ] 9.5 e2e: create integration + sender → create WHATSAPP campaign → tick dispatches via the emulator and records a gestión with the Meta message id as providerRef

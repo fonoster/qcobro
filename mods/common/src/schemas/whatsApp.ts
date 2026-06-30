@@ -76,7 +76,11 @@ const whatsAppChangeValueSchema = z.object({
     })
     .optional(),
   messages: z.array(whatsAppInboundMessageSchema).optional(),
-  statuses: z.array(whatsAppStatusSchema).optional()
+  statuses: z.array(whatsAppStatusSchema).optional(),
+  // Quality-rating callbacks: phone_number_id is at the value root, not under metadata.
+  phone_number_id: z.string().optional(),
+  event: z.string().optional(),
+  new_quality_rating: z.string().optional()
 });
 
 const whatsAppChangeSchema = z.object({
