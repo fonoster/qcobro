@@ -45,8 +45,36 @@
         <a class="nav__login" href="https://app.qcobro.com">Iniciar sesión</a>
         <button type="button" class="btn btn--primary" data-demo-open>Solicitar demo</button>
       </div>
+      <button class="nav__hamburger" id="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
+        <i data-lucide="menu"></i>
+      </button>
     </div>
   </header>
+
+  <!-- ═══════════════ MOBILE MENU ═══════════════ -->
+  <div class="nav__mobile-menu" id="nav-mobile-menu" aria-hidden="true">
+    <div class="nav__mobile-backdrop" id="nav-mobile-backdrop"></div>
+    <div class="nav__mobile-panel">
+      <div class="nav__mobile-header">
+        <a class="nav__logo" href="#top">
+          <span class="nav__logo-text">QCobro</span>
+          <span class="nav__logo-sub">by Fonoster</span>
+        </a>
+        <button class="nav__mobile-close" id="nav-mobile-close" aria-label="Cerrar menú">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <nav class="nav__mobile-links">
+        <a href="#como">Cómo funciona</a>
+        <a href="#precios">Precios</a>
+        <a href="#integraciones">Integraciones</a>
+        <a href="https://docs.qcobro.com">Documentación</a>
+      </nav>
+      <div class="nav__mobile-cta">
+        <button type="button" class="btn btn--primary" style="width:100%" data-demo-open>Solicitar demo</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ═══════════════ HERO (full green) ═══════════════ -->
   <section class="hero">
@@ -310,7 +338,7 @@
   <footer class="footer">
     <div class="footer__logo"><span class="footer__logo-text">QCobro</span><span class="footer__logo-sub">by Fonoster</span></div>
     <p class="footer__copy">© 2026 Fonoster, Inc. Todos los derechos reservados.</p>
-    <div class="footer__links"><a href="https://docs.qcobro.com">Documentación</a><a href="#">Privacidad</a><a href="#">Términos</a><a href="#">Contacto</a></div>
+    <div class="footer__links"><a href="https://docs.qcobro.com">Documentación</a><a href="brand.html">Kit de Marca</a><a href="#">Privacidad</a><a href="#">Términos</a><a href="#">Contacto</a></div>
   </footer>
 
   <!-- ═══════════════ DEMO MODAL ═══════════════ -->
@@ -419,6 +447,27 @@
     });
     audio.addEventListener('ended', function () { card.classList.remove('is-playing'); });
 
+    // ─── Mobile menu ───
+    var navToggle = document.getElementById('nav-toggle');
+    var navMobileMenu = document.getElementById('nav-mobile-menu');
+    var navMobileClose = document.getElementById('nav-mobile-close');
+    var navMobileBackdrop = document.getElementById('nav-mobile-backdrop');
+    function openMobileMenu() {
+      navMobileMenu.classList.add('is-open');
+      navMobileMenu.setAttribute('aria-hidden', 'false');
+      navToggle.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMobileMenu() {
+      navMobileMenu.classList.remove('is-open');
+      navMobileMenu.setAttribute('aria-hidden', 'true');
+      navToggle.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    }
+    navToggle.addEventListener('click', openMobileMenu);
+    navMobileClose.addEventListener('click', closeMobileMenu);
+    navMobileBackdrop.addEventListener('click', closeMobileMenu);
+
     // ─── Demo modal ───
     var modal = document.getElementById('demo-modal');
     function openModal() {
@@ -440,7 +489,10 @@
       el.addEventListener('click', closeModal);
     });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+      if (e.key === 'Escape') {
+        if (modal.classList.contains('is-open')) closeModal();
+        closeMobileMenu();
+      }
     });
 
     // ─── Form validation + submit ───
