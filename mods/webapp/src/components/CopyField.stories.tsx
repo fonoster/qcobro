@@ -16,7 +16,7 @@ const meta: Meta<typeof CopyField> = {
     )
   ],
   args: {
-    value: "WO7f3a92b1c4e8d6051a2b9c8d7e6f5a4b"
+    value: "WO6ueex0qan9ojhf820wgiae3qi5luy08y"
   }
 };
 

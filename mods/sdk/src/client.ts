@@ -61,8 +61,8 @@ export interface ClientOptions {
  * @example
  * ```ts
  * const client = new Client();
- * await client.login({ email: "me@acme.com", password: "secret" });
- * client.useWorkspace("ws_123");
+ * await client.login({ email: "me@acme.com", password: process.env.QCOBRO_PASSWORD! });
+ * client.useWorkspace("WO6ueex0qan9ojhf820wgiae3qi5luy08y");
  *
  * await client.portfolios.create({ name: "Q3 delinquencies", clientId: "acme" });
  * const portfolios = await client.portfolios.list();
@@ -180,7 +180,7 @@ export class Client {
    * @example
    * ```ts
    * await client.loginWithApiKey({
-   *   accessKeyId: "ak_workspace_123",
+   *   accessKeyId: "WO6ueex0qan9ojhf820wgiae3qi5luy08y",
    *   accessKeySecret: process.env.QCOBRO_API_SECRET!
    * });
    * ```

@@ -32,7 +32,7 @@ No requiere interacción de una persona.
 
 ```ts
 await client.loginWithApiKey({
-  accessKeyId: "WO7f3a92b1...",
+  accessKeyId: "WO6ueex0qan9ojhf820wgiae3qi5luy08y",
   accessKeySecret: process.env.QCOBRO_API_SECRET!
 });
 ```
@@ -48,7 +48,7 @@ Casi todos los métodos están **acotados a un workspace**: el cliente debe esta
 tener un workspace activo seleccionado. Elígelo con `useWorkspace`, pasando su `accessKeyId`.
 
 ```ts
-client.useWorkspace("WO7f3a92b1...");
+client.useWorkspace("WO6ueex0qan9ojhf820wgiae3qi5luy08y");
 
 // A partir de aquí, las llamadas actúan dentro de ese workspace.
 const portfolios = await client.portfolios.list();
@@ -91,7 +91,7 @@ al constructor — útil cuando ya tienes tokens persistidos.
 const client = new Client({
   accessToken: savedAccessToken,
   refreshToken: savedRefreshToken,
-  workspace: "WO7f3a92b1..."
+  workspace: "WO6ueex0qan9ojhf820wgiae3qi5luy08y"
 });
 ```
 

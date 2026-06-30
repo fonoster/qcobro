@@ -25,11 +25,11 @@ const client = new Client({ endpoint: "https://api.qcobro.com" });
 
 // Authenticate and pick the workspace to act in.
 await client.login({ email: "me@acme.com", password: process.env.QCOBRO_PASSWORD! });
-client.useWorkspace("WO7f3a92b1c4d5e6f"); // workspace accessKeyId from the QCobro console
+client.useWorkspace("WO6ueex0qan9ojhf820wgiae3qi5luy08y");
 
 // ...or, for unattended/server-to-server integrations, use a workspace API key:
 await client.loginWithApiKey({
-  accessKeyId: "WO4e2c8d1a9b3f5c7e",
+  accessKeyId: "WO6ueex0qan9ojhf820wgiae3qi5luy08y",
   accessKeySecret: process.env.QCOBRO_API_SECRET!
 });
 
