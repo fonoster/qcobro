@@ -221,37 +221,87 @@ model EmailConfig {
 }
 
 model WhatsAppConfig {
-  templateId   String        @id
-  templateName String
-  messageBody  String
-  template     AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  templateId     String        @id
+  // The Meta-side template id the operator enters; QCobro resolves + previews from the WABA.
+  metaTemplateId String        @default("")
+  templateName   String
+  messageBody    String
+  // Smart-agent decision brain for replies after the customer responds (mirrors EmailConfig).
+  systemPrompt   String        @default("")
+  // Per-agent cap on automated replies per gestión; null → deployment default.
+  maxReplies     Int?
+  template       AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@map("whatsapp_configs")
 }
 
 model Campaign {
-  id                    String                 @id @default(uuid())
-  workspaceRef          String
-  name                  String
-  agentTemplateId       String
-  status                CampaignStatus         @default(ACTIVE)
-  startDate             DateTime
-  endDate               DateTime?
-  startTime             String
-  endTime               String
-  daysOfWeek            Int[]
-  maxAttemptsPerAccount Int
-  maxAttemptsPerDay     Int
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  agentTemplate         AgentTemplate          @relation(fields: [agentTemplateId], references: [id])
-  portfolios            CampaignPortfolio[]
-  triggers              CampaignTrigger[]
-  accountStates         CampaignAccountState[]
-  contactLogs           AccountContactLog[]
+  id                     String                 @id @default(uuid())
+  workspaceRef           String
+  name                   String
+  agentTemplateId        String
+  status                 CampaignStatus         @default(ACTIVE)
+  startDate              DateTime
+  endDate                DateTime?
+  startTime              String
+  endTime                String
+  daysOfWeek             Int[]
+  maxAttemptsPerAccount  Int
+  maxAttemptsPerDay      Int
+  // WhatsApp campaigns send from one explicitly chosen sender number (not the random
+  // global pool used by voice/SMS). Null for non-WhatsApp campaigns.
+  whatsAppSenderNumberId String?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  agentTemplate          AgentTemplate          @relation(fields: [agentTemplateId], references: [id])
+  whatsAppSenderNumber   WhatsAppSenderNumber?  @relation(fields: [whatsAppSenderNumberId], references: [id])
+  portfolios             CampaignPortfolio[]
+  triggers               CampaignTrigger[]
+  accountStates          CampaignAccountState[]
+  contactLogs            AccountContactLog[]
 
   @@index([workspaceRef])
   @@map("campaigns")
+}
+
+// Per-workspace WhatsApp Business Account (WABA) — QCobro's first tenant-provided secret.
+// At most one per workspace. The access token is encrypted at rest via prisma-field-encryption
+// (the Fonoster/Routr "cloak" pattern); it is never returned to clients or logged in plaintext.
+model WhatsAppIntegration {
+  id              String                 @id @default(uuid())
+  workspaceRef    String                 @unique
+  wabaId          String
+  /// @encrypted
+  accessToken     String
+  verifyToken     String
+  // Meta template-send language for this workspace's WhatsApp (e.g. es_DO); the single
+  // source for the WhatsApp send language. Lives here so all WhatsApp config is together.
+  defaultLanguage String
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  senderNumbers   WhatsAppSenderNumber[]
+
+  @@map("whatsapp_integrations")
+}
+
+// A WhatsApp sender number under a workspace's integration. phoneNumberId is globally
+// unique so inbound webhook events resolve to exactly one workspace + sender. `capabilities`
+// is a flag set ({ messaging, calling }) — messaging now, calling reserved for WhatsApp Voice.
+model WhatsAppSenderNumber {
+  id            String              @id @default(uuid())
+  workspaceRef  String
+  phoneNumberId String              @unique
+  displayNumber String
+  label         String
+  qualityRating String?
+  capabilities  Json
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  integration   WhatsAppIntegration @relation(fields: [workspaceRef], references: [workspaceRef], onDelete: Cascade)
+  campaigns     Campaign[]
+
+  @@index([workspaceRef])
+  @@map("whatsapp_sender_numbers")
 }
 
 model CampaignPortfolio {

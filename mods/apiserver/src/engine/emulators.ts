@@ -3,7 +3,10 @@ import type {
   SmsClient,
   EmailClient,
   EmailSendInput,
-  OutboundCallInput
+  OutboundCallInput,
+  WhatsAppClient,
+  WhatsAppFetchedTemplate,
+  WhatsAppSendTemplateInput
 } from "@qcobro/common";
 
 /**
@@ -17,18 +20,22 @@ import type {
 
 /** A single recorded would-be dispatch. */
 export interface EmulatedDispatch {
-  channel: "voice" | "sms" | "email";
+  channel: "voice" | "sms" | "email" | "whatsapp";
   to: string;
   from: string;
   ref: string;
   /** Voice only: the application ref + per-call metadata. */
   appRef?: string;
   metadata?: Record<string, string>;
-  /** SMS / EMAIL: the rendered body. */
+  /** SMS / EMAIL / WHATSAPP: the rendered body. */
   body?: string;
   /** EMAIL only: subject + the per-attempt reply-to address. */
   subject?: string;
   replyTo?: string;
+  /** WHATSAPP only: template send-kind ("template" opener vs free-form "text" reply) + named params. */
+  kind?: "template" | "text";
+  templateName?: string;
+  params?: Array<{ parameterName: string; text: string }>;
 }
 
 /** Emulated Fonoster outbound-call client. */
@@ -94,5 +101,59 @@ export class EmulatedEmailClient implements EmailClient {
       ref: id
     });
     return { id };
+  }
+}
+
+/**
+ * Emulated Meta WhatsApp client. Records each opener (`sendTemplate`) and free-form reply
+ * (`sendText`) and returns a deterministic message id, so tests assert on the recorded log
+ * without a live Graph API. `fetchTemplate` returns a canned approved template (or the
+ * configured map) to back the modal-preview path.
+ */
+export class EmulatedWhatsAppClient implements WhatsAppClient {
+  readonly messages: EmulatedDispatch[] = [];
+  private seq = 0;
+
+  constructor(
+    private readonly opts: {
+      fail?: boolean;
+      /** Provider-ready sender shown in the recorded log; the real client has it implicit. */
+      from?: string;
+      /** Templates returned by `fetchTemplate`, keyed by template id. */
+      templates?: Record<string, WhatsAppFetchedTemplate>;
+    } = {}
+  ) {}
+
+  async sendTemplate(input: WhatsAppSendTemplateInput): Promise<{ id: string }> {
+    if (this.opts.fail) throw new Error("emulated whatsapp dispatch failure");
+    const id = `sim-wa-${++this.seq}`;
+    this.messages.push({
+      channel: "whatsapp",
+      to: input.to,
+      from: this.opts.from ?? "",
+      ref: id,
+      kind: "template",
+      templateName: input.templateName,
+      params: input.params
+    });
+    return { id };
+  }
+
+  async sendText(input: { to: string; body: string }): Promise<{ id: string }> {
+    if (this.opts.fail) throw new Error("emulated whatsapp dispatch failure");
+    const id = `sim-wa-${++this.seq}`;
+    this.messages.push({
+      channel: "whatsapp",
+      to: input.to,
+      from: this.opts.from ?? "",
+      ref: id,
+      kind: "text",
+      body: input.body
+    });
+    return { id };
+  }
+
+  async fetchTemplate(templateId: string): Promise<WhatsAppFetchedTemplate | null> {
+    return this.opts.templates?.[templateId] ?? null;
   }
 }

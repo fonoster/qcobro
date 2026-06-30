@@ -34,6 +34,14 @@ export const createCampaignSchema = z
     name: z.string().min(1).max(120),
     agentTemplateId: z.string().min(1),
     portfolioIds: z.array(z.string().min(1)).min(1),
+    /**
+     * The WhatsApp sender number to send from. Required when the agent template is
+     * `WHATSAPP` (quality rating and conversation continuity are per-number, so the
+     * sender identity is chosen per campaign, not pooled like voice/SMS) and must be
+     * omitted otherwise. The cross-field rule is enforced in `createCampaign` against the
+     * template's resolved type.
+     */
+    whatsAppSenderNumberId: z.string().min(1).optional(),
     startDate: z.string().min(1),
     endDate: z.string().min(1).optional(),
     daysOfWeek,

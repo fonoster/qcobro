@@ -14,6 +14,23 @@ export function renderTemplate(template: string, context: Record<string, unknown
 }
 
 /**
+ * Extracts the distinct simple placeholder names from a template, in first-seen order
+ * (e.g. `"Hola {{firstName}}, saldo {{outstandingBalance}}"` → `["firstName",
+ * "outstandingBalance"]`). Block helpers like `{{#if}}`/`{{/if}}` are ignored. Used to
+ * turn a WhatsApp template body into Meta **named** parameters: each token becomes a
+ * `{ parameter_name, text }` pair rendered against the customer context.
+ */
+export function extractTemplateTokens(template: string): string[] {
+  const tokens: string[] = [];
+  const re = /\{\{\s*([A-Za-z_][\w.]*)\s*\}\}/g;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(template)) !== null) {
+    if (!tokens.includes(match[1])) tokens.push(match[1]);
+  }
+  return tokens;
+}
+
+/**
  * Builds the render context exposed to outreach templates: every account field
  * plus derived `firstName` (first token of `fullName`), `currency` (the
  * workspace's currency from WorkspaceSettings), and `isDue` (whether the account

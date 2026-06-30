@@ -1,7 +1,13 @@
 import { z } from "zod";
 
 /** The channels the dispatch layer triggers (subset of AgentType). */
-export const dispatchChannelSchema = z.enum(["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL"]);
+export const dispatchChannelSchema = z.enum([
+  "VOICE_AI",
+  "VOICE_PRERECORDED",
+  "SMS",
+  "EMAIL",
+  "WHATSAPP"
+]);
 
 /**
  * A normalized dispatch request: a channel, a destination, the render context
@@ -24,10 +30,15 @@ export const dispatchOutreachSchema = z
     firstMessage: z.string().optional(),
     /** Voz pregrabada: the whole spoken script template (locuted via TTS). */
     script: z.string().optional(),
-    /** SMS / EMAIL: message body template. */
+    /** SMS / EMAIL / WHATSAPP: message body template. For WHATSAPP this is the fetched
+     * template body whose `{{vars}}` are extracted and sent as named parameters. */
     body: z.string().optional(),
     /** EMAIL: subject line template. */
-    subject: z.string().optional()
+    subject: z.string().optional(),
+    /** WHATSAPP: Meta-approved template name to send. */
+    templateName: z.string().optional(),
+    /** WHATSAPP: Meta template-send language code (sourced from the workspace, e.g. `es_DO`). */
+    languageCode: z.string().optional()
   })
   .superRefine((value, ctx) => {
     if (value.channel === "SMS" && (value.body ?? "").length === 0) {
@@ -39,6 +50,29 @@ export const dispatchOutreachSchema = z
       }
       if ((value.body ?? "").length === 0) {
         ctx.addIssue({ code: "custom", path: ["body"], message: "Email requires a body" });
+      }
+    }
+    if (value.channel === "WHATSAPP") {
+      if ((value.templateName ?? "").length === 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["templateName"],
+          message: "WhatsApp requires a templateName"
+        });
+      }
+      if ((value.languageCode ?? "").length === 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["languageCode"],
+          message: "WhatsApp requires a languageCode"
+        });
+      }
+      if ((value.body ?? "").length === 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["body"],
+          message: "WhatsApp requires a template body for parameter extraction"
+        });
       }
     }
     // Voice dispatch needs the synced application ref. Neither voice channel requires a

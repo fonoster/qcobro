@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
   dispatchOutreachSchema,
+  extractTemplateTokens,
   pickRandomNumber,
   renderTemplate,
   withErrorHandlingAndValidation,
@@ -60,6 +61,37 @@ export function createDispatchOutreach(deps: DispatchDeps) {
         to: params.to,
         renderedBody,
         renderedSubject: subject
+      };
+    }
+
+    if (params.channel === "WHATSAPP") {
+      // The messaging client is resolved per-call from the owning workspace's integration
+      // (credentials are tenant-owned, so it cannot be injected once at boot like the
+      // voice/SMS pools); the caller passes it in. The opener is an approved template:
+      // the body's {{vars}} become Meta named parameters, rendered against the context.
+      if (!deps.whatsAppClient) {
+        throw new Error(
+          "WhatsApp dispatch is not configured (missing or unresolved workspace integration)"
+        );
+      }
+      const from = params.from ?? "";
+      const body = params.body ?? "";
+      const namedParams = extractTemplateTokens(body).map((token) => ({
+        parameterName: token,
+        text: renderTemplate(`{{${token}}}`, params.context)
+      }));
+      const { id } = await deps.whatsAppClient.sendTemplate({
+        to: params.to,
+        templateName: params.templateName as string,
+        languageCode: params.languageCode as string,
+        params: namedParams
+      });
+      return {
+        channel: "WHATSAPP",
+        providerRef: id,
+        from,
+        to: params.to,
+        renderedBody: renderTemplate(body, params.context)
       };
     }
 

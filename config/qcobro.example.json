@@ -63,6 +63,13 @@
     "maxEmailsPerMinute": 60,
     "maxRepliesDefault": 3
   },
+  "security": {
+    "cloakEncryptionKey": "k1.aesgcm256.CHANGE_ME_base64_32_byte_key="
+  },
+  "whatsapp": {
+    "apiBaseUrl": "https://graph.facebook.com",
+    "apiVersion": "v18.0"
+  },
   "engine": {
     "enabled": true,
     "tickSeconds": 60

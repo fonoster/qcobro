@@ -97,6 +97,12 @@ export interface CampaignClient {
     }): Promise<{ id: string; workspaceRef: string; type: AgentType } | null>;
   };
 
+  whatsAppSenderNumber: {
+    findUnique(args: {
+      where: { id: string };
+    }): Promise<{ id: string; workspaceRef: string } | null>;
+  };
+
   campaign: {
     findMany(args: {
       where: { workspaceRef: string; status?: CampaignStatus | { notIn: CampaignStatus[] } };

@@ -302,6 +302,26 @@ export const qcobroConfigSchema = z.object({
   tts: ttsConfigSchema,
   announcement: announcementConfigSchema,
   /**
+   * Secret-at-rest. `cloakEncryptionKey` is a versioned AES-GCM-256 key
+   * (`k1.aesgcm256.<base64-32-byte>`) used by `prisma-field-encryption` (the Fonoster/Routr
+   * "cloak" pattern) to encrypt tenant-provided secrets — today the WhatsApp WABA access
+   * token. Optional: when absent, features that store tenant secrets (the Workspace
+   * Integrations area) are disabled rather than crashing boot. Only the *key* is global; the
+   * *secret* is per-workspace in the DB.
+   */
+  security: z.object({ cloakEncryptionKey: z.string().min(1).optional() }).optional(),
+  /**
+   * WhatsApp (Meta Cloud API) connection defaults. Per-workspace credentials (WABA id +
+   * access token) live in the DB, not here — only the shared Graph API base/version are
+   * deployment config.
+   */
+  whatsapp: z
+    .object({
+      apiBaseUrl: z.string().url().default("https://graph.facebook.com"),
+      apiVersion: z.string().default("v18.0")
+    })
+    .default({ apiBaseUrl: "https://graph.facebook.com", apiVersion: "v18.0" }),
+  /**
    * Campaigns engine. The autonomous in-process loop that originates campaign
    * outreach. Disabled by default so it never auto-dials in local development;
    * enable it in production. Per-channel pacing lives in the `fonoster`/`twilio`

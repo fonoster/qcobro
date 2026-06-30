@@ -6,7 +6,7 @@
  */
 
 /** Channels the dispatch layer can trigger. */
-export type DispatchChannel = "VOICE_AI" | "VOICE_PRERECORDED" | "SMS" | "EMAIL";
+export type DispatchChannel = "VOICE_AI" | "VOICE_PRERECORDED" | "SMS" | "EMAIL" | "WHATSAPP";
 
 /** Inputs for originating an outbound voice call (Fonoster). */
 export interface OutboundCallInput {
@@ -73,6 +73,52 @@ export interface EmailClient {
   getReceivedEmail?(id: string): Promise<ReceivedEmail | null>;
 }
 
+/** A single named WhatsApp template parameter (`{ parameter_name, text }` at the Meta boundary). */
+export interface WhatsAppTemplateParam {
+  parameterName: string;
+  text: string;
+}
+
+/** Inputs for sending a Meta-approved WhatsApp template (the conversation opener). */
+export interface WhatsAppSendTemplateInput {
+  /** Destination number (E.164, no `+` is added here — pass provider-ready). */
+  to: string;
+  /** Meta-approved template name. */
+  templateName: string;
+  /** Meta template-send language code (e.g. `es_DO`), sourced from the workspace. */
+  languageCode: string;
+  /** Named body parameters; matched to the template's `{{placeholders}}` by name. */
+  params: WhatsAppTemplateParam[];
+}
+
+/**
+ * A WhatsApp template resolved from Meta by id. Backs the agent-template modal's
+ * read-only preview and the stored `templateName`/`messageBody`.
+ */
+export interface WhatsAppFetchedTemplate {
+  id: string;
+  name: string;
+  language: string;
+  /** Template body text with `{{placeholders}}`. */
+  body: string;
+  /** Meta approval status (e.g. `APPROVED`, `PENDING`, `REJECTED`). */
+  status: string;
+}
+
+/**
+ * WhatsApp messaging port (Meta Cloud API). Resolved per-call from the owning
+ * workspace's integration + selected sender, because credentials are tenant-owned and
+ * cannot be injected once at boot like the voice/SMS pools.
+ */
+export interface WhatsAppClient {
+  /** Send an approved template (the opener); resolves with the provider message id. */
+  sendTemplate(input: WhatsAppSendTemplateInput): Promise<{ id: string }>;
+  /** Send a free-form reply, valid only inside Meta's 24h window; resolves with the message id. */
+  sendText(input: { to: string; body: string }): Promise<{ id: string }>;
+  /** Fetch a template by id (modal preview / config-time resolution). */
+  fetchTemplate(templateId: string): Promise<WhatsAppFetchedTemplate | null>;
+}
+
 /** Picks a sending number from a configured pool. Injectable for determinism. */
 export type NumberSelector = (numbers: string[]) => string;
 
@@ -97,6 +143,12 @@ export interface DispatchDeps {
   smsClient: SmsClient | null;
   /** Email provider client; null/omitted when email is unconfigured. */
   emailClient?: EmailClient | null;
+  /**
+   * WhatsApp client for this dispatch. Resolved per-call from the owning workspace's
+   * integration + selected sender (decrypt token, build/cache client) and passed in;
+   * null/omitted when the dispatch is not WhatsApp or the workspace has no integration.
+   */
+  whatsAppClient?: WhatsAppClient | null;
   /** E.164 caller-ID pool for voice. */
   fonosterNumbers: string[];
   /** E.164 sender pool for SMS. */
