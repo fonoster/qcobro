@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.11.0](https://github.com/fonoster/qcobro/compare/v1.10.0...v1.11.0) (2026-06-30)
+
+### Bug Fixes
+
+- **webapp:** proactive silent token refresh — no more mid-session logouts ([6288a0b](https://github.com/fonoster/qcobro/commit/6288a0b6b0730710bbb70811febc457c757e67fd))
+
+### Features
+
+- **whatsapp:** web console — integrations page, agent modal, campaign sender, gestión thread ([7885031](https://github.com/fonoster/qcobro/commit/7885031a859d5dad9a4d6911181857e43f73f48e))
+
 # [1.10.0](https://github.com/fonoster/qcobro/compare/v1.9.0...v1.10.0) (2026-06-30)
 
 ### Features

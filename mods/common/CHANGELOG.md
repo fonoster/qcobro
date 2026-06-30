@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.11.0](https://github.com/fonoster/qcobro/compare/v1.10.0...v1.11.0) (2026-06-30)
+
+### Features
+
+- **whatsapp:** inbound autopilot — reply, opt-out, payment promise (§7.3, §7.4, §9.4) ([ef37a91](https://github.com/fonoster/qcobro/commit/ef37a9109909cb9e86ff3a787b5af06ed199fd78))
+- **whatsapp:** inbound event processing — opt-out suppression + quality-rating (§7.2, §9.3) ([974a9e3](https://github.com/fonoster/qcobro/commit/974a9e35d549e1baf6386ac6bcec40297c8ae703))
+- **whatsapp:** wire engine tick, webhook handshake, and unit tests (§6.2, §7.1, §9.1–9.2) ([a46bb1f](https://github.com/fonoster/qcobro/commit/a46bb1fd0f786e5856281da48d07f2f3249081e7))
+
 # [1.10.0](https://github.com/fonoster/qcobro/compare/v1.9.0...v1.10.0) (2026-06-30)
 
 ### Features
