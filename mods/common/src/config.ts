@@ -326,12 +326,18 @@ export const qcobroConfigSchema = z.object({
        * events. Optional: when absent, signature verification is skipped (not recommended
        * in production).
        */
-      appSecret: z.string().min(1).optional()
+      appSecret: z.string().min(1).optional(),
+      /**
+       * Default cap on autopilot replies per collection attempt (per gestión) when a
+       * WHATSAPP agent does not set its own `maxReplies`. Mirrors `resend.maxRepliesDefault`.
+       */
+      maxRepliesDefault: z.number().int().nonnegative().default(3)
     })
     .default({
       apiBaseUrl: "https://graph.facebook.com",
       apiVersion: "v18.0",
-      maxMessagesPerMinute: 60
+      maxMessagesPerMinute: 60,
+      maxRepliesDefault: 3
     }),
   /**
    * Campaigns engine. The autonomous in-process loop that originates campaign

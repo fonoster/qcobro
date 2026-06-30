@@ -1,10 +1,29 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Request, Response } from "express";
 import type { PrismaClient } from "@prisma/client";
-import { whatsAppWebhookSchema } from "@qcobro/common";
+import {
+  buildOutreachContext,
+  whatsAppWebhookSchema,
+  type AiConfig,
+  type PortfolioAccountRecord,
+  type WhatsAppClient
+} from "@qcobro/common";
+import {
+  createIngestWhatsAppMessage,
+  type WhatsAppGestionView,
+  type WhatsAppInboundClient
+} from "../functions/whatsApp/ingestWhatsAppMessage.js";
+import { createRecordOutcome } from "../functions/campaigns/recordOutcome.js";
+import { createWhatsAppAutopilot } from "../services/whatsAppAutopilot.js";
 
 export interface WhatsAppWebhookConfig {
   appSecret?: string;
+  ai?: AiConfig;
+  maxRepliesDefault?: number;
+  resolveWhatsApp?: (
+    workspaceRef: string,
+    phoneNumberId: string
+  ) => Promise<{ client: WhatsAppClient; languageCode: string } | null>;
 }
 
 /**
@@ -71,13 +90,88 @@ function isOptOut(status: StatusRecord): boolean {
 }
 
 /**
+ * Build the Prisma-backed {@link WhatsAppInboundClient} used by the ingest function.
+ * Loads the gestión by correlating via `phoneNumberId + customerPhone` (the most recent
+ * WHATSAPP gestión our sender dispatched to that number).
+ */
+function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAppInboundClient {
+  return {
+    async loadByPhoneAndSender(
+      phoneNumberId: string,
+      customerPhone: string
+    ): Promise<WhatsAppGestionView | null> {
+      // First resolve the sender number to its workspace.
+      const sender = await prisma.whatsAppSenderNumber.findUnique({
+        where: { phoneNumberId }
+      });
+      if (!sender) return null;
+
+      // Find the most recent WHATSAPP gestión for this workspace dispatched to that phone.
+      const log = await prisma.accountContactLog.findFirst({
+        where: {
+          agentType: "WHATSAPP",
+          channelData: { path: ["to"], equals: customerPhone },
+          campaign: { workspaceRef: sender.workspaceRef }
+        },
+        include: {
+          campaign: {
+            include: {
+              agentTemplate: { include: { whatsAppConfig: true } },
+              whatsAppSenderNumber: { select: { phoneNumberId: true } }
+            }
+          },
+          portfolioAccount: {
+            include: { portfolio: true }
+          }
+        },
+        orderBy: { contactedAt: "desc" }
+      });
+      if (!log || !log.portfolioAccount.phone) return null;
+
+      const whatsAppCfg = log.campaign?.agentTemplate?.whatsAppConfig ?? null;
+      const settings = await prisma.workspaceSettings.findUnique({
+        where: { workspaceRef: sender.workspaceRef }
+      });
+      return {
+        id: log.id,
+        portfolioAccountId: log.portfolioAccountId,
+        campaignId: log.campaignId,
+        debtAmountSnapshot: log.debtAmountSnapshot,
+        customerPhone,
+        workspaceRef: sender.workspaceRef,
+        phoneNumberId: log.campaign?.whatsAppSenderNumber?.phoneNumberId ?? phoneNumberId,
+        providerRef: log.providerRef,
+        channelData: (log.channelData as Record<string, unknown> | null) ?? null,
+        agentSystemPrompt: whatsAppCfg?.systemPrompt ?? "",
+        agentMaxReplies: whatsAppCfg?.maxReplies ?? null,
+        accountContext: buildOutreachContext(
+          log.portfolioAccount as unknown as PortfolioAccountRecord,
+          { currency: settings?.currency ?? "USD" }
+        )
+      };
+    },
+
+    async updateChannelData(id: string, channelData: Record<string, unknown>): Promise<void> {
+      await prisma.accountContactLog.update({
+        where: { id },
+        data: { channelData: channelData as never }
+      });
+    }
+  };
+}
+
+/**
  * Process a parsed Meta webhook body: quality-rating updates, opt-out mapping, and
- * (§7.3) inbound customer message routing.
+ * inbound customer message routing through the WhatsApp AI-reply autopilot.
  *
  * Runs after the 200 response is sent — Meta requires acknowledgement within 20 s.
  * Individual event errors are caught and logged; one bad event never blocks the rest.
  */
-async function processEvents(body: ReturnType<typeof whatsAppWebhookSchema.parse>, db: WebhookDb) {
+async function processEvents(
+  body: ReturnType<typeof whatsAppWebhookSchema.parse>,
+  db: WebhookDb,
+  ingest: ReturnType<typeof createIngestWhatsAppMessage>
+) {
   for (const entry of body.entry ?? []) {
     for (const change of entry.changes ?? []) {
       const field = change.field;
@@ -107,8 +201,6 @@ async function processEvents(body: ReturnType<typeof whatsAppWebhookSchema.parse
         if (!phoneNumberId) continue;
 
         // Opt-out signals: a failed delivery status with error code 131050.
-        // Walk each status; find the dispatched gestión by the Meta message id (providerRef)
-        // then mark the account OPT_OUT so it is suppressed across all future campaigns.
         for (const status of value.statuses ?? []) {
           if (!isOptOut(status)) continue;
           const log = await db.accountContactLog.findFirst({
@@ -129,11 +221,25 @@ async function processEvents(body: ReturnType<typeof whatsAppWebhookSchema.parse
           );
         }
 
-        // Inbound customer messages — §7.3 (AI-reply autopilot).
+        // Inbound customer messages — route through the AI-reply autopilot.
         for (const msg of value.messages ?? []) {
-          console.log(
-            `[whatsapp/webhook] inbound message (§7.3): from=${msg.from} id=${msg.id} phoneNumberId=${phoneNumberId}`
-          );
+          const text = msg.text?.body ?? "";
+          const result = await ingest({
+            from: msg.from,
+            metaMessageId: msg.id,
+            timestamp: msg.timestamp,
+            text,
+            phoneNumberId
+          });
+          if (result.matched) {
+            console.log(
+              `[whatsapp/webhook] inbound message: from=${msg.from} id=${msg.id} action=${result.action}`
+            );
+          } else {
+            console.log(
+              `[whatsapp/webhook] inbound message: from=${msg.from} id=${msg.id} — no gestión match`
+            );
+          }
         }
       } catch (err) {
         console.error(
@@ -158,10 +264,27 @@ async function processEvents(body: ReturnType<typeof whatsAppWebhookSchema.parse
  *   acknowledges immediately (Meta requires a 200 within 20 s), then processes:
  *   - quality_rating changes → update `WhatsAppSenderNumber.qualityRating`
  *   - failed-delivery statuses with error 131050 → mark account `OPT_OUT`
- *   - inbound customer messages → §7.3 AI-reply autopilot (stub)
+ *   - inbound customer messages → AI-reply autopilot (§7.3/§7.4)
  */
 export function createWhatsAppWebhookHandlers(prisma: PrismaClient, cfg: WhatsAppWebhookConfig) {
   const db = prisma as unknown as WebhookDb;
+
+  const autopilot = createWhatsAppAutopilot(cfg.ai);
+  const recordOutcome = createRecordOutcome(prisma as never);
+  const inboundClient = createPrismaWhatsAppInboundClient(prisma);
+  const ingest = createIngestWhatsAppMessage({
+    client: inboundClient,
+    autopilot,
+    recordOutcome,
+    getWhatsAppClient: cfg.resolveWhatsApp
+      ? async (workspaceRef, phoneNumberId) => {
+          const resolved = await cfg.resolveWhatsApp!(workspaceRef, phoneNumberId);
+          return resolved?.client ?? null;
+        }
+      : async () => null,
+    maxRepliesDefault: cfg.maxRepliesDefault ?? 3,
+    now: () => new Date()
+  });
 
   async function verify(req: Request, res: Response): Promise<void> {
     const mode = req.query["hub.mode"];
@@ -209,7 +332,7 @@ export function createWhatsAppWebhookHandlers(prisma: PrismaClient, cfg: WhatsAp
     }
 
     // Fire-and-forget after the ack; errors are caught inside processEvents.
-    processEvents(parsed.data, db).catch((err) =>
+    processEvents(parsed.data, db, ingest).catch((err) =>
       console.error("[whatsapp/webhook] processEvents threw:", err)
     );
   }

@@ -1,5 +1,24 @@
 import type { WhatsAppCapabilities } from "../schemas/whatsApp.js";
 
+/** One message in a WhatsApp conversation thread. */
+export interface WhatsAppThreadMessage {
+  direction: "outbound" | "inbound";
+  /** "agent" for outbound; the customer's E.164 number for inbound. */
+  from: string;
+  at: string;
+  body: string;
+  metaMessageId?: string;
+}
+
+/** The per-gestión WhatsApp conversation thread stored in `channelData.whatsAppThread`. */
+export interface WhatsAppThread {
+  customerPhone: string;
+  messages: WhatsAppThreadMessage[];
+  agentReplyCount: number;
+  /** ISO timestamp of the customer's last inbound message — drives the 24 h window check. */
+  lastCustomerMessageAt: string;
+}
+
 /**
  * DB record + client surfaces for the per-workspace WhatsApp integration. The
  * `accessToken` is encrypted at rest (cloak) and MUST NOT be returned to clients —

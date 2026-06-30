@@ -9,6 +9,7 @@ import { createContactLogHandler } from "./rest/contactLogs.js";
 import { createVoiceEventsHandler } from "./rest/voiceEvents.js";
 import { createEmailInboundHandler } from "./rest/emailInbound.js";
 import { createWhatsAppWebhookHandlers } from "./rest/whatsAppWebhook.js";
+import { resolveWhatsAppClient } from "./services/resolveWhatsAppClient.js";
 import { createInsightGenerator } from "./services/insightGenerator.js";
 import { synthesizeSpeech } from "./services/elevenLabsTts.js";
 import { startVoiceServer } from "./voice/voiceServer.js";
@@ -53,7 +54,13 @@ app.post(
 
 // Meta WhatsApp Business API webhook: GET for the verify-token handshake (subscribe
 // flow), POST for signed event delivery (customer messages, delivery receipts, opt-outs).
-const whatsapp = createWhatsAppWebhookHandlers(prisma, { appSecret: config.whatsapp?.appSecret });
+const whatsapp = createWhatsAppWebhookHandlers(prisma, {
+  appSecret: config.whatsapp?.appSecret,
+  ai: config.ai,
+  maxRepliesDefault: config.whatsapp?.maxRepliesDefault ?? 3,
+  resolveWhatsApp: (workspaceRef, phoneNumberId) =>
+    resolveWhatsAppClient(prisma as never, workspaceRef, config.whatsapp, phoneNumberId)
+});
 app.get("/api/whatsapp/webhook", (req, res) => void whatsapp.verify(req, res));
 app.post("/api/whatsapp/webhook", (req, res) => void whatsapp.events(req, res));
 
