@@ -7,8 +7,14 @@ export interface WhatsAppApiSettings {
   apiVersion: string;
 }
 
+export interface ResolvedWhatsApp {
+  client: WhatsAppClient;
+  /** Workspace-level `defaultLanguage` from the integration row (used as `languageCode` on sends). */
+  languageCode: string;
+}
+
 /**
- * Resolve a {@link WhatsAppClient} for one dispatch from the owning workspace's stored
+ * Resolve a {@link WhatsAppClient} and the workspace's default send language from the stored
  * integration. Credentials are tenant-owned, so the client cannot be injected once at boot
  * like the voice/SMS pools — it is built per-call here. The cloak extension transparently
  * decrypts `accessToken` on read; it is used only to construct the client and never returned.
@@ -22,14 +28,17 @@ export async function resolveWhatsAppClient(
   workspaceRef: string,
   api: WhatsAppApiSettings,
   phoneNumberId?: string
-): Promise<WhatsAppClient | null> {
+): Promise<ResolvedWhatsApp | null> {
   const integration = await db.whatsAppIntegration.findUnique({ where: { workspaceRef } });
   if (!integration) return null;
-  return new MetaWhatsAppClient({
-    phoneNumberId: phoneNumberId ?? "",
-    accessToken: integration.accessToken,
-    wabaId: integration.wabaId,
-    apiBaseUrl: api.apiBaseUrl,
-    apiVersion: api.apiVersion
-  });
+  return {
+    client: new MetaWhatsAppClient({
+      phoneNumberId: phoneNumberId ?? "",
+      accessToken: integration.accessToken,
+      wabaId: integration.wabaId,
+      apiBaseUrl: api.apiBaseUrl,
+      apiVersion: api.apiVersion
+    }),
+    languageCode: integration.defaultLanguage
+  };
 }

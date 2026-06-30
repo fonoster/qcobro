@@ -72,6 +72,8 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
       voicePerMinute: 0,
       smsPerMinute: 60,
       emailPerMinute: 0,
+      whatsAppPerMinute: 0,
+      resolveWhatsApp: async () => null,
       tickSeconds: 60
     });
   }

@@ -17,7 +17,8 @@ export function createPrismaEngineClient(prisma: PrismaClient): EngineClient {
               voiceAiConfig: true,
               voicePrerecordedConfig: true,
               smsConfig: true,
-              emailConfig: true
+              emailConfig: true,
+              whatsAppConfig: true
             }
           },
           portfolios: { select: { portfolioId: true } }
@@ -62,10 +63,17 @@ export function createPrismaEngineClient(prisma: PrismaClient): EngineClient {
                     systemPrompt: c.agentTemplate.emailConfig.systemPrompt,
                     maxReplies: c.agentTemplate.emailConfig.maxReplies
                   }
+                : null,
+              whatsAppConfig: c.agentTemplate.whatsAppConfig
+                ? {
+                    templateName: c.agentTemplate.whatsAppConfig.templateName,
+                    messageBody: c.agentTemplate.whatsAppConfig.messageBody
+                  }
                 : null
             }
           : null,
-        portfolios: c.portfolios
+        portfolios: c.portfolios,
+        whatsAppSenderNumberId: c.whatsAppSenderNumberId
       }));
     },
 

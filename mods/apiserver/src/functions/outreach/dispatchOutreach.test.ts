@@ -1,13 +1,14 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import type { DispatchDeps } from "@qcobro/common";
+import type { DispatchDeps, WhatsAppSendTemplateInput } from "@qcobro/common";
 import { createDispatchOutreach } from "./dispatchOutreach.js";
 
 function makeDeps(overrides: Partial<DispatchDeps> = {}) {
-  const calls: { sms: unknown[]; voice: unknown[]; email: unknown[] } = {
+  const calls: { sms: unknown[]; voice: unknown[]; email: unknown[]; whatsapp: unknown[] } = {
     sms: [],
     voice: [],
-    email: []
+    email: [],
+    whatsapp: []
   };
   const deps: DispatchDeps = {
     smsClient: {
@@ -29,6 +30,17 @@ function makeDeps(overrides: Partial<DispatchDeps> = {}) {
       }
     },
     emailFrom: { email: "cobranza@mikro.do", name: "Mikro", inboundDomain: "inbound.mikro.do" },
+    whatsAppClient: {
+      sendTemplate: async (input: WhatsAppSendTemplateInput) => {
+        calls.whatsapp.push(input);
+        return { id: "wamid-1" };
+      },
+      sendText: async (input: { to: string; body: string }) => {
+        calls.whatsapp.push(input);
+        return { id: "wamid-2" };
+      },
+      fetchTemplate: async () => null
+    },
     fonosterNumbers: ["+50611111111"],
     twilioFromNumbers: ["+15550001111"],
     // Deterministic selection for assertions.
@@ -182,5 +194,68 @@ describe("dispatchOutreach", () => {
       })
     );
     assert.equal(calls.voice.length, 0);
+  });
+
+  it("WHATSAPP sends the template with named params extracted from the message body", async () => {
+    const { deps, calls } = makeDeps();
+    const result = await createDispatchOutreach(deps)({
+      channel: "WHATSAPP",
+      to: "+50670000000",
+      context: { firstName: "Ana", outstandingBalance: 1500 },
+      templateName: "recordatorio_pago",
+      languageCode: "es_DO",
+      body: "Hola {{firstName}}, su saldo es {{outstandingBalance}}"
+    });
+
+    assert.equal(calls.whatsapp.length, 1);
+    const sent = calls.whatsapp[0] as {
+      to: string;
+      templateName: string;
+      languageCode: string;
+      params: Array<{ parameterName: string; text: string }>;
+    };
+    assert.equal(sent.to, "+50670000000");
+    assert.equal(sent.templateName, "recordatorio_pago");
+    assert.equal(sent.languageCode, "es_DO");
+    // Each {{var}} in the body becomes a named parameter rendered against the context.
+    assert.deepEqual(sent.params, [
+      { parameterName: "firstName", text: "Ana" },
+      { parameterName: "outstandingBalance", text: "1500" }
+    ]);
+    assert.equal(result.channel, "WHATSAPP");
+    assert.equal(result.providerRef, "wamid-1");
+    assert.equal(result.renderedBody, "Hola Ana, su saldo es 1500");
+  });
+
+  it("WHATSAPP with no template variables sends an empty params array", async () => {
+    const { deps, calls } = makeDeps();
+    await createDispatchOutreach(deps)({
+      channel: "WHATSAPP",
+      to: "+50670000000",
+      context: {},
+      templateName: "saludo_fijo",
+      languageCode: "es_DO",
+      body: "Hola, le recordamos su pago pendiente."
+    });
+
+    const sent = calls.whatsapp[0] as { params: unknown[] };
+    assert.deepEqual(sent.params, []);
+  });
+
+  it("WHATSAPP fails clearly when the workspace integration is not resolved", async () => {
+    const { deps, calls } = makeDeps({ whatsAppClient: null });
+    await assert.rejects(
+      () =>
+        createDispatchOutreach(deps)({
+          channel: "WHATSAPP",
+          to: "+50670000000",
+          context: {},
+          templateName: "recordatorio_pago",
+          languageCode: "es_DO",
+          body: "Hola {{firstName}}"
+        }),
+      /not configured/
+    );
+    assert.equal(calls.whatsapp.length, 0);
   });
 });

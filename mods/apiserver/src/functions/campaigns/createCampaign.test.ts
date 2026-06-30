@@ -16,7 +16,17 @@ const VALID = {
   maxAttemptsPerDay: 2
 };
 
-function makeClient(templateWorkspace: string | null = "ws-1") {
+interface MakeClientOpts {
+  templateWorkspace?: string | null;
+  templateType?: string;
+  senderNumber?: { id: string; workspaceRef: string } | null;
+}
+
+function makeClient({
+  templateWorkspace = "ws-1",
+  templateType = "SMS",
+  senderNumber = undefined
+}: MakeClientOpts = {}) {
   let createdCampaign: Record<string, unknown> | null = null;
   let portfolioLinks: Array<{ campaignId: string; portfolioId: string }> = [];
 
@@ -24,8 +34,11 @@ function makeClient(templateWorkspace: string | null = "ws-1") {
     agentTemplate: {
       findFirst: async () =>
         templateWorkspace
-          ? ({ id: "tmpl-1", workspaceRef: templateWorkspace, type: "SMS" } as never)
+          ? ({ id: "tmpl-1", workspaceRef: templateWorkspace, type: templateType } as never)
           : null
+    },
+    whatsAppSenderNumber: {
+      findUnique: async () => senderNumber ?? null
     },
     campaign: {
       create: async (args: { data: Record<string, unknown> }) => {
@@ -47,7 +60,7 @@ function makeClient(templateWorkspace: string | null = "ws-1") {
 
 describe("createCampaign", () => {
   it("creates an ACTIVE campaign with its days and links portfolios", async () => {
-    const { client, stats } = makeClient("ws-1");
+    const { client, stats } = makeClient();
     const fn = createCreateCampaign(client as never, "ws-1");
 
     const result = await fn(VALID);
@@ -63,33 +76,76 @@ describe("createCampaign", () => {
   });
 
   it("rejects an empty portfolio list", async () => {
-    const { client } = makeClient("ws-1");
+    const { client } = makeClient();
     const fn = createCreateCampaign(client as never, "ws-1");
 
     await assert.rejects(() => fn({ ...VALID, portfolioIds: [] }), ValidationError);
   });
 
   it("rejects an empty days-of-week set", async () => {
-    const { client } = makeClient("ws-1");
+    const { client } = makeClient();
     const fn = createCreateCampaign(client as never, "ws-1");
 
     await assert.rejects(() => fn({ ...VALID, daysOfWeek: [] }), ValidationError);
   });
 
   it("rejects a template from another workspace", async () => {
-    const { client } = makeClient(null); // findFirst (scoped to ws-1) returns null
+    const { client } = makeClient({ templateWorkspace: null }); // findFirst (scoped to ws-1) returns null
     const fn = createCreateCampaign(client as never, "ws-1");
 
     await assert.rejects(() => fn(VALID), ValidationError);
   });
 
   it("rejects an end date before the start date", async () => {
-    const { client } = makeClient("ws-1");
+    const { client } = makeClient();
     const fn = createCreateCampaign(client as never, "ws-1");
 
     await assert.rejects(
       () => fn({ ...VALID, startDate: "2026-08-01", endDate: "2026-07-01" }),
       ValidationError
     );
+  });
+
+  it("WHATSAPP campaign stores the selected sender number id", async () => {
+    const { client, stats } = makeClient({
+      templateType: "WHATSAPP",
+      senderNumber: { id: "snd-1", workspaceRef: "ws-1" }
+    });
+    const fn = createCreateCampaign(client as never, "ws-1");
+
+    const result = await fn({ ...VALID, whatsAppSenderNumberId: "snd-1" });
+
+    assert.equal((result as { id: string }).id, "camp-1");
+    assert.equal(stats().createdCampaign?.whatsAppSenderNumberId, "snd-1");
+  });
+
+  it("WHATSAPP campaign rejects when no sender number is provided", async () => {
+    const { client } = makeClient({
+      templateType: "WHATSAPP",
+      senderNumber: { id: "snd-1", workspaceRef: "ws-1" }
+    });
+    const fn = createCreateCampaign(client as never, "ws-1");
+
+    await assert.rejects(() => fn(VALID), /sender number/);
+  });
+
+  it("WHATSAPP campaign rejects when the sender number belongs to another workspace", async () => {
+    const { client } = makeClient({
+      templateType: "WHATSAPP",
+      senderNumber: { id: "snd-1", workspaceRef: "ws-other" }
+    });
+    const fn = createCreateCampaign(client as never, "ws-1");
+
+    await assert.rejects(
+      () => fn({ ...VALID, whatsAppSenderNumberId: "snd-1" }),
+      /not found in this workspace/
+    );
+  });
+
+  it("non-WHATSAPP campaign rejects when a sender number is supplied", async () => {
+    const { client } = makeClient({ templateType: "SMS" });
+    const fn = createCreateCampaign(client as never, "ws-1");
+
+    await assert.rejects(() => fn({ ...VALID, whatsAppSenderNumberId: "snd-1" }), /Only WhatsApp/);
   });
 });

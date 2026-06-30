@@ -3,6 +3,7 @@ import { prisma } from "../db.js";
 import { FonosterOutboundCallClient } from "../services/fonosterOutboundCallClient.js";
 import { TwilioSmsClient } from "../services/twilioSmsClient.js";
 import { ResendEmailClient } from "../services/resendEmailClient.js";
+import { resolveWhatsAppClient } from "../services/resolveWhatsAppClient.js";
 import { createEngine } from "./engine.js";
 import { createPrismaEngineClient } from "./prismaEngineClient.js";
 import { createEngineRunner, type EngineRunner } from "./runner.js";
@@ -38,6 +39,9 @@ export function startEngine(): EngineRunner | null {
     voicePerMinute: config.fonoster?.maxCallsPerMinute ?? 0,
     smsPerMinute: config.twilio?.maxSmsPerMinute ?? 0,
     emailPerMinute: config.resend?.maxEmailsPerMinute ?? 0,
+    whatsAppPerMinute: config.whatsapp.maxMessagesPerMinute,
+    resolveWhatsApp: (workspaceRef, phoneNumberId) =>
+      resolveWhatsAppClient(prisma as never, workspaceRef, config.whatsapp, phoneNumberId),
     tickSeconds: config.engine.tickSeconds
   });
 

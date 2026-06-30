@@ -8,6 +8,7 @@ import { prisma } from "./db.js";
 import { createContactLogHandler } from "./rest/contactLogs.js";
 import { createVoiceEventsHandler } from "./rest/voiceEvents.js";
 import { createEmailInboundHandler } from "./rest/emailInbound.js";
+import { createWhatsAppWebhookHandlers } from "./rest/whatsAppWebhook.js";
 import { createInsightGenerator } from "./services/insightGenerator.js";
 import { synthesizeSpeech } from "./services/elevenLabsTts.js";
 import { startVoiceServer } from "./voice/voiceServer.js";
@@ -49,6 +50,12 @@ app.post(
   "/api/email/inbound",
   createEmailInboundHandler(prisma, { resend: config.resend, ai: config.ai })
 );
+
+// Meta WhatsApp Business API webhook: GET for the verify-token handshake (subscribe
+// flow), POST for signed event delivery (customer messages, delivery receipts, opt-outs).
+const whatsapp = createWhatsAppWebhookHandlers(prisma, { appSecret: config.whatsapp?.appSecret });
+app.get("/api/whatsapp/webhook", (req, res) => void whatsapp.verify(req, res));
+app.post("/api/whatsapp/webhook", (req, res) => void whatsapp.events(req, res));
 
 // Synthesize a pre-recorded agent's script to audio (ElevenLabs) so the Pre-grabada
 // gestión detail can play it. Cached in-memory per voice+text; 503 when TTS isn't

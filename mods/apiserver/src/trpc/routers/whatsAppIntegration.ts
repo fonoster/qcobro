@@ -65,12 +65,12 @@ export const whatsAppIntegrationRouter = router({
   previewTemplate: workspaceProcedure
     .input(z.object({ templateId: z.string().min(1) }))
     .query(async ({ input, ctx }) => {
-      const client = await resolveWhatsAppClient(
+      const resolved = await resolveWhatsAppClient(
         ctx.prisma as never,
         ctx.workspace.accessKeyId,
         config.whatsapp
       );
-      if (!client) return null;
-      return client.fetchTemplate(input.templateId);
+      if (!resolved) return null;
+      return resolved.client.fetchTemplate(input.templateId);
     })
 });

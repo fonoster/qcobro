@@ -318,9 +318,21 @@ export const qcobroConfigSchema = z.object({
   whatsapp: z
     .object({
       apiBaseUrl: z.string().url().default("https://graph.facebook.com"),
-      apiVersion: z.string().default("v18.0")
+      apiVersion: z.string().default("v18.0"),
+      /** Engine pacing: max template messages the engine may dispatch per minute. */
+      maxMessagesPerMinute: z.number().int().positive().default(60),
+      /**
+       * Meta App Secret — used to verify the `X-Hub-Signature-256` on inbound webhook
+       * events. Optional: when absent, signature verification is skipped (not recommended
+       * in production).
+       */
+      appSecret: z.string().min(1).optional()
     })
-    .default({ apiBaseUrl: "https://graph.facebook.com", apiVersion: "v18.0" }),
+    .default({
+      apiBaseUrl: "https://graph.facebook.com",
+      apiVersion: "v18.0",
+      maxMessagesPerMinute: 60
+    }),
   /**
    * Campaigns engine. The autonomous in-process loop that originates campaign
    * outreach. Disabled by default so it never auto-dials in local development;

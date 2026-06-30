@@ -9,7 +9,8 @@ import {
   type OutboundCallClient,
   type PortfolioAccountRecord,
   type SmsClient,
-  type TickReport
+  type TickReport,
+  type WhatsAppClient
 } from "@qcobro/common";
 import { createDispatchOutreach } from "../functions/outreach/dispatchOutreach.js";
 import { createReserveAttempt } from "../functions/campaigns/reserveAttempt.js";
@@ -35,6 +36,7 @@ export interface EngineTemplate {
     systemPrompt: string;
     maxReplies: number | null;
   } | null;
+  whatsAppConfig: { templateName: string; messageBody: string } | null;
 }
 
 /** A campaign as the engine loads it (schedule + caps + template + portfolios). */
@@ -45,6 +47,8 @@ export interface EngineCampaign extends WindowCampaign {
   maxAttemptsPerDay: number;
   agentTemplate: EngineTemplate | null;
   portfolios: { portfolioId: string }[];
+  /** Set for WHATSAPP campaigns; the sender chosen at campaign creation. */
+  whatsAppSenderNumberId: string | null;
 }
 
 /** A candidate account with its campaign-local state (filtered to the campaign). */
@@ -85,9 +89,19 @@ export interface EngineDeps {
   voicePerMinute: number;
   smsPerMinute: number;
   emailPerMinute: number;
+  whatsAppPerMinute: number;
   tickSeconds: number;
   /** Hard cap on dispatches per tick across all campaigns (keeps ticks bounded). */
   perTickMax?: number;
+  /**
+   * Resolve a per-workspace WhatsApp client and its send language. Called once per
+   * WHATSAPP dispatch; credentials are tenant-owned so the client cannot be injected
+   * at boot like the voice/SMS pools.
+   */
+  resolveWhatsApp: (
+    workspaceRef: string,
+    phoneNumberId: string
+  ) => Promise<{ client: WhatsAppClient; languageCode: string } | null>;
 }
 
 type Readiness =
@@ -97,21 +111,28 @@ type Readiness =
 const VOICE = new Set(["VOICE_AI", "VOICE_PRERECORDED"]);
 
 function channelOf(type: string | undefined): EngineChannel | null {
-  if (type === "VOICE_AI" || type === "VOICE_PRERECORDED" || type === "SMS" || type === "EMAIL")
+  if (
+    type === "VOICE_AI" ||
+    type === "VOICE_PRERECORDED" ||
+    type === "SMS" ||
+    type === "EMAIL" ||
+    type === "WHATSAPP"
+  )
     return type;
   return null;
 }
 
 export function createEngine(deps: EngineDeps) {
-  const dispatch = createDispatchOutreach({
+  const baseDeps = {
     outboundCallClient: deps.outboundCallClient,
     smsClient: deps.smsClient,
     emailClient: deps.emailClient,
     emailFrom: deps.emailFrom,
     fonosterNumbers: deps.fonosterNumbers,
     twilioFromNumbers: deps.twilioFromNumbers,
-    pickNumber: undefined
-  });
+    pickNumber: undefined as undefined
+  };
+  const dispatch = createDispatchOutreach(baseDeps);
   const record = createRecordOutcome(deps.reserveRecordClient as never);
   // Per-workspace timezone + currency, resolved once per campaign per tick. A workspace
   // without a settings row is seeded on read via the column defaults.
@@ -133,6 +154,12 @@ export function createEngine(deps: EngineDeps) {
       }
       return { ok: true, channel, appRef: null };
     }
+    if (channel === "WHATSAPP") {
+      // The WhatsApp client is resolved per-call from tenant creds (can't be pre-injected).
+      // We only need to verify the campaign nominated a sender number at creation time.
+      if (!c.whatsAppSenderNumberId) return { ok: false, reason: "channel_not_configured" };
+      return { ok: true, channel, appRef: null };
+    }
     if (!deps.outboundCallClient) return { ok: false, reason: "channel_not_configured" };
     if (deps.fonosterNumbers.length === 0) return { ok: false, reason: "empty_number_pool" };
     const appRef =
@@ -149,7 +176,8 @@ export function createEngine(deps: EngineDeps) {
     acc: EngineCandidate,
     channel: EngineChannel,
     appRef: string | null,
-    currency: string
+    currency: string,
+    whatsAppLanguageCode?: string
   ): DispatchOutreachInput {
     const context = buildOutreachContext(acc as unknown as PortfolioAccountRecord, { currency });
     const t = c.agentTemplate!;
@@ -163,6 +191,16 @@ export function createEngine(deps: EngineDeps) {
         context,
         subject: t.emailConfig?.subject ?? "",
         body: t.emailConfig?.messageBody ?? ""
+      };
+    }
+    if (channel === "WHATSAPP") {
+      return {
+        channel,
+        to: acc.phone!,
+        context,
+        templateName: t.whatsAppConfig?.templateName ?? "",
+        languageCode: whatsAppLanguageCode ?? "",
+        body: t.whatsAppConfig?.messageBody ?? ""
       };
     }
     if (channel === "VOICE_AI") {
@@ -192,12 +230,30 @@ export function createEngine(deps: EngineDeps) {
     reserve: ReturnType<typeof createReserveAttempt>,
     currency: string
   ): Promise<{ decision: AccountDecision; providerRef?: string }> {
+    // For WHATSAPP, resolve the per-workspace client before reserving the attempt so a
+    // missing integration skips cleanly without consuming an attempt slot.
+    let whatsAppLanguageCode: string | undefined;
+    let dispatchFn = dispatch;
+    if (channel === "WHATSAPP") {
+      const resolved = await deps.resolveWhatsApp(c.workspaceRef, c.whatsAppSenderNumberId!);
+      if (!resolved) {
+        console.error(
+          `[engine] WhatsApp integration not found campaign=${c.id} workspace=${c.workspaceRef}`
+        );
+        return { decision: "dispatch_failed" };
+      }
+      whatsAppLanguageCode = resolved.languageCode;
+      dispatchFn = createDispatchOutreach({ ...baseDeps, whatsAppClient: resolved.client });
+    }
+
     const at = deps.clock.now().toISOString();
     await reserve({ campaignId: c.id, portfolioAccountId: acc.id, at });
 
     let result;
     try {
-      result = await dispatch(buildRequest(c, acc, channel, appRef, currency));
+      result = await dispatchFn(
+        buildRequest(c, acc, channel, appRef, currency, whatsAppLanguageCode)
+      );
     } catch (err) {
       // Attempt stays consumed (at-most-once); no gestión for a failed dispatch.
       // Surface the reason — a swallowed dispatch error is undebuggable in prod.
@@ -235,16 +291,18 @@ export function createEngine(deps: EngineDeps) {
 
   async function tick(): Promise<TickReport> {
     const now = deps.clock.now();
-    const buckets: Record<"voice" | "sms" | "email", TokenBucket> = {
+    const buckets: Record<"voice" | "sms" | "email" | "whatsapp", TokenBucket> = {
       voice: createTokenBucket(perTickCapacity(deps.voicePerMinute, deps.tickSeconds)),
       sms: createTokenBucket(perTickCapacity(deps.smsPerMinute, deps.tickSeconds)),
-      email: createTokenBucket(perTickCapacity(deps.emailPerMinute, deps.tickSeconds))
+      email: createTokenBucket(perTickCapacity(deps.emailPerMinute, deps.tickSeconds)),
+      whatsapp: createTokenBucket(perTickCapacity(deps.whatsAppPerMinute, deps.tickSeconds))
     };
     const usage = {
       VOICE_AI: { dispatched: 0, budget: 0 },
       VOICE_PRERECORDED: { dispatched: 0, budget: 0 },
       SMS: { dispatched: 0, budget: buckets.sms.remaining() },
-      EMAIL: { dispatched: 0, budget: buckets.email.remaining() }
+      EMAIL: { dispatched: 0, budget: buckets.email.remaining() },
+      WHATSAPP: { dispatched: 0, budget: buckets.whatsapp.remaining() }
     };
     const voiceBudget = buckets.voice.remaining();
     usage.VOICE_AI.budget = voiceBudget;
@@ -313,7 +371,9 @@ export function createEngine(deps: EngineDeps) {
         ? buckets.voice
         : ready.channel === "EMAIL"
           ? buckets.email
-          : buckets.sms;
+          : ready.channel === "WHATSAPP"
+            ? buckets.whatsapp
+            : buckets.sms;
       for (const fa of eligible) {
         if (deps.perTickMax !== undefined && totalDispatched >= deps.perTickMax) {
           cr.decisions.push({

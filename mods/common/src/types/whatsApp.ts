@@ -45,6 +45,7 @@ export interface WhatsAppIntegrationClient {
     findUnique(args: {
       where: { workspaceRef: string };
     }): Promise<WhatsAppIntegrationRecord | null>;
+    findFirst(args: { where: { verifyToken: string } }): Promise<WhatsAppIntegrationRecord | null>;
     upsert(args: {
       where: { workspaceRef: string };
       create: Record<string, unknown>;
