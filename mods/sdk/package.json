@@ -9,6 +9,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -b --force",
     "clean": "rm -rf dist docs *.tsbuildinfo",
