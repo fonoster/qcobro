@@ -241,14 +241,33 @@ ul{list-style:none}
 .submit-btn:disabled{opacity:.7;cursor:default}
 .form-disclaimer{font-size:12px;color:var(--slate-600);text-align:center;line-height:1.5}
 
+/* ═══════════════ HAMBURGER + MOBILE MENU ═══════════════ */
+.nav__hamburger{display:none;width:36px;height:36px;border-radius:8px;background:transparent;align-items:center;justify-content:center;color:var(--ink);padding:0;flex-shrink:0}
+.nav__hamburger:hover{background:var(--slate-100)}
+.nav__mobile-menu{display:none;position:fixed;inset:0;z-index:200}
+.nav__mobile-menu.is-open{display:block}
+.nav__mobile-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.5)}
+.nav__mobile-panel{position:absolute;top:0;right:0;width:280px;height:100%;background:#fff;display:flex;flex-direction:column;padding:20px;box-shadow:-8px 0 32px rgba(0,0,0,.2);transform:translateX(100%);transition:transform .25s ease}
+.nav__mobile-menu.is-open .nav__mobile-panel{transform:none}
+.nav__mobile-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid var(--slate-200)}
+.nav__mobile-close{width:34px;height:34px;border-radius:8px;background:var(--slate-100);display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.nav__mobile-close:hover{background:var(--slate-200)}
+.nav__mobile-links{display:flex;flex-direction:column;flex:1;padding:8px 0}
+.nav__mobile-links a{padding:14px 0;font-size:16px;font-weight:500;color:var(--ink);border-bottom:1px solid var(--slate-100);display:block}
+.nav__mobile-links a:hover{color:var(--green-700)}
+.nav__mobile-cta{padding-top:16px;border-top:1px solid var(--slate-200)}
+
 /* ═══════════════ RESPONSIVE (mobile) ═══════════════ */
 @media (max-width:900px){
   .nav__links{display:none}
+  .nav__actions{display:none}
+  .nav__hamburger{display:flex}
   .nav__inner{padding:14px 20px}
   .hero__inner{flex-direction:column;align-items:stretch;gap:40px;padding:48px 20px 56px;min-height:auto}
   .hero__pitch{width:100%}
   .hero__title{font-size:54px;letter-spacing:-1.5px}
-  .hero__cta .btn{flex:1}
+  .hero__cta{flex-direction:column;align-items:stretch}
+  .hero__cta .btn{flex:none}
   .hero__visual{width:100%}
   .gcard{width:100%}
   .trusted{padding:32px 20px}
@@ -289,3 +308,5 @@ ul{list-style:none}
 .gcard__badge svg{width:12px;height:12px}
 .pcard__feats li svg{width:20px;height:20px}
 .modal__close svg{width:18px;height:18px}
+.nav__hamburger svg{width:20px;height:20px}
+.nav__mobile-close svg{width:18px;height:18px}
