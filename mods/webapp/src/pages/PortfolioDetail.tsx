@@ -106,7 +106,8 @@ export function PortfolioDetail() {
           {
             key: "id",
             header: "",
-            align: "center",
+            align: "right",
+            className: "w-px whitespace-nowrap",
             render: (r) => {
               const items: RowAction[] = [
                 {

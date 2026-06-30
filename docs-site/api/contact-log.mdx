@@ -22,10 +22,10 @@ El endpoint usa **HTTP Basic**, donde el **usuario** es la credencial del worksp
 
 ```bash
 curl -X POST "https://api.qcobro.com/api/contact-logs" \
-  -u "ws_abc123:<secreto>" \
+  -u "WO7f3a92b1...:<secreto>" \
   -H "Content-Type: application/json" \
   -d '{
-    "portfolioAccountId": "acc_123",
+    "portfolioAccountId": "a3bb189e-...",
     "agentType": "VOICE_AI",
     "contactedAt": "2026-06-28T15:30:00Z",
     "outcome": "PAYMENT_PROMISE",
@@ -96,8 +96,8 @@ En éxito, el endpoint responde `201 Created` con la gestión registrada.
 
 ```json
 {
-  "id": "log_123",
-  "portfolioAccountId": "acc_123",
+  "id": "e29b4f71-...",
+  "portfolioAccountId": "a3bb189e-...",
   "outcome": "PAYMENT_PROMISE",
   "contactedAt": "2026-06-28T15:30:00Z"
 }

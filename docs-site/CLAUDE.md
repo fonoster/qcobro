@@ -63,6 +63,19 @@ customers by voice, SMS, or email" — not "dispatchOutreach calls the injected
 OutboundCallClient"; "the SDK calls the QCobro API" — not "it reads from our PostgreSQL
 database".
 
+## Realistic example data
+
+Code examples must use data values that match the actual format stored in QCobro. Fake
+placeholder IDs like `"ak_workspace_123"` or `"ws_abc123"` are wrong — they don't look like
+real data and confuse integrators. Use these formats:
+
+- **Workspace `accessKeyId`** (also used in `useWorkspace` and `loginWithApiKey`): `"WO7f3a92b1c4d5e6f"` — starts with `WO`, followed by lowercase hex.
+- **Email**: a realistic address like `"ops@acme.com"`.
+- **Secrets / passwords**: always `process.env.VARIABLE_NAME`, never a literal value.
+
+When writing or reviewing any code block, check that every identifier, reference, or ID
+follows its actual storage format. Replace any that don't.
+
 ## Assets
 
 Diagrams and images obey the same rule — no internals, no infrastructure, no config files.

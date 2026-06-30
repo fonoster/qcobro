@@ -28531,7 +28531,8 @@
                           "id": "sgebL",
                           "type": "ref",
                           "ref": "KoP5V",
-                          "name": "Search"
+                          "name": "Search",
+                          "enabled": false
                         },
                         {
                           "type": "frame",
@@ -28583,6 +28584,31 @@
                         },
                         {
                           "type": "frame",
+                          "id": "JKfba",
+                          "name": "ShowArchivedFilter",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "id": "L37bui",
+                              "type": "ref",
+                              "ref": "LR9Dn",
+                              "name": "Checkbox"
+                            },
+                            {
+                              "type": "text",
+                              "id": "w5Xprf",
+                              "name": "Label",
+                              "fill": "$--muted-foreground",
+                              "content": "Mostrar archivados",
+                              "fontFamily": "$--font-primary",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
                           "id": "E1puI",
                           "name": "Spacer",
                           "width": "fill_container",
@@ -28614,6 +28640,9 @@
                         "kHSpi": {
                           "content": "Agente"
                         },
+                        "Zcy0b": {
+                          "enabled": false
+                        },
                         "tCM78": {
                           "content": "Canal"
                         },
@@ -28629,6 +28658,9 @@
                         "I4tMzt": {
                           "content": "Voz IA · ES-MX"
                         },
+                        "OCfwh": {
+                          "enabled": false
+                        },
                         "kQS5X": {
                           "content": "Voz IA"
                         },
@@ -28643,6 +28675,9 @@
                         },
                         "qH7gz": {
                           "content": "SMS · ES"
+                        },
+                        "KpgsS": {
+                          "enabled": false
                         },
                         "Qkm3u/euhVD": {
                           "content": "Borrador"
@@ -28662,6 +28697,9 @@
                         "kyOnE": {
                           "content": "WhatsApp · ES"
                         },
+                        "Ac8ig": {
+                          "enabled": false
+                        },
                         "F8NToT": {
                           "content": "WhatsApp"
                         },
@@ -28676,6 +28714,9 @@
                         },
                         "pGtKU": {
                           "content": "Audio · ES"
+                        },
+                        "O8lWl": {
+                          "enabled": false
                         },
                         "bZsng/eimgZ": {
                           "content": "Inactivo"
@@ -28694,6 +28735,9 @@
                         },
                         "lEBYG": {
                           "content": "Email · HTML"
+                        },
+                        "BoAhG": {
+                          "enabled": false
                         },
                         "G2HNh": {
                           "content": "Email"

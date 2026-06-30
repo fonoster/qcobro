@@ -28,7 +28,7 @@ const all = await client.portfolios.list({ includeArchived: true });
 `get` devuelve una sola cartera por su `id` dentro del workspace activo.
 
 ```ts
-const portfolio = await client.portfolios.get({ id: "ptf_123" });
+const portfolio = await client.portfolios.get({ id: "f47ac10b-..." });
 ```
 
 ## Crea una cartera
@@ -57,13 +57,13 @@ const portfolio = await client.portfolios.create({
 
 ```ts
 // Renombra una cartera.
-await client.portfolios.update({ id: "ptf_123", name: "Morosidad Q4" });
+await client.portfolios.update({ id: "f47ac10b-...", name: "Morosidad Q4" });
 
 // Archívala.
-await client.portfolios.update({ id: "ptf_123", archived: true });
+await client.portfolios.update({ id: "f47ac10b-...", archived: true });
 
 // Restáurala.
-await client.portfolios.update({ id: "ptf_123", archived: false });
+await client.portfolios.update({ id: "f47ac10b-...", archived: false });
 ```
 
 <ParamField body="id" type="string" required>
@@ -81,7 +81,7 @@ await client.portfolios.update({ id: "ptf_123", archived: false });
 `delete` elimina una cartera del workspace activo.
 
 ```ts
-await client.portfolios.delete({ id: "ptf_123" });
+await client.portfolios.delete({ id: "f47ac10b-..." });
 ```
 
 <Tip>
@@ -96,7 +96,7 @@ página con `limit` (1–200) y `offset`.
 
 ```ts
 const { accounts, total } = await client.portfolios.listAccounts({
-  portfolioId: "ptf_123",
+  portfolioId: "f47ac10b-...",
   limit: 50,
   offset: 0
 });

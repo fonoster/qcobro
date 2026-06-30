@@ -27,7 +27,7 @@ elegiste.
 
     const client = new Client();
     await client.login({ email: "me@acme.com", password: process.env.QCOBRO_PASSWORD! });
-    client.useWorkspace("ws_abc123");
+    client.useWorkspace("WO7f3a92b1...");
     ```
   </Step>
   <Step title="Envía las filas">
@@ -36,7 +36,7 @@ elegiste.
 
     ```ts
     const result = await client.portfolios.syncAccounts({
-      portfolioId: "ptf_123",
+      portfolioId: "f47ac10b-...",
       mode: "APPEND_ONLY",
       rows: [
         { externalId: "A-1", fullName: "Jane Doe", outstandingBalance: 1200.5 },
@@ -72,7 +72,7 @@ por `externalId` dentro de la cartera.
     las que los datos previos son la fuente autoritativa.
 
     ```ts
-    await client.portfolios.syncAccounts({ portfolioId: "ptf_123", mode: "APPEND_ONLY", rows });
+    await client.portfolios.syncAccounts({ portfolioId: "f47ac10b-...", mode: "APPEND_ONLY", rows });
     ```
   </Tab>
   <Tab title="UPDATE_EXISTING">
@@ -80,7 +80,7 @@ por `externalId` dentro de la cartera.
     recurrentes que traen saldos o datos de contacto actualizados.
 
     ```ts
-    await client.portfolios.syncAccounts({ portfolioId: "ptf_123", mode: "UPDATE_EXISTING", rows });
+    await client.portfolios.syncAccounts({ portfolioId: "f47ac10b-...", mode: "UPDATE_EXISTING", rows });
     ```
   </Tab>
   <Tab title="REPLACE">
@@ -89,7 +89,7 @@ por `externalId` dentro de la cartera.
     cartera.
 
     ```ts
-    await client.portfolios.syncAccounts({ portfolioId: "ptf_123", mode: "REPLACE", rows });
+    await client.portfolios.syncAccounts({ portfolioId: "f47ac10b-...", mode: "REPLACE", rows });
     ```
   </Tab>
 </Tabs>
@@ -187,7 +187,7 @@ import { ValidationError } from "@qcobro/sdk";
 
 try {
   await client.portfolios.syncAccounts({
-    portfolioId: "ptf_123",
+    portfolioId: "f47ac10b-...",
     mode: "APPEND_ONLY",
     rows: [] // los lotes vacíos se rechazan
   });

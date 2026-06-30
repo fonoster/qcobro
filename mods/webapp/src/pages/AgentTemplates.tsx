@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
@@ -63,6 +63,7 @@ export function AgentTemplates() {
   const [typeFilter, setTypeFilter] = useState<"" | AgentType>("");
   const [includeArchived, setIncludeArchived] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  const [editing, setEditing] = useState<Template | null>(null);
   const [deleting, setDeleting] = useState<Template | null>(null);
 
   const { data } = trpc.agentTemplates.list.useQuery({
@@ -148,10 +149,15 @@ export function AgentTemplates() {
           {
             key: "id",
             header: "",
-            align: "center",
+            align: "right",
+            className: "w-px whitespace-nowrap",
             render: (r) => (
               <RowActionsMenu
                 items={[
+                  {
+                    label: t("agents.actions.edit"),
+                    onClick: () => setEditing(r)
+                  },
                   {
                     label: t("agents.actions.view"),
                     onClick: () => navigate(`/agent-templates/${r.id}`)
@@ -182,6 +188,17 @@ export function AgentTemplates() {
           onClose={() => setShowCreate(false)}
           onSuccess={() => {
             setShowCreate(false);
+            utils.agentTemplates.list.invalidate();
+          }}
+        />
+      )}
+
+      {editing && (
+        <EditAgentTemplateModal
+          template={editing}
+          onClose={() => setEditing(null)}
+          onSuccess={() => {
+            setEditing(null);
             utils.agentTemplates.list.invalidate();
           }}
         />
@@ -438,6 +455,260 @@ function CreateAgentTemplateModal({
         )}
 
         {error && <p className="text-xs text-red-600">{error}</p>}
+      </div>
+    </Dialog>
+  );
+}
+
+type FullTemplate = {
+  id: string;
+  name: string;
+  type: AgentType;
+  voiceAiConfig: Record<string, unknown> | null;
+  voicePrerecordedConfig: Record<string, unknown> | null;
+  smsConfig: Record<string, unknown> | null;
+  emailConfig: Record<string, unknown> | null;
+  whatsAppConfig: Record<string, unknown> | null;
+};
+
+function EditAgentTemplateModal({
+  template,
+  onClose,
+  onSuccess
+}: {
+  template: Template;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const { t } = useI18n();
+  const query = trpc.agentTemplates.get.useQuery({ id: template.id });
+  const full = query.data as FullTemplate | undefined;
+
+  const { data: voices } = trpc.config.voices.useQuery();
+  const [name, setName] = useState(template.name);
+  const [fields, setFields] = useState<Record<string, string>>({});
+  const [seeded, setSeeded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!full || seeded) return;
+    const cfg =
+      full.voiceAiConfig ??
+      full.voicePrerecordedConfig ??
+      full.smsConfig ??
+      full.emailConfig ??
+      full.whatsAppConfig ??
+      {};
+    const f: Record<string, string> = {};
+    for (const [k, v] of Object.entries(cfg)) {
+      if (v != null && k !== "fonosterAppRef" && k !== "templateId") f[k] = String(v);
+    }
+    setFields(f);
+    setSeeded(true);
+  }, [full, seeded]);
+
+  const update = trpc.agentTemplates.update.useMutation({
+    onSuccess,
+    onError: (err) => setError(err.message)
+  });
+
+  function set(key: string, value: string) {
+    setFields((f) => ({ ...f, [key]: value }));
+  }
+
+  function handleSave() {
+    if (!name.trim()) {
+      setError(t("agents.form.name"));
+      return;
+    }
+    setError(null);
+    let config: Record<string, unknown> = {};
+    switch (template.type) {
+      case "VOICE_AI":
+        config = {
+          voice: fields.voice,
+          systemPrompt: fields.systemPrompt,
+          firstMessage: fields.firstMessage,
+          language: fields.language
+        };
+        break;
+      case "VOICE_PRERECORDED":
+        config = { voice: fields.voice, script: fields.script, language: fields.language };
+        break;
+      case "SMS":
+        config = {
+          messageBody: fields.messageBody,
+          ...(fields.senderId ? { senderId: fields.senderId } : {})
+        };
+        break;
+      case "EMAIL":
+        config = {
+          subject: fields.subject,
+          messageBody: fields.messageBody,
+          systemPrompt: fields.systemPrompt,
+          ...(fields.maxReplies ? { maxReplies: Number(fields.maxReplies) } : {})
+        };
+        break;
+      case "WHATSAPP":
+        config = { templateName: fields.templateName, messageBody: fields.messageBody };
+        break;
+    }
+    update.mutate({ id: template.id, name: name.trim(), config });
+  }
+
+  const isVoice = template.type === "VOICE_AI" || template.type === "VOICE_PRERECORDED";
+  const isLoading = !seeded && query.isLoading;
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={`${t("agents.actions.edit")}: ${template.name}`}
+      confirmLabel={update.isPending ? "…" : t("agents.form.save")}
+      onConfirm={handleSave}
+    >
+      <div className="mt-4 flex flex-col gap-3">
+        {isLoading ? (
+          <p className="text-sm text-slate-400">…</p>
+        ) : (
+          <>
+            <InputGroup
+              label={t("agents.form.name")}
+              id="e-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+
+            <div className="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-500">
+              <span className="font-medium">{t("agents.form.type")}:</span>{" "}
+              {t(`agents.type.${template.type}` as Parameters<typeof t>[0])}
+            </div>
+
+            {isVoice && (
+              <>
+                <SelectGroup
+                  label={t("agents.form.language")}
+                  id="e-lang"
+                  value={fields.language ?? "es"}
+                  onChange={(e) => set("language", e.target.value)}
+                >
+                  {(["es", "en"] as const).map((lng) => (
+                    <option key={lng} value={lng}>
+                      {t(`agents.lang.${lng}` as Parameters<typeof t>[0])}
+                    </option>
+                  ))}
+                </SelectGroup>
+                <SelectGroup
+                  label={t("agents.form.voice")}
+                  id="e-voice"
+                  value={fields.voice ?? ""}
+                  onChange={(e) => set("voice", e.target.value)}
+                >
+                  <option value="" disabled>
+                    {t("agents.form.voicePlaceholder")}
+                  </option>
+                  {(voices ?? []).map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {`${v.name} (${v.language}, ${t(`agents.gender.${v.gender}` as Parameters<typeof t>[0])})`}
+                    </option>
+                  ))}
+                </SelectGroup>
+              </>
+            )}
+
+            {template.type === "VOICE_AI" && (
+              <>
+                <InputGroup
+                  label={t("agents.form.firstMessage")}
+                  id="e-first"
+                  value={fields.firstMessage ?? ""}
+                  onChange={(e) => set("firstMessage", e.target.value)}
+                />
+                <TextareaGroup
+                  label={t("agents.form.systemPrompt")}
+                  id="e-prompt"
+                  value={fields.systemPrompt ?? ""}
+                  onChange={(e) => set("systemPrompt", e.target.value)}
+                />
+              </>
+            )}
+
+            {template.type === "VOICE_PRERECORDED" && (
+              <TextareaGroup
+                label={t("agents.form.script")}
+                id="e-script"
+                value={fields.script ?? ""}
+                onChange={(e) => set("script", e.target.value)}
+              />
+            )}
+
+            {template.type === "SMS" && (
+              <>
+                <TextareaGroup
+                  label={t("agents.form.messageBody")}
+                  id="e-sms"
+                  value={fields.messageBody ?? ""}
+                  onChange={(e) => set("messageBody", e.target.value)}
+                />
+                <InputGroup
+                  label={t("agents.form.senderId")}
+                  id="e-sender"
+                  value={fields.senderId ?? ""}
+                  onChange={(e) => set("senderId", e.target.value)}
+                />
+              </>
+            )}
+
+            {template.type === "EMAIL" && (
+              <>
+                <InputGroup
+                  label={t("agents.form.subject")}
+                  id="e-subject"
+                  value={fields.subject ?? ""}
+                  onChange={(e) => set("subject", e.target.value)}
+                />
+                <TextareaGroup
+                  label={t("agents.form.messageBody")}
+                  id="e-email-body"
+                  value={fields.messageBody ?? ""}
+                  onChange={(e) => set("messageBody", e.target.value)}
+                />
+                <TextareaGroup
+                  label={t("agents.form.systemPrompt")}
+                  id="e-email-prompt"
+                  value={fields.systemPrompt ?? ""}
+                  onChange={(e) => set("systemPrompt", e.target.value)}
+                />
+                <InputGroup
+                  label={t("agents.form.maxReplies")}
+                  id="e-email-maxreplies"
+                  type="number"
+                  value={fields.maxReplies ?? ""}
+                  onChange={(e) => set("maxReplies", e.target.value)}
+                />
+              </>
+            )}
+
+            {template.type === "WHATSAPP" && (
+              <>
+                <InputGroup
+                  label={t("agents.form.templateName")}
+                  id="e-template"
+                  value={fields.templateName ?? ""}
+                  onChange={(e) => set("templateName", e.target.value)}
+                />
+                <TextareaGroup
+                  label={t("agents.form.messageBody")}
+                  id="e-wa-body"
+                  value={fields.messageBody ?? ""}
+                  onChange={(e) => set("messageBody", e.target.value)}
+                />
+              </>
+            )}
+
+            {error && <p className="text-xs text-red-600">{error}</p>}
+          </>
+        )}
       </div>
     </Dialog>
   );

@@ -70,7 +70,7 @@ export function RowActionsMenu({ items }: { items: RowAction[] }) {
                     "flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-[9px] text-left text-[13px] font-medium",
                     item.variant === "destructive"
                       ? "text-red-600 hover:bg-red-50"
-                      : "bg-slate-100 text-slate-900 hover:bg-slate-200"
+                      : "text-slate-900 hover:bg-slate-100"
                   )}
                 >
                   {Icon && <Icon className="h-4 w-4 shrink-0 text-slate-600" />}

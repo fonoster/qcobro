@@ -62,7 +62,7 @@ representación serializable.
 
 ```ts
 try {
-  await client.portfolios.syncAccounts({ portfolioId: "ptf_123", mode: "APPEND_ONLY", rows: [] });
+  await client.portfolios.syncAccounts({ portfolioId: "f47ac10b-...", mode: "APPEND_ONLY", rows: [] });
 } catch (err) {
   if (err instanceof ValidationError) {
     res.status(400).json(err.toJSON());

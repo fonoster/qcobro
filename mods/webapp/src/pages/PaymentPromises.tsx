@@ -160,7 +160,8 @@ export function PaymentPromises() {
           {
             key: "id",
             header: "",
-            align: "center",
+            align: "right",
+            className: "w-px whitespace-nowrap",
             render: (r) =>
               r.status === "PENDING" ? (
                 <RowActionsMenu

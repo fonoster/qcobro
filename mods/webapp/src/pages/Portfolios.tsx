@@ -116,7 +116,8 @@ export function Portfolios() {
           {
             key: "id",
             header: "",
-            align: "center",
+            align: "right",
+            className: "w-px whitespace-nowrap",
             render: (r) => (
               <RowActionsMenu
                 items={[
