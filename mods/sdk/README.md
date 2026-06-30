@@ -24,12 +24,12 @@ import { Client } from "@qcobro/sdk";
 const client = new Client({ endpoint: "https://api.qcobro.com" });
 
 // Authenticate and pick the workspace to act in.
-await client.login({ email: "me@acme.com", password: "••••••••" });
-client.useWorkspace("ws_abc123");
+await client.login({ email: "me@acme.com", password: process.env.QCOBRO_PASSWORD! });
+client.useWorkspace("WO7f3a92b1c4d5e6f"); // workspace accessKeyId from the QCobro console
 
 // ...or, for unattended/server-to-server integrations, use a workspace API key:
 await client.loginWithApiKey({
-  accessKeyId: "ak_workspace_123",
+  accessKeyId: "WO4e2c8d1a9b3f5c7e",
   accessKeySecret: process.env.QCOBRO_API_SECRET!
 });
 
