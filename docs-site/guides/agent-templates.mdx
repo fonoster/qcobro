@@ -112,6 +112,26 @@ enviarse:
   enviándose; no se interrumpe el contacto.
 </Note>
 
+### Ayudantes (helpers)
+
+Además de las variables, hay ayudantes para hacer cálculos dentro de la plantilla:
+
+| Ayudante | Qué hace |
+| --- | --- |
+| `{{multiply a b}}` | Multiplica `a` por `b`. Si alguno no es un número, el resultado es `0`. |
+
+Por ejemplo, para ofrecer un descuento del 50% sobre el saldo pendiente:
+
+```handlebars
+Le ofrecemos liquidar su cuenta por {{multiply outstandingBalance 0.5}} {{currency}}.
+```
+
+<Note>
+  Si una plantilla usa un ayudante que no existe, el mensaje no se interrumpe: en su lugar
+  verás un texto como `[Error de plantilla: ...]` donde estaría ese valor, para que puedas
+  corregirlo antes de reenviar.
+</Note>
+
 ### Mensajes condicionales
 
 `{{isDue}}` es un valor de sí/no, así que en SMS, WhatsApp, correo y voz pregrabada puedes

@@ -73,6 +73,27 @@ describe("renderTemplate + buildOutreachContext", () => {
     assert.equal(overdue, "Su pago está vencido");
     assert.equal(current, "Gracias por estar al día");
   });
+
+  it("multiplies two numeric fields with the multiply helper", () => {
+    const ctx = buildOutreachContext(makeAccount({ outstandingBalance: 1000 }), {
+      currency: "CRC"
+    });
+    const out = renderTemplate("Oferta: {{multiply outstandingBalance 0.5}} {{currency}}", ctx);
+    assert.equal(out, "Oferta: 500 CRC");
+  });
+
+  it("multiply helper yields 0 instead of NaN for non-numeric operands", () => {
+    const ctx = buildOutreachContext(makeAccount(), { currency: "CRC" });
+    const out = renderTemplate("{{multiply unknownField 2}}", ctx);
+    assert.equal(out, "0");
+  });
+
+  it("a reference to an unregistered helper surfaces as a marker instead of throwing", () => {
+    const ctx = buildOutreachContext(makeAccount(), { currency: "CRC" });
+    assert.doesNotThrow(() => renderTemplate("{{notAHelper firstName}}", ctx));
+    const out = renderTemplate("{{notAHelper firstName}}", ctx);
+    assert.match(out, /^\[Error de plantilla:.*notAHelper.*\]$/);
+  });
 });
 
 describe("pickRandomNumber", () => {

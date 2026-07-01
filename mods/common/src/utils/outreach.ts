@@ -3,14 +3,40 @@ import type { PortfolioAccountRecord } from "../types/portfolios.js";
 import type { NumberSelector } from "../types/dispatch.js";
 
 /**
+ * `{{multiply a b}}` — coerces both operands to numbers; either operand being
+ * non-numeric (missing field, bad data) yields 0 rather than NaN, so a
+ * malformed context never produces `NaN` in a customer-facing message.
+ */
+Handlebars.registerHelper("multiply", (a: unknown, b: unknown) => {
+  const x = Number(a);
+  const y = Number(b);
+  return Number.isFinite(x) && Number.isFinite(y) ? x * y : 0;
+});
+
+/**
  * Renders a Handlebars template against a context. Bodies are plain text (voice
  * script / SMS), never HTML, so escaping is disabled. A missing `{{field}}`
  * renders as empty rather than throwing, so a sparse account never aborts a
  * dispatch mid-flight.
+ *
+ * A malformed template — most commonly a reference to an unregistered helper,
+ * e.g. `{{multiply amount rate}}` before that helper existed — throws a
+ * synchronous Handlebars compile/render error. That used to propagate
+ * uncaught, crashing the webapp's live template preview
+ * (`ReachOutModal.tsx`) and, in the dispatch pipeline, aborting the send
+ * attempt. Both are now caught here: the error surfaces as a visible
+ * `[Error de plantilla: ...]` marker in the rendered output instead of
+ * throwing, so a template bug is obvious without taking down a preview or a
+ * send.
  */
 export function renderTemplate(template: string, context: Record<string, unknown>): string {
-  const compiled = Handlebars.compile(template, { noEscape: true });
-  return compiled(context);
+  try {
+    const compiled = Handlebars.compile(template, { noEscape: true });
+    return compiled(context);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return `[Error de plantilla: ${message}]`;
+  }
 }
 
 /**
