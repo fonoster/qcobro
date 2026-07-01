@@ -21,7 +21,8 @@ export function createPrismaEngineClient(prisma: PrismaClient): EngineClient {
               whatsAppConfig: true
             }
           },
-          portfolios: { select: { portfolioId: true } }
+          portfolios: { select: { portfolioId: true } },
+          whatsAppSenderNumber: { select: { phoneNumberId: true } }
         },
         orderBy: { createdAt: "asc" }
       });
@@ -73,7 +74,8 @@ export function createPrismaEngineClient(prisma: PrismaClient): EngineClient {
             }
           : null,
         portfolios: c.portfolios,
-        whatsAppSenderNumberId: c.whatsAppSenderNumberId
+        whatsAppSenderNumberId: c.whatsAppSenderNumberId,
+        whatsAppSenderPhoneNumberId: c.whatsAppSenderNumber?.phoneNumberId ?? null
       }));
     },
 

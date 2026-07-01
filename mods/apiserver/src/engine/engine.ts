@@ -49,6 +49,8 @@ export interface EngineCampaign extends WindowCampaign {
   portfolios: { portfolioId: string }[];
   /** Set for WHATSAPP campaigns; the sender chosen at campaign creation. */
   whatsAppSenderNumberId: string | null;
+  /** The chosen sender's Meta-assigned phone_number_id (join of whatsAppSenderNumberId). */
+  whatsAppSenderPhoneNumberId: string | null;
 }
 
 /** A candidate account with its campaign-local state (filtered to the campaign). */
@@ -235,7 +237,7 @@ export function createEngine(deps: EngineDeps) {
     let whatsAppLanguageCode: string | undefined;
     let dispatchFn = dispatch;
     if (channel === "WHATSAPP") {
-      const resolved = await deps.resolveWhatsApp(c.workspaceRef, c.whatsAppSenderNumberId!);
+      const resolved = await deps.resolveWhatsApp(c.workspaceRef, c.whatsAppSenderPhoneNumberId!);
       if (!resolved) {
         console.error(
           `[engine] WhatsApp integration not found campaign=${c.id} workspace=${c.workspaceRef}`
