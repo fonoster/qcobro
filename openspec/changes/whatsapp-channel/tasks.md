@@ -1,8 +1,8 @@
 ## 1. Compliance & onboarding docs (no code)
 
-- [ ] 1.1 Document the Meta Business verification flow (Business Manager, phone registration, display-name review) on the QCobro site and in an internal runbook
-- [ ] 1.2 Write the account-health playbook: quality-rating monitoring, opt-out handling, template-policy compliance, and number-ban escalation
-- [ ] 1.3 Document the operator-side template-approval handoff (UTILITY category, named placeholders drawn from QCobro's documented variable set)
+- [x] 1.1 Document the Meta Business verification flow (Business Manager, phone registration, display-name review) on the QCobro site and in an internal runbook
+- [x] 1.2 Write the account-health playbook: quality-rating monitoring, opt-out handling, template-policy compliance, and number-ban escalation
+- [x] 1.3 Document the operator-side template-approval handoff (UTILITY category, named placeholders drawn from QCobro's documented variable set)
 
 ## 2. Contracts in @qcobro/common
 
@@ -58,4 +58,4 @@
 - [x] 9.2 Unit tests for integration storage (token encrypted at rest, never returned; duplicate phoneNumberId rejected) and campaign sender-selection validation
 - [x] 9.3 Tests for the inbound webhook (signature rejection, opt-out → suppression, quality-rating update)
 - [x] 9.4 Unit tests for the smart-agent reply path: reply generated within the window, `maxReplies` cap halts further replies, closed 24h window forbids free-form text, opt-out intent in conversation suppresses the account
-- [ ] 9.5 e2e: create integration + sender → create WHATSAPP campaign → tick dispatches via the emulator and records a gestión with the Meta message id as providerRef
+- [x] 9.5 e2e: create integration + sender → create WHATSAPP campaign → tick dispatches via the emulator and records a gestión with the Meta message id as providerRef

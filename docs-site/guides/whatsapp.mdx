@@ -1,0 +1,114 @@
+---
+title: "Integración de WhatsApp"
+description: "Conecta tu cuenta de WhatsApp Business, agrega números remitentes y aprueba la plantilla que usará tu agente de WhatsApp."
+---
+
+WhatsApp es un canal más de contacto, pero a diferencia de SMS o correo requiere que conectes
+tu propia **cuenta de WhatsApp Business (WABA)** y que Meta apruebe de antemano el mensaje que
+enviarás. Esta guía cubre esa configuración de principio a fin.
+
+<Note>
+  Necesitas rol de **administrador** del espacio de trabajo para conectar o modificar la
+  integración de WhatsApp.
+</Note>
+
+## Antes de empezar: lo que necesitas de Meta
+
+Antes de entrar a QCobro, completa estos pasos del lado de Meta (en tu propia cuenta de
+WhatsApp Business):
+
+1. **Verifica tu Business Manager.** Meta exige una empresa verificada antes de aprobar
+   mensajería a gran volumen.
+2. **Registra el número de teléfono** que usarás para enviar mensajes en tu cuenta de
+   WhatsApp Business.
+3. **Solicita la revisión del nombre de visualización** (display name) que verán tus clientes
+   al recibir el mensaje.
+
+De esta cuenta necesitarás tres datos para el siguiente paso: el **ID de tu WABA**, un
+**token de acceso** y un **token de verificación** que tú mismo defines (QCobro lo usa para
+confirmar que los eventos entrantes vienen de tu WABA).
+
+<Warning>
+  QCobro no puede completar estos pasos por ti — son parte de la verificación de tu cuenta de
+  WhatsApp Business con Meta, no de la configuración de QCobro.
+</Warning>
+
+## Conecta tu WhatsApp Business en Integraciones
+
+<Steps>
+  <Step title="Abre Integraciones">
+    En el menú del avatar (esquina superior), entra en **Integraciones**.
+  </Step>
+  <Step title="Conecta tu WABA">
+    En **Cuenta de WhatsApp Business**, completa el **WABA ID**, el **Token de acceso**, el
+    **Token de verificación del webhook** y el **Idioma de plantilla por defecto** (por
+    ejemplo `es_DO`) — el idioma en que Meta enviará tus plantillas a los clientes. Guarda con
+    **Guardar**.
+  </Step>
+  <Step title="Agrega un número remitente">
+    En **Números remitentes**, agrega el **ID de número de teléfono** (el que te dio Meta al
+    registrar el número), el **Número visible (E.164)** y una **Etiqueta** para identificarlo.
+  </Step>
+</Steps>
+
+<Note>
+  El **Token de acceso** se guarda cifrado y nunca vuelve a mostrarse; si lo dejas en blanco al
+  editar la integración, QCobro conserva el token actual.
+</Note>
+
+## Aprueba tu plantilla en Meta
+
+QCobro envía WhatsApp mediante una **plantilla aprobada por Meta**, no un texto libre. Al
+solicitar la plantilla en tu cuenta de WhatsApp Business, ten en cuenta:
+
+- Usa la categoría **UTILITY** (transaccional) — es la que corresponde a recordatorios de
+  cobranza, no a mensajería de marketing.
+- Escribe los **parámetros de la plantilla con nombre** (named parameters), no posicionales
+  (`{{1}}`, `{{2}}`). Los nombres deben coincidir **exactamente** con las [variables que
+  QCobro reconoce](/guides/agent-templates#lista-de-variables) — por ejemplo `firstName` u
+  `outstandingBalance` — así QCobro puede rellenar cada uno con el dato real de la cuenta al
+  enviar.
+
+<Tip>
+  Comparte la [lista de variables](/guides/agent-templates#lista-de-variables) con quien
+  redacte y someta la plantilla en Meta — es la referencia exacta de qué nombres usar.
+</Tip>
+
+Una vez que Meta aprueba la plantilla, anota su **ID de plantilla**: lo necesitarás al crear
+el agente en QCobro.
+
+## Crea el agente de WhatsApp
+
+En [Agentes IA](/guides/agent-templates), crea un agente con **Tipo de canal** WhatsApp e
+ingresa el **ID de plantilla de Meta**. QCobro trae el texto ya aprobado y lo muestra de solo
+lectura como vista previa — no lo redactas ahí. Agrega un **Prompt del sistema** y, si quieres
+limitar cuántas veces responde automáticamente, un **Máximo de respuestas**: dentro de la
+ventana de 24 horas que abre la respuesta del cliente, el agente puede conversar con él
+siguiendo ese prompt.
+
+<Warning>
+  No puedes crear un agente de WhatsApp sin una integración conectada — conecta tu WABA
+  primero.
+</Warning>
+
+## Úsalo en una campaña
+
+Al crear o editar una [campaña](/guides/campaigns) con un agente de WhatsApp, elige el
+**Número remitente de WhatsApp** que enviará los mensajes de esa campaña.
+
+## Qué ves de cada conversación
+
+Cada envío y cada respuesta del cliente quedan en la gestión de esa cuenta, como una
+conversación: el mensaje de plantilla inicial, las respuestas del agente y del cliente, y el
+[análisis con IA](/guides/ai-insights) del intercambio.
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Plantillas de agente" icon="robot" href="/guides/agent-templates">
+    Crea el agente de WhatsApp y consulta la lista de variables.
+  </Card>
+  <Card title="Lanzar una campaña" icon="bullhorn" href="/guides/campaigns">
+    Elige el remitente de WhatsApp al configurar tu campaña.
+  </Card>
+</CardGroup>

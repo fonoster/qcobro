@@ -45,8 +45,12 @@ Los campos cambian según el tipo de canal elegido:
   mensaje, el agente espera a que el cliente inicie. Puedes limitar las respuestas del
   autopiloto por caso.
 - **Voz pregrabada** — define el **Guion** que se reproduce y la **Voz**.
-- **SMS** / **WhatsApp** — escribe el **Cuerpo del mensaje** y, opcionalmente, un **ID de
-  remitente**.
+- **SMS** — escribe el **Cuerpo del mensaje** y, opcionalmente, un **ID de remitente**.
+- **WhatsApp** — indica el **ID de plantilla de Meta**; QCobro trae el texto ya aprobado y lo
+  muestra de solo lectura como vista previa (no lo redactas en QCobro). Agrega un **Prompt del
+  sistema** y, opcionalmente, un **Máximo de respuestas** para que el agente conteste
+  automáticamente dentro de la ventana de 24 horas de WhatsApp. Ver [Integración de
+  WhatsApp](/guides/whatsapp).
 - **Correo** — define el **Asunto** y el **Cuerpo del mensaje**.
 
 <Tip>
@@ -73,7 +77,8 @@ enviarse:
 
 | Canal | ¿Variables? | Dónde escribirlas |
 | --- | --- | --- |
-| **SMS** y **WhatsApp** | Sí | Cuerpo del mensaje |
+| **SMS** | Sí | Cuerpo del mensaje |
+| **WhatsApp** | Sí | En los parámetros con nombre de tu plantilla de Meta — ver [Integración de WhatsApp](/guides/whatsapp) |
 | **Correo** | Sí | Asunto y Cuerpo del mensaje |
 | **Voz pregrabada** | Sí | Guion (se locuta por voz, así que pasa por el mismo reemplazo) |
 | **Voz IA** | No | Se personaliza distinto — ver [Personalizar Voz IA](#personalizar-voz-ia) |
