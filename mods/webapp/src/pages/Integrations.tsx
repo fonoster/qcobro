@@ -5,6 +5,7 @@ import { PageHeader } from "../components/page-header.js";
 import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
+import { Dialog } from "../components/ui/dialog.js";
 
 type SenderRow = {
   id: string;
@@ -13,7 +14,7 @@ type SenderRow = {
   label: string;
 };
 
-function AddSenderForm({ onSuccess }: { onSuccess: () => void }) {
+function AddSenderModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const { t } = useI18n();
   const [phoneNumberId, setPhoneNumberId] = useState("");
   const [displayNumber, setDisplayNumber] = useState("");
@@ -22,9 +23,6 @@ function AddSenderForm({ onSuccess }: { onSuccess: () => void }) {
 
   const add = trpc.whatsAppIntegration.addSender.useMutation({
     onSuccess: () => {
-      setPhoneNumberId("");
-      setDisplayNumber("");
-      setLabel("");
       setError(null);
       onSuccess();
     },
@@ -42,8 +40,18 @@ function AddSenderForm({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-3 gap-3">
+    <Dialog
+      open
+      onClose={onClose}
+      title={t("integrations.senders.add")}
+      description={t("integrations.senders.addDescription")}
+      confirmLabel={
+        add.isPending ? t("integrations.senders.adding") : t("integrations.senders.add")
+      }
+      cancelLabel={t("common.cancel")}
+      onConfirm={handleAdd}
+    >
+      <div className="mt-4 flex flex-col gap-3">
         <InputGroup
           label={t("integrations.senders.phoneNumberId")}
           id="s-pnid"
@@ -62,19 +70,9 @@ function AddSenderForm({ onSuccess }: { onSuccess: () => void }) {
           value={label}
           onChange={(e) => setLabel(e.target.value)}
         />
+        {error && <p className="text-xs text-red-600">{error}</p>}
       </div>
-      {error && <p className="text-xs text-red-600">{error}</p>}
-      <div>
-        <Button
-          onClick={handleAdd}
-          disabled={
-            add.isPending || !phoneNumberId.trim() || !displayNumber.trim() || !label.trim()
-          }
-        >
-          {add.isPending ? t("integrations.senders.adding") : t("integrations.senders.add")}
-        </Button>
-      </div>
-    </div>
+    </Dialog>
   );
 }
 
@@ -98,7 +96,7 @@ function WabaForm() {
     onError: () => setStatus("error")
   });
 
-  const connected = !!integration.data;
+  const connected = !!integration.data?.connected;
 
   function handleSave() {
     if (!wabaId.trim() && !integration.data?.wabaId) return;
@@ -192,6 +190,7 @@ export function Integrations() {
   });
 
   const [removeError, setRemoveError] = useState<string | null>(null);
+  const [showAddSender, setShowAddSender] = useState(false);
 
   function handleRemove(phoneNumberId: string) {
     setRemoveError(null);
@@ -217,7 +216,7 @@ export function Integrations() {
             {t("integrations.senders.section")}
           </h2>
 
-          {!integration.data ? (
+          {!integration.data?.connected ? (
             <p className="text-sm text-slate-400">{t("integrations.senders.noIntegration")}</p>
           ) : (
             <>
@@ -247,11 +246,25 @@ export function Integrations() {
 
               {removeError && <p className="text-xs text-red-600">{removeError}</p>}
 
-              <AddSenderForm onSuccess={() => utils.whatsAppIntegration.listSenders.invalidate()} />
+              <div>
+                <Button onClick={() => setShowAddSender(true)}>
+                  {t("integrations.senders.add")}
+                </Button>
+              </div>
             </>
           )}
         </div>
       </Card>
+
+      {showAddSender && (
+        <AddSenderModal
+          onClose={() => setShowAddSender(false)}
+          onSuccess={() => {
+            setShowAddSender(false);
+            utils.whatsAppIntegration.listSenders.invalidate();
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -71551,6 +71551,190 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "QcITO",
+      "x": 15749,
+      "y": 15853,
+      "name": "Integraciones Modals",
+      "gap": 100,
+      "children": [
+        {
+          "type": "frame",
+          "id": "qwklz",
+          "name": "Agregar número · WhatsApp · Modal",
+          "fill": "#FFFFFF00",
+          "children": [
+            {
+              "type": "frame",
+              "id": "SmJA7",
+              "name": "Overlay",
+              "fill": "#FFFFFF00",
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "qkbf9",
+                  "name": "Card",
+                  "width": 440,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 16,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#0000004D",
+                    "offset": {
+                      "x": 0,
+                      "y": 20
+                    },
+                    "blur": 50
+                  },
+                  "layout": "vertical",
+                  "gap": 20,
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "cTvPF",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "m6Dj28",
+                          "name": "HText",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "xa7j8",
+                              "name": "Title",
+                              "fill": "#0F172A",
+                              "content": "Agregar número",
+                              "fontFamily": "Inter",
+                              "fontSize": 18,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "RvFwj",
+                              "name": "Sub",
+                              "fill": "#64748B",
+                              "content": "Vincula un número de envío a tu cuenta de WhatsApp Business (WABA).",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "qTWIB",
+                          "name": "Close",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "x",
+                          "library": "lucide",
+                          "fill": "#94A3B8"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "YL5B0",
+                      "type": "ref",
+                      "ref": "BoM07",
+                      "name": "Nombre",
+                      "width": "fill_container",
+                      "descendants": {
+                        "hTkn4": {
+                          "content": "ID de número (Meta)"
+                        },
+                        "KmeTM": {
+                          "content": "108234957123456"
+                        }
+                      }
+                    },
+                    {
+                      "id": "EhbyB",
+                      "type": "ref",
+                      "ref": "BoM07",
+                      "name": "Email",
+                      "width": "fill_container",
+                      "descendants": {
+                        "hTkn4": {
+                          "content": "Número para mostrar"
+                        },
+                        "KmeTM": {
+                          "content": "+1 809 555 0142"
+                        }
+                      }
+                    },
+                    {
+                      "id": "lvLN2",
+                      "type": "ref",
+                      "ref": "BoM07",
+                      "name": "Etiqueta",
+                      "width": "fill_container",
+                      "descendants": {
+                        "hTkn4": {
+                          "content": "Etiqueta"
+                        },
+                        "KmeTM": {
+                          "content": "Cobranza suave"
+                        }
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "fz681",
+                      "name": "Footer",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "justifyContent": "end",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "cN4kg",
+                          "type": "ref",
+                          "ref": "VJCaF",
+                          "name": "Cancel",
+                          "descendants": {
+                            "XyMlx": {
+                              "enabled": false
+                            },
+                            "NkZAZ": {
+                              "content": "Cancelar"
+                            }
+                          }
+                        },
+                        {
+                          "id": "pMhWQ",
+                          "type": "ref",
+                          "ref": "ws2MA",
+                          "name": "Send",
+                          "descendants": {
+                            "kGizg": {
+                              "enabled": false
+                            },
+                            "MQ2HP": {
+                              "content": "Agregar número"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {

@@ -504,6 +504,8 @@ export const messages = {
       "Workspace integrations are disabled — no encryption key is configured on this deployment.",
     "integrations.senders.section": "Sender numbers",
     "integrations.senders.empty": "No sender numbers added yet.",
+    "integrations.senders.addDescription":
+      "Link a sending number to your connected WhatsApp Business Account.",
     "integrations.senders.phoneNumberId": "Phone number ID",
     "integrations.senders.displayNumber": "Display number (E.164)",
     "integrations.senders.label": "Label",
@@ -1027,6 +1029,8 @@ export const messages = {
       "Las integraciones del espacio están deshabilitadas — no hay clave de cifrado configurada en este despliegue.",
     "integrations.senders.section": "Números remitentes",
     "integrations.senders.empty": "Aún no hay números remitentes.",
+    "integrations.senders.addDescription":
+      "Vincula un número de envío a tu cuenta de WhatsApp Business conectada.",
     "integrations.senders.phoneNumberId": "ID de número de teléfono",
     "integrations.senders.displayNumber": "Número visible (E.164)",
     "integrations.senders.label": "Etiqueta",
