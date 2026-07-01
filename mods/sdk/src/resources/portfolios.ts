@@ -1,14 +1,16 @@
 import type { CreateTRPCClient } from "@trpc/client";
 import type { AppRouter } from "@qcobro/apiserver";
 import { z } from "zod";
+import { ValidationError } from "../errors.js";
 import {
   createPortfolioSchema,
   updatePortfolioSchema,
   deletePortfolioSchema,
   syncAccountsInputSchema,
-  ValidationError
-} from "@qcobro/common";
-import { listPortfoliosSchema, getPortfolioSchema, listAccountsSchema } from "../schemas.js";
+  listPortfoliosSchema,
+  getPortfolioSchema,
+  listAccountsSchema
+} from "../schemas.js";
 
 type RouterClient = CreateTRPCClient<AppRouter>;
 type Portfolios = RouterClient["portfolios"];

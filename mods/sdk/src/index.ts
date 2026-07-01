@@ -11,6 +11,4 @@ export { Client } from "./client.js";
 export type { ClientOptions, Tokens } from "./client.js";
 export { PortfoliosResource } from "./resources/portfolios.js";
 
-// Re-export the shared structured error so callers can detect client-side
-// validation failures without depending on `@qcobro/common` directly.
-export { ValidationError, type FieldError } from "@qcobro/common";
+export { ValidationError, type FieldError } from "./errors.js";
