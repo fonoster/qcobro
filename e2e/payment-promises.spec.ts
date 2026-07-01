@@ -20,15 +20,8 @@ test.describe("payment promises — worklist", () => {
 
     await signUpAndEnter(page, owner, `WS ${stamp}`);
 
-    // Enter the workspace if we landed on the picker (no auto-entry).
-    const carterasLink = page.getByRole("link", { name: "Carteras" });
-    if (!(await carterasLink.isVisible().catch(() => false))) {
-      await page.getByText(`WS ${stamp}`).first().click();
-      await expect(carterasLink).toBeVisible({ timeout: 15000 });
-    }
-
     // --- Portfolio + import one account --------------------------------------
-    await carterasLink.click();
+    await page.getByRole("link", { name: "Carteras" }).click();
     await page.getByRole("button", { name: /Nueva cartera/ }).click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(`cli-${stamp}`);
