@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.12.1](https://github.com/fonoster/qcobro/compare/v1.12.0...v1.12.1) (2026-07-01)
+
+### Bug Fixes
+
+- **whatsapp:** dispatch to the sender's Meta phone_number_id, not its internal id ([0956217](https://github.com/fonoster/qcobro/commit/0956217347eeeb83d18efe9080246ad98c75cdcf))
+
 # [1.12.0](https://github.com/fonoster/qcobro/compare/v1.11.4...v1.12.0) (2026-07-01)
 
 **Note:** Version bump only for package @qcobro/apiserver
