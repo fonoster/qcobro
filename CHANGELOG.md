@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.12.2](https://github.com/fonoster/qcobro/compare/v1.12.1...v1.12.2) (2026-07-01)
+
+### Bug Fixes
+
+- **gestiones:** match EMAIL gestión detail's dedicated (not generic) insight ([36672a7](https://github.com/fonoster/qcobro/commit/36672a761faba24002f17eaeaf19f3e819ed85ff))
+
 ## [1.12.1](https://github.com/fonoster/qcobro/compare/v1.12.0...v1.12.1) (2026-07-01)
 
 ### Bug Fixes
