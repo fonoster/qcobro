@@ -90,8 +90,12 @@ if [ -n "$API_DOMAIN" ]; then
   if ! $SUDO openssl x509 -noout -text -in "$LIVE_DIR/fullchain.pem" 2>/dev/null \
        | grep -q "DNS:$API_DOMAIN"; then
     echo "tls.sh: cert does not yet cover $API_DOMAIN — expanding (adds a SAN)…"
+    # --force-renewal is required: certbot --expand still checks the expiry
+    # gate and refuses to re-issue when the cert is not near expiry, even
+    # when new SANs are being added. One forced issuance per new domain is
+    # well within Let's Encrypt's rate limits.
     # shellcheck disable=SC2086
-    $SUDO certbot certonly --standalone --expand $DOMAIN_FLAGS \
+    $SUDO certbot certonly --standalone --expand --force-renewal $DOMAIN_FLAGS \
       --agree-tos -m "$EMAIL" --non-interactive \
       --deploy-hook "$HOOK"
     echo "tls.sh: expanded and installed into Envoy."
