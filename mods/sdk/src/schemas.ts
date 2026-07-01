@@ -1,50 +1,12 @@
 import { z } from "zod";
 
-// ── Portfolio schemas (mirrored from @qcobro/common so the SDK has no runtime
-//    dependency on an unpublished internal package) ───────────────────────────
-
-export const createPortfolioSchema = z.object({
-  name: z.string().min(1).max(120),
-  clientId: z.string().min(1).max(120)
-});
-
-export const updatePortfolioSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1).max(120).optional(),
-  archived: z.boolean().optional()
-});
-
-export const deletePortfolioSchema = z.object({
-  id: z.string().min(1)
-});
-
-const accountRowSchema = z.object({
-  externalId: z.string().min(1),
-  fullName: z.string().min(1),
-  phone: z.string().optional(),
-  email: z.string().email().optional(),
-  preferredLanguage: z.string().optional(),
-  bestTimeToCall: z.string().optional(),
-  customerSegment: z.string().optional(),
-  principalAmount: z.number().nonnegative().default(0),
-  termsAmount: z.number().nonnegative().default(0),
-  termsFrequency: z.string().optional(),
-  termsLength: z.number().int().nonnegative().default(0),
-  outstandingBalance: z.number().nonnegative(),
-  daysPastDue: z.number().int().nonnegative().default(0),
-  missedInstallments: z.number().int().nonnegative().default(0),
-  lastPaymentDate: z.string().optional(),
-  lastPaymentAmount: z.number().nonnegative().optional(),
-  negotiationOptions: z.string().optional()
-});
-
-export const syncAccountsInputSchema = z.object({
-  portfolioId: z.string().min(1),
-  mode: z.enum(["APPEND_ONLY", "UPDATE_EXISTING", "REPLACE"]),
-  rows: z.array(accountRowSchema).min(1)
-});
-
-// ── List/get/listAccounts (apiserver-inline shapes) ───────────────────────────
+/**
+ * Local schemas for portfolio operations whose inputs the apiserver defines
+ * inline (rather than in `@qcobro/common`). Kept minimal and matched to the
+ * server's inline `z.object(...)` shapes so the SDK can validate client-side
+ * before a request is sent. Contract-bearing inputs (create/update/delete/
+ * syncAccounts) reuse the shared `@qcobro/common` schemas directly.
+ */
 
 /** Input for `portfolios.list`. */
 export const listPortfoliosSchema = z

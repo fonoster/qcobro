@@ -1,8 +1,10 @@
 {
   "name": "@qcobro/common",
   "version": "1.11.2",
-  "private": true,
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": "./dist/index.js"
   },

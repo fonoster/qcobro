@@ -1,16 +1,6 @@
 import { createTRPCClient, httpBatchLink, type CreateTRPCClient } from "@trpc/client";
 import type { AppRouter } from "@qcobro/apiserver";
-/** Credentials for `login`. */
-interface LoginInput {
-  email: string;
-  password: string;
-  twoFactorCode?: string;
-}
-/** Credentials for `loginWithApiKey`. */
-interface ApiKeyLoginInput {
-  accessKeyId: string;
-  accessKeySecret: string;
-}
+import type { LoginInput, ApiKeyLoginInput } from "@qcobro/common";
 import { PortfoliosResource } from "./resources/portfolios.js";
 
 /** Header the apiserver reads to scope a request to a workspace. */

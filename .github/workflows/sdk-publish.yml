@@ -26,6 +26,11 @@ jobs:
       - name: Build SDK and its workspace dependencies
         run: npx lerna run build --scope=@qcobro/sdk --include-dependencies
 
+      - name: Publish @qcobro/common
+        run: npm publish --workspace=mods/common
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish @qcobro/sdk
         run: npm publish --workspace=mods/sdk
         env:
