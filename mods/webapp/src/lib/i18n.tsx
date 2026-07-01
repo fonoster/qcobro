@@ -407,7 +407,6 @@ export const messages = {
     "gestiones.detail.subject": "Subject",
     "gestiones.insight.SMS": "Payment reminder sent to the customer with a payment link.",
     "gestiones.insight.VOICE_PRERECORDED": "Pre-recorded reminder played to the customer.",
-    "gestiones.insight.EMAIL": "Reminder email delivered to the customer.",
     "gestiones.detail.call": "Collection call",
     "gestiones.detail.agentSpeaker": "QCobro · AI voice",
     "gestiones.detail.customerSpeaker": "Customer",
@@ -525,7 +524,6 @@ export const messages = {
     "gestiones.detail.whatsAppThread": "WhatsApp conversation",
     "gestiones.detail.whatsAppAgent": "Collections Team · AI",
     "gestiones.detail.whatsAppNoReply": "No customer reply yet.",
-    "gestiones.insight.WHATSAPP": "WhatsApp template sent. Customer replies handled by AI agent.",
     "campaigns.form.whatsAppSender": "WhatsApp sender number",
     "campaigns.form.noWhatsAppSender": "Add a sender number in Integrations first."
   },
@@ -931,7 +929,6 @@ export const messages = {
     "gestiones.insight.SMS": "Recordatorio de pago enviado al cliente con enlace de pago.",
     "gestiones.insight.VOICE_PRERECORDED":
       "Mensaje pre-grabado de recordatorio reproducido al cliente.",
-    "gestiones.insight.EMAIL": "Correo de recordatorio enviado al cliente.",
     "gestiones.detail.call": "Llamada de cobranza",
     "gestiones.detail.agentSpeaker": "QCobro · Voz IA",
     "gestiones.detail.customerSpeaker": "Cliente",
@@ -1050,8 +1047,6 @@ export const messages = {
     "gestiones.detail.whatsAppThread": "Conversación por WhatsApp",
     "gestiones.detail.whatsAppAgent": "Equipo de Cobranza · IA",
     "gestiones.detail.whatsAppNoReply": "Sin respuesta del cliente aún.",
-    "gestiones.insight.WHATSAPP":
-      "Plantilla de WhatsApp enviada. Respuestas del cliente gestionadas por agente IA.",
     "campaigns.form.whatsAppSender": "Número remitente de WhatsApp",
     "campaigns.form.noWhatsAppSender": "Agrega un número remitente en Integraciones primero."
   }

@@ -153,11 +153,12 @@ test.describe("gestiones — channels", () => {
     await expect(panel.getByText("Transcripción")).toHaveCount(0);
     await closePanel();
 
-    // Email — communication card + body + generic insight; no transcript
+    // Email — communication card + body; dedicated (not generic) analysis section, empty
+    // until the bidirectional agent has a reply to analyze; no transcript
     panel = await openPanel("Correo");
     await expect(panel.getByText("Conversación por correo")).toBeVisible();
     await expect(panel.getByText(emailBody)).toBeVisible();
-    await expect(panel.getByText(/correo de recordatorio/i)).toBeVisible();
+    await expect(panel.getByText("Análisis del email (AI Insights)")).toBeVisible();
     await expect(panel.getByText("Transcripción")).toHaveCount(0);
     await closePanel();
 
