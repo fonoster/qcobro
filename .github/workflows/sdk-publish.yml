@@ -26,12 +26,28 @@ jobs:
       - name: Build SDK and its workspace dependencies
         run: npx lerna run build --scope=@qcobro/sdk --include-dependencies
 
-      - name: Publish @qcobro/common
-        run: npm publish --workspace=mods/common
+      # lerna's fixed-mode version bump only touches packages a release's commits actually
+      # scope to, so mods/common (or mods/sdk) can sit at an already-published version on
+      # a tag that bumped other packages. Publishing unconditionally then fails with npm's
+      # 403 "cannot publish over previously published version" — check first and skip.
+      - name: Publish @qcobro/common (if version changed)
+        run: |
+          version=$(node -p "require('./mods/common/package.json').version")
+          if npm view "@qcobro/common@$version" version >/dev/null 2>&1; then
+            echo "@qcobro/common@$version is already published — skipping (unchanged this release)."
+          else
+            npm publish --workspace=mods/common
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @qcobro/sdk
-        run: npm publish --workspace=mods/sdk
+      - name: Publish @qcobro/sdk (if version changed)
+        run: |
+          version=$(node -p "require('./mods/sdk/package.json').version")
+          if npm view "@qcobro/sdk@$version" version >/dev/null 2>&1; then
+            echo "@qcobro/sdk@$version is already published — skipping (unchanged this release)."
+          else
+            npm publish --workspace=mods/sdk
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
