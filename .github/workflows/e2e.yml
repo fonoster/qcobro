@@ -75,6 +75,11 @@ jobs:
             c.database.url = "postgresql://qcobro:qcobro@localhost:5432/qcobro?schema=public";
             c.identity = { endpoint: "localhost:50051", httpBridgeUrl: "http://localhost:9110" };
             c.ai = { enabled: true, provider: "mock", model: "mock" };
+            // The example ships a non-decodable placeholder ("CHANGE_ME_..."), which
+            // makes prisma-field-encryption throw at boot ("Unknown key format") and
+            // crashes the apiserver before it can serve /health. Swap in a throwaway
+            // (but validly-formatted, 32-byte) key — CI never stores a real WABA secret.
+            c.security = { cloakEncryptionKey: "k1.aesgcm256.S3va8kWoKh1r5v0u465_BaTt2L5kVdP6ZDWpSYmkfcM" };
             // Keep fonoster (its voice catalog) but drop SMS/email — their SDKs validate
             // placeholder creds eagerly at startup. e2e never dials/sends.
             delete c.twilio;
