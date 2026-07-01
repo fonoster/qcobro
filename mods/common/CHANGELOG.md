@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.12.0](https://github.com/fonoster/qcobro/compare/v1.11.4...v1.12.0) (2026-07-01)
+
+### Features
+
+- **common:** add comparison and date Handlebars helpers for outreach templates ([fbb9ab8](https://github.com/fonoster/qcobro/commit/fbb9ab8dfbb408ce2d6b9fa176299d3b92600e0e))
+- **common:** add multiply Handlebars helper, make renderTemplate error-safe ([4184035](https://github.com/fonoster/qcobro/commit/4184035593fbb968d6a5174d60056f54b7650d3f))
+
 # [1.11.0](https://github.com/fonoster/qcobro/compare/v1.10.0...v1.11.0) (2026-06-30)
 
 ### Features

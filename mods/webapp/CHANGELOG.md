@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.12.0](https://github.com/fonoster/qcobro/compare/v1.11.4...v1.12.0) (2026-07-01)
+
+### Features
+
+- **webapp:** add account metadata expander to portfolio account detail dialog ([d6fa278](https://github.com/fonoster/qcobro/commit/d6fa278f7155a256995443c3069ae57d1825ba4d))
+
 # [1.11.0](https://github.com/fonoster/qcobro/compare/v1.10.0...v1.11.0) (2026-06-30)
 
 ### Bug Fixes
