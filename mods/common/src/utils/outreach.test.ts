@@ -94,6 +94,48 @@ describe("renderTemplate + buildOutreachContext", () => {
     const out = renderTemplate("{{notAHelper firstName}}", ctx);
     assert.match(out, /^\[Error de plantilla:.*notAHelper.*\]$/);
   });
+
+  it("eq branches a template on an exact match", () => {
+    const ctx = buildOutreachContext(makeAccount({ customerSegment: "variant_A" }), {
+      currency: "CRC"
+    });
+    const out = renderTemplate('{{#if (eq customerSegment "variant_A")}}A{{else}}B{{/if}}', ctx);
+    assert.equal(out, "A");
+  });
+
+  it("gt/gte/lt/lte compare numeric fields", () => {
+    const ctx = buildOutreachContext(makeAccount({ daysPastDue: 30 }), { currency: "CRC" });
+    assert.equal(renderTemplate("{{#if (gt daysPastDue 10)}}yes{{else}}no{{/if}}", ctx), "yes");
+    assert.equal(renderTemplate("{{#if (gte daysPastDue 30)}}yes{{else}}no{{/if}}", ctx), "yes");
+    assert.equal(renderTemplate("{{#if (lt daysPastDue 10)}}yes{{else}}no{{/if}}", ctx), "no");
+    assert.equal(renderTemplate("{{#if (lte daysPastDue 30)}}yes{{else}}no{{/if}}", ctx), "yes");
+  });
+
+  it("ge is an alias of gte", () => {
+    const ctx = buildOutreachContext(makeAccount({ daysPastDue: 30 }), { currency: "CRC" });
+    assert.equal(renderTemplate("{{#if (ge daysPastDue 30)}}yes{{else}}no{{/if}}", ctx), "yes");
+  });
+
+  it("comparison helpers yield false instead of throwing for non-numeric operands", () => {
+    const ctx = buildOutreachContext(makeAccount(), { currency: "CRC" });
+    assert.equal(renderTemplate("{{#if (gt unknownField 10)}}yes{{else}}no{{/if}}", ctx), "no");
+  });
+
+  it("daysSince/daysUntil compute whole days against now", () => {
+    const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
+    const fiveDaysAhead = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000 + 60_000).toISOString();
+    const ctx = buildOutreachContext(makeAccount({ lastPaymentDate: new Date(tenDaysAgo) }), {
+      currency: "CRC"
+    });
+    assert.equal(renderTemplate("{{daysSince lastPaymentDate}}", ctx), "10");
+    assert.equal(renderTemplate(`{{daysUntil "${fiveDaysAhead}"}}`, ctx), "5");
+  });
+
+  it("daysSince/daysUntil yield 0 instead of NaN for an unparseable date", () => {
+    const ctx = buildOutreachContext(makeAccount(), { currency: "CRC" });
+    assert.equal(renderTemplate("{{daysSince unknownField}}", ctx), "0");
+    assert.equal(renderTemplate("{{daysUntil unknownField}}", ctx), "0");
+  });
 });
 
 describe("pickRandomNumber", () => {

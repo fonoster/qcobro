@@ -119,11 +119,35 @@ Además de las variables, hay ayudantes para hacer cálculos dentro de la planti
 | Ayudante | Qué hace |
 | --- | --- |
 | `{{multiply a b}}` | Multiplica `a` por `b`. Si alguno no es un número, el resultado es `0`. |
+| `{{eq a b}}` | Sí/no: si `a` es exactamente igual a `b`. |
+| `{{gt a b}}` | Sí/no: si `a` es mayor que `b`. |
+| `{{gte a b}}` / `{{ge a b}}` | Sí/no: si `a` es mayor o igual que `b` (los dos nombres hacen lo mismo). |
+| `{{lt a b}}` | Sí/no: si `a` es menor que `b`. |
+| `{{lte a b}}` | Sí/no: si `a` es menor o igual que `b`. |
+| `{{daysSince fecha}}` | Los días completos transcurridos desde `fecha` hasta hoy. |
+| `{{daysUntil fecha}}` | Los días completos que faltan desde hoy hasta `fecha`. |
 
 Por ejemplo, para ofrecer un descuento del 50% sobre el saldo pendiente:
 
 ```handlebars
 Le ofrecemos liquidar su cuenta por {{multiply outstandingBalance 0.5}} {{currency}}.
+```
+
+Los ayudantes de comparación se usan junto con `{{#if}}` para condicionar el mensaje, por
+ejemplo, para distinguir cuentas muy atrasadas de las recién vencidas:
+
+```handlebars
+{{#if (gte daysPastDue 30)}}
+  Su cuenta tiene {{daysPastDue}} días de atraso.
+{{else}}
+  Le recordamos que su pago está próximo a vencer.
+{{/if}}
+```
+
+O para mencionar cuánto tiempo ha pasado desde el último pago:
+
+```handlebars
+Han pasado {{daysSince lastPaymentDate}} días desde su último pago.
 ```
 
 <Note>

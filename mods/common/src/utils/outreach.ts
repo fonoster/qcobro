@@ -14,6 +14,50 @@ Handlebars.registerHelper("multiply", (a: unknown, b: unknown) => {
 });
 
 /**
+ * `{{eq a b}}` — strict equality, for branching on exact values (e.g.
+ * `{{#if (eq customerSegment "variant_A")}}`).
+ */
+Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);
+
+/**
+ * `{{gt a b}}` / `{{gte a b}}` / `{{lt a b}}` / `{{lte a b}}` — numeric
+ * comparisons for use inside `{{#if}}`, e.g. `{{#if (gte daysPastDue 30)}}`.
+ * Operands are coerced with `Number()`; a non-numeric operand becomes `NaN`,
+ * and every JS comparison against `NaN` is `false` — so a malformed context
+ * makes the condition not match rather than throwing. `ge` is registered as
+ * an alias of `gte` (both names are in common use).
+ */
+Handlebars.registerHelper("gt", (a: unknown, b: unknown) => Number(a) > Number(b));
+Handlebars.registerHelper("gte", (a: unknown, b: unknown) => Number(a) >= Number(b));
+Handlebars.registerHelper("ge", (a: unknown, b: unknown) => Number(a) >= Number(b));
+Handlebars.registerHelper("lt", (a: unknown, b: unknown) => Number(a) < Number(b));
+Handlebars.registerHelper("lte", (a: unknown, b: unknown) => Number(a) <= Number(b));
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function toDate(value: unknown): Date | null {
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (typeof value !== "string" && typeof value !== "number") return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+/**
+ * `{{daysSince date}}` / `{{daysUntil date}}` — whole days between `date` and
+ * now (rounded down), for copy like "han pasado {{daysSince lastPaymentDate}}
+ * días desde su último pago". An unparseable or missing date yields `0`
+ * rather than `NaN`, matching `multiply`'s malformed-context handling.
+ */
+Handlebars.registerHelper("daysSince", (value: unknown) => {
+  const date = toDate(value);
+  return date ? Math.floor((Date.now() - date.getTime()) / DAY_MS) : 0;
+});
+Handlebars.registerHelper("daysUntil", (value: unknown) => {
+  const date = toDate(value);
+  return date ? Math.floor((date.getTime() - Date.now()) / DAY_MS) : 0;
+});
+
+/**
  * Renders a Handlebars template against a context. Bodies are plain text (voice
  * script / SMS), never HTML, so escaping is disabled. A missing `{{field}}`
  * renders as empty rather than throwing, so a sparse account never aborts a
