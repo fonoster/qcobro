@@ -36134,6 +36134,9 @@
                         "kHSpi": {
                           "content": "Cartera"
                         },
+                        "Zcy0b": {
+                          "enabled": false
+                        },
                         "tCM78": {
                           "content": "Cuentas"
                         },
@@ -36149,6 +36152,9 @@
                         "I4tMzt": {
                           "content": "Segmento: Mora temprana"
                         },
+                        "OCfwh": {
+                          "enabled": false
+                        },
                         "kQS5X": {
                           "content": "4,823 cuentas"
                         },
@@ -36163,6 +36169,9 @@
                         },
                         "qH7gz": {
                           "content": "Segmento: Pre-jurídico"
+                        },
+                        "KpgsS": {
+                          "enabled": false
                         },
                         "Qkm3u/euhVD": {
                           "content": "Sincronizando"
@@ -36182,6 +36191,9 @@
                         "kyOnE": {
                           "content": "Segmento: Mora tardía"
                         },
+                        "Ac8ig": {
+                          "enabled": false
+                        },
                         "F8NToT": {
                           "content": "892 cuentas"
                         },
@@ -36196,6 +36208,9 @@
                         },
                         "pGtKU": {
                           "content": "Segmento: Nueva"
+                        },
+                        "O8lWl": {
+                          "enabled": false
                         },
                         "bZsng/eimgZ": {
                           "content": "Inactiva"
@@ -36214,6 +36229,9 @@
                         },
                         "lEBYG": {
                           "content": "Segmento: Mora temprana"
+                        },
+                        "BoAhG": {
+                          "enabled": false
                         },
                         "G2HNh": {
                           "content": "634 cuentas"
@@ -36414,6 +36432,9 @@
                         "kHSpi": {
                           "content": "Nombre"
                         },
+                        "Zcy0b": {
+                          "enabled": false
+                        },
                         "tCM78": {
                           "content": "Saldo"
                         },
@@ -36425,6 +36446,9 @@
                         },
                         "I4tMzt": {
                           "content": "LN-78452 · +57 301 234 5678"
+                        },
+                        "OCfwh": {
+                          "enabled": false
                         },
                         "kQS5X": {
                           "content": "$42,700"
@@ -36438,6 +36462,9 @@
                         "qH7gz": {
                           "content": "LN-19863 · +57 312 567 8901"
                         },
+                        "KpgsS": {
+                          "enabled": false
+                        },
                         "C57iOr": {
                           "content": "$82,301"
                         },
@@ -36449,6 +36476,9 @@
                         },
                         "kyOnE": {
                           "content": "LN-54091 · +57 320 345 6789"
+                        },
+                        "Ac8ig": {
+                          "enabled": false
                         },
                         "F8NToT": {
                           "content": "$28,450"
@@ -36462,6 +36492,9 @@
                         "pGtKU": {
                           "content": "LN-23174 · +57 315 678 9012"
                         },
+                        "O8lWl": {
+                          "enabled": false
+                        },
                         "ZDfQG": {
                           "content": "$95,380"
                         },
@@ -36473,6 +36506,9 @@
                         },
                         "lEBYG": {
                           "content": "LN-67438 · +57 300 234 5678"
+                        },
+                        "BoAhG": {
+                          "enabled": false
                         },
                         "G2HNh": {
                           "content": "$12,480"

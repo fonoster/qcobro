@@ -216,6 +216,7 @@ export const messages = {
     "portfolios.detail.col.dpd": "DPD",
     "portfolios.detail.back": "Back to portfolios",
     "portfolios.detail.viewDetail": "View details",
+    "portfolios.detail.viewMetadata": "View metadata",
     "portfolios.bulk.action": "Contact selected",
     "portfolios.bulk.title": "Contact {count} accounts",
     "portfolios.bulk.subtitle": "Select one agent to contact every selected account.",
@@ -737,6 +738,7 @@ export const messages = {
     "portfolios.detail.col.dpd": "DPD",
     "portfolios.detail.back": "Volver a carteras",
     "portfolios.detail.viewDetail": "Ver detalle",
+    "portfolios.detail.viewMetadata": "Ver metadata",
     "portfolios.bulk.action": "Contactar seleccionados",
     "portfolios.bulk.title": "Contactar {count} cuentas",
     "portfolios.bulk.subtitle":

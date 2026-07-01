@@ -8,6 +8,7 @@ import { DataTable, TableCellStack } from "../components/ui/data-table.js";
 import { Button } from "../components/ui/button.js";
 import { PageHeader } from "../components/page-header.js";
 import { Dialog } from "../components/ui/dialog.js";
+import { Accordion } from "../components/ui/accordion.js";
 import { CsvSyncModal } from "../components/portfolios/CsvSyncModal.js";
 import { ReachOutModal } from "../components/portfolios/ReachOutModal.js";
 import { BulkReachOutModal } from "../components/portfolios/BulkReachOutModal.js";
@@ -150,6 +151,30 @@ export function PortfolioDetail() {
               </div>
             ))}
           </dl>
+
+          <Accordion
+            className="mt-4"
+            items={[
+              {
+                id: "raw",
+                title: t("portfolios.detail.viewMetadata"),
+                content: (
+                  <pre className="overflow-x-auto whitespace-pre-wrap break-words text-xs text-slate-600">
+                    {JSON.stringify(
+                      Object.fromEntries(
+                        Object.entries(viewDetail).filter(
+                          ([key]) =>
+                            !["outstandingBalance", "daysPastDue", "phone", "email"].includes(key)
+                        )
+                      ),
+                      null,
+                      2
+                    )}
+                  </pre>
+                )
+              }
+            ]}
+          />
         </Dialog>
       )}
 
