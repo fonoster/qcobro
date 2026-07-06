@@ -1,0 +1,11 @@
+full_name,phone_number,email,principal_amount,terms_amount,terms_frequency,terms_length,days_past_due,outstanding_balance,missed_installments,last_payment_date,last_payment_amount,preferred_language,best_time_to_call,customer_segment,loan_id,negotiation_options
+Rafael Antonio Guzmán,+18091234567,r.guzman@email.com,15000,750,weekly,24,30,9500,4,2026-04-03,750,es-DO,PM,control,LN001023,"[{""terms_amount"":600,""terms_frequency"":""weekly"",""terms_length"":11},{""terms_amount"":550,""terms_frequency"":""weekly"",""terms_length"":13}]"
+María Altagracia Fernández,+18097654321,m.fernandez@email.com,20000,800,weekly,30,30,13200,4,2026-04-05,800,es-DO,AM,variant_A,LN001024,[]
+Manuel Alejandro Peña,+18293456789,m.pena@email.com,10000,600,weekly,20,30,5500,4,2026-04-04,600,es-DO,PM,variant_A,LN001025,"[]"
+Rosa Elena Martínez,+18495551234,rosa.martinez@email.com,25000,800,weekly,36,30,17500,4,2026-04-06,800,es-DO,18:00-20:00,control,LN001026,[]
+Luis Miguel Santana,+18091112233,l.santana@email.com,12000,600,weekly,24,30,7800,4,2026-04-02,600,es-DO,PM,variant_B,LN001027,"[]"
+Carmen Yolanda Reyes,+18092223344,carmen.reyes@email.com,18000,900,weekly,24,30,11700,4,2026-04-07,900,es-DO,AM,control,LN001028,[]
+José Manuel Tavárez,+18293334455,j.tavarez@email.com,30000,900,weekly,40,30,22500,4,2026-04-04,900,es-DO,PM,variant_A,LN001029,"[]"
+Ana Lucía Espinal,+18494445566,ana.espinal@email.com,8000,600,weekly,16,30,4200,4,2026-04-03,600,es-DO,AM,variant_B,LN001030,[]
+Francisco Javier Núñez,+18095556677,f.nunez@email.com,22000,850,weekly,30,30,15400,4,2026-04-05,850,es-DO,18:00-20:00,control,LN001031,"[]"
+Mercedes del Carmen Polanco,+18296667788,m.polanco@email.com,14000,700,weekly,24,30,8400,4,2026-04-06,700,es-DO,PM,variant_A,LN001032,[]
