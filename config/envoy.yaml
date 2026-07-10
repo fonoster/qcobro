@@ -22,6 +22,19 @@ static_resources:
                     - name: qcobro
                       domains: ["*"]
                       routes:
+                        # Native gRPC (Fonoster Voice Server → the embedded
+                        # VoiceServer for PRE-RECORDED agents). Fonoster dials
+                        # back into us over HTTP/2 when a pre-recorded call
+                        # connects. Matched by content-type so it wins over the
+                        # SPA catch-all regardless of the gRPC method path, and
+                        # routed to the HTTP/2 apiserver_voice cluster. timeout 0
+                        # so a streaming call is never cut short by Envoy.
+                        - match:
+                            prefix: "/"
+                            headers:
+                              - name: "content-type"
+                                string_match: { prefix: "application/grpc" }
+                          route: { cluster: apiserver_voice, timeout: 0s }
                         # tRPC and REST API → apiserver
                         - match: { prefix: "/trpc" }
                           route: { cluster: apiserver, timeout: 30s }
@@ -48,6 +61,10 @@ static_resources:
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
               common_tls_context:
+                # Offer h2 in ALPN so native gRPC clients (Fonoster's Voice
+                # Server) negotiate HTTP/2 on this same 443 listener, while
+                # browsers/REST fall back to HTTP/1.1.
+                alpn_protocols: ["h2", "http/1.1"]
                 tls_certificates:
                   # Certs are copied (dereferenced) into ./config/certs by the
                   # certbot renewal deploy-hook, because Docker userns-remap means
@@ -69,6 +86,27 @@ static_resources:
               - endpoint:
                   address:
                     socket_address: { address: apiserver, port_value: 3000 }
+
+    # Embedded Fonoster VoiceServer for pre-recorded agents. gRPC upstream, so
+    # http2_protocol_options is required. Port must match apiserver.voicePort in
+    # qcobro.json (50061). Reachable over the internal Docker network — no need
+    # to publish the port on the host.
+    - name: apiserver_voice
+      type: logical_dns
+      connect_timeout: 20s
+      typed_extension_protocol_options:
+        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+          "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+          explicit_http_config:
+            http2_protocol_options: {}
+      lb_policy: round_robin
+      load_assignment:
+        cluster_name: apiserver_voice
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: apiserver, port_value: 50061 }
 
     - name: webapp
       type: logical_dns
