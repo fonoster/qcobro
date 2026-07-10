@@ -80,6 +80,19 @@ describe("recordOutcome", () => {
     assert.ok(cap.promiseCreated?.dueDate, "carries a due date");
   });
 
+  it("falls back to contactedAt when the promised date is vague (Invalid Date)", async () => {
+    // The LLM autopilot extracts free text like "mañana" that `new Date()` can't parse.
+    const { client, cap } = makeClient({ existing: null });
+    await createRecordOutcome(client as never)({
+      ...BASE,
+      outcome: "PAYMENT_PROMISE",
+      intentMetadata: { promisedAmount: 9500, promisedDate: "mañana" }
+    });
+    const dueDate = cap.promiseCreated?.dueDate as Date;
+    assert.ok(dueDate instanceof Date && !Number.isNaN(dueDate.getTime()), "due date is valid");
+    assert.equal(dueDate.toISOString(), BASE.contactedAt, "falls back to contactedAt");
+  });
+
   it("creates no PaymentPromise for a non-payment outcome", async () => {
     const { client, cap } = makeClient({ existing: null });
     await createRecordOutcome(client as never)({ ...BASE, outcome: "NEW_TERMS" });

@@ -36,6 +36,18 @@ function triggerNumber(
   return typeof value === "number" ? value : fallback;
 }
 
+/**
+ * Parse a date the LLM autopilot extracted from free text into a *valid* Date, or null.
+ * Vague replies ("mañana", "next week") yield an Invalid Date — which is a Date object, not
+ * null, so it would slip past a `?? fallback` guard and reach Prisma as `new Date("Invalid
+ * Date")`. Collapse those to null so callers fall back to a real date.
+ */
+function parseValidDate(value: unknown): Date | null {
+  if (typeof value !== "string") return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function addDays(date: Date, days: number): Date {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 }
@@ -113,7 +125,7 @@ async function applyOutcomeEffectsTx(
           ? meta.installmentAmount
           : null;
     const dateStr = effectiveOutcome === "PAYMENT_PROMISE" ? meta.promisedDate : meta.startDate;
-    promiseDueDate = typeof dateStr === "string" ? new Date(dateStr) : null;
+    promiseDueDate = parseValidDate(dateStr);
 
     const existing = await tx.paymentPromise.findFirst({
       where: { contactLogId: log.id }
@@ -142,8 +154,7 @@ async function applyOutcomeEffectsTx(
       const suppressDays = triggerNumber(triggers, "PAYMENT_PROMISE", "suppressDays", 7);
       suppressUntil = promiseDueDate ?? addDays(contactedAt, suppressDays);
     } else if (effectiveOutcome === "CALLBACK_REQUESTED") {
-      const requested =
-        typeof meta.requestedDate === "string" ? new Date(meta.requestedDate) : null;
+      const requested = parseValidDate(meta.requestedDate);
       const suppressHours = triggerNumber(triggers, "CALLBACK_REQUESTED", "suppressHours", 24);
       suppressUntil = requested ?? addHours(contactedAt, suppressHours);
     }
