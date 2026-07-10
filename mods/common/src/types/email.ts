@@ -45,6 +45,11 @@ export interface EmailAutopilotRequest {
   thread: EmailThreadMessage[];
   context?: Record<string, unknown>;
   language?: string;
+  /**
+   * "Today" as an ISO date (`YYYY-MM-DD`), so the model can resolve relative promises
+   * ("mañana", "el viernes") into the absolute `objective.dueDate` it must return.
+   */
+  referenceDate?: string;
 }
 
 /** The autopilot decision engine (LLM-backed in prod, deterministic mock offline). */

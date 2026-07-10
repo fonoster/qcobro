@@ -35,7 +35,13 @@ function harness(g: EmailGestionView | null, decision: EmailAutopilotDecision) {
       updates.push(channelData);
     }
   };
-  const autopilot: EmailAutopilot = { decide: async () => decision };
+  const decideReqs: Record<string, unknown>[] = [];
+  const autopilot: EmailAutopilot = {
+    decide: async (req) => {
+      decideReqs.push(req as unknown as Record<string, unknown>);
+      return decision;
+    }
+  };
   const deps = {
     client,
     autopilot,
@@ -52,7 +58,7 @@ function harness(g: EmailGestionView | null, decision: EmailAutopilotDecision) {
     maxRepliesDefault: 3,
     now: NOW
   };
-  return { deps, updates, outcomes, sends };
+  return { deps, updates, outcomes, sends, decideReqs };
 }
 
 const inbound = (over: Record<string, unknown> = {}) => ({
@@ -66,7 +72,7 @@ const inbound = (over: Record<string, unknown> = {}) => ({
 
 describe("ingestEmailReply", () => {
   it("correlates, threads the reply, and sends an autopilot reply under the cap", async () => {
-    const { deps, updates, sends } = harness(gestion(), {
+    const { deps, updates, sends, decideReqs } = harness(gestion(), {
       action: "reply",
       replyBody: "Gracias, coordinamos el pago."
     });
@@ -75,6 +81,8 @@ describe("ingestEmailReply", () => {
     assert.deepEqual(res, { matched: true, id: "log-1", action: "reply" });
     assert.equal(sends.length, 1, "one reply sent");
     assert.equal(sends[0].to, "cliente@example.com");
+    // The autopilot gets today's date so it can resolve relative promises ("el viernes").
+    assert.equal(decideReqs[0].referenceDate, "2026-06-26");
     const thread = updates.at(-1)!.emailThread as { messages: unknown[]; agentReplyCount: number };
     assert.equal(thread.messages.length, 2, "inbound + agent reply threaded");
     assert.equal(thread.agentReplyCount, 1);

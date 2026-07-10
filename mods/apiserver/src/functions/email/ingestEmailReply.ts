@@ -115,7 +115,8 @@ export function createIngestEmailReply(deps: IngestEmailReplyDeps) {
           language:
             typeof g.accountContext.preferredLanguage === "string"
               ? g.accountContext.preferredLanguage
-              : undefined
+              : undefined,
+          referenceDate: nowIso.slice(0, 10)
         });
 
     // Cap reached → never auto-reply; surface for an operator instead.
