@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.12.4](https://github.com/fonoster/qcobro/compare/v1.12.3...v1.12.4) (2026-07-10)
+
+### Bug Fixes
+
+- **api:** stop email-inbound webhook crashes (invalid promise dates + malformed cloak key) ([#21](https://github.com/fonoster/qcobro/issues/21)) ([a51a5b5](https://github.com/fonoster/qcobro/commit/a51a5b561fb130aebbf9bbd3591a390f502ac5fe))
+
 # [1.12.0](https://github.com/fonoster/qcobro/compare/v1.11.4...v1.12.0) (2026-07-01)
 
 ### Features
