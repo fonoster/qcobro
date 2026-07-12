@@ -7,6 +7,7 @@ import { resolveWhatsAppClient } from "../services/resolveWhatsAppClient.js";
 import { createEngine } from "./engine.js";
 import { createPrismaEngineClient } from "./prismaEngineClient.js";
 import { createEngineRunner, type EngineRunner } from "./runner.js";
+import { createEventPruner, createPrismaEngineEventSink } from "./eventSink.js";
 
 /**
  * Builds the campaigns engine from `qcobro.json` and starts its tick timer — but only
@@ -48,7 +49,12 @@ export function startEngine(): EngineRunner | null {
   const runner = createEngineRunner({
     prisma,
     tick: engine.tick,
-    tickSeconds: config.engine.tickSeconds
+    tickSeconds: config.engine.tickSeconds,
+    eventSink: createPrismaEngineEventSink(prisma),
+    pruneEvents:
+      config.engine.eventsRetentionDays > 0
+        ? createEventPruner(prisma, config.engine.eventsRetentionDays)
+        : null
   });
   runner.start();
   console.log(`[engine] started — tick every ${config.engine.tickSeconds}s`);

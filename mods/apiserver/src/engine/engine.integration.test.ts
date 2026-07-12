@@ -1,9 +1,12 @@
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { PrismaClient } from "@prisma/client";
+import { evaluate, evaluationParametersSchema, type EngineEvent } from "@qcobro/common";
 import { createEngine } from "./engine.js";
 import { createPrismaEngineClient } from "./prismaEngineClient.js";
-import { EmulatedSmsClient } from "./emulators.js";
+import { createEngineRunner } from "./runner.js";
+import { createEventPruner } from "./eventSink.js";
+import { EmulatedSmsClient, InMemoryEngineEventSink } from "./emulators.js";
 
 // Integration tests need a real Postgres. Skipped unless DATABASE_URL is set
 // (the dev stack: `docker compose -f compose.dev.yaml up -d db`).
@@ -59,7 +62,7 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
     return { campaignId: camp.id };
   }
 
-  function makeEngine(sms: EmulatedSmsClient) {
+  function makeEngine(sms: EmulatedSmsClient, opts: { perTickMax?: number } = {}) {
     return createEngine({
       db: createPrismaEngineClient(prisma),
       reserveRecordClient: prisma,
@@ -74,9 +77,21 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
       emailPerMinute: 0,
       whatsAppPerMinute: 0,
       resolveWhatsApp: async () => null,
-      tickSeconds: 60
+      tickSeconds: 60,
+      perTickMax: opts.perTickMax
     });
   }
+
+  /** Judge parameters mirroring the engine wiring above. */
+  const judgeParams = (thresholds: { livenessTicks?: number } = {}) =>
+    evaluationParametersSchema.parse({
+      tickSeconds: 60,
+      ratesPerMinute: { voice: 0, sms: 60, email: 0, whatsApp: 0 },
+      thresholds
+    });
+
+  const invariant = (events: EngineEvent[], id: string, thresholds = {}) =>
+    evaluate(events, judgeParams(thresholds)).invariants.find((i) => i.id === id);
 
   const mine = (sms: EmulatedSmsClient) => sms.messages.filter((m) => m.to.includes(tag));
 
@@ -162,5 +177,118 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
     const healthy = new EmulatedSmsClient();
     await makeEngine(healthy).tick();
     assert.equal(mine(healthy).length, 0, "no retry of the consumed attempt (at-most-once)");
+  });
+
+  // ——— Flight recorder + scorecard (engine-events / engine-scorecard) ———
+
+  it("a healthy multi-tick run yields a green scorecard from the recorded stream", async () => {
+    const { campaignId } = await seedCampaign({ maxPerDay: 1, accounts: 2 });
+    const sms = new EmulatedSmsClient();
+    const engine = makeEngine(sms);
+
+    const first = await engine.tick();
+    const second = await engine.tick();
+    const events = [...(first.events ?? []), ...(second.events ?? [])];
+    assert.ok(events.length > 0, "the tick reports carry recorded events");
+
+    const card = evaluate(events, judgeParams());
+    assert.equal(card.verdict, "pass");
+    assert.equal(card.gaps.length, 0);
+    assert.equal(card.totals.ticks, 2);
+    const breakdown = card.campaigns.find((c) => c.campaignId === campaignId);
+    assert.equal(breakdown?.dispatched, 2);
+    assert.deepEqual(breakdown?.violations, {});
+
+    // Same stream, same parameters → deeply equal scorecards (judge determinism).
+    assert.deepEqual(evaluate(events, judgeParams()), card);
+  });
+
+  it("scripted provider failures above the error threshold turn PERF-3 red", async () => {
+    const { campaignId } = await seedCampaign({ maxPerDay: 1, accounts: 2 });
+    const failing = new EmulatedSmsClient({ fail: true });
+
+    const report = await makeEngine(failing).tick();
+    const card = evaluate(report.events ?? [], judgeParams());
+
+    assert.equal(card.verdict, "fail");
+    const perf3 = card.invariants.find((i) => i.id === "PERF-3");
+    assert.equal(perf3?.verdict, "fail");
+    assert.equal(card.campaigns.find((c) => c.campaignId === campaignId)?.failed, 2);
+  });
+
+  it("a starved account is flagged by LIVE-1 (and PERF-4 stays quiet under perTickMax)", async () => {
+    // perTickMax 0 legitimately starves every eligible account each tick: the funnel
+    // admits them, the deployment cap blocks them. Three such ticks exceed a
+    // livenessTicks of 2. PERF-4 must NOT fire — the limiter was the per-tick cap,
+    // not an unspent channel bucket (tick.completed says perTickMaxReached).
+    await seedCampaign({ maxPerDay: 1, accounts: 1 });
+    const sms = new EmulatedSmsClient();
+    const engine = makeEngine(sms, { perTickMax: 0 });
+
+    const events: EngineEvent[] = [];
+    for (let i = 0; i < 3; i++) events.push(...((await engine.tick()).events ?? []));
+
+    assert.equal(mine(sms).length, 0, "nothing dispatched under a zero per-tick cap");
+    assert.equal(invariant(events, "LIVE-1", { livenessTicks: 2 })?.verdict, "fail");
+    assert.equal(invariant(events, "PERF-4")?.verdict, "pass");
+  });
+
+  it("the runner flushes tick events to the sink", async () => {
+    await seedCampaign({ maxPerDay: 1, accounts: 1 });
+    const sms = new EmulatedSmsClient();
+    const sink = new InMemoryEngineEventSink();
+    const runner = createEngineRunner({
+      prisma,
+      tick: makeEngine(sms).tick,
+      tickSeconds: 60,
+      log: () => undefined,
+      eventSink: sink
+    });
+
+    await runner.runOnce();
+
+    assert.ok(sink.events.length > 0, "sink received the tick's events");
+    assert.ok(sink.events.some((e) => e.kind === "tick.completed"));
+  });
+
+  it("a failing sink never affects dispatch or gestiones (best-effort telemetry)", async () => {
+    const { campaignId } = await seedCampaign({ maxPerDay: 1, accounts: 1 });
+    const sms = new EmulatedSmsClient();
+    const runner = createEngineRunner({
+      prisma,
+      tick: makeEngine(sms).tick,
+      tickSeconds: 60,
+      log: () => undefined,
+      eventSink: new InMemoryEngineEventSink({ fail: true })
+    });
+
+    await runner.runOnce();
+
+    assert.equal(mine(sms).length, 1, "dispatch went out despite the sink failure");
+    const logs = await prisma.accountContactLog.findMany({ where: { campaignId } });
+    assert.equal(logs.length, 1, "gestión recorded despite the sink failure");
+  });
+
+  it("the pruner deletes expired events and keeps recent ones", async () => {
+    const oldId = `test-prune-old-${tag}`;
+    const newId = `test-prune-new-${tag}`;
+    await prisma.engineEvent.createMany({
+      data: [
+        {
+          id: oldId,
+          kind: "TICK_STARTED",
+          at: new Date(Date.now() - 40 * 86_400_000),
+          payload: {}
+        },
+        { id: newId, kind: "TICK_STARTED", at: new Date(), payload: {} }
+      ]
+    });
+
+    const pruned = await createEventPruner(prisma, 30)();
+
+    assert.ok(pruned >= 1, "at least the expired row was pruned");
+    assert.equal(await prisma.engineEvent.findUnique({ where: { id: oldId } }), null);
+    assert.ok(await prisma.engineEvent.findUnique({ where: { id: newId } }));
+    await prisma.engineEvent.delete({ where: { id: newId } });
   });
 });
