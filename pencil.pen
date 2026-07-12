@@ -41053,6 +41053,1709 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "b4rbrX",
+          "name": "Facturación · Página",
+          "clip": true,
+          "width": 1440,
+          "height": 900,
+          "fill": "#F8FAFC",
+          "children": [
+            {
+              "id": "bmm3Q",
+              "type": "ref",
+              "ref": "KIQZZ",
+              "name": "Sidebar",
+              "width": 240,
+              "height": "fill_container",
+              "descendants": {
+                "I0gAe": {
+                  "fill": "#00000000"
+                },
+                "WDvPW": {
+                  "fill": "#64748B"
+                },
+                "P4peqX": {
+                  "fill": "#475569",
+                  "fontWeight": "500"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "MgTjD",
+              "name": "Main",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "qtvf7",
+                  "name": "Content",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": 24,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "F5QkPX",
+                      "name": "PageHeader",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "d0GaZB",
+                          "name": "Titles",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "h7izH6",
+                              "name": "Title",
+                              "fill": "#0F172A",
+                              "content": "Facturación",
+                              "fontFamily": "Inter",
+                              "fontSize": 22,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "joOcV",
+                              "name": "Sub",
+                              "fill": "#64748B",
+                              "content": "Consulta los créditos del ciclo y administra el plan de tu espacio.",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Vkudx",
+                      "name": "Créditos Card",
+                      "width": 680,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 16,
+                      "stroke": "#E2E8F0",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "gap": 16,
+                      "padding": 24,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ovr2M",
+                          "name": "Header",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "MOqCA",
+                              "name": "HText",
+                              "layout": "vertical",
+                              "gap": 2,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "TqGI2",
+                                  "name": "T",
+                                  "fill": "#0F172A",
+                                  "content": "Créditos del ciclo",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 16,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "vcsRb",
+                                  "name": "S",
+                                  "fill": "#64748B",
+                                  "content": "La asignación mensual se repone al renovarse el ciclo.",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "P5vPv",
+                              "name": "PlanBadge",
+                              "fill": "#ECFDF5",
+                              "cornerRadius": "$--radius-pill",
+                              "stroke": "#A7F3D0",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "padding": [
+                                6,
+                                12
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "SKTTB",
+                                  "name": "T",
+                                  "fill": "#047857",
+                                  "content": "Plan Crecimiento",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "rLw4M",
+                          "name": "Meter",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "CMtR7",
+                              "name": "Amount",
+                              "gap": 6,
+                              "alignItems": "end",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "V035w",
+                                  "name": "Restante",
+                                  "fill": "#0F172A",
+                                  "content": "US$ 16,20",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 28,
+                                  "fontWeight": "800",
+                                  "letterSpacing": -0.5
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "QVHDF",
+                                  "name": "OfWrap",
+                                  "padding": [
+                                    0,
+                                    0,
+                                    5,
+                                    0
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "ExwMx",
+                                      "name": "Of",
+                                      "fill": "#64748B",
+                                      "content": "de US$ 29,00 restantes",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 14,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "r1azTK",
+                              "name": "Track",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 10,
+                              "fill": "#F1F5F9",
+                              "cornerRadius": "$--radius-pill",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "SWQD8",
+                                  "name": "Fill",
+                                  "width": 353,
+                                  "height": "fill_container",
+                                  "fill": "#10B981",
+                                  "cornerRadius": "$--radius-pill"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "qZQhw",
+                              "name": "Legend",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "l9nlj",
+                                  "name": "Used",
+                                  "fill": "#64748B",
+                                  "content": "Consumido este ciclo: US$ 12,80",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Nr06e",
+                                  "name": "Renew",
+                                  "fill": "#64748B",
+                                  "content": "Se renueva el 1 ago 2026",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "iEVzk",
+                          "name": "Divider",
+                          "width": "fill_container",
+                          "height": 1,
+                          "fill": "#F1F5F9"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Mty8Q",
+                          "name": "Burn",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "G5W0pP",
+                              "name": "I",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "trending-down",
+                              "library": "lucide",
+                              "fill": "#94A3B8"
+                            },
+                            {
+                              "type": "text",
+                              "id": "pzqxB",
+                              "name": "T",
+                              "fill": "#94A3B8",
+                              "content": "Al ritmo actual, los créditos alcanzan para ≈ 12 días más.",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "auYrW",
+                      "name": "Plan Card",
+                      "width": 680,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 16,
+                      "stroke": "#E2E8F0",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "gap": 20,
+                      "padding": 24,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "vMyap",
+                          "name": "HText",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "xviRm",
+                              "name": "T",
+                              "fill": "#0F172A",
+                              "content": "Plan y pago",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "CU9rs",
+                              "name": "S",
+                              "fill": "#64748B",
+                              "content": "Solo el propietario puede cambiar el plan, el método de pago y ver las facturas.",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "lHYbW",
+                          "name": "PlanRow",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "QmNx5",
+                              "name": "L",
+                              "layout": "vertical",
+                              "gap": 2,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Z053Y",
+                                  "name": "T",
+                                  "fill": "#0F172A",
+                                  "content": "Plan Crecimiento",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 14,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "AyTnR",
+                                  "name": "S",
+                                  "fill": "#64748B",
+                                  "content": "US$ 29,00/mes · US$ 29,00 en créditos incluidos",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "kt9gO",
+                              "type": "ref",
+                              "ref": "ws2MA",
+                              "name": "Manage",
+                              "descendants": {
+                                "kGizg": {
+                                  "enabled": false
+                                },
+                                "MQ2HP": {
+                                  "content": "Gestionar plan"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "SkG9N",
+                          "name": "Divider",
+                          "width": "fill_container",
+                          "height": 1,
+                          "fill": "#F1F5F9"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "B8pw7",
+                          "name": "PaymentRow",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "YEMM5",
+                              "name": "L",
+                              "gap": 12,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "KL5Qw",
+                                  "name": "I",
+                                  "width": 20,
+                                  "height": 20,
+                                  "icon": "credit-card",
+                                  "library": "lucide",
+                                  "fill": "#475569"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "G0Vwvv",
+                                  "name": "LT",
+                                  "layout": "vertical",
+                                  "gap": 2,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "Lmpgm",
+                                      "name": "T",
+                                      "fill": "#0F172A",
+                                      "content": "Visa terminada en 4242",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 14,
+                                      "fontWeight": "500"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "NWrl9",
+                                      "name": "S",
+                                      "fill": "#64748B",
+                                      "content": "Vence 08/27 · Un solo método de pago por pagador",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "id": "epVrw",
+                              "type": "ref",
+                              "ref": "VJCaF",
+                              "name": "UpdateCard",
+                              "descendants": {
+                                "XyMlx": {
+                                  "enabled": false
+                                },
+                                "NkZAZ": {
+                                  "content": "Actualizar ↗"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "T2D5Ni",
+                          "name": "Divider",
+                          "width": "fill_container",
+                          "height": 1,
+                          "fill": "#F1F5F9"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "JfFwY",
+                          "name": "InvoicesRow",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "cEaw7",
+                              "name": "L",
+                              "gap": 12,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "hfzal",
+                                  "name": "I",
+                                  "width": 20,
+                                  "height": 20,
+                                  "icon": "file-text",
+                                  "library": "lucide",
+                                  "fill": "#475569"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "UzQ2j",
+                                  "name": "LT",
+                                  "layout": "vertical",
+                                  "gap": 2,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "AglAP",
+                                      "name": "T",
+                                      "fill": "#0F172A",
+                                      "content": "Facturas",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 14,
+                                      "fontWeight": "500"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "sIHIS",
+                                      "name": "S",
+                                      "fill": "#64748B",
+                                      "content": "Historial de cobros de este espacio",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "id": "w3Auct",
+                              "type": "ref",
+                              "ref": "VJCaF",
+                              "name": "ViewInvoices",
+                              "descendants": {
+                                "XyMlx": {
+                                  "enabled": false
+                                },
+                                "NkZAZ": {
+                                  "content": "Ver facturas ↗"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "nTeH0",
+          "name": "Campañas · Pausado · créditos agotados",
+          "clip": true,
+          "width": 1440,
+          "height": 900,
+          "fill": "#F8FAFC",
+          "children": [
+            {
+              "id": "vn2jd",
+              "type": "ref",
+              "ref": "KIQZZ",
+              "name": "Sidebar",
+              "width": 240,
+              "height": "fill_container",
+              "descendants": {
+                "I0gAe": {
+                  "fill": "#00000000"
+                },
+                "WDvPW": {
+                  "fill": "#64748B"
+                },
+                "P4peqX": {
+                  "fill": "#475569",
+                  "fontWeight": "500"
+                },
+                "vJyZX": {
+                  "fill": "#ECFDF5"
+                },
+                "a7sfkc": {
+                  "fill": "#047857"
+                },
+                "gkhKL": {
+                  "fill": "#047857",
+                  "fontWeight": "600"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "JvFLr",
+              "name": "Main",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ZDT2I",
+                  "name": "Content",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": 24,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Px6eG",
+                      "name": "Banner · Créditos agotados",
+                      "width": "fill_container",
+                      "fill": "#FFFBEB",
+                      "cornerRadius": 12,
+                      "stroke": "#FDE68A",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "gap": 16,
+                      "padding": [
+                        16,
+                        20
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "QdOqC",
+                          "name": "IconWrap",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#FEF3C7",
+                          "cornerRadius": "$--radius-pill",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "LKpeb",
+                              "name": "I",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "pause-circle",
+                              "library": "lucide",
+                              "fill": "#D97706"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "bwJgb",
+                          "name": "Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "yqR8j",
+                              "name": "T",
+                              "fill": "#92400E",
+                              "content": "Cobranzas pausadas · créditos agotados",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "re8iC",
+                              "name": "S",
+                              "fill": "#B45309",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Este espacio agotó los créditos del ciclo. Los envíos se reanudarán al renovarse el ciclo el 1 ago 2026 · o de inmediato si mejoras el plan.",
+                              "lineHeight": 1.4,
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "x4RKbM",
+                          "name": "CTA",
+                          "fill": "#D97706",
+                          "cornerRadius": "$--radius-pill",
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "zA03s",
+                              "name": "T",
+                              "fill": "#FFFFFF",
+                              "content": "Mejorar plan",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "s2dhKQ",
+                      "name": "PageHeader",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "WWVJG",
+                          "name": "Titles",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "n9mTY",
+                              "name": "Title",
+                              "fill": "#0F172A",
+                              "content": "Campañas",
+                              "fontFamily": "Inter",
+                              "fontSize": 22,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Kf2Lw",
+                              "name": "Sub",
+                              "fill": "#64748B",
+                              "content": "Programa de contacto que ejecuta un agente sobre una o más carteras.",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HIsb8",
+                      "name": "Toolbar",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "XEycJ",
+                          "type": "ref",
+                          "ref": "KoP5V",
+                          "name": "Search"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "v5JyB",
+                          "name": "Filter",
+                          "fill": "$--card",
+                          "cornerRadius": 8,
+                          "stroke": "$--border",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "gap": 8,
+                          "padding": [
+                            10,
+                            14
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "xWM7y",
+                              "name": "i",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "sliders-horizontal",
+                              "library": "lucide",
+                              "fill": "$--muted-foreground"
+                            },
+                            {
+                              "type": "text",
+                              "id": "msP3O",
+                              "name": "t",
+                              "fill": "$--foreground",
+                              "content": "Canal",
+                              "fontFamily": "$--font-primary",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "jF6wR",
+                              "name": "c",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "chevron-down",
+                              "library": "lucide",
+                              "fill": "$--muted-foreground"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ZOisU",
+                          "name": "Spacer",
+                          "width": "fill_container",
+                          "height": 1
+                        },
+                        {
+                          "id": "VFZvV",
+                          "type": "ref",
+                          "ref": "tiMW3",
+                          "name": "CTA",
+                          "descendants": {
+                            "GTAmU": {
+                              "content": "Nueva campaña"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "H6a0gW",
+                      "type": "ref",
+                      "ref": "Y0cy6y",
+                      "name": "Table",
+                      "width": "fill_container",
+                      "descendants": {
+                        "fXyc9": {
+                          "enabled": false
+                        },
+                        "kHSpi": {
+                          "content": "Campaña"
+                        },
+                        "tCM78": {
+                          "content": "Canal"
+                        },
+                        "d02Cq": {
+                          "width": 160
+                        },
+                        "d9mJwv": {
+                          "content": "Próxima ejecución"
+                        },
+                        "UOqki": {
+                          "enabled": false
+                        },
+                        "K1KYaH": {
+                          "content": "Recordatorio Vencidos Q2"
+                        },
+                        "I4tMzt": {
+                          "content": "4,823 contactos"
+                        },
+                        "kQS5X": {
+                          "content": "Voz IA"
+                        },
+                        "vOs2s": {
+                          "width": 160
+                        },
+                        "VMee8": {
+                          "content": "Hoy, 15:00"
+                        },
+                        "Hn0W4": {
+                          "enabled": false
+                        },
+                        "F0lXsA": {
+                          "content": "Aviso temprano SMS"
+                        },
+                        "qH7gz": {
+                          "content": "1,247 contactos"
+                        },
+                        "Qkm3u/euhVD": {
+                          "content": "Programada"
+                        },
+                        "C57iOr": {
+                          "content": "SMS"
+                        },
+                        "sI2Cx": {
+                          "width": 160
+                        },
+                        "dIEgG": {
+                          "content": "Mañana, 9:00"
+                        },
+                        "UZuYr": {
+                          "enabled": false
+                        },
+                        "SKeY2": {
+                          "content": "Cobro pre-jurídico"
+                        },
+                        "kyOnE": {
+                          "content": "892 contactos"
+                        },
+                        "F8NToT": {
+                          "content": "Email"
+                        },
+                        "j8FelC": {
+                          "width": 160
+                        },
+                        "tQt3C": {
+                          "content": "Lun 23 jun"
+                        },
+                        "V3igvo": {
+                          "enabled": false
+                        },
+                        "EFSmw": {
+                          "content": "Campaña Marzo Email"
+                        },
+                        "pGtKU": {
+                          "content": "2,156 contactos"
+                        },
+                        "bZsng/eimgZ": {
+                          "content": "Pausada"
+                        },
+                        "ZDfQG": {
+                          "content": "Email"
+                        },
+                        "p8rTnV": {
+                          "width": 160
+                        },
+                        "mehuL": {
+                          "content": "Mar 24 jun"
+                        },
+                        "fCKNe": {
+                          "enabled": false
+                        },
+                        "PGB1O": {
+                          "content": "Recordatorio WhatsApp"
+                        },
+                        "lEBYG": {
+                          "content": "634 contactos"
+                        },
+                        "G2HNh": {
+                          "content": "WhatsApp"
+                        },
+                        "V0mWqH": {
+                          "width": 160
+                        },
+                        "y7Kbj": {
+                          "content": "—"
+                        },
+                        "BUWRE": {
+                          "content": "Mostrando 1–5 de 8 campañas"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "S4OZDu",
+          "name": "Campañas · Pausado · pago fallido",
+          "clip": true,
+          "width": 1440,
+          "height": 900,
+          "fill": "#F8FAFC",
+          "children": [
+            {
+              "id": "ALlOx",
+              "type": "ref",
+              "ref": "KIQZZ",
+              "name": "Sidebar",
+              "width": 240,
+              "height": "fill_container",
+              "descendants": {
+                "I0gAe": {
+                  "fill": "#00000000"
+                },
+                "WDvPW": {
+                  "fill": "#64748B"
+                },
+                "P4peqX": {
+                  "fill": "#475569",
+                  "fontWeight": "500"
+                },
+                "vJyZX": {
+                  "fill": "#ECFDF5"
+                },
+                "a7sfkc": {
+                  "fill": "#047857"
+                },
+                "gkhKL": {
+                  "fill": "#047857",
+                  "fontWeight": "600"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "LRnth",
+              "name": "Main",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "q8JisY",
+                  "name": "Content",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": 24,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Sy8M3",
+                      "name": "Banner · Pago fallido",
+                      "width": "fill_container",
+                      "fill": "#FEF2F2",
+                      "cornerRadius": 12,
+                      "stroke": "#FECACA",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "gap": 16,
+                      "padding": [
+                        16,
+                        20
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "RCoq7",
+                          "name": "IconWrap",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#FEE2E2",
+                          "cornerRadius": "$--radius-pill",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "ODWvU",
+                              "name": "I",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "credit-card",
+                              "library": "lucide",
+                              "fill": "#DC2626"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "xJK0A",
+                          "name": "Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "y8Aq5",
+                              "name": "T",
+                              "fill": "#991B1B",
+                              "content": "Cobranzas pausadas · problema con el pago",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "G6iYrE",
+                              "name": "S",
+                              "fill": "#B91C1C",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "No pudimos procesar el cobro a tu método de pago. Actualízalo para reanudar los envíos · no es necesario cambiar de plan.",
+                              "lineHeight": 1.4,
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "f5xteT",
+                          "name": "CTA",
+                          "fill": "#DC2626",
+                          "cornerRadius": "$--radius-pill",
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "w8zFr",
+                              "name": "T",
+                              "fill": "#FFFFFF",
+                              "content": "Actualizar método de pago",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kr8nV",
+                      "name": "PageHeader",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ZDikh",
+                          "name": "Titles",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "NtQsk",
+                              "name": "Title",
+                              "fill": "#0F172A",
+                              "content": "Campañas",
+                              "fontFamily": "Inter",
+                              "fontSize": 22,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "TfyBU",
+                              "name": "Sub",
+                              "fill": "#64748B",
+                              "content": "Programa de contacto que ejecuta un agente sobre una o más carteras.",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kgW2P",
+                      "name": "Toolbar",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "zSZKW",
+                          "type": "ref",
+                          "ref": "KoP5V",
+                          "name": "Search"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "t1n6OZ",
+                          "name": "Filter",
+                          "fill": "$--card",
+                          "cornerRadius": 8,
+                          "stroke": "$--border",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "gap": 8,
+                          "padding": [
+                            10,
+                            14
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Q7dOvP",
+                              "name": "i",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "sliders-horizontal",
+                              "library": "lucide",
+                              "fill": "$--muted-foreground"
+                            },
+                            {
+                              "type": "text",
+                              "id": "baBeo",
+                              "name": "t",
+                              "fill": "$--foreground",
+                              "content": "Canal",
+                              "fontFamily": "$--font-primary",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "kRXwr",
+                              "name": "c",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "chevron-down",
+                              "library": "lucide",
+                              "fill": "$--muted-foreground"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "g1tcnh",
+                          "name": "Spacer",
+                          "width": "fill_container",
+                          "height": 1
+                        },
+                        {
+                          "id": "f6aifZ",
+                          "type": "ref",
+                          "ref": "tiMW3",
+                          "name": "CTA",
+                          "descendants": {
+                            "GTAmU": {
+                              "content": "Nueva campaña"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "Gd9Rh",
+                      "type": "ref",
+                      "ref": "Y0cy6y",
+                      "name": "Table",
+                      "width": "fill_container",
+                      "descendants": {
+                        "fXyc9": {
+                          "enabled": false
+                        },
+                        "kHSpi": {
+                          "content": "Campaña"
+                        },
+                        "tCM78": {
+                          "content": "Canal"
+                        },
+                        "d02Cq": {
+                          "width": 160
+                        },
+                        "d9mJwv": {
+                          "content": "Próxima ejecución"
+                        },
+                        "UOqki": {
+                          "enabled": false
+                        },
+                        "K1KYaH": {
+                          "content": "Recordatorio Vencidos Q2"
+                        },
+                        "I4tMzt": {
+                          "content": "4,823 contactos"
+                        },
+                        "kQS5X": {
+                          "content": "Voz IA"
+                        },
+                        "vOs2s": {
+                          "width": 160
+                        },
+                        "VMee8": {
+                          "content": "Hoy, 15:00"
+                        },
+                        "Hn0W4": {
+                          "enabled": false
+                        },
+                        "F0lXsA": {
+                          "content": "Aviso temprano SMS"
+                        },
+                        "qH7gz": {
+                          "content": "1,247 contactos"
+                        },
+                        "Qkm3u/euhVD": {
+                          "content": "Programada"
+                        },
+                        "C57iOr": {
+                          "content": "SMS"
+                        },
+                        "sI2Cx": {
+                          "width": 160
+                        },
+                        "dIEgG": {
+                          "content": "Mañana, 9:00"
+                        },
+                        "UZuYr": {
+                          "enabled": false
+                        },
+                        "SKeY2": {
+                          "content": "Cobro pre-jurídico"
+                        },
+                        "kyOnE": {
+                          "content": "892 contactos"
+                        },
+                        "F8NToT": {
+                          "content": "Email"
+                        },
+                        "j8FelC": {
+                          "width": 160
+                        },
+                        "tQt3C": {
+                          "content": "Lun 23 jun"
+                        },
+                        "V3igvo": {
+                          "enabled": false
+                        },
+                        "EFSmw": {
+                          "content": "Campaña Marzo Email"
+                        },
+                        "pGtKU": {
+                          "content": "2,156 contactos"
+                        },
+                        "bZsng/eimgZ": {
+                          "content": "Pausada"
+                        },
+                        "ZDfQG": {
+                          "content": "Email"
+                        },
+                        "p8rTnV": {
+                          "width": 160
+                        },
+                        "mehuL": {
+                          "content": "Mar 24 jun"
+                        },
+                        "fCKNe": {
+                          "enabled": false
+                        },
+                        "PGB1O": {
+                          "content": "Recordatorio WhatsApp"
+                        },
+                        "lEBYG": {
+                          "content": "634 contactos"
+                        },
+                        "G2HNh": {
+                          "content": "WhatsApp"
+                        },
+                        "V0mWqH": {
+                          "width": 160
+                        },
+                        "y7Kbj": {
+                          "content": "—"
+                        },
+                        "BUWRE": {
+                          "content": "Mostrando 1–5 de 8 campañas"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "k8650",
+          "name": "Notes · Facturación",
+          "width": 380,
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "pvfCe",
+              "name": "VISIBILIDAD POR ROL",
+              "width": "fill_container",
+              "fill": "#34D3991F",
+              "cornerRadius": 10,
+              "stroke": "#34D39966",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                12,
+                14
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "TvXJj",
+                  "name": "t",
+                  "fill": "#34D399",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "VISIBILIDAD POR ROL",
+                  "fontFamily": "Roboto Mono",
+                  "fontSize": 13,
+                  "fontWeight": "700",
+                  "letterSpacing": 1
+                },
+                {
+                  "type": "text",
+                  "id": "G8d8N",
+                  "name": "b",
+                  "fill": "#E2E8F0",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "El medidor de créditos y los banners de pausa son visibles para administradores y propietarios. Gestionar plan, método de pago y facturas: solo propietario. Los administradores ven los mismos banners sin el botón de acción.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SIXyJ",
+              "name": "PAUSA: AGOTADO VS PAGO",
+              "width": "fill_container",
+              "fill": "#34D3991F",
+              "cornerRadius": 10,
+              "stroke": "#34D39966",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                12,
+                14
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "j0lZVK",
+                  "name": "t",
+                  "fill": "#34D399",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "PAUSA: AGOTADO VS PAGO",
+                  "fontFamily": "Roboto Mono",
+                  "fontSize": 13,
+                  "fontWeight": "700",
+                  "letterSpacing": 1
+                },
+                {
+                  "type": "text",
+                  "id": "s1qoW",
+                  "name": "b",
+                  "fill": "#E2E8F0",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Créditos agotados (ámbar) invita a mejorar el plan o esperar el ciclo. Pago fallido (rojo) dirige a actualizar el método de pago · nunca a mejorar el plan.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "m76wh",
+              "name": "CAMBIO DE PLAN",
+              "width": "fill_container",
+              "fill": "#34D3991F",
+              "cornerRadius": 10,
+              "stroke": "#34D39966",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                12,
+                14
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "oqd5d",
+                  "name": "t",
+                  "fill": "#34D399",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "CAMBIO DE PLAN",
+                  "fontFamily": "Roboto Mono",
+                  "fontSize": 13,
+                  "fontWeight": "700",
+                  "letterSpacing": 1
+                },
+                {
+                  "type": "text",
+                  "id": "RmUdn",
+                  "name": "b",
+                  "fill": "#E2E8F0",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Mejorar aplica de inmediato: cobro prorrateado y créditos repuestos al instante. Bajar se agenda para el fin del ciclo actual. Orden del catálogo = ruta de mejora (Inicial → Crecimiento → Escala).",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ibzgf",
+              "name": "PRECIOS PLACEHOLDER",
+              "width": "fill_container",
+              "fill": "#34D3991F",
+              "cornerRadius": 10,
+              "stroke": "#34D39966",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                12,
+                14
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "DHWfi",
+                  "name": "t",
+                  "fill": "#34D399",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "PRECIOS PLACEHOLDER",
+                  "fontFamily": "Roboto Mono",
+                  "fontSize": 13,
+                  "fontWeight": "700",
+                  "letterSpacing": 1
+                },
+                {
+                  "type": "text",
+                  "id": "D8GKB",
+                  "name": "b",
+                  "fill": "#E2E8F0",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Los montos y tarifas por canal son de ejemplo; los precios de lanzamiento siguen abiertos en design.md. billing.currency (US$) es independiente de la moneda de la cartera.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mPbAK",
+              "name": "RITMO DE CONSUMO",
+              "width": "fill_container",
+              "fill": "#34D3991F",
+              "cornerRadius": 10,
+              "stroke": "#34D39966",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                12,
+                14
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "IkywC",
+                  "name": "t",
+                  "fill": "#34D399",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "RITMO DE CONSUMO",
+                  "fontFamily": "Roboto Mono",
+                  "fontSize": 13,
+                  "fontWeight": "700",
+                  "letterSpacing": 1
+                },
+                {
+                  "type": "text",
+                  "id": "iGrK7",
+                  "name": "b",
+                  "fill": "#E2E8F0",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "La línea «≈ 12 días más» propone mostrar proyección de burn rate en v1 · pregunta abierta en design.md; quitarla es un cambio de una línea.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "E2JLY",
+              "name": "PORTAL DE STRIPE",
+              "width": "fill_container",
+              "fill": "#34D3991F",
+              "cornerRadius": 10,
+              "stroke": "#34D39966",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                12,
+                14
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "qYEMC",
+                  "name": "t",
+                  "fill": "#34D399",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "PORTAL DE STRIPE",
+                  "fontFamily": "Roboto Mono",
+                  "fontSize": 13,
+                  "fontWeight": "700",
+                  "letterSpacing": 1
+                },
+                {
+                  "type": "text",
+                  "id": "rxXcb",
+                  "name": "b",
+                  "fill": "#E2E8F0",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "«Ver facturas» y «Actualizar» abren el portal de facturación alojado por Stripe (customer portal) en una pestaña externa. QCobro no renderiza datos de facturas ni del método de pago en la app.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IOGPH",
+              "name": "FLUJO DE PAGO",
+              "width": "fill_container",
+              "fill": "#34D3991F",
+              "cornerRadius": 10,
+              "stroke": "#34D39966",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                12,
+                14
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Wqvyc",
+                  "name": "t",
+                  "fill": "#34D399",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "FLUJO DE PAGO",
+                  "fontFamily": "Roboto Mono",
+                  "fontSize": 13,
+                  "fontWeight": "700",
+                  "letterSpacing": 1
+                },
+                {
+                  "type": "text",
+                  "id": "vKEnR",
+                  "name": "b",
+                  "fill": "#E2E8F0",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "El flujo de cambio de plan dentro de la app (confirmación de mejora, captura de tarjeta la primera vez) fue doloroso de implementar en el pasado · la implementación puede redirigir a una página alojada por Stripe (Checkout / customer portal) para completar el proceso. El modal queda como comparación de planes y punto de entrada; la transacción se completa en Stripe.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -42543,6 +44246,463 @@
                             },
                             "MQ2HP": {
                               "content": "Crear clave"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "YcJdj",
+          "name": "Gestionar plan · Modal",
+          "fill": "#FFFFFF00",
+          "children": [
+            {
+              "type": "frame",
+              "id": "OgLZb",
+              "name": "Overlay",
+              "fill": "#FFFFFF00",
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "iGMR7",
+                  "name": "Card",
+                  "width": 640,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 16,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#0000004D",
+                    "offset": {
+                      "x": 0,
+                      "y": 20
+                    },
+                    "blur": 50
+                  },
+                  "layout": "vertical",
+                  "gap": 20,
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "r5PxA",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "WL0xt",
+                          "name": "HText",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ZIm2V",
+                              "name": "T",
+                              "fill": "#0F172A",
+                              "content": "Gestionar plan",
+                              "fontFamily": "Inter",
+                              "fontSize": 18,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "wF8K4",
+                              "name": "S",
+                              "fill": "#64748B",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Tu espacio está en el plan Crecimiento. El ciclo actual se renueva el 1 ago 2026.",
+                              "lineHeight": 1.4,
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "vaDSL",
+                          "name": "Close",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "x",
+                          "library": "lucide",
+                          "fill": "#94A3B8"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vIoeA",
+                      "name": "Plans",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "tNOyz",
+                          "name": "Plan — Inicial",
+                          "width": "fill_container",
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 12,
+                          "stroke": "#E2E8F0",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "gap": 16,
+                          "padding": 16,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "I2r9O",
+                              "name": "L",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "S820XU",
+                                  "name": "Name",
+                                  "fill": "#0F172A",
+                                  "content": "Inicial",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 15,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "YaSuS",
+                                  "name": "Price",
+                                  "fill": "#334155",
+                                  "content": "US$ 9,00/mes · US$ 9,00 en créditos incluidos",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "kfTKz",
+                                  "name": "Rates",
+                                  "fill": "#64748B",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Voz IA US$ 0,25/min · Pregrabada US$ 0,12/min · SMS US$ 0,05 · WhatsApp US$ 0,06 · Email US$ 0,005",
+                                  "lineHeight": 1.4,
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "eOADk",
+                              "name": "R",
+                              "layout": "vertical",
+                              "gap": 6,
+                              "alignItems": "end",
+                              "children": [
+                                {
+                                  "id": "N80WSm",
+                                  "type": "ref",
+                                  "ref": "VJCaF",
+                                  "name": "Downgrade",
+                                  "descendants": {
+                                    "XyMlx": {
+                                      "enabled": false
+                                    },
+                                    "NkZAZ": {
+                                      "content": "Bajar de plan"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "bHhQA",
+                                  "name": "Caption",
+                                  "fill": "#94A3B8",
+                                  "content": "Se aplica al final del ciclo · 1 ago",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "zFbrW",
+                          "name": "Plan — Crecimiento",
+                          "width": "fill_container",
+                          "fill": "#F0FDF4",
+                          "cornerRadius": 12,
+                          "stroke": "#10B981",
+                          "strokeWidth": 2,
+                          "strokeAlignment": "inner",
+                          "gap": 16,
+                          "padding": 16,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "naek8",
+                              "name": "L",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "zw6e8",
+                                  "name": "Name",
+                                  "fill": "#0F172A",
+                                  "content": "Crecimiento",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 15,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "H2M0rr",
+                                  "name": "Price",
+                                  "fill": "#334155",
+                                  "content": "US$ 29,00/mes · US$ 29,00 en créditos incluidos",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "oOApe",
+                                  "name": "Rates",
+                                  "fill": "#64748B",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Voz IA US$ 0,20/min · Pregrabada US$ 0,10/min · SMS US$ 0,04 · WhatsApp US$ 0,05 · Email US$ 0,004",
+                                  "lineHeight": 1.4,
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "sOLMT",
+                              "name": "R",
+                              "layout": "vertical",
+                              "gap": 6,
+                              "alignItems": "end",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "PLAsO",
+                                  "name": "CurrentPill",
+                                  "fill": "#ECFDF5",
+                                  "cornerRadius": "$--radius-pill",
+                                  "stroke": "#A7F3D0",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "padding": [
+                                    6,
+                                    12
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "l0nk6H",
+                                      "name": "T",
+                                      "fill": "#047857",
+                                      "content": "Plan actual",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "eNeim",
+                                  "name": "Caption",
+                                  "fill": "#94A3B8",
+                                  "content": "Renueva el 1 ago 2026",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "MLQm6",
+                          "name": "Plan — Escala",
+                          "width": "fill_container",
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 12,
+                          "stroke": "#E2E8F0",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "gap": 16,
+                          "padding": 16,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "tFkUk",
+                              "name": "L",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "sB7X6",
+                                  "name": "Name",
+                                  "fill": "#0F172A",
+                                  "content": "Escala",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 15,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "VVZTm",
+                                  "name": "Price",
+                                  "fill": "#334155",
+                                  "content": "US$ 79,00/mes · US$ 79,00 en créditos incluidos",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "j1XFG",
+                                  "name": "Rates",
+                                  "fill": "#64748B",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Voz IA US$ 0,16/min · Pregrabada US$ 0,08/min · SMS US$ 0,035 · WhatsApp US$ 0,04 · Email US$ 0,003",
+                                  "lineHeight": 1.4,
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "afwf8",
+                              "name": "R",
+                              "layout": "vertical",
+                              "gap": 6,
+                              "alignItems": "end",
+                              "children": [
+                                {
+                                  "id": "a72qyx",
+                                  "type": "ref",
+                                  "ref": "ws2MA",
+                                  "name": "Upgrade",
+                                  "descendants": {
+                                    "kGizg": {
+                                      "enabled": false
+                                    },
+                                    "MQ2HP": {
+                                      "content": "Mejorar ahora"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Q1IiH",
+                                  "name": "Caption",
+                                  "fill": "#94A3B8",
+                                  "content": "Se aplica de inmediato · créditos prorrateados",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "SaicT",
+                      "name": "SemanticsNote",
+                      "width": "fill_container",
+                      "fill": "#F8FAFC",
+                      "cornerRadius": 8,
+                      "gap": 10,
+                      "padding": [
+                        10,
+                        12
+                      ],
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "lj2AD",
+                          "name": "I",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "info",
+                          "library": "lucide",
+                          "fill": "#64748B"
+                        },
+                        {
+                          "type": "text",
+                          "id": "R9I4Zk",
+                          "name": "T",
+                          "fill": "#64748B",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Mejorar de plan se cobra prorrateado y repone los créditos al instante. Bajar de plan mantiene los créditos actuales hasta que termine el ciclo.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mCAM1",
+                      "name": "Footer",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "justifyContent": "end",
+                      "children": [
+                        {
+                          "id": "oP20f",
+                          "type": "ref",
+                          "ref": "VJCaF",
+                          "name": "Close",
+                          "descendants": {
+                            "XyMlx": {
+                              "enabled": false
+                            },
+                            "NkZAZ": {
+                              "content": "Cerrar"
                             }
                           }
                         }
