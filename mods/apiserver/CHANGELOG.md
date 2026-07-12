@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.14.3](https://github.com/fonoster/qcobro/compare/v1.14.2...v1.14.3) (2026-07-12)
+
+### Bug Fixes
+
+- **apiserver:** bump @fonoster/sdk to 0.22.2 ([#32](https://github.com/fonoster/qcobro/issues/32)) ([f037257](https://github.com/fonoster/qcobro/commit/f0372574a737fb5949756ac9eb0bfe2692e673b1)), closes [fonoster/fonoster#864](https://github.com/fonoster/fonoster/issues/864) [#27](https://github.com/fonoster/qcobro/issues/27)
+
 ## [1.14.2](https://github.com/fonoster/qcobro/compare/v1.14.1...v1.14.2) (2026-07-12)
 
 ### Bug Fixes
