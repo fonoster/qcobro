@@ -156,7 +156,21 @@ app.use(
   "/trpc",
   createExpressMiddleware({
     router: appRouter,
-    createContext
+    createContext,
+    // Errors thrown by procedures are otherwise never logged: the adapter converts
+    // them straight to a JSON response (client sees a 500 with no server-side trace).
+    // Some procedures (e.g. outreach.dispatch) sanitize provider errors before they
+    // reach the client and chain the real one as `.cause` — walk it so the raw
+    // provider reason (auth, balance, rate limits) still lands in the server log.
+    onError: ({ path, error }) => {
+      const chain = [error.message];
+      let cause: unknown = error.cause;
+      while (cause instanceof Error) {
+        chain.push(cause.message);
+        cause = cause.cause;
+      }
+      logger.error(`trpc error on ${path ?? "<unknown>"} [${error.code}]: ${chain.join(" ← ")}`);
+    }
   })
 );
 

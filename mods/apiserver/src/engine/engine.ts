@@ -384,9 +384,13 @@ export function createEngine(deps: EngineDeps) {
     } catch (err) {
       // Attempt stays consumed (at-most-once); no gestión for a failed dispatch.
       // Surface the reason — a swallowed dispatch error is undebuggable in prod.
+      // dispatchOutreach wraps provider failures in a generic message for any
+      // customer-facing surface; the real provider detail rides as `.cause` — log
+      // and record that here since this is an internal audit trail, not the UI.
+      const rawErr = err instanceof Error && err.cause instanceof Error ? err.cause : err;
       logger.error(
         `dispatch failed campaign=${c.id} account=${acc.id} channel=${channel}:`,
-        err instanceof Error ? err.message : err
+        rawErr instanceof Error ? rawErr.message : rawErr
       );
       recorder.emit({
         kind: "dispatch.failed",
@@ -395,8 +399,8 @@ export function createEngine(deps: EngineDeps) {
         portfolioAccountId: acc.id,
         channel,
         latencyMs: Date.now() - dispatchStartedMs,
-        errorClass: err instanceof Error ? err.constructor.name : "Error",
-        errorMessage: err instanceof Error ? err.message : String(err),
+        errorClass: rawErr instanceof Error ? rawErr.constructor.name : "Error",
+        errorMessage: rawErr instanceof Error ? rawErr.message : String(rawErr),
         toMasked
       });
       return { decision: "dispatch_failed" };

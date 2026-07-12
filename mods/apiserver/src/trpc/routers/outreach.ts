@@ -185,7 +185,14 @@ export const outreachRouter = router({
       // Same validation contract as createRecordOutcome — coverage must not
       // depend on billing enrollment.
       const parsed = createContactLogSchema.safeParse(logParams);
-      if (!parsed.success) throw new ValidationError(parsed.error);
+      if (!parsed.success) {
+        // Surface as a proper TRPCError — a bare ValidationError isn't a TRPCError,
+        // so the adapter would otherwise coerce it to an opaque INTERNAL_SERVER_ERROR.
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: new ValidationError(parsed.error).message
+        });
+      }
       // Gestión + priced usage + ledger debit in ONE transaction (usage-ledger spec).
       await billingDb.$transaction(async (tx) => {
         await recordOutcomeTx(tx as never, parsed.data as typeof logParams);

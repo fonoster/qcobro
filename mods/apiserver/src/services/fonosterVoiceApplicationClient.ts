@@ -32,7 +32,9 @@ function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
  * template plus the deployment's Autopilot defaults (`qcobro.json`).
  *
  * Auth mirrors the Fonoster SDK demo: a workspace access key, then an API
- * key/secret login. The login promise is memoized so it happens once per process.
+ * key/secret login. The login promise is memoized once it succeeds, so login only
+ * happens once per process; a failed login is not memoized and is retried on the
+ * next call.
  */
 export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
   private readonly settings: FonosterSettings;
@@ -51,7 +53,13 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
         } as ConstructorParameters<typeof SDK.Client>[0]);
         await client.loginWithApiKey(this.settings.apiKey, this.settings.apiSecret);
         return new SDK.Applications(client);
-      })();
+      })().catch((err) => {
+        // A failed login must not be memoized — otherwise one transient auth error
+        // permanently breaks every future call for the life of this process, since
+        // appsPromise would stay set to a rejection.
+        this.appsPromise = null;
+        throw err;
+      });
     }
     return this.appsPromise;
   }

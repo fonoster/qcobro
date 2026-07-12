@@ -258,4 +258,33 @@ describe("dispatchOutreach", () => {
     );
     assert.equal(calls.whatsapp.length, 0);
   });
+
+  it("wraps a provider failure in a generic message and preserves the original as cause", async () => {
+    const providerError = new Error("Authenticate");
+    const { deps } = makeDeps({
+      smsClient: {
+        sendMessage: async () => {
+          throw providerError;
+        }
+      }
+    });
+    await assert.rejects(
+      () =>
+        createDispatchOutreach(deps)({
+          channel: "SMS",
+          to: "+50670000000",
+          context: {},
+          body: "hi"
+        }),
+      (err: unknown) => {
+        assert.ok(err instanceof Error);
+        // The raw provider message (credentials, balance, etc.) must never reach a
+        // customer-facing surface — only a generic reason, with the original chained.
+        assert.doesNotMatch(err.message, /Authenticate/);
+        assert.match(err.message, /SMS dispatch failed/);
+        assert.equal(err.cause, providerError);
+        return true;
+      }
+    );
+  });
 });
