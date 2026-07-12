@@ -1,7 +1,7 @@
 # Ship checkpoint — workspace-billing
 
 Started: 2026-07-11
-Current stage: 5 — Sync (awaiting human gate)
+Current stage: 6 — Archive (awaiting human gate)
 
 **Scope:** Usage-based billing for QCobro: durable priced-at-write-time usage ledger, plan
 catalog in qcobro.json (7 meters, 15/15 voice increments), monthly allowance with hard stop
@@ -17,7 +17,7 @@ item-per-workspace topology, billing console surfaces, and simulation + evaluati
 | 2   | Spec reconcile  | done    | Design decisions folded into billing-console spec (Stripe-hosted surfaces, burn projection, modal-as-entry-point), design.md, tasks.md. `openspec validate` green                                                                                              |
 | 3   | Build           | done    | 23/24 tasks (commits 83deab6, fe49051, 1339f7c, f90e115, 187b777). Only 7.1 (staging metering-only verification) remains — deploy-time step                                                                                                                    |
 | 4   | Test            | done    | typecheck + eslint green; 100 common + 212 apiserver tests pass (incl. Postgres-backed engine integration + migration deploy); webapp builds; billing:sim scenario suite green (BIL-1…6). e2e billing.spec.ts authored but NOT executed (needs full dev stack) |
-| 5   | Sync            | pending |                                                                                                                                                                                                                                                                |
+| 5   | Sync            | done    | 8 delta specs promoted (6 new capabilities created, campaigns-engine + voice-events-hook merged); payment_failed skip reason reconciled into the delta first                                                                                                   |
 | 6   | Archive         | pending |                                                                                                                                                                                                                                                                |
 
 Status values: `pending` · `in-progress` · `done` · `skipped` (with reason).
@@ -25,6 +25,8 @@ Status values: `pending` · `in-progress` · `done` · `skipped` (with reason).
 ## Decision log
 
 Newest first. One line per meaningful decision or stage transition.
+
+- 2026-07-11 — Stage 5 done: main specs gained billing-plans, usage-ledger, billing-accounts, billing-enforcement, billing-console, billing-evaluation; campaigns-engine gained "Credit gate in the tick" (incl. payment_failed skip reason, reconciled from build); voice-events-hook's conversation-events requirement replaced with the settlement-aware version. openspec validate green. Next gate: archive.
 
 - 2026-07-11 — /code-review high (8 angles): 10 findings reported, 9 fixed in 60d2db5 (founding-item metadata stamp, downgrade schedule anchor, voice settlement duration guard, upgrade + metering idempotency, subscribe-race compensation, metered-path validation, credit/token ordering, ctx gateway + i18n literal, plus cleanup: shared meter map/estimator/P2002 helper/localized resolver, settings cache, staleTime, parallel price validation, dead exports). SKIPPED as follow-up: O(history) ledger balance aggregate (cycle-bounded sum is equivalent since closed cycles net to zero — optimize when volume warrants). Accepted by design: gestión+metering share one tx (spec-mandated), misconfigured gate labeled credits_exhausted (fail-closed, logged). README gained the plans-configuration guide (QCobro↔Stripe).
 
