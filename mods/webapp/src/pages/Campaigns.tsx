@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { PageHeader } from "../components/page-header.js";
+import { BillingPausedNotice } from "../components/BillingPausedNotice.js";
 import { DataTable } from "../components/ui/data-table.js";
 import { Dialog } from "../components/ui/dialog.js";
 import { ConfirmDeleteDialog } from "../components/ui/confirm-delete-dialog.js";
@@ -67,6 +68,7 @@ export function Campaigns() {
 
   return (
     <div className="flex flex-col gap-6">
+      <BillingPausedNotice />
       <PageHeader title={t("campaigns.title")} description={t("campaigns.description")} />
 
       <DataTable

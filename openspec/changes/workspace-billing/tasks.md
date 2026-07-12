@@ -35,8 +35,8 @@
 
 - [x] 5.1 Design billing surfaces in Pencil (credit meter, paused states, plan management modal) — done: Facturación `b4rbrX`, banners `nTeH0`/`S4OZDu`, modal `YcJdj`, notes `k8650` in the Administración clusters
 - [x] 5.2 Add billing tRPC router (balance/allowance/cycle/burn projection for admins; plan-change, Stripe billing-portal session, and Checkout session creation for owners via `ownerProcedure`)
-- [ ] 5.3 Build Facturación page: credit meter (plan pill, remaining vs allowance, renewal date, projected days) + paused banners (exhausted vs payment-failed, role-aware CTAs), all copy through i18n (en/es), center-dot convention
-- [ ] 5.4 Build plan management modal (comparison + entry point) with transactions completing on Stripe-hosted pages (Checkout for first subscribe, portal/hosted flow for changes); "Ver facturas ↗" and "Actualizar ↗" open the customer billing portal
+- [x] 5.3 Build Facturación page: credit meter (plan pill, remaining vs allowance, renewal date, projected days) + paused banners (exhausted vs payment-failed, role-aware CTAs), all copy through i18n (en/es), center-dot convention
+- [x] 5.4 Build plan management modal (comparison + entry point) with transactions completing on Stripe-hosted pages (Checkout for first subscribe, portal/hosted flow for changes); "Ver facturas ↗" and "Actualizar ↗" open the customer billing portal
 - [ ] 5.5 E2E tests: meter renders, exhausted state appears, owner-only gating of payment surfaces
 
 ## 6. Simulation and evaluation

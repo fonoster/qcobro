@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { User, SlidersHorizontal, Users, KeyRound, Plug, LogOut } from "lucide-react";
+import { User, SlidersHorizontal, Users, KeyRound, Plug, LogOut, CreditCard } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n } from "../lib/i18n.js";
@@ -52,6 +52,7 @@ export function UserMenu() {
               label={t("settings.title")}
               onClick={() => go("/settings")}
             />
+            <MenuItem icon={CreditCard} label={t("billing.title")} onClick={() => go("/billing")} />
             <MenuItem icon={Users} label={t("userMenu.members")} onClick={() => go("/members")} />
             {canManageKeys && (
               <MenuItem icon={KeyRound} label={t("nav.apiKeys")} onClick={() => go("/api-keys")} />
