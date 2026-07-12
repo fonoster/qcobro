@@ -34,35 +34,98 @@ npm run start:webapp   # console on :5173
 The engine is the autonomous loop that originates outreach. It is **off by default**
 (`engine.enabled: false`) so it never dials in development.
 
-**Simulate one tick** — runs the real engine with **emulated** channels (real DB writes,
-nothing actually dialed or texted):
+#### The sim → eval loop
 
-```bash
-npm run engine:sim --workspace=mods/apiserver
-```
+Simulation and evaluation are one workflow: `engine:sim` runs the **real engine** with
+**emulated** channels (real DB writes and reservations, nothing actually dialed or
+texted), every tick writes an append-only **flight recorder** stream to `engine_events`
+(tick lifecycle, campaign evaluations, per-account decisions, dispatch attempts), and
+`engine-eval` replays that stream through a pure **judge** that proves the run stayed
+within parameters. Same recorder, same judge, whether the ticks came from a sim or from
+production.
 
-Try it end to end:
+End to end from a fresh checkout (dev stack up, migrations applied):
 
-1. Seed a complete demo (idempotent — user, portfolio + accounts, agents, and three
-   **ACTIVE** campaigns scheduled Mon–Fri 09:00–18:00):
+1. **Seed the demo** (idempotent — user, portfolio + accounts, agents, and three
+   **ACTIVE** campaigns):
 
    ```bash
    npm run db:seed --workspace=mods/apiserver   # login: demo@qcobro.com / password123
    ```
 
-2. Run `npm run engine:sim` **during the campaign window** (Mon–Fri, 09:00–18:00 in the
-   deployment timezone). It prints a **TickReport**: each campaign's in-window status and
-   a per-account decision (`dispatched` / `daily_cap` / `promise_suppressed` / …), plus
-   the would-be dispatches (emulated). The SMS and Voz-pregrabada campaigns dispatch; the
-   Voz IA one shows `voice_not_synced` until Fonoster is configured. Outside the window
-   every campaign is `out_of_window`.
-3. Open the **Gestiones** page — the simulated attempts are recorded as real gestiones.
-4. Run the sim a few more times: once an account reaches `maxAttemptsPerDay` it shows
-   `daily_cap` — proof of at-most-once (it is never dialed beyond its cap).
+2. **Simulate a few ticks.** `SIM_AT=<iso>` pins the engine clock so you can run
+   "inside" the campaign window (Mon–Fri 09:00–18:00, workspace timezone) at any
+   wall-clock time; `SIM_TICKS=<n>` runs consecutive ticks:
+
+   ```bash
+   SIM_AT="2026-07-11T15:00:00-04:00" SIM_TICKS=4 npm run engine:sim --workspace=mods/apiserver
+   ```
+
+   It prints a **TickReport** — each campaign's in-window status and a per-account
+   decision (`dispatched` / `daily_cap` / `promise_suppressed` / …) — and records the
+   flight-recorder events. The attempts land as real gestiones (check the **Gestiones**
+   page); re-running shows `daily_cap` once accounts hit `maxAttemptsPerDay` — the
+   at-most-once guarantee at work.
+
+3. **Mint a workspace API key** for the seeded demo workspace (`engine-eval`
+   authenticates with a workspace API key pair; the secret is printed once):
+
+   ```bash
+   npm run apikey:create --workspace=mods/apiserver
+   ```
+
+4. **Start the apiserver** (it serves `GET /api/engine/events`, the flight-recorder
+   export the CLI reads):
+
+   ```bash
+   npm run start:dev --workspace=mods/apiserver
+   ```
+
+5. **Judge the run.** No repo checkout or DB access is needed on the machine that runs
+   this — only the URL and the key pair (`--url` defaults to `https://api.qcobro.com`;
+   point it at your apiserver for local runs):
+
+   ```bash
+   npx -p @qcobro/common engine-eval --url http://localhost:3000 \
+     --access-key-id <accessKeyId> --access-key-secret <accessKeySecret>
+   ```
+
+   ```
+   VERDICT: PASS
+
+   INVARIANTS
+     [PASS]  SAF-1   window compliance       workspace
+     [PASS]  SAF-5   channel rate caps       deployment  peak 9.0/min on SMS
+     [PASS]  PERF-3  dispatch error rate     workspace   worst 0.0%
+     [PASS]  LIVE-1  ticks to first attempt  workspace   max streak 4
+     ...
+
+   BY CAMPAIGN
+     campaign              ticks  considered  dispatched  failed  suppressed  violations
+     Recuperación Q2 2026      4          40          18       0          22  -
+     Cobro Compulsivo          4          40          18       0          16  -
+   ```
+
+Reading the card: **SAF-\*** are safety invariants (window compliance, lifetime/daily
+attempt caps, suppression respected, per-channel rate caps, at-most-once dispatch),
+**PERF-\*** are thresholds (tick duration, dispatch latency p95, error rate, budget
+utilization), **LIVE-1** catches starved accounts. Any violation names the campaign, the
+account, and the exact event ids that evidence it. The scorecard is scoped to the API
+key's workspace (plus the deployment-level tick events that back the `deployment`-scoped
+rows).
+
+Useful flags: no `--from`/`--to` evaluates **today** in your local timezone (pass a range
+to audit an older window); `--json` for machine-readable output; `--latency-p95` /
+`--max-error-rate` / `--liveness-ticks` to tighten thresholds; the key pair also falls
+back to `QCOBRO_ACCESS_KEY_ID` / `QCOBRO_ACCESS_KEY_SECRET`. Exit codes: `0` pass, `1`
+fail, `2` usage/auth/network — wire it into a post-deploy check. Recorded events are kept
+for `engine.eventsRetentionDays` (`qcobro.json`, `0` disables pruning).
 
 **Run it for real** (⚠️ places real calls/SMS): set `engine.enabled: true` and configure
 `fonoster` / `twilio` in `qcobro.json`, then start the apiserver — it ticks every
 `engine.tickSeconds`, guarded by a Postgres advisory lock so only one instance dispatches.
+The flight recorder runs identically in production, so step 5 works unchanged against a
+live deployment — that's the point.
 
 ### Verifying behavior matches the spec
 
