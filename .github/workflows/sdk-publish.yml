@@ -13,6 +13,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Refuse to publish from a tag whose commit never actually landed on main — this
+      # is what let v1.14.0 ship broken code on 2026-07-12 (a race in the Release
+      # workflow pushed the v1.14.0 tag while the matching branch commit was rejected).
+      - name: Verify the tag's commit is reachable from main
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main || {
+            echo "::error::${GITHUB_REF_NAME}'s commit is not reachable from origin/main — refusing to publish from an orphaned tag."
+            exit 1
+          }
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

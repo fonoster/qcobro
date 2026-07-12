@@ -64,14 +64,36 @@ jobs:
       - name: Pull latest (avoid EBEHIND if commits land during runner startup)
         run: git pull --rebase origin main
 
-      - name: Version and tag
+      - name: Record pre-version HEAD
+        id: pre
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # --no-push: lerna's own push (git push --follow-tags) pushes the branch commit
+      # and the new tag as separate ref updates, not atomically. If main advances after
+      # our checkout (e.g. another push lands mid-run) the branch push is rejected as
+      # non-fast-forward, but the tag ref has no such conflict and can still land on the
+      # remote — publishing a tag whose commit was never actually merged to main. That's
+      # exactly how v1.14.0 got published from an orphaned commit on 2026-07-12. Pushing
+      # ourselves, branch first, lets a rejected branch push abort before any tag exists
+      # on the remote at all.
+      - name: Version and tag (local only)
         run: |
           if [ -n "${{ inputs.force_bump }}" ]; then
             # Force a release even when no mods/* package changed. Deploy/CI/TLS
             # changes live outside the lerna packages, so the conventional-commits
             # autobump finds "No changed packages to version" and never releases
             # them. --force-publish bumps every package to the requested level.
-            npx lerna version "${{ inputs.force_bump }}" --yes --force-publish
+            npx lerna version "${{ inputs.force_bump }}" --yes --force-publish --no-push
           else
-            npx lerna version --conventional-commits --yes
+            npx lerna version --conventional-commits --yes --no-push
           fi
+
+      - name: Push commit, then tag
+        run: |
+          if [ "$(git rev-parse HEAD)" = "${{ steps.pre.outputs.sha }}" ]; then
+            echo "No release created (no changed packages) — nothing to push."
+            exit 0
+          fi
+          new_tag=$(git describe --tags --exact-match HEAD)
+          git push origin HEAD:main
+          git push origin "$new_tag"
