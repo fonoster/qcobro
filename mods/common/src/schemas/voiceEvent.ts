@@ -25,6 +25,22 @@ export const voiceConversationEventSchema = z.object({
 });
 export type VoiceConversationEvent = z.infer<typeof voiceConversationEventSchema>;
 
+/**
+ * In-process completion signal for a PRE-RECORDED call, reported by the co-located
+ * VoiceServer (not an HTTP callback like Voz IA). `answered` distinguishes a connected
+ * call from one that never picked up; `answeredSeconds` is the answer→hangup duration
+ * (0 when unanswered). `scriptDurationSeconds` is the nominal length of the synthesized
+ * clip, stored so a future report can compare it against the answered duration.
+ */
+export const prerecordedCompletionSchema = z.object({
+  providerRef: z.string().min(1),
+  answered: z.boolean(),
+  answeredSeconds: z.number().int().nonnegative(),
+  scriptDurationSeconds: z.number().int().nonnegative().optional(),
+  at: z.string().min(1)
+});
+export type PrerecordedCompletionInput = z.infer<typeof prerecordedCompletionSchema>;
+
 /** A normalized transcript line stored in `channelData.transcript` for the console. */
 export interface TranscriptLine {
   role: "agent" | "customer";

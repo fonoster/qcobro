@@ -10,6 +10,7 @@ import { prisma } from "./db.js";
 import { createContactLogHandler } from "./rest/contactLogs.js";
 import { createVoiceEventsHandler } from "./rest/voiceEvents.js";
 import { createSettleVoiceUsage } from "./functions/billing/settleVoiceUsage.js";
+import { createRecordPrerecordedOutcome } from "./functions/voice/recordPrerecordedOutcome.js";
 import { createStripeWebhookHandler } from "./rest/stripeWebhook.js";
 import {
   createStripeGateway,
@@ -178,8 +179,34 @@ app.listen(port, () => {
   logger.verbose(`Server running on port ${port}`);
 });
 
-// External voice application for pre-recorded agents (own port).
-startVoiceServer();
+// External voice application for pre-recorded agents (own port). On call completion
+// the co-located server reports the answered duration IN-PROCESS (no HTTP callback):
+// record DELIVERED + duration on the gestión, then settle usage to the answered
+// duration (idempotent per call ref). Both are best-effort and never break the call.
+const recordPrerecordedOutcome = createRecordPrerecordedOutcome(prisma as never);
+const settlePrerecordedUsage = config.billing?.enabled
+  ? createSettleVoiceUsage(prisma as never)
+  : null;
+startVoiceServer({
+  onCompleted: (completion) => {
+    void recordPrerecordedOutcome(completion).catch((err: unknown) =>
+      logger.error(
+        `[voice] pre-recorded outcome record failed: ${err instanceof Error ? err.message : err}`
+      )
+    );
+    if (settlePrerecordedUsage) {
+      void settlePrerecordedUsage({
+        providerRef: completion.providerRef,
+        answeredSeconds: completion.answeredSeconds,
+        at: completion.at
+      }).catch((err: unknown) =>
+        logger.error(
+          `[billing] pre-recorded settlement failed: ${err instanceof Error ? err.message : err}`
+        )
+      );
+    }
+  }
+});
 
 // Campaigns engine — the autonomous tick that originates outreach (only when
 // engine.enabled; off in dev). Stopped gracefully so an in-flight tick can settle.

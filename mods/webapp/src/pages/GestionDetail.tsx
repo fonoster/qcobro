@@ -179,13 +179,55 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         : t("gestiones.detail.sentMessage")
     : "";
 
-  const deliveryValue = g
-    ? g.agentType === "EMAIL"
-      ? t("gestiones.detail.delivered")
-      : g.agentType === "VOICE_PRERECORDED"
-        ? t("gestiones.detail.played")
-        : t("gestiones.detail.sent")
-    : "";
+  // Delivery lifecycle as a reached-stage arrow progression, shown in the "Estado de
+  // entrega" metadata field. Only stages the attempt actually reached appear; threaded
+  // channels are capped at one full cycle by construction (each stage appended once).
+  const deliveryValue = ((): string => {
+    if (!g) return "";
+    const s = (k: string) => t(`gestiones.stage.${k}` as Parameters<typeof t>[0]);
+    const cd = (g.channelData ?? {}) as Record<string, unknown>;
+    const status = String(cd.deliveryStatus ?? "").toLowerCase();
+    const hasReply =
+      (emailThread?.messages?.some((m) => m.direction === "inbound") ?? false) ||
+      (whatsAppThread?.messages?.some((m) => m.direction === "inbound") ?? false);
+    let stages: string[];
+    switch (g.agentType) {
+      case "SMS":
+        stages =
+          g.outcome === "DELIVERED" || status.includes("deliver")
+            ? [s("sent"), s("delivered")]
+            : [s("sent")];
+        break;
+      case "VOICE_PRERECORDED":
+        stages = g.outcome === "DELIVERED" ? [s("sent"), s("delivered")] : [s("sent")];
+        break;
+      case "VOICE_AI":
+        stages =
+          g.durationSeconds != null || transcript.length > 0 || cd.endedAt
+            ? [s("sent"), s("answered"), s("finalized")]
+            : [s("sent")];
+        break;
+      case "EMAIL": {
+        const opened = !!cd.openedAt || status.includes("open");
+        stages = [s("sent")];
+        if (opened || hasReply || status.includes("deliver")) stages.push(s("delivered"));
+        if (opened || hasReply) stages.push(s("read"));
+        if (hasReply) stages.push(s("replied"));
+        break;
+      }
+      case "WHATSAPP": {
+        const read = status === "read" || hasReply;
+        stages = [s("sent")];
+        if (read || status.includes("deliver") || hasReply) stages.push(s("delivered"));
+        if (read) stages.push(s("read"));
+        if (hasReply) stages.push(s("replied"));
+        break;
+      }
+      default:
+        stages = [s("sent")];
+    }
+    return stages.join(" → ");
+  })();
 
   return (
     <>
@@ -664,7 +706,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                 label={t("gestiones.col.agent")}
                 value={t(`agents.type.${g.agentType}` as Parameters<typeof t>[0])}
               />
-              {oneWay && <MetaItem label={t("gestiones.detail.delivery")} value={deliveryValue} />}
+              <MetaItem label={t("gestiones.detail.delivery")} value={deliveryValue} />
               <MetaItem
                 label={t("gestiones.col.date")}
                 value={new Date(g.contactedAt).toLocaleString()}

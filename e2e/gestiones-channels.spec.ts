@@ -76,6 +76,7 @@ test.describe("gestiones — channels", () => {
       },
       {
         agentType: "VOICE_PRERECORDED",
+        outcome: "DELIVERED",
         extra: { durationSeconds: 38 },
         channelData: { to: "+525500000001", messageBody: script }
       },
@@ -145,11 +146,14 @@ test.describe("gestiones — channels", () => {
     await expect(panel.getByText("Transcripción")).toHaveCount(0);
     await closePanel();
 
-    // Pre-grabada — played message + script + generic insight; no transcript
+    // Pre-grabada — playable script (not a "heard" claim) + delivery progression in the
+    // "Estado de entrega" field + honest insight copy; no transcript
     panel = await openPanel("Voz pregrabada");
-    await expect(panel.getByText("Mensaje reproducido")).toBeVisible();
+    await expect(panel.getByText("Guion reproducible")).toBeVisible();
     await expect(panel.getByText(script)).toBeVisible();
-    await expect(panel.getByText(/reproducido al cliente/i)).toBeVisible();
+    await expect(panel.getByText("Enviado → Entregado")).toBeVisible();
+    await expect(panel.getByText(/no confirma que el mensaje se haya escuchado/i)).toBeVisible();
+    await expect(panel.getByText(/reproducido al cliente/i)).toHaveCount(0);
     await expect(panel.getByText("Transcripción")).toHaveCount(0);
     await closePanel();
 
