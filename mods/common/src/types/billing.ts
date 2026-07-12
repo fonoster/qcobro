@@ -54,9 +54,19 @@ export interface LedgerEntryRow {
 }
 
 /** The Prisma subset the billing functions reach through the tRPC/engine context. */
+export interface BillingAccountRecord {
+  id: string;
+  createdFromUserRef: string;
+  stripeCustomerId: string;
+  stripeSubscriptionId: string | null;
+  collectionMethod: string;
+  paymentFailed: boolean;
+}
+
 export interface BillingClient {
   workspaceBilling: {
     findUnique(args: { where: { workspaceRef: string } }): Promise<WorkspaceBillingRecord | null>;
+    create(args: { data: Record<string, unknown> }): Promise<WorkspaceBillingRecord>;
     update(args: {
       where: { workspaceRef: string };
       data: Record<string, unknown>;
@@ -64,9 +74,19 @@ export interface BillingClient {
   };
 
   billingAccount: {
-    findUnique(args: {
+    findUnique(args: { where: { id: string } }): Promise<BillingAccountRecord | null>;
+    findFirst(args: {
+      where: { stripeCustomerId?: string; createdFromUserRef?: string };
+    }): Promise<BillingAccountRecord | null>;
+    create(args: { data: Record<string, unknown> }): Promise<BillingAccountRecord>;
+    update(args: {
       where: { id: string };
-    }): Promise<{ id: string; paymentFailed: boolean; collectionMethod: string } | null>;
+      data: Record<string, unknown>;
+    }): Promise<BillingAccountRecord>;
+    updateMany(args: {
+      where: { stripeCustomerId: string };
+      data: Record<string, unknown>;
+    }): Promise<{ count: number }>;
   };
 
   usageRecord: {

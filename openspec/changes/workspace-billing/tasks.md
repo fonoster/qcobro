@@ -25,16 +25,16 @@
 
 ## 4. Stripe lifecycle
 
-- [ ] 4.1 Add Stripe SDK to the tRPC context (config-driven client); startup price-drift validation (warn when `stripePriceId` amount ≠ `monthlyPrice`)
-- [ ] 4.2 Implement checkout/subscribe flow via Stripe-hosted Checkout: lazy BillingAccount + customer creation, subscription with anchor, add item-per-workspace with workspaceRef metadata, prorated first grant on completion
-- [ ] 4.3 Implement upgrade (item price swap + immediate prorated grant) and downgrade (subscription schedule at period end) as validated functions with stubbed-Stripe tests
-- [ ] 4.4 Implement Stripe webhook route: signature verification, `invoice.paid` → idempotent cycle turnover per item, payment-failure → dunning state suspending the account's workspaces (distinct from exhaustion); tests with replayed events
+- [x] 4.1 Add Stripe SDK to the tRPC context (config-driven client); startup price-drift validation (warn when `stripePriceId` amount ≠ `monthlyPrice`)
+- [x] 4.2 Implement checkout/subscribe flow via Stripe-hosted Checkout: lazy BillingAccount + customer creation, subscription with anchor, add item-per-workspace with workspaceRef metadata, prorated first grant on completion
+- [x] 4.3 Implement upgrade (item price swap + immediate prorated grant) and downgrade (subscription schedule at period end) as validated functions with stubbed-Stripe tests
+- [x] 4.4 Implement Stripe webhook route: signature verification, `invoice.paid` → idempotent cycle turnover per item, payment-failure → dunning state suspending the account's workspaces (distinct from exhaustion); tests with replayed events
 - [ ] 4.5 Support `send_invoice` collection for enterprise accounts; document the ownership-transfer (cancel-and-recreate) runbook
 
 ## 5. Console (`mods/webapp`)
 
 - [x] 5.1 Design billing surfaces in Pencil (credit meter, paused states, plan management modal) — done: Facturación `b4rbrX`, banners `nTeH0`/`S4OZDu`, modal `YcJdj`, notes `k8650` in the Administración clusters
-- [ ] 5.2 Add billing tRPC router (balance/allowance/cycle/burn projection for admins; plan-change, Stripe billing-portal session, and Checkout session creation for owners via `ownerProcedure`)
+- [x] 5.2 Add billing tRPC router (balance/allowance/cycle/burn projection for admins; plan-change, Stripe billing-portal session, and Checkout session creation for owners via `ownerProcedure`)
 - [ ] 5.3 Build Facturación page: credit meter (plan pill, remaining vs allowance, renewal date, projected days) + paused banners (exhausted vs payment-failed, role-aware CTAs), all copy through i18n (en/es), center-dot convention
 - [ ] 5.4 Build plan management modal (comparison + entry point) with transactions completing on Stripe-hosted pages (Checkout for first subscribe, portal/hosted flow for changes); "Ver facturas ↗" and "Actualizar ↗" open the customer billing portal
 - [ ] 5.5 E2E tests: meter renders, exhausted state appears, owner-only gating of payment surfaces

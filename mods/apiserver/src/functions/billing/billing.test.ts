@@ -1,17 +1,12 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import type {
-  BillingClient,
-  BillingConfig,
-  LedgerEntryRow,
-  UsageRecordRow,
-  WorkspaceBillingRecord
-} from "@qcobro/common";
+import type { BillingClient, BillingConfig, WorkspaceBillingRecord } from "@qcobro/common";
 import { billingConfigSchema } from "@qcobro/common";
 import { meterDispatchTx, createMeterDispatch } from "./meterDispatch.js";
 import { settleVoiceUsageTx } from "./settleVoiceUsage.js";
 import { cycleTurnoverTx } from "./cycleTurnover.js";
 import { workspaceBalanceMicroTx } from "./workspaceBalance.js";
+import { makeBillingStub } from "./billingStubClient.js";
 
 const billing = billingConfigSchema.parse({
   enabled: true,
@@ -36,87 +31,14 @@ const billing = billingConfigSchema.parse({
   ]
 }) as NonNullable<BillingConfig>;
 
-/** In-memory BillingClient stub: real enough to assert ledger math end to end. */
 function makeStub(enrollment: Partial<WorkspaceBillingRecord> | null = {}) {
-  const usageRecords: UsageRecordRow[] = [];
-  const ledgerEntries: LedgerEntryRow[] = [];
-  let nextId = 1;
-  const workspaceBilling: WorkspaceBillingRecord | null =
-    enrollment === null
-      ? null
-      : {
-          workspaceRef: "ws_1",
-          billingAccountId: "ba_1",
-          planKey: "growth",
-          rateOverrides: null,
-          stripeSubscriptionItemId: "si_1",
-          cycleStart: null,
-          cycleEnd: null,
-          ...enrollment
-        };
-
-  const client: BillingClient = {
-    workspaceBilling: {
-      findUnique: async ({ where }) =>
-        workspaceBilling && where.workspaceRef === workspaceBilling.workspaceRef
-          ? workspaceBilling
-          : null,
-      update: async ({ data }) => Object.assign(workspaceBilling!, data)
-    },
-    billingAccount: {
-      findUnique: async () => ({
-        id: "ba_1",
-        paymentFailed: false,
-        collectionMethod: "charge_automatically"
-      })
-    },
-    usageRecord: {
-      create: async ({ data }) => {
-        const row = { id: `ur_${nextId++}`, settledAt: null, ...data } as unknown as UsageRecordRow;
-        usageRecords.push(row);
-        return row;
-      },
-      findUnique: async ({ where }) =>
-        usageRecords.find((r) => r.providerRef === where.providerRef) ?? null,
-      update: async ({ where, data }) => {
-        const row = usageRecords.find((r) => r.id === where.id)!;
-        return Object.assign(row, data);
-      }
-    },
-    ledgerEntry: {
-      create: async ({ data }) => {
-        const entry = data as unknown as LedgerEntryRow;
-        if (
-          entry.stripeInvoiceId &&
-          ledgerEntries.some(
-            (e) =>
-              e.workspaceRef === entry.workspaceRef &&
-              e.stripeInvoiceId === entry.stripeInvoiceId &&
-              e.kind === entry.kind
-          )
-        ) {
-          throw Object.assign(new Error("Unique constraint failed"), { code: "P2002" });
-        }
-        const row = {
-          ...entry,
-          id: `le_${nextId++}`,
-          usageRecordId: entry.usageRecordId ?? null,
-          stripeInvoiceId: entry.stripeInvoiceId ?? null
-        };
-        ledgerEntries.push(row);
-        return row;
-      },
-      aggregate: async ({ where }) => ({
-        _sum: {
-          amountMicro: ledgerEntries
-            .filter((e) => e.workspaceRef === where.workspaceRef)
-            .reduce((sum, e) => sum + BigInt(e.amountMicro), 0n)
-        }
-      })
-    },
-    $transaction: async (fn) => fn(client)
-  };
-  return { client, usageRecords, ledgerEntries };
+  return makeBillingStub({
+    workspaceBillings:
+      enrollment === null
+        ? []
+        : [{ planKey: "growth", stripeSubscriptionItemId: "si_1", ...enrollment }],
+    billingAccounts: [{}]
+  });
 }
 
 describe("meterDispatchTx", () => {

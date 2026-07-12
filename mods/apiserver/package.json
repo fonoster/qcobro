@@ -38,6 +38,7 @@
     "cors": "^2.8.5",
     "express": "^5.0.0",
     "prisma-field-encryption": "^1.6.0",
+    "stripe": "^22.3.1",
     "twilio": "^5.13.1",
     "yaml": "^2.9.0",
     "zod": "^4.0.0"

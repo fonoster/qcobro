@@ -52,3 +52,30 @@ export const getWorkspaceBillingStatusSchema = z.object({
   workspaceRef: z.string().min(1)
 });
 export type GetWorkspaceBillingStatusInput = z.infer<typeof getWorkspaceBillingStatusSchema>;
+
+/**
+ * Puts a workspace on a paid plan. First paid workspace for a payer → a
+ * Stripe-hosted Checkout session (collects the card, creates customer +
+ * subscription); subsequent workspaces → a prorated subscription item on the
+ * existing subscription, no card entry.
+ */
+export const subscribeWorkspaceSchema = z.object({
+  workspaceRef: z.string().min(1),
+  planKey: z.string().min(1),
+  ownerUserRef: z.string().min(1),
+  ownerEmail: z.string().email().optional(),
+  successUrl: z.string().url(),
+  cancelUrl: z.string().url()
+});
+export type SubscribeWorkspaceInput = z.infer<typeof subscribeWorkspaceSchema>;
+
+/**
+ * Changes a workspace's plan. Upgrades apply immediately (prorated charge +
+ * prorated allowance replacing the remainder); downgrades take effect at
+ * period end via a subscription schedule.
+ */
+export const changePlanSchema = z.object({
+  workspaceRef: z.string().min(1),
+  targetPlanKey: z.string().min(1)
+});
+export type ChangePlanInput = z.infer<typeof changePlanSchema>;
