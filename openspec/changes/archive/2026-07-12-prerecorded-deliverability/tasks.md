@@ -31,7 +31,7 @@
 - [x] 5.1 Unit: answered completion sets DELIVERED + duration (recordPrerecordedOutcome.test.ts)
 - [x] 5.2 Unit: unanswered completion sets NOT_DELIVERED with zero duration
 - [x] 5.3 Unit: idempotent (finalized outcome preserved) + validation-failure case (structured error, no DB touch)
-- [~] 5.4 E2E: `gestiones-channels.spec.ts` updated — pre-grabada asserts "Guion reproducible", "Enviado → Entregado", honest copy, no transcript. **Not executed here** (needs the live dev stack: postgres + apiserver + webapp)
+- [x] 5.4 E2E: `gestiones-channels.spec.ts` updated + **executed green** against the live dev stack — pre-grabada asserts "Guion reproducible", "Enviado → Entregado", honest copy, no "reproducido al cliente", no transcript (1 passed)
 - [x] 5.5 Green on touched packages: common build + tests (102), apiserver typecheck + tests (46 incl 5 new), webapp typecheck, eslint
 
 ## 6. Spec sync & archive (gated)
