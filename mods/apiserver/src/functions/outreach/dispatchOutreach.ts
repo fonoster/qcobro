@@ -11,6 +11,19 @@ import {
 } from "@qcobro/common";
 
 /**
+ * Wraps a raw provider failure (Twilio/Resend/Fonoster/Meta) in a generic, safe-to-
+ * display message — the raw error is a provider implementation detail (auth, balance,
+ * rate limits) that shouldn't reach a customer-facing UI verbatim — while chaining the
+ * original as `cause` so callers can still log the real reason.
+ */
+function providerDispatchError(label: string, err: unknown): Error {
+  return new Error(
+    `${label} dispatch failed. The provider rejected the request — check the workspace's provider configuration.`,
+    { cause: err }
+  );
+}
+
+/**
  * The channel-dispatch trigger. Routes a normalized dispatch request to the
  * configured provider (Fonoster voice / Twilio SMS), rendering the body templates
  * against the customer context first and picking a sending number from the pool.
@@ -32,7 +45,12 @@ export function createDispatchOutreach(deps: DispatchDeps) {
       }
       const from = params.from ?? pick(deps.twilioFromNumbers);
       const renderedBody = renderTemplate(params.body ?? "", params.context);
-      const { sid } = await deps.smsClient.sendMessage({ from, to: params.to, body: renderedBody });
+      let sid: string;
+      try {
+        ({ sid } = await deps.smsClient.sendMessage({ from, to: params.to, body: renderedBody }));
+      } catch (err) {
+        throw providerDispatchError("SMS", err);
+      }
       return { channel: "SMS", providerRef: sid, from, to: params.to, renderedBody };
     }
 
@@ -46,14 +64,18 @@ export function createDispatchOutreach(deps: DispatchDeps) {
       const subject = renderTemplate(params.subject ?? "", params.context);
       const renderedBody = renderTemplate(params.body ?? "", params.context);
       const replyTo = `reply+${token}@${deps.emailFrom.inboundDomain}`;
-      await deps.emailClient.sendEmail({
-        from,
-        fromName: deps.emailFrom.name,
-        to: params.to,
-        subject,
-        body: renderedBody,
-        replyTo
-      });
+      try {
+        await deps.emailClient.sendEmail({
+          from,
+          fromName: deps.emailFrom.name,
+          to: params.to,
+          subject,
+          body: renderedBody,
+          replyTo
+        });
+      } catch (err) {
+        throw providerDispatchError("Email", err);
+      }
       return {
         channel: "EMAIL",
         providerRef: token,
@@ -80,12 +102,17 @@ export function createDispatchOutreach(deps: DispatchDeps) {
         parameterName: token,
         text: renderTemplate(`{{${token}}}`, params.context)
       }));
-      const { id } = await deps.whatsAppClient.sendTemplate({
-        to: params.to,
-        templateName: params.templateName as string,
-        languageCode: params.languageCode as string,
-        params: namedParams
-      });
+      let id: string;
+      try {
+        ({ id } = await deps.whatsAppClient.sendTemplate({
+          to: params.to,
+          templateName: params.templateName as string,
+          languageCode: params.languageCode as string,
+          params: namedParams
+        }));
+      } catch (err) {
+        throw providerDispatchError("WhatsApp", err);
+      }
       return {
         channel: "WHATSAPP",
         providerRef: id,
@@ -122,12 +149,17 @@ export function createDispatchOutreach(deps: DispatchDeps) {
       metadata = { firstMessage: renderedBody };
     }
 
-    const { ref } = await deps.outboundCallClient.createCall({
-      from,
-      to: params.to,
-      appRef: params.appRef,
-      metadata
-    });
+    let ref: string;
+    try {
+      ({ ref } = await deps.outboundCallClient.createCall({
+        from,
+        to: params.to,
+        appRef: params.appRef,
+        metadata
+      }));
+    } catch (err) {
+      throw providerDispatchError("Voice", err);
+    }
     return { channel: params.channel, providerRef: ref, from, to: params.to, renderedBody };
   };
 
