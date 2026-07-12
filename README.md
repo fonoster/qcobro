@@ -298,6 +298,56 @@ Add a Resend webhook for the **`email.received`** event pointing at
 `resend` is absent, EMAIL campaigns are skipped as `channel_not_configured` and the
 webhook returns `503`; a bad signature returns `401`.
 
+### Billing (Stripe)
+
+Usage-based billing meters every dispatch (SMS, email, WhatsApp, both voice modes) into
+a durable ledger priced at write time, grants a monthly credit allowance per plan, and
+**hard-stops** collections when a workspace's credits run out (no overage). Add a
+`billing` block to `qcobro.json` (see the example config for the full plan catalog):
+
+```jsonc
+"billing": {
+  "enabled": false,                 // master switch: metering + gating + Stripe
+  "currency": "USD",
+  "stripe": {
+    "secretKey": "sk_live_...",
+    "webhookSigningSecret": "whsec_..."
+  },
+  "voiceDebitEstimateSeconds": 60,  // pre-dispatch voice debit, settled at call end
+  "plans": [ /* ordered array — index order IS the upgrade path */ ]
+}
+```
+
+Voice bills by telecom increments (`"15/15"` = every started 15s block, answered time
+only — voicemail pickup counts as answered, unanswered calls bill zero). Message meters
+bill per message. Each plan needs a Stripe **price** (`stripePriceId`); at startup the
+apiserver warns when a price's amount drifts from the plan's `monthlyPrice`.
+
+**Stripe setup**: create one recurring price per plan, then add a webhook endpoint for
+`checkout.session.completed`, `invoice.paid`, and `invoice.payment_failed` pointing at
+`POST https://<host>/api/stripe/webhook` (signature-verified; all effects idempotent).
+One Stripe customer per payer holds ONE subscription with one item per workspace, so an
+owner with several workspaces gets a single monthly charge on one card.
+
+**Rollout**: ship with `enabled:false` (no metering, no gating — also the rollback
+switch). Enroll workspaces by creating their `WorkspaceBilling` rows (or via checkout);
+unenrolled workspaces keep dispatching unmetered, which is what makes gradual backfill
+safe. Verify the module any time with the in-memory scenario suite:
+
+```sh
+npm run billing:sim --workspace=mods/apiserver   # hard stop, proration, overshoot, replays + BIL-1…6
+```
+
+**Enterprise**: set the billing account's `collectionMethod` to `send_invoice` (Stripe
+emails the invoice; cycles turn over on payment exactly as with cards) and put
+per-workspace negotiated rates in `WorkspaceBilling.rateOverrides` (a partial of the
+rates schema — e.g. custom `"60/6"` voice increments).
+
+**Ownership transfer runbook**: Stripe cannot move a subscription between customers. To
+move a workspace to a new payer: schedule/cancel its item on the old subscription at
+period end, then subscribe the workspace from the new owner's account (checkout or item
+add). The ledger keys on `workspaceRef`, so usage history is unaffected.
+
 ### Production integrations & webhooks
 
 In production, Envoy terminates TLS on port 443 and routes `/trpc` and `/api/*` to the

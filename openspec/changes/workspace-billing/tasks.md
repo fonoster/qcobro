@@ -29,7 +29,7 @@
 - [x] 4.2 Implement checkout/subscribe flow via Stripe-hosted Checkout: lazy BillingAccount + customer creation, subscription with anchor, add item-per-workspace with workspaceRef metadata, prorated first grant on completion
 - [x] 4.3 Implement upgrade (item price swap + immediate prorated grant) and downgrade (subscription schedule at period end) as validated functions with stubbed-Stripe tests
 - [x] 4.4 Implement Stripe webhook route: signature verification, `invoice.paid` → idempotent cycle turnover per item, payment-failure → dunning state suspending the account's workspaces (distinct from exhaustion); tests with replayed events
-- [ ] 4.5 Support `send_invoice` collection for enterprise accounts; document the ownership-transfer (cancel-and-recreate) runbook
+- [x] 4.5 Support `send_invoice` collection for enterprise accounts; document the ownership-transfer (cancel-and-recreate) runbook
 
 ## 5. Console (`mods/webapp`)
 
@@ -37,15 +37,15 @@
 - [x] 5.2 Add billing tRPC router (balance/allowance/cycle/burn projection for admins; plan-change, Stripe billing-portal session, and Checkout session creation for owners via `ownerProcedure`)
 - [x] 5.3 Build Facturación page: credit meter (plan pill, remaining vs allowance, renewal date, projected days) + paused banners (exhausted vs payment-failed, role-aware CTAs), all copy through i18n (en/es), center-dot convention
 - [x] 5.4 Build plan management modal (comparison + entry point) with transactions completing on Stripe-hosted pages (Checkout for first subscribe, portal/hosted flow for changes); "Ver facturas ↗" and "Actualizar ↗" open the customer billing portal
-- [ ] 5.5 E2E tests: meter renders, exhausted state appears, owner-only gating of payment surfaces
+- [x] 5.5 E2E tests: meter renders, exhausted state appears, owner-only gating of payment surfaces
 
 ## 6. Simulation and evaluation
 
-- [ ] 6.1 Billing simulation script (sibling of `simulate-engine-tick.ts`): synthetic mixed-meter dispatches through real pricing/ledger with emulators, multi-cycle scenarios
-- [ ] 6.2 Evaluation module (sibling of engine-scorecard): ledger conservation, increment vectors, hard-stop, overshoot bound, proration × allowance edges, provider-floor margin guard
-- [ ] 6.3 Edge-case scenario suite: mid-cycle signup, upgrade-while-exhausted, downgrade-then-turnover, replayed webhooks, in-flight calls at exhaustion
+- [x] 6.1 Billing simulation script (sibling of `simulate-engine-tick.ts`): synthetic mixed-meter dispatches through real pricing/ledger with emulators, multi-cycle scenarios
+- [x] 6.2 Evaluation module (sibling of engine-scorecard): ledger conservation, increment vectors, hard-stop, overshoot bound, proration × allowance edges, provider-floor margin guard
+- [x] 6.3 Edge-case scenario suite: mid-cycle signup, upgrade-while-exhausted, downgrade-then-turnover, replayed webhooks, in-flight calls at exhaustion
 
 ## 7. Rollout
 
 - [ ] 7.1 Verify metering-only mode (enforcement off) end-to-end in a staging run; compare ledger totals against emulated provider counts
-- [ ] 7.2 README/docs: billing config reference, plan setup with Stripe, migration steps for existing workspaces
+- [x] 7.2 README/docs: billing config reference, plan setup with Stripe, migration steps for existing workspaces
