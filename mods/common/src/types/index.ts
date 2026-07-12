@@ -9,3 +9,4 @@ export * from "./email.js";
 export * from "./whatsApp.js";
 export * from "./engine.js";
 export * from "./insight.js";
+export * from "./billing.js";

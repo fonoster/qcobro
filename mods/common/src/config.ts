@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ratesSchema } from "./billing/rates.js";
 
 /**
  * QCobro service configuration — the shape of `qcobro.json`.
@@ -274,6 +275,70 @@ export const announcementConfigSchema = z
 
 export type AnnouncementConfig = z.infer<typeof announcementConfigSchema>;
 
+/**
+ * One sellable plan. Plans are quoted in the deployment's billing currency;
+ * `monthlyPrice` (what the card is charged) and `monthlyAllowance` (the usage
+ * credit granted each cycle) are separate on purpose — "pay 29, get 35" is a
+ * config edit, not a schema change. `stripePriceId` joins the catalog to the
+ * Stripe price backing the subscription item.
+ */
+export const billingPlanSchema = z.object({
+  key: z.string().regex(/^[a-z][a-z0-9-]*$/, "plan key must be kebab-case (e.g. 'starter')"),
+  name: localizedStringSchema,
+  monthlyPrice: z.number().nonnegative(),
+  monthlyAllowance: z.number().nonnegative(),
+  stripePriceId: z.string().min(1),
+  rates: ratesSchema
+});
+export type BillingPlan = z.infer<typeof billingPlanSchema>;
+
+/**
+ * Usage-based billing. The plan catalog is deployment config (this section);
+ * all billing STATE — workspace→plan assignment, balances, ledger, Stripe ids,
+ * enterprise rate overrides — lives in the database. `plans` is ORDERED: array
+ * index defines the upgrade path shown in the console. When `enabled` is false,
+ * dispatch paths neither meter usage nor enforce credit gates (pre-billing
+ * behavior, and the rollback switch). Stripe credentials are optional so
+ * metering-only and self-hosted deployments can run without payment; checkout
+ * and webhook surfaces error clearly when they're absent.
+ */
+export const billingConfigSchema = z
+  .object({
+    enabled: z.boolean().default(false),
+    /** Billing currency (ISO 4217) — distinct from WorkspaceSettings.currency. */
+    currency: z.string().length(3).default("USD"),
+    stripe: z
+      .object({
+        secretKey: z.string().min(1),
+        webhookSigningSecret: z.string().min(1)
+      })
+      .optional(),
+    /**
+     * Seconds of answered time the engine's credit bucket debits per voice
+     * dispatch before the call settles to its actual duration (never less than
+     * the meter's initial increment).
+     */
+    voiceDebitEstimateSeconds: z.number().int().positive().default(60),
+    plans: z
+      .array(billingPlanSchema)
+      .min(1)
+      .superRefine((plans, ctx) => {
+        const seen = new Set<string>();
+        for (const [index, plan] of plans.entries()) {
+          if (seen.has(plan.key)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: [index, "key"],
+              message: `Duplicate plan key "${plan.key}" — plan keys must be unique`
+            });
+          }
+          seen.add(plan.key);
+        }
+      })
+  })
+  .optional();
+export type BillingConfig = z.infer<typeof billingConfigSchema>;
+
 export const qcobroConfigSchema = z.object({
   /** Application (apiserver) database. */
   database: z.object({ url: z.string().min(1) }),
@@ -301,6 +366,7 @@ export const qcobroConfigSchema = z.object({
   ai: aiConfigSchema,
   tts: ttsConfigSchema,
   announcement: announcementConfigSchema,
+  billing: billingConfigSchema,
   /**
    * Secret-at-rest. `cloakEncryptionKey` is a versioned AES-GCM-256 key
    * (`k1.aesgcm256.<base64-32-byte>`) used by `prisma-field-encryption` (the Fonoster/Routr

@@ -75,6 +75,65 @@
     "tickSeconds": 60,
     "eventsRetentionDays": 30
   },
+  "billing": {
+    "enabled": false,
+    "currency": "USD",
+    "stripe": {
+      "secretKey": "sk_CHANGE_ME",
+      "webhookSigningSecret": "whsec_CHANGE_ME"
+    },
+    "voiceDebitEstimateSeconds": 60,
+    "plans": [
+      {
+        "key": "starter",
+        "name": { "en": "Starter", "es": "Inicial" },
+        "monthlyPrice": 9,
+        "monthlyAllowance": 9,
+        "stripePriceId": "price_CHANGE_ME",
+        "rates": {
+          "sms": { "perMessage": 0.01 },
+          "email": { "perMessage": 0.0005 },
+          "whatsappMessage": { "perMessage": 0.012 },
+          "voicePrerecorded": { "perMinute": 0.32, "increments": "15/15" },
+          "voiceAi": { "perMinute": 0.48, "increments": "15/15" },
+          "whatsappVoicePrerecorded": { "perMinute": 0.1, "increments": "15/15" },
+          "whatsappVoiceAi": { "perMinute": 0.9, "increments": "15/15" }
+        }
+      },
+      {
+        "key": "growth",
+        "name": { "en": "Growth", "es": "Crecimiento" },
+        "monthlyPrice": 29,
+        "monthlyAllowance": 29,
+        "stripePriceId": "price_CHANGE_ME",
+        "rates": {
+          "sms": { "perMessage": 0.008 },
+          "email": { "perMessage": 0.0004 },
+          "whatsappMessage": { "perMessage": 0.01 },
+          "voicePrerecorded": { "perMinute": 0.28, "increments": "15/15" },
+          "voiceAi": { "perMinute": 0.4, "increments": "15/15" },
+          "whatsappVoicePrerecorded": { "perMinute": 0.08, "increments": "15/15" },
+          "whatsappVoiceAi": { "perMinute": 0.8, "increments": "15/15" }
+        }
+      },
+      {
+        "key": "scale",
+        "name": { "en": "Scale", "es": "Escala" },
+        "monthlyPrice": 79,
+        "monthlyAllowance": 79,
+        "stripePriceId": "price_CHANGE_ME",
+        "rates": {
+          "sms": { "perMessage": 0.0065 },
+          "email": { "perMessage": 0.0003 },
+          "whatsappMessage": { "perMessage": 0.008 },
+          "voicePrerecorded": { "perMinute": 0.24, "increments": "15/15" },
+          "voiceAi": { "perMinute": 0.34, "increments": "15/15" },
+          "whatsappVoicePrerecorded": { "perMinute": 0.06, "increments": "15/15" },
+          "whatsappVoiceAi": { "perMinute": 0.7, "increments": "15/15" }
+        }
+      }
+    ]
+  },
   "ai": {
     "enabled": false,
     "provider": "google",

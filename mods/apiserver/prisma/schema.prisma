@@ -435,3 +435,121 @@ model EngineEvent {
   @@index([at])
   @@map("engine_events")
 }
+
+// ---------------------------------------------------------------------------
+// Workspace billing (workspace-billing capability)
+// ---------------------------------------------------------------------------
+
+// The payer: owns the Stripe customer (one card), the subscription, and the
+// dunning state. Free-standing — created lazily from the workspace owner on the
+// first paid plan, but not identity-keyed, so payership can move without
+// migration (future org billing). Workspaces point at it via WorkspaceBilling.
+model BillingAccount {
+  id                   String             @id @default(uuid())
+  // The owner userRef this account was created from (provenance, not a key).
+  createdFromUserRef   String
+  stripeCustomerId     String             @unique
+  stripeSubscriptionId String?            @unique
+  // "charge_automatically" (card) or "send_invoice" (enterprise invoicing).
+  collectionMethod     String             @default("charge_automatically")
+  // Payment-failure dunning: distinct from credit exhaustion. While true, all
+  // this account's workspaces stop dispatching with a payment-failed status.
+  paymentFailed        Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  workspaces           WorkspaceBilling[]
+
+  @@map("billing_accounts")
+}
+
+// The cost center: one row per workspace on a plan. Plan/rate resolution reads
+// this row; balances derive from LedgerEntry, never stored here.
+model WorkspaceBilling {
+  workspaceRef             String         @id
+  billingAccountId         String
+  // Key into the qcobro.json billing.plans catalog (rates resolved at write time).
+  planKey                  String
+  // Enterprise per-meter overrides: a Partial of the shared rates schema.
+  rateOverrides            Json?
+  stripeSubscriptionItemId String?        @unique
+  // Current allowance cycle (opened by the invoice.paid webhook).
+  cycleStart               DateTime?
+  cycleEnd                 DateTime?
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+  billingAccount           BillingAccount @relation(fields: [billingAccountId], references: [id])
+
+  @@index([billingAccountId])
+  @@map("workspace_billing")
+}
+
+enum BillingMeter {
+  SMS
+  EMAIL
+  WHATSAPP_MESSAGE
+  VOICE_PRERECORDED
+  VOICE_AI
+  WHATSAPP_VOICE_PRERECORDED
+  WHATSAPP_VOICE_AI
+}
+
+enum LedgerEntryKind {
+  GRANT
+  USAGE_DEBIT
+  VOID
+  ADJUSTMENT
+}
+
+// One priced billable event, written in the SAME transaction as the dispatch's
+// gestión — never via the (lossy) engine event sink, and never pruned. Priced at
+// write time: unit price (and voice increments) are frozen on the row so later
+// plan/rate changes cannot reprice history. Voice rows start as the dispatch-time
+// estimate and are corrected to the actual answered duration at settlement
+// (settledAt marks it; the ledger delta lands as an ADJUSTMENT entry).
+// Intentionally relation-free (like EngineEvent): billing history survives
+// campaign/account deletion.
+model UsageRecord {
+  id                 String       @id @default(uuid())
+  workspaceRef       String
+  meter              BillingMeter
+  // Message meters: messages (1). Voice meters: increment-billed seconds.
+  quantity           Int
+  // Message meters: micro-units per message. Voice meters: micro-units per minute.
+  unitPriceMicro     BigInt
+  amountMicro        BigInt
+  // Voice only: the increment notation ("15/15") frozen at dispatch, so
+  // settlement re-prices with the dispatch-time rate even if the plan changed.
+  increments         String?
+  // Voice only: set when the completion webhook settled the actual duration.
+  settledAt          DateTime?
+  campaignId         String?
+  portfolioAccountId String?
+  providerRef        String?      @unique
+  at                 DateTime
+  createdAt          DateTime     @default(now())
+
+  @@index([workspaceRef, at])
+  @@map("usage_records")
+}
+
+// The signed ledger a workspace balance derives from. Sign conventions:
+// GRANT (+) opens a cycle, USAGE_DEBIT (−) prices a dispatch, VOID (−) expires
+// the unused remainder at cycle close (no rollover), ADJUSTMENT (±) settles a
+// voice estimate to its actual amount. Cycle turnover is idempotent via the
+// (workspaceRef, stripeInvoiceId, kind) unique — a replayed invoice.paid
+// webhook cannot double-grant or double-void. Relation-free like UsageRecord.
+model LedgerEntry {
+  id              String          @id @default(uuid())
+  workspaceRef    String
+  kind            LedgerEntryKind
+  amountMicro     BigInt
+  at              DateTime
+  usageRecordId   String?
+  stripeInvoiceId String?
+  createdAt       DateTime        @default(now())
+
+  @@unique([workspaceRef, stripeInvoiceId, kind])
+  @@unique([usageRecordId, kind])
+  @@index([workspaceRef, at])
+  @@map("ledger_entries")
+}
