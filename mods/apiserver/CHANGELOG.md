@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.14.0](https://github.com/fonoster/qcobro/compare/v1.13.1...v1.14.0) (2026-07-12)
+
+### Bug Fixes
+
+- **billing:** apply code-review findings across stripe, engine, and console ([5a0f901](https://github.com/fonoster/qcobro/commit/5a0f901153d1f0a97f3d68cd198a45ec9c7de69f))
+
+### Features
+
+- **billing:** engine credit gate, dispatch metering, and voice settlement ([48016d8](https://github.com/fonoster/qcobro/commit/48016d88420ea95c4fb8f7930e940f3ebf025b1e))
+- **billing:** evaluation invariants, scenario simulation, e2e, and docs ([8dbd2f9](https://github.com/fonoster/qcobro/commit/8dbd2f9b807de99d31eb72198bbf103cf3d135f5))
+- **billing:** micro-unit pricing contracts, usage ledger, and cycle turnover ([44fb7db](https://github.com/fonoster/qcobro/commit/44fb7dbb021b51134f754450db0a5293056f0a7d))
+- **billing:** stripe lifecycle with checkout, plan changes, and webhook ([93ef54e](https://github.com/fonoster/qcobro/commit/93ef54e184af99f3a1620a6b66fd6a8426943bae))
+
 ## [1.13.1](https://github.com/fonoster/qcobro/compare/v1.13.0...v1.13.1) (2026-07-12)
 
 **Note:** Version bump only for package @qcobro/apiserver

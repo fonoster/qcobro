@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.14.0](https://github.com/fonoster/qcobro/compare/v1.13.1...v1.14.0) (2026-07-12)
+
+### Bug Fixes
+
+- **billing:** apply code-review findings across stripe, engine, and console ([5a0f901](https://github.com/fonoster/qcobro/commit/5a0f901153d1f0a97f3d68cd198a45ec9c7de69f))
+
+### Features
+
+- **webapp:** billing console with credit meter, paused banners, and plan modal ([243fa28](https://github.com/fonoster/qcobro/commit/243fa2883e0c5c6d97b28891241c43e34bd69ef0))
+
 # [1.13.0](https://github.com/fonoster/qcobro/compare/v1.12.4...v1.13.0) (2026-07-12)
 
 **Note:** Version bump only for package @qcobro/webapp
