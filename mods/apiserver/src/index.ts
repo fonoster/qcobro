@@ -9,6 +9,7 @@ import { config } from "./config.js";
 import { prisma } from "./db.js";
 import { createContactLogHandler } from "./rest/contactLogs.js";
 import { createVoiceEventsHandler } from "./rest/voiceEvents.js";
+import { createSettleVoiceUsage } from "./functions/billing/settleVoiceUsage.js";
 import { createEmailInboundHandler } from "./rest/emailInbound.js";
 import { createWhatsAppWebhookHandlers } from "./rest/whatsAppWebhook.js";
 import { createEngineEventsHandler } from "./rest/engineEvents.js";
@@ -61,7 +62,10 @@ app.post(
   createVoiceEventsHandler(prisma as never, {
     generator: createInsightGenerator(config.ai),
     generation: config.ai?.generation ?? "onDemand",
-    recordEvent: providerEvents("voice-events")
+    recordEvent: providerEvents("voice-events"),
+    // Billing settlement: replace the dispatch-time voice estimate with the
+    // increment-billed amount for the answered duration (idempotent per ref).
+    settleUsage: config.billing?.enabled ? createSettleVoiceUsage(prisma as never) : null
   })
 );
 

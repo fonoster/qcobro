@@ -17,6 +17,14 @@ export interface VoiceEventsDeps {
   generation: NonNullable<AiConfig>["generation"];
   /** Flight recorder; each conversation event is recorded best-effort. */
   recordEvent?: ProviderEventRecorder | null;
+  /**
+   * Voice usage settlement (billing; null when billing is disabled). Called
+   * fire-and-forget on `conversation.ended` with the call's answered duration —
+   * idempotent per call ref, so webhook replays settle once.
+   */
+  settleUsage?:
+    | ((input: { providerRef: string; answeredSeconds: number; at: string }) => Promise<unknown>)
+    | null;
 }
 
 /**
@@ -49,6 +57,29 @@ export function createVoiceEventsHandler(
         summary:
           typeof req.body?.eventType === "string" ? { eventType: req.body.eventType } : undefined
       });
+
+      // Billing settlement: the call ended, so replace the dispatch-time estimate
+      // with the increment-billed amount for the answered duration. Best-effort
+      // after responding; idempotent per call ref (usage-ledger spec).
+      if (
+        deps.settleUsage &&
+        req.body?.eventType === "conversation.ended" &&
+        typeof req.body?.callRef === "string"
+      ) {
+        deps
+          .settleUsage({
+            providerRef: req.body.callRef,
+            answeredSeconds:
+              typeof req.body?.durationSeconds === "number" ? req.body.durationSeconds : 0,
+            at: new Date().toISOString()
+          })
+          .catch((err: unknown) =>
+            console.error(
+              "[billing] voice settlement failed:",
+              err instanceof Error ? err.message : err
+            )
+          );
+      }
 
       // On-ingestion analysis: best-effort, after responding (the autopilot does not
       // wait for our response). Failures must not affect ingestion.

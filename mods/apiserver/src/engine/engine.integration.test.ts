@@ -1,7 +1,13 @@
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { PrismaClient } from "@prisma/client";
-import { evaluate, evaluationParametersSchema, type EngineEvent } from "@qcobro/common";
+import {
+  billingConfigSchema,
+  evaluate,
+  evaluationParametersSchema,
+  type BillingConfig,
+  type EngineEvent
+} from "@qcobro/common";
 import { createEngine } from "./engine.js";
 import { createPrismaEngineClient } from "./prismaEngineClient.js";
 import { createEngineRunner } from "./runner.js";
@@ -62,7 +68,10 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
     return { campaignId: camp.id };
   }
 
-  function makeEngine(sms: EmulatedSmsClient, opts: { perTickMax?: number } = {}) {
+  function makeEngine(
+    sms: EmulatedSmsClient,
+    opts: { perTickMax?: number; billing?: BillingConfig } = {}
+  ) {
     return createEngine({
       db: createPrismaEngineClient(prisma),
       reserveRecordClient: prisma,
@@ -78,7 +87,8 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
       whatsAppPerMinute: 0,
       resolveWhatsApp: async () => null,
       tickSeconds: 60,
-      perTickMax: opts.perTickMax
+      perTickMax: opts.perTickMax,
+      billing: opts.billing
     });
   }
 
@@ -114,6 +124,10 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
   });
 
   after(async () => {
+    await prisma.ledgerEntry.deleteMany({ where: { workspaceRef: ws } });
+    await prisma.usageRecord.deleteMany({ where: { workspaceRef: ws } });
+    await prisma.workspaceBilling.deleteMany({ where: { workspaceRef: ws } });
+    await prisma.billingAccount.deleteMany({ where: { createdFromUserRef: ws } });
     await prisma.campaign.deleteMany({ where: { workspaceRef: ws } });
     await prisma.portfolio.deleteMany({ where: { workspaceRef: ws } });
     await prisma.agentTemplate.deleteMany({ where: { workspaceRef: ws } });
@@ -267,6 +281,89 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
     assert.equal(mine(sms).length, 1, "dispatch went out despite the sink failure");
     const logs = await prisma.accountContactLog.findMany({ where: { campaignId } });
     assert.equal(logs.length, 1, "gestión recorded despite the sink failure");
+  });
+
+  it("meters dispatches, stops at credits_exhausted, and skips the campaign once drained", async () => {
+    // Plan: SMS at 0.008 (8,000 micro). Grant 20,000 micro → covers exactly 2 SMS.
+    const billing = billingConfigSchema.parse({
+      enabled: true,
+      voiceDebitEstimateSeconds: 60,
+      plans: [
+        {
+          key: "starter",
+          name: { en: "Starter", es: "Inicial" },
+          monthlyPrice: 9,
+          monthlyAllowance: 9,
+          stripePriceId: "price_test",
+          rates: {
+            sms: { perMessage: 0.008 },
+            email: { perMessage: 0.0004 },
+            whatsappMessage: { perMessage: 0.01 },
+            voicePrerecorded: { perMinute: 0.28, increments: "15/15" },
+            voiceAi: { perMinute: 0.4, increments: "15/15" },
+            whatsappVoicePrerecorded: { perMinute: 0.08, increments: "15/15" },
+            whatsappVoiceAi: { perMinute: 0.8, increments: "15/15" }
+          }
+        }
+      ]
+    });
+    const account = await prisma.billingAccount.create({
+      data: { createdFromUserRef: ws, stripeCustomerId: `cus_${tag}` }
+    });
+    await prisma.workspaceBilling.create({
+      data: { workspaceRef: ws, billingAccountId: account.id, planKey: "starter" }
+    });
+    await prisma.ledgerEntry.create({
+      data: { workspaceRef: ws, kind: "GRANT", amountMicro: 20_000n, at: NOW }
+    });
+
+    const { campaignId } = await seedCampaign({ maxPerDay: 5, accounts: 4 });
+    const sms = new EmulatedSmsClient();
+    const engine = makeEngine(sms, { billing });
+
+    // Tick 1: 2 dispatches fit the balance; the rest decide credits_exhausted.
+    const report = await engine.tick();
+    const cr = report.campaigns.find((r) => r.campaignId === campaignId)!;
+    assert.equal(cr.dispatched, 2);
+    const exhausted = cr.decisions.filter((d) => d.decision === "credits_exhausted");
+    assert.equal(exhausted.length, 2);
+
+    // Priced at write time, debited in the same transaction as the gestión.
+    const usage = await prisma.usageRecord.findMany({ where: { workspaceRef: ws } });
+    assert.equal(usage.length, 2);
+    assert.ok(usage.every((u) => u.meter === "SMS" && u.amountMicro === 8_000n));
+    const entries = await prisma.ledgerEntry.findMany({ where: { workspaceRef: ws } });
+    const balance = entries.reduce((sum, e) => sum + e.amountMicro, 0n);
+    assert.equal(balance, 4_000n); // 20,000 − 2 × 8,000
+
+    // Tick 2: remaining 4,000 micro cannot cover one SMS → whole campaign skips.
+    const report2 = await engine.tick();
+    const cr2 = report2.campaigns.find((r) => r.campaignId === campaignId)!;
+    assert.equal(cr2.dispatched, 0);
+    assert.equal(cr2.skipReason, undefined); // balance is 4,000 (> 0) so the gate opens…
+    assert.equal(
+      cr2.decisions.filter((d) => d.decision === "credits_exhausted").length,
+      cr2.decisions.filter((d) => d.decision !== "dispatched").length
+    );
+
+    // Drain to zero and verify the tick-start campaign skip.
+    await prisma.ledgerEntry.create({
+      data: { workspaceRef: ws, kind: "VOID", amountMicro: -4_000n, at: NOW }
+    });
+    const report3 = await engine.tick();
+    const cr3 = report3.campaigns.find((r) => r.campaignId === campaignId)!;
+    assert.equal(cr3.skipReason, "credits_exhausted");
+    assert.equal(cr3.dispatched, 0);
+
+    // billing.enabled=false bypasses gating AND metering (rollback switch).
+    const disabled = { ...billing!, enabled: false };
+    const engineOff = makeEngine(sms, { billing: disabled });
+    const report4 = await engineOff.tick();
+    const cr4 = report4.campaigns.find((r) => r.campaignId === campaignId)!;
+    assert.ok(cr4.dispatched > 0);
+    assert.equal(await prisma.usageRecord.count({ where: { workspaceRef: ws } }), 2);
+
+    await prisma.campaign.update({ where: { id: campaignId }, data: { status: "PAUSED" } });
   });
 
   it("the pruner deletes expired events and keeps recent ones", async () => {

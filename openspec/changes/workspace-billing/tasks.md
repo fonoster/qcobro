@@ -11,17 +11,17 @@
 
 ## 2. Persistence and ledger (`mods/apiserver`)
 
-- [ ] 2.1 Prisma migration: `BillingAccount`, `WorkspaceBilling` (planKey, rateOverrides JSON, stripeSubscriptionItemId, cycle state), `UsageRecord`, `LedgerEntry` (amounts as BIGINT micro-units)
-- [ ] 2.2 Implement ledger service as validated functions: append entries, derive balance, cycle open/close (idempotent per workspaceRef+stripeInvoiceId), with unit tests
-- [ ] 2.3 Implement usage recording: price-at-write inside the dispatch transaction for the three message meters (SMS, email, WhatsApp), failing the transaction on ledger failure; integration tests
-- [ ] 2.4 Implement voice estimate debit at dispatch and settlement adjustment (idempotent per call ref, unanswered→net zero); integration tests
+- [x] 2.1 Prisma migration: `BillingAccount`, `WorkspaceBilling` (planKey, rateOverrides JSON, stripeSubscriptionItemId, cycle state), `UsageRecord`, `LedgerEntry` (amounts as BIGINT micro-units)
+- [x] 2.2 Implement ledger service as validated functions: append entries, derive balance, cycle open/close (idempotent per workspaceRef+stripeInvoiceId), with unit tests
+- [x] 2.3 Implement usage recording: price-at-write inside the dispatch transaction for the three message meters (SMS, email, WhatsApp), failing the transaction on ledger failure; integration tests
+- [x] 2.4 Implement voice estimate debit at dispatch and settlement adjustment (idempotent per call ref, unanswered→net zero); integration tests
 
 ## 3. Enforcement
 
-- [ ] 3.1 Add credit bucket (seed from balance, `tryDebit`, min initial-increment voice estimate) alongside channel buckets in `buckets.ts` style, with unit tests
-- [ ] 3.2 Wire the bucket into the engine tick: workspace seed at tick start, `credits_exhausted` account decision + campaign skip reason in TickReport, engine events, and emulator paths; extend `engine.integration.test.ts`
-- [ ] 3.3 Add direct balance check to manual/ad-hoc outreach with structured insufficient-credits error (tRPC), with tests
-- [ ] 3.4 Ensure `billing.enabled: false` bypasses metering and gating everywhere (test both modes)
+- [x] 3.1 Add credit bucket (seed from balance, `tryDebit`, min initial-increment voice estimate) alongside channel buckets in `buckets.ts` style, with unit tests
+- [x] 3.2 Wire the bucket into the engine tick: workspace seed at tick start, `credits_exhausted` account decision + campaign skip reason in TickReport, engine events, and emulator paths; extend `engine.integration.test.ts`
+- [x] 3.3 Add direct balance check to manual/ad-hoc outreach with structured insufficient-credits error (tRPC), with tests
+- [x] 3.4 Ensure `billing.enabled: false` bypasses metering and gating everywhere (test both modes)
 
 ## 4. Stripe lifecycle
 

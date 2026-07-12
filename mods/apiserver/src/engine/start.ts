@@ -46,7 +46,8 @@ export function startEngine(): EngineRunner | null {
     whatsAppPerMinute: config.whatsapp.maxMessagesPerMinute,
     resolveWhatsApp: (workspaceRef, phoneNumberId) =>
       resolveWhatsAppClient(prisma as never, workspaceRef, config.whatsapp, phoneNumberId),
-    tickSeconds: config.engine.tickSeconds
+    tickSeconds: config.engine.tickSeconds,
+    billing: config.billing
   });
 
   const runner = createEngineRunner({

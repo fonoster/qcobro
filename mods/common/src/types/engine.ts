@@ -22,7 +22,9 @@ export type CampaignSkipReason =
   | "channel_not_configured"
   | "channel_not_supported"
   | "empty_number_pool"
-  | "voice_not_synced";
+  | "voice_not_synced"
+  | "credits_exhausted"
+  | "payment_failed";
 
 /** The outcome of considering a single account during a tick. */
 export type AccountDecision =
@@ -35,7 +37,8 @@ export type AccountDecision =
   | "promise_suppressed"
   | "lifetime_cap"
   | "daily_cap"
-  | "budget_exhausted";
+  | "budget_exhausted"
+  | "credits_exhausted";
 
 /** Per-account line in the tick report. */
 export interface AccountDecisionEntry {
