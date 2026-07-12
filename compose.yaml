@@ -24,6 +24,11 @@ services:
   apiserver:
     image: ghcr.io/fonoster/qcobro-apiserver:${QCOBRO_VERSION}
     restart: unless-stopped
+    environment:
+      # @fonoster/logger reads this directly (no qcobro.json plumbing for a
+      # third-party lib's env var). Set to "info" to quiet the migrated
+      # console.log-turned-verbose lines.
+      LOGS_LEVEL: verbose
     volumes:
       - ./config/qcobro.json:/config/qcobro.json:ro
 

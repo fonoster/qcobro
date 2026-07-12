@@ -1,3 +1,4 @@
+import { getLogger } from "@fonoster/logger";
 import { config } from "../config.js";
 import { prisma } from "../db.js";
 import { FonosterOutboundCallClient } from "../services/fonosterOutboundCallClient.js";
@@ -9,6 +10,8 @@ import { createPrismaEngineClient } from "./prismaEngineClient.js";
 import { createEngineRunner, type EngineRunner } from "./runner.js";
 import { createEventPruner, createPrismaEngineEventSink } from "./eventSink.js";
 
+const logger = getLogger({ service: "engine", filePath: import.meta.url });
+
 /**
  * Builds the campaigns engine from `qcobro.json` and starts its tick timer — but only
  * when `engine.enabled` (off in dev so it never auto-dials). Returns the runner so the
@@ -16,7 +19,7 @@ import { createEventPruner, createPrismaEngineEventSink } from "./eventSink.js";
  */
 export function startEngine(): EngineRunner | null {
   if (!config.engine.enabled) {
-    console.log("[engine] disabled (engine.enabled = false)");
+    logger.verbose("disabled (engine.enabled = false)");
     return null;
   }
 
@@ -57,6 +60,6 @@ export function startEngine(): EngineRunner | null {
         : null
   });
   runner.start();
-  console.log(`[engine] started — tick every ${config.engine.tickSeconds}s`);
+  logger.verbose(`started — tick every ${config.engine.tickSeconds}s`);
   return runner;
 }

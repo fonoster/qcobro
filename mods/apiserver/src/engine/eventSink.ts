@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type { EngineEvent, EngineEventSink, ProviderEventEvent } from "@qcobro/common";
 import type { EngineEventKind, PrismaClient } from "@prisma/client";
+import { getLogger } from "@fonoster/logger";
+
+const logger = getLogger({ service: "engine", filePath: import.meta.url });
 
 /**
  * Prisma-backed flight-recorder sink plus the provider-event helper the inbound
@@ -50,8 +53,8 @@ export function createPrismaEngineEventSink(prisma: PrismaClient): EngineEventSi
           skipDuplicates: true
         });
       } catch (err) {
-        console.error(
-          "[engine] event sink failed (dropping batch):",
+        logger.error(
+          "event sink failed (dropping batch):",
           err instanceof Error ? err.message : err
         );
       }
@@ -140,10 +143,7 @@ export async function recordProviderEvent(
       }
     ]);
   } catch (err) {
-    console.error(
-      "[engine] provider event recording failed:",
-      err instanceof Error ? err.message : err
-    );
+    logger.error("provider event recording failed:", err instanceof Error ? err.message : err);
   }
 }
 
@@ -184,7 +184,7 @@ export function createEventPruner(prisma: PrismaClient, retentionDays: number) {
       }
       return total;
     } catch (err) {
-      console.error("[engine] event pruning failed:", err instanceof Error ? err.message : err);
+      logger.error("event pruning failed:", err instanceof Error ? err.message : err);
       return 0;
     }
   };

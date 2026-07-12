@@ -1,5 +1,8 @@
 import type { PrismaClient } from "@prisma/client";
 import type { EngineEventSink, TickReport } from "@qcobro/common";
+import { getLogger } from "@fonoster/logger";
+
+const logger = getLogger({ service: "engine", filePath: import.meta.url });
 
 // Arbitrary app-wide key for the engine's Postgres advisory lock. Ensures that even
 // if more than one apiserver instance runs, only one ticks at a time.
@@ -14,8 +17,8 @@ export interface EngineRunner {
 
 function defaultLog(report: TickReport): void {
   const dispatched = report.campaigns.reduce((n, c) => n + c.dispatched, 0);
-  console.log(
-    `[engine] tick ${report.at}: ${report.campaigns.length} campaign(s), ${dispatched} dispatched`
+  logger.verbose(
+    `tick ${report.at}: ${report.campaigns.length} campaign(s), ${dispatched} dispatched`
   );
 }
 
@@ -55,7 +58,7 @@ export function createEngineRunner(opts: {
           try {
             await opts.eventSink.record(report.events);
           } catch (err) {
-            console.error("[engine] event flush failed", err);
+            logger.error("event flush failed", err);
           }
         }
         if (opts.pruneEvents && Date.now() - lastPruneMs > 3_600_000) {
@@ -63,14 +66,14 @@ export function createEngineRunner(opts: {
           try {
             await opts.pruneEvents();
           } catch (err) {
-            console.error("[engine] event pruning failed", err);
+            logger.error("event pruning failed", err);
           }
         }
       } finally {
         await opts.prisma.$queryRaw`SELECT pg_advisory_unlock(${ADVISORY_LOCK_KEY})`;
       }
     } catch (err) {
-      console.error("[engine] tick failed", err);
+      logger.error("tick failed", err);
     } finally {
       running = false;
     }

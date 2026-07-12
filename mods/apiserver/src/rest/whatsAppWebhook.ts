@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Request, Response } from "express";
 import type { PrismaClient } from "@prisma/client";
+import { getLogger } from "@fonoster/logger";
 import {
   buildOutreachContext,
   whatsAppWebhookSchema,
@@ -16,6 +17,8 @@ import {
 } from "../functions/whatsApp/ingestWhatsAppMessage.js";
 import { createRecordOutcome } from "../functions/campaigns/recordOutcome.js";
 import { createWhatsAppAutopilot } from "../services/whatsAppAutopilot.js";
+
+const logger = getLogger({ service: "whatsapp", filePath: import.meta.url });
 
 export interface WhatsAppWebhookConfig {
   appSecret?: string;
@@ -193,8 +196,8 @@ async function processEvents(
               where: { phoneNumberId },
               data: { qualityRating: rating }
             });
-            console.log(
-              `[whatsapp/webhook] quality rating updated phoneNumberId=${phoneNumberId} rating=${rating}`
+            logger.verbose(
+              `quality rating updated phoneNumberId=${phoneNumberId} rating=${rating}`
             );
           }
           continue;
@@ -218,18 +221,14 @@ async function processEvents(
             where: { providerRef: status.id }
           });
           if (!log) {
-            console.warn(
-              `[whatsapp/webhook] opt-out: no gestión for providerRef=${status.id} — skipping`
-            );
+            logger.warn(`opt-out: no gestión for providerRef=${status.id} — skipping`);
             continue;
           }
           await db.portfolioAccount.update({
             where: { id: log.portfolioAccountId },
             data: { intentStatus: "OPT_OUT" }
           });
-          console.log(
-            `[whatsapp/webhook] opt-out: account=${log.portfolioAccountId} providerRef=${status.id}`
-          );
+          logger.verbose(`opt-out: account=${log.portfolioAccountId} providerRef=${status.id}`);
         }
 
         // Inbound customer messages — route through the AI-reply autopilot.
@@ -253,18 +252,16 @@ async function processEvents(
             summary: { type: "inbound_message" }
           });
           if (result.matched) {
-            console.log(
-              `[whatsapp/webhook] inbound message: from=${msg.from} id=${msg.id} action=${result.action}`
+            logger.verbose(
+              `inbound message: from=${msg.from} id=${msg.id} action=${result.action}`
             );
           } else {
-            console.log(
-              `[whatsapp/webhook] inbound message: from=${msg.from} id=${msg.id} — no gestión match`
-            );
+            logger.verbose(`inbound message: from=${msg.from} id=${msg.id} — no gestión match`);
           }
         }
       } catch (err) {
-        console.error(
-          `[whatsapp/webhook] error processing change field=${field}:`,
+        logger.error(
+          `error processing change field=${field}:`,
           err instanceof Error ? err.message : err
         );
       }
@@ -321,26 +318,24 @@ export function createWhatsAppWebhookHandlers(prisma: PrismaClient, cfg: WhatsAp
       where: { verifyToken: token }
     });
     if (!integration) {
-      console.warn("[whatsapp/webhook] verify_token not found:", token);
+      logger.warn("verify_token not found:", token);
       res.status(403).json({ error: "Forbidden" });
       return;
     }
 
-    console.log(
-      `[whatsapp/webhook] verified workspace=${integration.workspaceRef} challenge=${challenge}`
-    );
+    logger.verbose(`verified workspace=${integration.workspaceRef} challenge=${challenge}`);
     res.status(200).send(challenge);
   }
 
   async function events(req: Request, res: Response): Promise<void> {
     if (cfg.appSecret) {
       if (!verifyMetaSignature(req, cfg.appSecret)) {
-        console.warn("[whatsapp/webhook] invalid signature — request rejected");
+        logger.warn("invalid signature — request rejected");
         res.status(401).json({ error: "Invalid signature" });
         return;
       }
     } else {
-      console.warn("[whatsapp/webhook] appSecret not configured — skipping signature verification");
+      logger.warn("appSecret not configured — skipping signature verification");
     }
 
     // Acknowledge immediately — Meta requires a 200 within 20 s.
@@ -348,13 +343,13 @@ export function createWhatsAppWebhookHandlers(prisma: PrismaClient, cfg: WhatsAp
 
     const parsed = whatsAppWebhookSchema.safeParse(req.body);
     if (!parsed.success) {
-      console.warn("[whatsapp/webhook] malformed body:", parsed.error.message);
+      logger.warn("malformed body:", parsed.error.message);
       return;
     }
 
     // Fire-and-forget after the ack; errors are caught inside processEvents.
     processEvents(parsed.data, db, ingest, cfg.recordEvent ?? undefined).catch((err) =>
-      console.error("[whatsapp/webhook] processEvents threw:", err)
+      logger.error("processEvents threw:", err)
     );
   }
 
