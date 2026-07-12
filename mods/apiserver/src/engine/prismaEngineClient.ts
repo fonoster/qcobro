@@ -29,6 +29,7 @@ export function createPrismaEngineClient(prisma: PrismaClient): EngineClient {
 
       return rows.map((c) => ({
         id: c.id,
+        name: c.name,
         workspaceRef: c.workspaceRef,
         status: c.status,
         startDate: c.startDate,

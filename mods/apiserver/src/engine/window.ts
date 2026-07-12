@@ -1,4 +1,4 @@
-import { localParts, localDateString, type CampaignSkipReason } from "@qcobro/common";
+import { isWithinScheduleWindow, localDateString, type CampaignSkipReason } from "@qcobro/common";
 
 /** The campaign fields the schedule-window gate reads. */
 export interface WindowCampaign {
@@ -23,16 +23,8 @@ export type WindowResult = { ok: true } | { ok: false; reason: CampaignSkipReaso
  */
 export function isInWindow(c: WindowCampaign, now: Date, timeZone: string): WindowResult {
   if (c.status !== "ACTIVE") return { ok: false, reason: "not_active" };
-
-  const { date, weekday, time } = localParts(now, timeZone);
-
-  if (date < localDateString(c.startDate, timeZone)) return { ok: false, reason: "out_of_window" };
-  if (c.endDate && date > localDateString(c.endDate, timeZone)) {
-    return { ok: false, reason: "out_of_window" };
-  }
-  if (!c.daysOfWeek.includes(weekday)) return { ok: false, reason: "out_of_window" };
-  if (time < c.startTime || time > c.endTime) return { ok: false, reason: "out_of_window" };
-
+  // The schedule rule itself is shared with the evaluator's SAF-1 check.
+  if (!isWithinScheduleWindow(c, now, timeZone)) return { ok: false, reason: "out_of_window" };
   return { ok: true };
 }
 

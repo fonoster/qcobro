@@ -1,4 +1,6 @@
 import type {
+  EngineEvent,
+  EngineEventSink,
   OutboundCallClient,
   SmsClient,
   EmailClient,
@@ -17,6 +19,9 @@ import type {
  * the recorded log and the TickReport. NEVER import these from production code — the
  * engine wires the real provider clients via config.
  */
+
+/** Per-instance tag so refs never collide across separate runs (providerRef is unique in the DB). */
+const makeRunTag = () => Math.random().toString(36).slice(2, 8);
 
 /** A single recorded would-be dispatch. */
 export interface EmulatedDispatch {
@@ -42,12 +47,13 @@ export interface EmulatedDispatch {
 export class EmulatedOutboundCallClient implements OutboundCallClient {
   readonly calls: EmulatedDispatch[] = [];
   private seq = 0;
+  private readonly run = makeRunTag();
 
   constructor(private readonly opts: { fail?: boolean } = {}) {}
 
   async createCall(input: OutboundCallInput): Promise<{ ref: string }> {
     if (this.opts.fail) throw new Error("emulated voice dispatch failure");
-    const ref = `sim-call-${++this.seq}`;
+    const ref = `sim-call-${this.run}-${++this.seq}`;
     this.calls.push({
       channel: "voice",
       to: input.to,
@@ -64,12 +70,13 @@ export class EmulatedOutboundCallClient implements OutboundCallClient {
 export class EmulatedSmsClient implements SmsClient {
   readonly messages: EmulatedDispatch[] = [];
   private seq = 0;
+  private readonly run = makeRunTag();
 
   constructor(private readonly opts: { fail?: boolean } = {}) {}
 
   async sendMessage(input: { from: string; to: string; body: string }): Promise<{ sid: string }> {
     if (this.opts.fail) throw new Error("emulated sms dispatch failure");
-    const sid = `sim-sms-${++this.seq}`;
+    const sid = `sim-sms-${this.run}-${++this.seq}`;
     this.messages.push({
       channel: "sms",
       to: input.to,
@@ -85,12 +92,13 @@ export class EmulatedSmsClient implements SmsClient {
 export class EmulatedEmailClient implements EmailClient {
   readonly emails: EmulatedDispatch[] = [];
   private seq = 0;
+  private readonly run = makeRunTag();
 
   constructor(private readonly opts: { fail?: boolean } = {}) {}
 
   async sendEmail(input: EmailSendInput): Promise<{ id: string }> {
     if (this.opts.fail) throw new Error("emulated email dispatch failure");
-    const id = `sim-email-${++this.seq}`;
+    const id = `sim-email-${this.run}-${++this.seq}`;
     this.emails.push({
       channel: "email",
       to: input.to,
@@ -113,6 +121,7 @@ export class EmulatedEmailClient implements EmailClient {
 export class EmulatedWhatsAppClient implements WhatsAppClient {
   readonly messages: EmulatedDispatch[] = [];
   private seq = 0;
+  private readonly run = makeRunTag();
 
   constructor(
     private readonly opts: {
@@ -126,7 +135,7 @@ export class EmulatedWhatsAppClient implements WhatsAppClient {
 
   async sendTemplate(input: WhatsAppSendTemplateInput): Promise<{ id: string }> {
     if (this.opts.fail) throw new Error("emulated whatsapp dispatch failure");
-    const id = `sim-wa-${++this.seq}`;
+    const id = `sim-wa-${this.run}-${++this.seq}`;
     this.messages.push({
       channel: "whatsapp",
       to: input.to,
@@ -141,7 +150,7 @@ export class EmulatedWhatsAppClient implements WhatsAppClient {
 
   async sendText(input: { to: string; body: string }): Promise<{ id: string }> {
     if (this.opts.fail) throw new Error("emulated whatsapp dispatch failure");
-    const id = `sim-wa-${++this.seq}`;
+    const id = `sim-wa-${this.run}-${++this.seq}`;
     this.messages.push({
       channel: "whatsapp",
       to: input.to,
@@ -155,5 +164,17 @@ export class EmulatedWhatsAppClient implements WhatsAppClient {
 
   async fetchTemplate(templateId: string): Promise<WhatsAppFetchedTemplate | null> {
     return this.opts.templates?.[templateId] ?? null;
+  }
+}
+
+/** In-memory flight-recorder sink so simulations can hand the stream to `evaluate`. */
+export class InMemoryEngineEventSink implements EngineEventSink {
+  readonly events: EngineEvent[] = [];
+
+  constructor(private readonly opts: { fail?: boolean } = {}) {}
+
+  async record(events: EngineEvent[]): Promise<void> {
+    if (this.opts.fail) throw new Error("emulated event sink failure");
+    this.events.push(...events);
   }
 }

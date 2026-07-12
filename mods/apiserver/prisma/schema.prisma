@@ -396,3 +396,42 @@ model PaymentPromise {
   @@index([portfolioAccountId, dueDate])
   @@map("payment_promises")
 }
+
+enum EngineEventKind {
+  TICK_STARTED
+  TICK_COMPLETED
+  CAMPAIGN_EVALUATED
+  ACCOUNT_DECIDED
+  ATTEMPT_RESERVED
+  DISPATCH_REQUESTED
+  DISPATCH_SUCCEEDED
+  DISPATCH_FAILED
+  PROVIDER_EVENT
+}
+
+// Engine flight recorder (engine-events capability). Append-only telemetry, not a
+// system of record: gestiones stay authoritative. Typed columns are the correlation
+// spine used for filtering; `payload` holds the full EngineEvent JSON (the shape the
+// evaluator in @qcobro/common consumes). Pruned by `engine.eventsRetentionDays`.
+// Intentionally relation-free so writes never contend with dispatch-path rows and
+// events survive campaign/account deletion.
+model EngineEvent {
+  id                 String          @id
+  tickId             String?
+  seq                Int?
+  kind               EngineEventKind
+  at                 DateTime
+  workspaceRef       String?
+  campaignId         String?
+  portfolioAccountId String?
+  providerRef        String?
+  channel            String?
+  payload            Json
+  createdAt          DateTime        @default(now())
+
+  @@index([tickId])
+  @@index([campaignId, at])
+  @@index([providerRef])
+  @@index([at])
+  @@map("engine_events")
+}

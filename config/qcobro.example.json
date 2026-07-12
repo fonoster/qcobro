@@ -72,7 +72,8 @@
   },
   "engine": {
     "enabled": true,
-    "tickSeconds": 60
+    "tickSeconds": 60,
+    "eventsRetentionDays": 30
   },
   "ai": {
     "enabled": false,

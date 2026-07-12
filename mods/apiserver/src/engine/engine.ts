@@ -1,6 +1,9 @@
 import {
+  bucketOf,
   buildOutreachContext,
+  maskRecipient,
   type AccountDecision,
+  type CampaignSnapshot,
   type CampaignTickReport,
   type Clock,
   type DispatchOutreachInput,
@@ -12,6 +15,7 @@ import {
   type TickReport,
   type WhatsAppClient
 } from "@qcobro/common";
+import { createTickRecorder, type TickRecorder } from "./recorder.js";
 import { createDispatchOutreach } from "../functions/outreach/dispatchOutreach.js";
 import { createReserveAttempt } from "../functions/campaigns/reserveAttempt.js";
 import { createRecordOutcome } from "../functions/campaigns/recordOutcome.js";
@@ -42,6 +46,8 @@ export interface EngineTemplate {
 /** A campaign as the engine loads it (schedule + caps + template + portfolios). */
 export interface EngineCampaign extends WindowCampaign {
   id: string;
+  /** Display name, embedded in `campaign.evaluated` events for scorecards. */
+  name: string;
   workspaceRef: string;
   maxAttemptsPerAccount: number;
   maxAttemptsPerDay: number;
@@ -109,8 +115,6 @@ export interface EngineDeps {
 type Readiness =
   | { ok: true; channel: EngineChannel; appRef: string | null }
   | { ok: false; reason: NonNullable<CampaignTickReport["skipReason"]> };
-
-const VOICE = new Set(["VOICE_AI", "VOICE_PRERECORDED"]);
 
 function channelOf(type: string | undefined): EngineChannel | null {
   if (
@@ -223,6 +227,22 @@ export function createEngine(deps: EngineDeps) {
     };
   }
 
+  /** The campaign parameters in force this tick, embedded so the stream is self-contained. */
+  function snapshotOf(c: EngineCampaign, tz: string): CampaignSnapshot {
+    return {
+      status: c.status,
+      startDate: c.startDate.toISOString(),
+      endDate: c.endDate ? c.endDate.toISOString() : null,
+      daysOfWeek: c.daysOfWeek,
+      startTime: c.startTime,
+      endTime: c.endTime,
+      maxAttemptsPerAccount: c.maxAttemptsPerAccount,
+      maxAttemptsPerDay: c.maxAttemptsPerDay,
+      timezone: tz,
+      channel: channelOf(c.agentTemplate?.type)
+    };
+  }
+
   /** Reserve (before send) → dispatch → record. Returns the per-account decision. */
   async function reserveAndDispatch(
     c: EngineCampaign,
@@ -230,7 +250,8 @@ export function createEngine(deps: EngineDeps) {
     channel: EngineChannel,
     appRef: string | null,
     reserve: ReturnType<typeof createReserveAttempt>,
-    currency: string
+    currency: string,
+    recorder: TickRecorder
   ): Promise<{ decision: AccountDecision; providerRef?: string }> {
     // For WHATSAPP, resolve the per-workspace client before reserving the attempt so a
     // missing integration skips cleanly without consuming an attempt slot.
@@ -242,6 +263,19 @@ export function createEngine(deps: EngineDeps) {
         console.error(
           `[engine] WhatsApp integration not found campaign=${c.id} workspace=${c.workspaceRef}`
         );
+        // Recorded as a failed dispatch so the scorecard's error rate sees it —
+        // without this, a campaign failing 100% this way would judge as 0% errors.
+        recorder.emit({
+          kind: "dispatch.failed",
+          workspaceRef: c.workspaceRef,
+          campaignId: c.id,
+          portfolioAccountId: acc.id,
+          channel,
+          latencyMs: 0,
+          errorClass: "IntegrationMissing",
+          errorMessage: "WhatsApp integration not found for workspace",
+          toMasked: maskRecipient(acc.phone ?? "")
+        });
         return { decision: "dispatch_failed" };
       }
       whatsAppLanguageCode = resolved.languageCode;
@@ -250,6 +284,23 @@ export function createEngine(deps: EngineDeps) {
 
     const at = deps.clock.now().toISOString();
     await reserve({ campaignId: c.id, portfolioAccountId: acc.id, at });
+    recorder.emit({
+      kind: "attempt.reserved",
+      workspaceRef: c.workspaceRef,
+      campaignId: c.id,
+      portfolioAccountId: acc.id
+    });
+
+    const toMasked = maskRecipient((channel === "EMAIL" ? acc.email : acc.phone) ?? "");
+    recorder.emit({
+      kind: "dispatch.requested",
+      workspaceRef: c.workspaceRef,
+      campaignId: c.id,
+      portfolioAccountId: acc.id,
+      channel,
+      toMasked
+    });
+    const dispatchStartedMs = Date.now();
 
     let result;
     try {
@@ -263,8 +314,29 @@ export function createEngine(deps: EngineDeps) {
         `[engine] dispatch failed campaign=${c.id} account=${acc.id} channel=${channel}:`,
         err instanceof Error ? err.message : err
       );
+      recorder.emit({
+        kind: "dispatch.failed",
+        workspaceRef: c.workspaceRef,
+        campaignId: c.id,
+        portfolioAccountId: acc.id,
+        channel,
+        latencyMs: Date.now() - dispatchStartedMs,
+        errorClass: err instanceof Error ? err.constructor.name : "Error",
+        errorMessage: err instanceof Error ? err.message : String(err),
+        toMasked
+      });
       return { decision: "dispatch_failed" };
     }
+    recorder.emit({
+      kind: "dispatch.succeeded",
+      workspaceRef: c.workspaceRef,
+      campaignId: c.id,
+      portfolioAccountId: acc.id,
+      channel,
+      providerRef: result.providerRef,
+      latencyMs: Date.now() - dispatchStartedMs,
+      toMasked
+    });
 
     await record({
       portfolioAccountId: acc.id,
@@ -293,22 +365,35 @@ export function createEngine(deps: EngineDeps) {
 
   async function tick(): Promise<TickReport> {
     const now = deps.clock.now();
-    const buckets: Record<"voice" | "sms" | "email" | "whatsapp", TokenBucket> = {
+    const recorder = createTickRecorder(deps.clock);
+    const tickStartedMs = Date.now();
+    const buckets: Record<"voice" | "sms" | "email" | "whatsApp", TokenBucket> = {
       voice: createTokenBucket(perTickCapacity(deps.voicePerMinute, deps.tickSeconds)),
       sms: createTokenBucket(perTickCapacity(deps.smsPerMinute, deps.tickSeconds)),
       email: createTokenBucket(perTickCapacity(deps.emailPerMinute, deps.tickSeconds)),
-      whatsapp: createTokenBucket(perTickCapacity(deps.whatsAppPerMinute, deps.tickSeconds))
+      whatsApp: createTokenBucket(perTickCapacity(deps.whatsAppPerMinute, deps.tickSeconds))
     };
     const usage = {
       VOICE_AI: { dispatched: 0, budget: 0 },
       VOICE_PRERECORDED: { dispatched: 0, budget: 0 },
       SMS: { dispatched: 0, budget: buckets.sms.remaining() },
       EMAIL: { dispatched: 0, budget: buckets.email.remaining() },
-      WHATSAPP: { dispatched: 0, budget: buckets.whatsapp.remaining() }
+      WHATSAPP: { dispatched: 0, budget: buckets.whatsApp.remaining() }
     };
     const voiceBudget = buckets.voice.remaining();
     usage.VOICE_AI.budget = voiceBudget;
     usage.VOICE_PRERECORDED.budget = voiceBudget;
+    recorder.emit({
+      kind: "tick.started",
+      budgets: {
+        VOICE_AI: voiceBudget,
+        VOICE_PRERECORDED: voiceBudget,
+        SMS: usage.SMS.budget,
+        EMAIL: usage.EMAIL.budget,
+        WHATSAPP: usage.WHATSAPP.budget
+      },
+      perTickMax: deps.perTickMax
+    });
 
     const report: TickReport = { at: now.toISOString(), campaigns: [], channelUsage: {} };
     let totalDispatched = 0;
@@ -329,9 +414,28 @@ export function createEngine(deps: EngineDeps) {
       const tz = ws.timezone;
       const reserve = createReserveAttempt(deps.reserveRecordClient as never, tz);
 
+      const evaluated = (over: {
+        inWindow: boolean;
+        skipReason?: string;
+        completed?: boolean;
+        candidateCount?: number;
+      }) =>
+        recorder.emit({
+          kind: "campaign.evaluated",
+          workspaceRef: c.workspaceRef,
+          campaignId: c.id,
+          campaignName: c.name,
+          inWindow: over.inWindow,
+          skipReason: over.skipReason,
+          completed: over.completed,
+          candidateCount: over.candidateCount ?? 0,
+          snapshot: snapshotOf(c, tz)
+        });
+
       if (isPastEndDate(c, now, tz)) {
         await deps.db.completeCampaign(c.id);
         cr.completed = true;
+        evaluated({ inWindow: false, completed: true });
         report.campaigns.push(cr);
         continue;
       }
@@ -339,6 +443,7 @@ export function createEngine(deps: EngineDeps) {
       const win = isInWindow(c, now, tz);
       if (!win.ok) {
         cr.skipReason = win.reason;
+        evaluated({ inWindow: false, skipReason: win.reason });
         report.campaigns.push(cr);
         continue;
       }
@@ -347,6 +452,7 @@ export function createEngine(deps: EngineDeps) {
       const ready = readiness(c);
       if (!ready.ok) {
         cr.skipReason = ready.reason;
+        evaluated({ inWindow: true, skipReason: ready.reason });
         report.campaigns.push(cr);
         continue;
       }
@@ -355,6 +461,7 @@ export function createEngine(deps: EngineDeps) {
         c.id,
         c.portfolios.map((p) => p.portfolioId)
       );
+      evaluated({ inWindow: true, candidateCount: candidates.length });
       const { eligible, decisions } = runFunnel(
         c,
         candidates.map(toFunnelAccount),
@@ -364,24 +471,30 @@ export function createEngine(deps: EngineDeps) {
       );
       const candidateById = new Map(candidates.map((a) => [a.id, a]));
 
+      const decided = (portfolioAccountId: string, decision: AccountDecision, ref?: string) =>
+        recorder.emit({
+          kind: "account.decided",
+          workspaceRef: c.workspaceRef,
+          campaignId: c.id,
+          portfolioAccountId,
+          decision,
+          providerRef: ref
+        });
+
       for (const d of decisions) {
         cr.decisions.push(d);
         cr.suppressed += 1;
+        decided(d.portfolioAccountId, d.decision);
       }
 
-      const bucket = VOICE.has(ready.channel)
-        ? buckets.voice
-        : ready.channel === "EMAIL"
-          ? buckets.email
-          : ready.channel === "WHATSAPP"
-            ? buckets.whatsapp
-            : buckets.sms;
+      const bucket = buckets[bucketOf(ready.channel)];
       for (const fa of eligible) {
         if (deps.perTickMax !== undefined && totalDispatched >= deps.perTickMax) {
           cr.decisions.push({
             portfolioAccountId: fa.portfolioAccountId,
             decision: "budget_exhausted"
           });
+          decided(fa.portfolioAccountId, "budget_exhausted");
           cr.skipped += 1;
           continue;
         }
@@ -390,6 +503,7 @@ export function createEngine(deps: EngineDeps) {
             portfolioAccountId: fa.portfolioAccountId,
             decision: "budget_exhausted"
           });
+          decided(fa.portfolioAccountId, "budget_exhausted");
           cr.skipped += 1;
           continue;
         }
@@ -400,9 +514,11 @@ export function createEngine(deps: EngineDeps) {
           ready.channel,
           ready.appRef,
           reserve,
-          ws.currency
+          ws.currency,
+          recorder
         );
         cr.decisions.push({ portfolioAccountId: acc.id, decision, providerRef });
+        decided(acc.id, decision, providerRef);
         if (decision === "dispatched") {
           cr.dispatched += 1;
           totalDispatched += 1;
@@ -415,7 +531,30 @@ export function createEngine(deps: EngineDeps) {
       report.campaigns.push(cr);
     }
 
+    // The event reports tokens CONSUMED (budget - remaining), not successes: a failed
+    // dispatch still spends its token, and budget-utilization checks must see that.
+    // The two voice channels share one bucket; its consumption is reported on VOICE_AI.
+    recorder.emit({
+      kind: "tick.completed",
+      durationMs: Date.now() - tickStartedMs,
+      dispatched: totalDispatched,
+      perTickMaxReached: deps.perTickMax !== undefined && totalDispatched >= deps.perTickMax,
+      channelUsage: {
+        VOICE_AI: { dispatched: voiceBudget - buckets.voice.remaining(), budget: voiceBudget },
+        VOICE_PRERECORDED: { dispatched: 0, budget: voiceBudget },
+        SMS: { dispatched: usage.SMS.budget - buckets.sms.remaining(), budget: usage.SMS.budget },
+        EMAIL: {
+          dispatched: usage.EMAIL.budget - buckets.email.remaining(),
+          budget: usage.EMAIL.budget
+        },
+        WHATSAPP: {
+          dispatched: usage.WHATSAPP.budget - buckets.whatsApp.remaining(),
+          budget: usage.WHATSAPP.budget
+        }
+      }
+    });
     report.channelUsage = usage;
+    report.events = recorder.events();
     return report;
   }
 

@@ -26,7 +26,6 @@ export function createTokenBucket(capacity: number): TokenBucket {
   };
 }
 
-/** Tokens a channel may spend in a single tick, from its per-minute rate. */
-export function perTickCapacity(ratePerMinute: number, tickSeconds: number): number {
-  return Math.floor((Math.max(0, ratePerMinute) * Math.max(1, tickSeconds)) / 60);
-}
+// The capacity formula lives in @qcobro/common so the evaluator's SAF-5 check
+// can never drift from what the engine enforces; re-exported for callers here.
+export { perTickCapacity } from "@qcobro/common";

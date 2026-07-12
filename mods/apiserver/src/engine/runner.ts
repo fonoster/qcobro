@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-import type { TickReport } from "@qcobro/common";
+import type { EngineEventSink, TickReport } from "@qcobro/common";
 
 // Arbitrary app-wide key for the engine's Postgres advisory lock. Ensures that even
 // if more than one apiserver instance runs, only one ticks at a time.
@@ -30,9 +30,14 @@ export function createEngineRunner(opts: {
   tick: () => Promise<TickReport>;
   tickSeconds: number;
   log?: (report: TickReport) => void;
+  /** Flight-recorder sink; tick events are flushed to it best-effort after each tick. */
+  eventSink?: EngineEventSink | null;
+  /** Expired-event pruner (see `createEventPruner`); invoked at most hourly. */
+  pruneEvents?: (() => Promise<number>) | null;
 }): EngineRunner {
   let timer: NodeJS.Timeout | null = null;
   let running = false;
+  let lastPruneMs = 0;
 
   async function runOnce(): Promise<void> {
     if (running) return; // single-flight: never overlap ticks
@@ -45,6 +50,22 @@ export function createEngineRunner(opts: {
       try {
         const report = await opts.tick();
         (opts.log ?? defaultLog)(report);
+        // Best-effort telemetry: a sink failure must never fail the tick.
+        if (opts.eventSink && report.events && report.events.length > 0) {
+          try {
+            await opts.eventSink.record(report.events);
+          } catch (err) {
+            console.error("[engine] event flush failed", err);
+          }
+        }
+        if (opts.pruneEvents && Date.now() - lastPruneMs > 3_600_000) {
+          lastPruneMs = Date.now();
+          try {
+            await opts.pruneEvents();
+          } catch (err) {
+            console.error("[engine] event pruning failed", err);
+          }
+        }
       } finally {
         await opts.prisma.$queryRaw`SELECT pg_advisory_unlock(${ADVISORY_LOCK_KEY})`;
       }
