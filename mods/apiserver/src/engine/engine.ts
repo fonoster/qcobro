@@ -1,16 +1,27 @@
 import {
   bucketOf,
   buildOutreachContext,
+  estimateVoiceDebitMicro,
+  isMessageMeter,
   maskRecipient,
+  priceMessageMicro,
+  resolveRate,
   type AccountDecision,
+  type BillingClient,
+  type BillingConfig,
+  type BillingMeter,
   type CampaignSnapshot,
   type CampaignTickReport,
   type Clock,
+  type CreateContactLogInput,
   type DispatchOutreachInput,
   type EmailClient,
   type EngineChannel,
+  type MeterDispatchInput,
   type OutboundCallClient,
   type PortfolioAccountRecord,
+  type RateOverrides,
+  type Rates,
   type SmsClient,
   type TickReport,
   type WhatsAppClient
@@ -18,11 +29,42 @@ import {
 import { createTickRecorder, type TickRecorder } from "./recorder.js";
 import { createDispatchOutreach } from "../functions/outreach/dispatchOutreach.js";
 import { createReserveAttempt } from "../functions/campaigns/reserveAttempt.js";
-import { createRecordOutcome } from "../functions/campaigns/recordOutcome.js";
+import { createRecordOutcome, recordOutcomeTx } from "../functions/campaigns/recordOutcome.js";
 import { createGetWorkspaceSettings } from "../functions/workspaceSettings/getWorkspaceSettings.js";
 import { isInWindow, isPastEndDate, type WindowCampaign } from "./window.js";
 import { runFunnel, type FunnelAccount } from "./funnel.js";
-import { createTokenBucket, perTickCapacity, type TokenBucket } from "./buckets.js";
+import { meterDispatchTx } from "../functions/billing/meterDispatch.js";
+import { parseStoredOverrides, planFromCatalog } from "../functions/billing/meters.js";
+import { workspaceBalanceMicroTx } from "../functions/billing/workspaceBalance.js";
+import {
+  createCreditBucket,
+  createTokenBucket,
+  perTickCapacity,
+  type CreditBucket,
+  type TokenBucket
+} from "./buckets.js";
+
+/** Engine channel → billing meter (WhatsApp voice meters have no channel yet). */
+const METER_OF: Record<EngineChannel, BillingMeter> = {
+  VOICE_AI: "voiceAi",
+  VOICE_PRERECORDED: "voicePrerecorded",
+  SMS: "sms",
+  EMAIL: "email",
+  WHATSAPP: "whatsappMessage"
+};
+
+/**
+ * A workspace's credit gate for one tick. `off` = billing disabled or workspace
+ * not enrolled (dispatches unmetered — what makes gradual rollout safe);
+ * `payment_failed` = the payer is dunning, all its workspaces suspend;
+ * `misconfigured` = enrollment points at an unknown plan (fail closed);
+ * `active` = bucket seeded from the ledger, debited per dispatch.
+ */
+type CreditGate =
+  | { kind: "off" }
+  | { kind: "payment_failed" }
+  | { kind: "misconfigured" }
+  | { kind: "active"; bucket: CreditBucket; rates: Rates; overrides?: RateOverrides };
 
 /** Agent template with the dispatch configs the engine needs. */
 export interface EngineTemplate {
@@ -110,6 +152,13 @@ export interface EngineDeps {
     workspaceRef: string,
     phoneNumberId: string
   ) => Promise<{ client: WhatsAppClient; languageCode: string } | null>;
+  /**
+   * Billing config (the qcobro.json `billing` section). When absent or
+   * `enabled:false`, dispatch paths neither meter usage nor enforce credit
+   * gates — pre-billing behavior, and the rollback switch. The billing tables
+   * are reached through `reserveRecordClient` (the same Prisma client).
+   */
+  billing?: BillingConfig;
 }
 
 type Readiness =
@@ -143,6 +192,37 @@ export function createEngine(deps: EngineDeps) {
   // Per-workspace timezone + currency, resolved once per campaign per tick. A workspace
   // without a settings row is seeded on read via the column defaults.
   const getSettings = createGetWorkspaceSettings(deps.reserveRecordClient as never);
+  const billingCfg = deps.billing?.enabled ? deps.billing : null;
+  const billingDb = deps.reserveRecordClient as BillingClient;
+
+  /**
+   * Writes the dispatch gestión and, when the workspace is metered, the priced
+   * usage record + ledger debit in the SAME transaction — a failed ledger write
+   * fails the dispatch record (usage-ledger spec).
+   */
+  async function recordDispatch(params: CreateContactLogInput, meter: MeterDispatchInput | null) {
+    if (!meter || !billingCfg) return record(params);
+    return billingDb.$transaction(async (tx) => {
+      const log = await recordOutcomeTx(tx as never, params);
+      await meterDispatchTx(tx, billingCfg, meter);
+      return log;
+    });
+  }
+
+  /** The pre-dispatch credit-bucket debit for one dispatch on this gate. */
+  function estimateCostMicro(
+    gate: Extract<CreditGate, { kind: "active" }>,
+    channel: EngineChannel
+  ): number {
+    const meter = METER_OF[channel];
+    if (isMessageMeter(meter)) {
+      return priceMessageMicro(resolveRate(meter, gate.rates, gate.overrides));
+    }
+    return estimateVoiceDebitMicro(
+      resolveRate(meter, gate.rates, gate.overrides),
+      billingCfg!.voiceDebitEstimateSeconds
+    );
+  }
 
   /** Channel readiness for a campaign (Topic 5 tier A — catches config up-front). */
   function readiness(c: EngineCampaign): Readiness {
@@ -251,7 +331,8 @@ export function createEngine(deps: EngineDeps) {
     appRef: string | null,
     reserve: ReturnType<typeof createReserveAttempt>,
     currency: string,
-    recorder: TickRecorder
+    recorder: TickRecorder,
+    metered: boolean
   ): Promise<{ decision: AccountDecision; providerRef?: string }> {
     // For WHATSAPP, resolve the per-workspace client before reserving the attempt so a
     // missing integration skips cleanly without consuming an attempt slot.
@@ -338,16 +419,28 @@ export function createEngine(deps: EngineDeps) {
       toMasked
     });
 
-    await record({
-      portfolioAccountId: acc.id,
-      campaignId: c.id,
-      agentType: channel,
-      contactedAt: at,
-      outcome: "OTHER",
-      debtAmountSnapshot: acc.outstandingBalance,
-      providerRef: result.providerRef,
-      channelData: { from: result.from, to: result.to, messageBody: result.renderedBody }
-    });
+    await recordDispatch(
+      {
+        portfolioAccountId: acc.id,
+        campaignId: c.id,
+        agentType: channel,
+        contactedAt: at,
+        outcome: "OTHER",
+        debtAmountSnapshot: acc.outstandingBalance,
+        providerRef: result.providerRef,
+        channelData: { from: result.from, to: result.to, messageBody: result.renderedBody }
+      },
+      metered
+        ? {
+            workspaceRef: c.workspaceRef,
+            meter: METER_OF[channel],
+            at,
+            campaignId: c.id,
+            portfolioAccountId: acc.id,
+            providerRef: result.providerRef
+          }
+        : null
+    );
     return { decision: "dispatched", providerRef: result.providerRef };
   }
 
@@ -397,6 +490,52 @@ export function createEngine(deps: EngineDeps) {
 
     const report: TickReport = { at: now.toISOString(), campaigns: [], channelUsage: {} };
     let totalDispatched = 0;
+
+    // One credit gate per workspace per tick, seeded from the ledger on first
+    // touch. Campaign iteration order is the de-facto priority order when the
+    // bucket runs low (documented v1 behavior).
+    const gates = new Map<string, CreditGate>();
+    async function creditGateFor(workspaceRef: string): Promise<CreditGate> {
+      if (!billingCfg) return { kind: "off" };
+      const cached = gates.get(workspaceRef);
+      if (cached) return cached;
+      let gate: CreditGate;
+      try {
+        const enrollment = await billingDb.workspaceBilling.findUnique({
+          where: { workspaceRef }
+        });
+        if (!enrollment) {
+          gate = { kind: "off" };
+        } else {
+          const account = await billingDb.billingAccount.findUnique({
+            where: { id: enrollment.billingAccountId }
+          });
+          if (account?.paymentFailed) {
+            gate = { kind: "payment_failed" };
+          } else {
+            const plan = planFromCatalog(billingCfg, enrollment.planKey);
+            const overrides = parseStoredOverrides(enrollment.rateOverrides);
+            const balance = await workspaceBalanceMicroTx(billingDb, workspaceRef);
+            gate = {
+              kind: "active",
+              bucket: createCreditBucket(balance),
+              rates: plan.rates,
+              overrides
+            };
+          }
+        }
+      } catch (err) {
+        // Fail closed: a broken enrollment (unknown plan, bad overrides) must not
+        // dispatch unpriced — but it must not kill the tick for other workspaces.
+        console.error(
+          `[engine] billing gate failed workspace=${workspaceRef} (failing closed):`,
+          err instanceof Error ? err.message : err
+        );
+        gate = { kind: "misconfigured" };
+      }
+      gates.set(workspaceRef, gate);
+      return gate;
+    }
 
     for (const c of await deps.db.listActiveCampaigns()) {
       const cr: CampaignTickReport = {
@@ -457,6 +596,25 @@ export function createEngine(deps: EngineDeps) {
         continue;
       }
 
+      // Credit gate (billing-enforcement): a payer in dunning or an exhausted
+      // (or misconfigured, failing closed) balance skips the whole campaign.
+      const gate = await creditGateFor(c.workspaceRef);
+      if (gate.kind === "payment_failed") {
+        cr.skipReason = "payment_failed";
+        evaluated({ inWindow: true, skipReason: cr.skipReason });
+        report.campaigns.push(cr);
+        continue;
+      }
+      if (
+        gate.kind === "misconfigured" ||
+        (gate.kind === "active" && gate.bucket.remainingMicro() <= 0)
+      ) {
+        cr.skipReason = "credits_exhausted";
+        evaluated({ inWindow: true, skipReason: cr.skipReason });
+        report.campaigns.push(cr);
+        continue;
+      }
+
       const candidates = await deps.db.listCandidates(
         c.id,
         c.portfolios.map((p) => p.portfolioId)
@@ -498,6 +656,21 @@ export function createEngine(deps: EngineDeps) {
           cr.skipped += 1;
           continue;
         }
+        // Credit debit before the channel token: both are tick-scoped and the
+        // ledger reseeds next tick, so a debit whose dispatch never happens
+        // (channel budget hit right after) costs nothing durable.
+        if (
+          gate.kind === "active" &&
+          !gate.bucket.tryDebit(estimateCostMicro(gate, ready.channel))
+        ) {
+          cr.decisions.push({
+            portfolioAccountId: fa.portfolioAccountId,
+            decision: "credits_exhausted"
+          });
+          decided(fa.portfolioAccountId, "credits_exhausted");
+          cr.skipped += 1;
+          continue;
+        }
         if (!bucket.tryTake()) {
           cr.decisions.push({
             portfolioAccountId: fa.portfolioAccountId,
@@ -515,7 +688,8 @@ export function createEngine(deps: EngineDeps) {
           ready.appRef,
           reserve,
           ws.currency,
-          recorder
+          recorder,
+          gate.kind === "active"
         );
         cr.decisions.push({ portfolioAccountId: acc.id, decision, providerRef });
         decided(acc.id, decision, providerRef);

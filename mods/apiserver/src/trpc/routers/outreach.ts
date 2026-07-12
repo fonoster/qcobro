@@ -2,11 +2,24 @@ import { TRPCError } from "@trpc/server";
 import {
   buildOutreachContext,
   manualOutreachSchema,
+  type BillingClient,
+  type BillingMeter,
   type DispatchOutreachInput
 } from "@qcobro/common";
 import { router, workspaceProcedure } from "../trpc.js";
+import { config } from "../../config.js";
 import { createDispatchOutreach } from "../../functions/outreach/dispatchOutreach.js";
-import { createRecordOutcome } from "../../functions/campaigns/recordOutcome.js";
+import { createRecordOutcome, recordOutcomeTx } from "../../functions/campaigns/recordOutcome.js";
+import { assessManualDispatch } from "../../functions/billing/manualDispatchGate.js";
+import { meterDispatchTx } from "../../functions/billing/meterDispatch.js";
+
+/** Manual-outreach template type → billing meter (WhatsApp is not manual-dispatchable). */
+const MANUAL_METER: Record<string, BillingMeter> = {
+  SMS: "sms",
+  EMAIL: "email",
+  VOICE_AI: "voiceAi",
+  VOICE_PRERECORDED: "voicePrerecorded"
+};
 
 /** An agent template with its four dispatchable channel configs loaded. */
 type TemplateWithConfigs = {
@@ -122,6 +135,20 @@ export const outreachRouter = router({
       ...(input.script != null && { script: input.script })
     };
 
+    // Billing gate (billing-enforcement spec): manual dispatches verify the
+    // balance BEFORE any provider call and reject with a structured error.
+    const meter = MANUAL_METER[template.type];
+    const billingDb = ctx.prisma as unknown as BillingClient;
+    const gate = meter
+      ? await assessManualDispatch(billingDb, config.billing, workspaceRef, meter)
+      : ({ kind: "unmetered" } as const);
+    if (gate.kind === "insufficient_credits") {
+      throw new TRPCError({ code: "PRECONDITION_FAILED", message: "insufficient_credits" });
+    }
+    if (gate.kind === "payment_failed") {
+      throw new TRPCError({ code: "PRECONDITION_FAILED", message: "payment_failed" });
+    }
+
     const dispatch = createDispatchOutreach({
       outboundCallClient: ctx.outboundCallClient,
       smsClient: ctx.smsClient,
@@ -137,12 +164,12 @@ export const outreachRouter = router({
 
     // One campaign-less gestión per attempt, correlated by providerRef (richer outcomes
     // arrive via callbacks and enrich this same row). No campaign → no CampaignAccountState.
-    await createRecordOutcome(ctx.prisma as never)({
+    const logParams = {
       portfolioAccountId: account.id,
       agentTemplateId: input.agentTemplateId,
       agentType: template.type as DispatchOutreachInput["channel"],
       contactedAt: at,
-      outcome: "OTHER",
+      outcome: "OTHER" as const,
       notes: "Contacto manual",
       debtAmountSnapshot: account.outstandingBalance,
       providerRef: result.providerRef,
@@ -152,7 +179,23 @@ export const outreachRouter = router({
         messageBody: result.renderedBody,
         ...(result.renderedSubject != null && { subject: result.renderedSubject })
       }
-    });
+    };
+    if (gate.kind === "metered" && config.billing) {
+      const billing = config.billing;
+      // Gestión + priced usage + ledger debit in ONE transaction (usage-ledger spec).
+      await billingDb.$transaction(async (tx) => {
+        await recordOutcomeTx(tx as never, logParams);
+        await meterDispatchTx(tx, billing, {
+          workspaceRef,
+          meter,
+          at,
+          portfolioAccountId: account.id,
+          providerRef: result.providerRef
+        });
+      });
+    } else {
+      await createRecordOutcome(ctx.prisma as never)(logParams);
+    }
 
     return result;
   })

@@ -97,7 +97,12 @@ function makeStub(enrollment: Partial<WorkspaceBillingRecord> | null = {}) {
         ) {
           throw Object.assign(new Error("Unique constraint failed"), { code: "P2002" });
         }
-        const row = { id: `le_${nextId++}`, usageRecordId: null, stripeInvoiceId: null, ...entry };
+        const row = {
+          ...entry,
+          id: `le_${nextId++}`,
+          usageRecordId: entry.usageRecordId ?? null,
+          stripeInvoiceId: entry.stripeInvoiceId ?? null
+        };
         ledgerEntries.push(row);
         return row;
       },
