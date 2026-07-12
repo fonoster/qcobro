@@ -2,12 +2,12 @@
 
 ## 1. Contracts and config (`mods/common`)
 
-- [ ] 1.1 Add micro-unit money utilities (decimal→micro-unit parse, integer math, aggregation rounding) with unit tests
-- [ ] 1.2 Add per-meter rate Zod schemas (message vs voice, `"initial/subsequent"` increment parse-and-transform) and the shared `rates` schema; export `Partial` variant for overrides
-- [ ] 1.3 Add `billing` config section schema (enabled, currency, stripe keys, `voiceDebitEstimateSeconds`, ordered plans with i18n names, unique-key + seven-meter validation) and wire into the root config schema
-- [ ] 1.4 Implement pricing math: `billedSeconds` increment formula + meter pricing (rate resolution with overrides), with the canonical vectors as unit tests
-- [ ] 1.5 Add ledger/usage types and schemas (UsageRecord, ledger entry kinds: grant, debit, void, adjustment) shared by apiserver and webapp
-- [ ] 1.6 Update `config/qcobro.example.json` with the `billing` section (placeholder prices, two plans)
+- [x] 1.1 Add micro-unit money utilities (decimal→micro-unit parse, integer math, aggregation rounding) with unit tests
+- [x] 1.2 Add per-meter rate Zod schemas (message vs voice, `"initial/subsequent"` increment parse-and-transform) and the shared `rates` schema; export `Partial` variant for overrides
+- [x] 1.3 Add `billing` config section schema (enabled, currency, stripe keys, `voiceDebitEstimateSeconds`, ordered plans with i18n names, unique-key + seven-meter validation) and wire into the root config schema
+- [x] 1.4 Implement pricing math: `billedSeconds` increment formula + meter pricing (rate resolution with overrides), with the canonical vectors as unit tests
+- [x] 1.5 Add ledger/usage types and schemas (UsageRecord, ledger entry kinds: grant, debit, void, adjustment) shared by apiserver and webapp
+- [x] 1.6 Update `config/qcobro.example.json` with the `billing` section (placeholder prices, two plans)
 
 ## 2. Persistence and ledger (`mods/apiserver`)
 

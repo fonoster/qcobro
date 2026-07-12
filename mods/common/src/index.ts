@@ -5,6 +5,7 @@ export * from "./utils/index.js";
 export * from "./schemas/index.js";
 export * from "./types/index.js";
 export * from "./evaluation/index.js";
+export * from "./billing/index.js";
 export * from "./config.js";
 
 /**
