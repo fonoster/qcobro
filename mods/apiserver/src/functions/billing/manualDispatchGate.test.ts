@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import type { BillingClient, BillingConfig } from "@qcobro/common";
 import { billingConfigSchema } from "@qcobro/common";
 import { assessManualDispatch } from "./manualDispatchGate.js";
+import { makeBillingStub } from "./billingStubClient.js";
 
 const billing = billingConfigSchema.parse({
   enabled: true,
@@ -32,48 +33,21 @@ function stubDb(opts: {
   paymentFailed?: boolean;
   balanceMicro?: number;
 }): BillingClient {
-  return {
-    workspaceBilling: {
-      findUnique: async () =>
-        opts.enrolled === false
-          ? null
-          : {
-              workspaceRef: "ws_1",
-              billingAccountId: "ba_1",
-              planKey: "starter",
-              rateOverrides: null,
-              stripeSubscriptionItemId: null,
-              cycleStart: null,
-              cycleEnd: null
-            },
-      update: async () => {
-        throw new Error("unused");
+  const stub = makeBillingStub({
+    workspaceBillings: opts.enrolled === false ? [] : [{}],
+    billingAccounts: [{ paymentFailed: opts.paymentFailed ?? false }]
+  });
+  if (opts.balanceMicro) {
+    void stub.client.ledgerEntry.create({
+      data: {
+        workspaceRef: "ws_1",
+        kind: "GRANT",
+        amountMicro: BigInt(opts.balanceMicro),
+        at: new Date()
       }
-    },
-    billingAccount: {
-      findUnique: async () => ({
-        id: "ba_1",
-        paymentFailed: opts.paymentFailed ?? false,
-        collectionMethod: "charge_automatically"
-      })
-    },
-    usageRecord: {
-      create: async () => {
-        throw new Error("unused");
-      },
-      findUnique: async () => null,
-      update: async () => {
-        throw new Error("unused");
-      }
-    },
-    ledgerEntry: {
-      create: async () => {
-        throw new Error("unused");
-      },
-      aggregate: async () => ({ _sum: { amountMicro: BigInt(opts.balanceMicro ?? 0) } })
-    },
-    $transaction: async (fn) => fn(stubDb(opts))
-  };
+    });
+  }
+  return stub.client;
 }
 
 describe("assessManualDispatch", () => {

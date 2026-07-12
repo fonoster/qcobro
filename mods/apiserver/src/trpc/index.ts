@@ -11,6 +11,7 @@ import { configRouter } from "./routers/config.js";
 import { outreachRouter } from "./routers/outreach.js";
 import { workspaceSettingsRouter } from "./routers/workspaceSettings.js";
 import { whatsAppIntegrationRouter } from "./routers/whatsAppIntegration.js";
+import { billingRouter } from "./routers/billing.js";
 
 export const appRouter = router({
   health: healthRouter,
@@ -24,7 +25,8 @@ export const appRouter = router({
   config: configRouter,
   outreach: outreachRouter,
   workspaceSettings: workspaceSettingsRouter,
-  whatsAppIntegration: whatsAppIntegrationRouter
+  whatsAppIntegration: whatsAppIntegrationRouter,
+  billing: billingRouter
 });
 
 export type AppRouter = typeof appRouter;

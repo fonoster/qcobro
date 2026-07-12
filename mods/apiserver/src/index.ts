@@ -10,6 +10,12 @@ import { prisma } from "./db.js";
 import { createContactLogHandler } from "./rest/contactLogs.js";
 import { createVoiceEventsHandler } from "./rest/voiceEvents.js";
 import { createSettleVoiceUsage } from "./functions/billing/settleVoiceUsage.js";
+import { createStripeWebhookHandler } from "./rest/stripeWebhook.js";
+import {
+  createStripeGateway,
+  createStripeSdk,
+  validateStripePrices
+} from "./services/stripeGateway.js";
 import { createEmailInboundHandler } from "./rest/emailInbound.js";
 import { createWhatsAppWebhookHandlers } from "./rest/whatsAppWebhook.js";
 import { createEngineEventsHandler } from "./rest/engineEvents.js";
@@ -92,6 +98,21 @@ const whatsapp = createWhatsAppWebhookHandlers(prisma, {
 });
 app.get("/api/whatsapp/webhook", (req, res) => void whatsapp.verify(req, res));
 app.post("/api/whatsapp/webhook", (req, res) => void whatsapp.events(req, res));
+
+// Stripe webhook (billing-accounts capability): checkout provisioning, cycle
+// turnover on invoice.paid, dunning on payment failure. Signature-verified
+// against the raw body; registered only when billing + Stripe are configured.
+const stripeGateway = createStripeGateway(config.billing);
+const stripeSdk = createStripeSdk(config.billing);
+if (config.billing?.enabled && stripeGateway && stripeSdk) {
+  const billing = config.billing;
+  app.post(
+    "/api/stripe/webhook",
+    createStripeWebhookHandler(prisma as never, stripeSdk, stripeGateway, billing)
+  );
+  // Startup drift check: catalog monthlyPrice vs the live Stripe price amounts.
+  void validateStripePrices(stripeGateway, billing);
+}
 
 // Read-only flight-recorder export (engine-events capability): workspace-scoped
 // event stream + engine parameters, consumed by the `engine-eval` CLI (@qcobro/common).
