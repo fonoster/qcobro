@@ -127,6 +127,42 @@ for `engine.eventsRetentionDays` (`qcobro.json`, `0` disables pruning).
 The flight recorder runs identically in production, so step 5 works unchanged against a
 live deployment — that's the point.
 
+### Cleaning up gestiones from a test run
+
+Sim runs and manual test dispatches write **real** gestiones (`account_contact_logs`,
+cascading to `payment_promises`) — there's no separate test data path. To wipe one
+customer's history on a shared DB (e.g. a DigitalOcean managed Postgres you don't have
+`psql` installed next to), run the official Postgres image against it:
+
+```bash
+docker run --rm -i postgres:16 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+BEGIN;
+
+SELECT pa."externalId", pa.id AS portfolio_account_id,
+       count(acl.id) AS gestiones_to_delete,
+       count(pp.id) AS payment_promises_to_cascade
+FROM "portfolio_accounts" pa
+LEFT JOIN "account_contact_logs" acl ON acl."portfolioAccountId" = pa.id
+LEFT JOIN "payment_promises" pp ON pp."contactLogId" = acl.id
+WHERE pa."externalId" = 'LN001023'
+GROUP BY pa."externalId", pa.id;
+
+DELETE FROM "account_contact_logs"
+WHERE "portfolioAccountId" IN (
+  SELECT id FROM "portfolio_accounts" WHERE "externalId" = 'LN001023'
+);
+
+COMMIT;
+SQL
+```
+
+Swap `'LN001023'` (in both places) for the account's `externalId`. `payment_promises`
+cascade-delete automatically via the `contactLogId` FK, so no separate statement is
+needed. `DATABASE_URL` must include `?sslmode=require` for a DO managed database, and is
+expanded by your shell before `docker run` starts, so it doesn't need to exist inside the
+container. Note `externalId` is unique per portfolio, not globally — this matches the
+customer across every portfolio they appear in.
+
 ### Verifying behavior matches the spec
 
 Product behavior lives in OpenSpec specs (`openspec/`); the tests are the executable
