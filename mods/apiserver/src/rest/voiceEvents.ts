@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { getLogger } from "@fonoster/logger";
 import { ValidationError, type AiConfig, type InsightGenerator } from "@qcobro/common";
 import {
   createIngestVoiceEvent,
@@ -9,6 +10,8 @@ import {
   type GenerateInsightClient
 } from "../functions/voice/generateGestionInsight.js";
 import type { ProviderEventRecorder } from "../engine/eventSink.js";
+
+const logger = getLogger({ service: "voice-events", filePath: import.meta.url });
 
 export interface VoiceEventsDeps {
   /** Insight generator (null when AI insights are disabled). */
@@ -47,9 +50,19 @@ export function createVoiceEventsHandler(
   const generate = createGenerateGestionInsight({ prisma, generator: deps.generator });
 
   return async (req: Request, res: Response): Promise<void> => {
+    // Receipt log: this is currently the ONLY server-side evidence that Fonoster
+    // reached this endpoint at all (no access-log middleware is mounted, and a
+    // schema-validation failure below would otherwise leave zero trace).
+    logger.verbose(
+      `received eventType=${req.body?.eventType} appRef=${req.body?.appRef} callRef=${req.body?.callRef}`
+    );
     try {
       const result = await ingest(req.body);
       res.status(200).json(result);
+
+      if (!result.matched) {
+        logger.warn(`no gestión matched callRef=${req.body?.callRef} — event dropped`);
+      }
 
       deps.recordEvent?.({
         providerRef: typeof req.body?.callRef === "string" ? req.body.callRef : undefined,
@@ -103,9 +116,13 @@ export function createVoiceEventsHandler(
       }
     } catch (err) {
       if (err instanceof ValidationError) {
+        logger.error(
+          `400 validation failed: ${JSON.stringify(err.toJSON())} body_keys=${Object.keys(req.body ?? {}).join(",")}`
+        );
         res.status(400).json(err.toJSON());
         return;
       }
+      logger.error(`unexpected error: ${err instanceof Error ? err.message : err}`);
       res.status(500).json({ error: "Failed to ingest voice event" });
     }
   };
