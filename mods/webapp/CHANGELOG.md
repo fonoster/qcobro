@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.14.4](https://github.com/fonoster/qcobro/compare/v1.14.3...v1.14.4) (2026-07-12)
+
+### Bug Fixes
+
+- **webapp:** use input for Voz IA first message in reach-out modal ([#33](https://github.com/fonoster/qcobro/issues/33)) ([37e4aba](https://github.com/fonoster/qcobro/commit/37e4abaa8ae31522895301f87bab5aec0ad11695))
+
 # [1.13.0](https://github.com/fonoster/qcobro/compare/v1.12.4...v1.13.0) (2026-07-12)
 
 **Note:** Version bump only for package @qcobro/webapp
