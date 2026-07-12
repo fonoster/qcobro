@@ -2,6 +2,8 @@ import type { Request, Response } from "express";
 import { ValidationError } from "@qcobro/common";
 import { createCreateContactLog } from "../functions/campaigns/createContactLog.js";
 import { createGetWorkspaceSettings } from "../functions/workspaceSettings/getWorkspaceSettings.js";
+import { parseBasicAuth } from "./basicAuth.js";
+import type { ProviderEventRecorder } from "../engine/eventSink.js";
 
 /** Minimal shape of the config slice this module needs. */
 export interface ContactLogAuthConfig {
@@ -26,17 +28,7 @@ export interface ContactLogPrisma {
  * we fix only the scope (workspace) and scheme (HTTP Basic).
  */
 export function parseBasicWorkspace(authHeader: string | undefined): string | null {
-  if (!authHeader || !authHeader.startsWith("Basic ")) return null;
-  let decoded: string;
-  try {
-    decoded = Buffer.from(authHeader.slice(6), "base64").toString("utf8");
-  } catch {
-    return null;
-  }
-  const sep = decoded.indexOf(":");
-  if (sep <= 0) return null;
-  const username = decoded.slice(0, sep);
-  return username || null;
+  return parseBasicAuth(authHeader)?.username || null;
 }
 
 /**
@@ -45,7 +37,12 @@ export function parseBasicWorkspace(authHeader: string | undefined): string | nu
  * account must belong to that same workspace; otherwise it responds 401. When
  * disabled (local dev) the endpoint accepts unauthenticated requests.
  */
-export function createContactLogHandler(prisma: ContactLogPrisma, config: ContactLogAuthConfig) {
+export function createContactLogHandler(
+  prisma: ContactLogPrisma,
+  config: ContactLogAuthConfig,
+  /** Flight recorder; each accepted outcome callback is recorded best-effort. */
+  recordEvent?: ProviderEventRecorder | null
+) {
   const getSettings = createGetWorkspaceSettings(prisma as never);
 
   return async (req: Request, res: Response): Promise<void> => {
@@ -83,6 +80,11 @@ export function createContactLogHandler(prisma: ContactLogPrisma, config: Contac
       const timeZone = (await getSettings(account.portfolio.workspaceRef)).timezone;
       const result = await createCreateContactLog(prisma as never, timeZone)(req.body);
       res.status(201).json(result);
+
+      recordEvent?.({
+        providerRef: typeof req.body?.providerRef === "string" ? req.body.providerRef : undefined,
+        summary: typeof req.body?.outcome === "string" ? { outcome: req.body.outcome } : undefined
+      });
     } catch (err) {
       if (err instanceof ValidationError) {
         res.status(400).json(err.toJSON());

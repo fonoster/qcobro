@@ -49,7 +49,7 @@ export type IngestEmailReplyResult =
   | { matched: true; id: string; action: "reply" | "ignore" | "resolve" | "escalate" };
 
 /** Pulls the per-attempt correlation token out of the reply-to addresses (`reply+<token>@…`). */
-function extractToken(to: string[]): string | null {
+export function extractToken(to: string[]): string | null {
   for (const addr of to) {
     const m = addr.match(/reply\+([^@>\s]+)@/i);
     if (m) return m[1];

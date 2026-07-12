@@ -8,8 +8,10 @@ import {
   type PortfolioAccountRecord,
   type ResendConfig
 } from "@qcobro/common";
+import type { ProviderEventRecorder } from "../engine/eventSink.js";
 import {
   createIngestEmailReply,
+  extractToken,
   type EmailGestionView,
   type EmailInboundClient
 } from "../functions/email/ingestEmailReply.js";
@@ -166,6 +168,8 @@ function normalize(body: unknown): {
 export interface EmailInboundDeps {
   resend: ResendConfig;
   ai: AiConfig;
+  /** Flight recorder; each inbound reply is recorded best-effort. */
+  recordEvent?: ProviderEventRecorder | null;
 }
 
 /**
@@ -267,6 +271,14 @@ export function createEmailInboundHandler(prisma: PrismaClient, deps: EmailInbou
       console.log("[email/inbound] reply received:", JSON.stringify(normalized));
       const result = await ingest(normalized);
       res.status(200).json(result);
+
+      // Same token extraction the correlation path uses — a diverging regex here
+      // would record matched events with no attributable providerRef.
+      deps.recordEvent?.({
+        providerRef: extractToken(normalized.to) ?? undefined,
+        matched: result.matched,
+        summary: { type: "inbound_reply" }
+      });
     } catch (err) {
       if (err instanceof ValidationError) {
         console.error("[email/inbound] 400:", JSON.stringify(err.toJSON()));

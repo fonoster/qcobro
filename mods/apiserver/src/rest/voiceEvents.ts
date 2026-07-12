@@ -8,12 +8,15 @@ import {
   createGenerateGestionInsight,
   type GenerateInsightClient
 } from "../functions/voice/generateGestionInsight.js";
+import type { ProviderEventRecorder } from "../engine/eventSink.js";
 
 export interface VoiceEventsDeps {
   /** Insight generator (null when AI insights are disabled). */
   generator: InsightGenerator | null;
   /** Generation mode from the `ai` config. */
   generation: NonNullable<AiConfig>["generation"];
+  /** Flight recorder; each conversation event is recorded best-effort. */
+  recordEvent?: ProviderEventRecorder | null;
 }
 
 /**
@@ -39,6 +42,13 @@ export function createVoiceEventsHandler(
     try {
       const result = await ingest(req.body);
       res.status(200).json(result);
+
+      deps.recordEvent?.({
+        providerRef: typeof req.body?.callRef === "string" ? req.body.callRef : undefined,
+        matched: result.matched,
+        summary:
+          typeof req.body?.eventType === "string" ? { eventType: req.body.eventType } : undefined
+      });
 
       // On-ingestion analysis: best-effort, after responding (the autopilot does not
       // wait for our response). Failures must not affect ingestion.
