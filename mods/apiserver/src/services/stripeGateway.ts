@@ -27,7 +27,6 @@ export function createStripeGateway(billing: BillingConfig): StripeGateway | nul
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
         line_items: [{ price: input.priceId, quantity: 1 }],
-        customer_email: input.customerEmail,
         success_url: input.successUrl,
         cancel_url: input.cancelUrl,
         subscription_data: {
@@ -69,6 +68,16 @@ export function createStripeGateway(billing: BillingConfig): StripeGateway | nul
       return { id: item.id };
     },
 
+    async setItemWorkspaceRef(input) {
+      await stripe.subscriptionItems.update(input.itemId, {
+        metadata: { workspaceRef: input.workspaceRef }
+      });
+    },
+
+    async removeItem(input) {
+      await stripe.subscriptionItems.del(input.itemId, { proration_behavior: "always_invoice" });
+    },
+
     async swapItemPrice(input) {
       await stripe.subscriptionItems.update(input.itemId, {
         price: input.priceId,
@@ -101,11 +110,17 @@ export function createStripeGateway(billing: BillingConfig): StripeGateway | nul
         quantity: item.quantity ?? 1,
         metadata: item.metadata
       }));
-      const periodEnd = sub.items.data[0]?.current_period_end ?? 0;
+      const periodStart = sub.items.data[0]?.current_period_start;
+      const periodEnd = sub.items.data[0]?.current_period_end;
+      if (!periodStart || !periodEnd) {
+        throw new Error(`Subscription ${input.subscriptionId} has no current period bounds`);
+      }
+      // Phase 1 must anchor at the CURRENT period start (not the subscription's
+      // original start_date — Stripe rejects phases that don't align with it).
       await stripe.subscriptionSchedules.update(scheduleId, {
         end_behavior: "release",
         phases: [
-          { items: currentItems, start_date: sub.start_date, end_date: periodEnd },
+          { items: currentItems, start_date: periodStart, end_date: periodEnd },
           { items: nextItems, start_date: periodEnd, proration_behavior: "none" }
         ]
       });
@@ -132,20 +147,22 @@ export async function validateStripePrices(
   gateway: StripeGateway,
   billing: NonNullable<BillingConfig>
 ): Promise<void> {
-  for (const plan of billing.plans) {
-    try {
-      const unitAmount = await gateway.getPriceUnitAmount(plan.stripePriceId);
-      const expectedCents = Math.round(plan.monthlyPrice * 100);
-      if (unitAmount !== null && unitAmount !== expectedCents) {
+  await Promise.all(
+    billing.plans.map(async (plan) => {
+      try {
+        const unitAmount = await gateway.getPriceUnitAmount(plan.stripePriceId);
+        const expectedCents = Math.round(plan.monthlyPrice * 100);
+        if (unitAmount !== null && unitAmount !== expectedCents) {
+          console.warn(
+            `[billing] price drift: plan "${plan.key}" configures ${expectedCents} cents but Stripe price ${plan.stripePriceId} charges ${unitAmount}`
+          );
+        }
+      } catch (err) {
         console.warn(
-          `[billing] price drift: plan "${plan.key}" configures ${expectedCents} cents but Stripe price ${plan.stripePriceId} charges ${unitAmount}`
+          `[billing] could not verify Stripe price for plan "${plan.key}":`,
+          err instanceof Error ? err.message : err
         );
       }
-    } catch (err) {
-      console.warn(
-        `[billing] could not verify Stripe price for plan "${plan.key}":`,
-        err instanceof Error ? err.message : err
-      );
-    }
-  }
+    })
+  );
 }

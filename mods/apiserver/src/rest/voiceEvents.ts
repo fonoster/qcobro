@@ -66,19 +66,29 @@ export function createVoiceEventsHandler(
         req.body?.eventType === "conversation.ended" &&
         typeof req.body?.callRef === "string"
       ) {
-        deps
-          .settleUsage({
-            providerRef: req.body.callRef,
-            answeredSeconds:
-              typeof req.body?.durationSeconds === "number" ? req.body.durationSeconds : 0,
-            at: new Date().toISOString()
-          })
-          .catch((err: unknown) =>
-            console.error(
-              "[billing] voice settlement failed:",
-              err instanceof Error ? err.message : err
-            )
+        // Settle ONLY when the event carries a numeric duration. Defaulting a
+        // missing field to 0 would refund the whole estimate for a call that
+        // was actually answered — a silent revenue leak. Skipping leaves the
+        // estimate standing and lets a later/redelivered event (settlement is
+        // idempotent and unfired) supply the real duration.
+        if (typeof req.body?.durationSeconds === "number") {
+          deps
+            .settleUsage({
+              providerRef: req.body.callRef,
+              answeredSeconds: req.body.durationSeconds,
+              at: new Date().toISOString()
+            })
+            .catch((err: unknown) =>
+              console.error(
+                "[billing] voice settlement failed:",
+                err instanceof Error ? err.message : err
+              )
+            );
+        } else {
+          console.warn(
+            `[billing] conversation.ended for ${req.body.callRef} carried no durationSeconds — estimate left unsettled`
           );
+        }
       }
 
       // On-ingestion analysis: best-effort, after responding (the autopilot does not

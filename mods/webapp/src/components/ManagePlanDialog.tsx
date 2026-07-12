@@ -3,16 +3,7 @@ import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { Dialog } from "./ui/dialog.js";
 import { Button } from "./ui/button.js";
-
-/** Resolve a localized plan name (string or {lang: name} map) for the UI language. */
-function planName(name: unknown, language: string): string {
-  if (typeof name === "string") return name;
-  if (name && typeof name === "object") {
-    const map = name as Record<string, string>;
-    return map[language] ?? Object.values(map)[0] ?? "";
-  }
-  return "";
-}
+import { resolveLocalizedString } from "../lib/localizedString.js";
 
 export interface ManagePlanDialogProps {
   open: boolean;
@@ -75,7 +66,7 @@ export function ManagePlanDialog({ open, onClose }: ManagePlanDialogProps) {
               <div>
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-semibold text-slate-900">
-                    {planName(plan.name, language)}
+                    {resolveLocalizedString(plan.name, language)}
                   </p>
                   {isCurrent && (
                     <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
@@ -84,8 +75,7 @@ export function ManagePlanDialog({ open, onClose }: ManagePlanDialogProps) {
                   )}
                 </div>
                 <p className="text-sm text-slate-500">
-                  US$ {plan.monthlyPrice}
-                  {t("billing.perMonth")} ·{" "}
+                  {t("billing.monthlyPrice").replace("{price}", String(plan.monthlyPrice))} ·{" "}
                   {t("billing.includedCredits").replace("{amount}", String(plan.monthlyAllowance))}
                 </p>
               </div>

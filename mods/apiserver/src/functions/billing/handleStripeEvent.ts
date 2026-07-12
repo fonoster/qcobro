@@ -1,5 +1,6 @@
 import { toMicroUnits, type BillingClient, type BillingConfig } from "@qcobro/common";
 import { cycleTurnoverTx } from "./cycleTurnover.js";
+import { isUniqueViolation } from "./prismaErrors.js";
 import type { StripeGateway } from "./stripeGateway.js";
 
 /**
@@ -78,6 +79,14 @@ async function provisionCheckout(
   }
   const sub = await stripe.getSubscription(event.subscriptionId);
   const item = sub.items.find((i) => i.workspaceRef === event.workspaceRef) ?? sub.items[0];
+
+  // Checkout puts metadata on the SUBSCRIPTION, not the item — but invoice.paid
+  // turnover correlates workspaces by ITEM metadata. Stamp the founding item so
+  // the payer's first workspace renews like every later one.
+  if (item && item.workspaceRef !== event.workspaceRef) {
+    await stripe.setItemWorkspaceRef({ itemId: item.id, workspaceRef: event.workspaceRef });
+    item.workspaceRef = event.workspaceRef;
+  }
 
   let account = await db.billingAccount.findFirst({
     where: { stripeCustomerId: event.customerId }
@@ -177,13 +186,4 @@ async function applyInvoicePaid(
       })
     );
   }
-}
-
-function isUniqueViolation(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    (err as { code: unknown }).code === "P2002"
-  );
 }

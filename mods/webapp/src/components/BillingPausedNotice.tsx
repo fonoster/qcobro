@@ -12,7 +12,9 @@ import { BillingPausedBanner } from "./BillingPausedBanner.js";
  */
 export function BillingPausedNotice() {
   const { workspace, accessToken } = useAuth();
-  const status = trpc.billing.status.useQuery();
+  // Paused state changes at cycle/dunning granularity — do not re-aggregate the
+  // ledger on every page mount/refocus.
+  const status = trpc.billing.status.useQuery(undefined, { staleTime: 60_000 });
   const navigate = useNavigate();
   const data = status.data;
   if (!data?.enabled || !("enrolled" in data) || !data.enrolled || !data.paused) return null;

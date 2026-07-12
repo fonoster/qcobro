@@ -4,15 +4,13 @@ import type { BillingClient } from "@qcobro/common";
 import { microUnitsToDecimalString, toMicroUnits } from "@qcobro/common";
 import { ownerProcedure, router, workspaceProcedure } from "../trpc.js";
 import { config } from "../../config.js";
-import { createStripeGateway } from "../../services/stripeGateway.js";
 import { createSubscribeWorkspace } from "../../functions/billing/subscribeWorkspace.js";
 import { createChangePlan } from "../../functions/billing/changePlan.js";
 import { workspaceBalanceMicroTx } from "../../functions/billing/workspaceBalance.js";
 import { planFromCatalog } from "../../functions/billing/meters.js";
+import type { StripeGateway } from "../../functions/billing/stripeGateway.js";
 
-const gateway = createStripeGateway(config.billing);
-
-function requireStripe() {
+function requireStripe(gateway: StripeGateway | null) {
   if (!config.billing?.enabled || !gateway) {
     throw new TRPCError({ code: "PRECONDITION_FAILED", message: "billing_not_configured" });
   }
@@ -113,7 +111,7 @@ export const billingRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { billing, gateway: stripe } = requireStripe();
+      const { billing, gateway: stripe } = requireStripe(ctx.stripeGateway);
       const subscribe = createSubscribeWorkspace(
         ctx.prisma as unknown as BillingClient,
         stripe,
@@ -132,7 +130,7 @@ export const billingRouter = router({
   changePlan: ownerProcedure
     .input(z.object({ targetPlanKey: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const { billing, gateway: stripe } = requireStripe();
+      const { billing, gateway: stripe } = requireStripe(ctx.stripeGateway);
       const change = createChangePlan(ctx.prisma as unknown as BillingClient, stripe, billing);
       return change({
         workspaceRef: ctx.workspace.accessKeyId,
@@ -144,7 +142,7 @@ export const billingRouter = router({
   portalSession: ownerProcedure
     .input(z.object({ returnUrl: z.string().url() }))
     .mutation(async ({ ctx, input }) => {
-      const { gateway: stripe } = requireStripe();
+      const { gateway: stripe } = requireStripe(ctx.stripeGateway);
       const db = ctx.prisma as unknown as BillingClient;
       const enrollment = await db.workspaceBilling.findUnique({
         where: { workspaceRef: ctx.workspace.accessKeyId }

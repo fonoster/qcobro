@@ -105,3 +105,22 @@ export function resolveRate(
 export function isMessageMeter(meter: BillingMeter): meter is MessageMeter {
   return (MESSAGE_METERS as readonly string[]).includes(meter);
 }
+
+/**
+ * The pre-dispatch cost of one dispatch on a meter, in micro-units: the exact
+ * unit price for message meters, the voice estimate (never below the initial
+ * increment) for voice meters. THE single definition of "what a dispatch costs
+ * up front" — the engine's credit bucket and the manual-outreach gate both
+ * check/debit this amount.
+ */
+export function estimateDispatchCostMicro(
+  meter: BillingMeter,
+  rates: Rates,
+  overrides: RateOverrides | undefined,
+  voiceDebitEstimateSeconds: number
+): number {
+  if (isMessageMeter(meter)) {
+    return priceMessageMicro(resolveRate(meter, rates, overrides));
+  }
+  return estimateVoiceDebitMicro(resolveRate(meter, rates, overrides), voiceDebitEstimateSeconds);
+}

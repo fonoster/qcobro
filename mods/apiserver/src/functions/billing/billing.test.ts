@@ -88,6 +88,21 @@ describe("meterDispatchTx", () => {
     assert.equal(usageRecords[0].amountMicro, 5000n);
   });
 
+  it("is idempotent per providerRef (a retried dispatch does not double-debit)", async () => {
+    const { client, usageRecords, ledgerEntries } = makeStub();
+    const input = {
+      workspaceRef: "ws_1",
+      meter: "sms" as const,
+      at: "2026-07-11T12:00:00.000Z",
+      providerRef: "SM_retry"
+    };
+    const first = await meterDispatchTx(client, billing, input);
+    const second = await meterDispatchTx(client, billing, input);
+    assert.equal(second?.id, first?.id);
+    assert.equal(usageRecords.length, 1);
+    assert.equal(ledgerEntries.length, 1);
+  });
+
   it("skips unenrolled workspaces without writing", async () => {
     const { client, usageRecords, ledgerEntries } = makeStub(null);
     const record = await meterDispatchTx(client, billing, {

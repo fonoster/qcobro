@@ -107,7 +107,7 @@ export const messages = {
     "billing.downgradeScheduled":
       "Downgrade scheduled \u00b7 your current plan runs until the end of the cycle.",
     "billing.changeError": "The plan change failed. Please try again.",
-    "billing.perMonth": "/mo",
+    "billing.monthlyPrice": "US$ {price}/mo",
     "billing.includedCredits": "US$ {amount} in credits",
     "billing.paused.exhausted.title": "Collections paused \u00b7 credits exhausted",
     "billing.paused.exhausted.body":
@@ -662,7 +662,7 @@ export const messages = {
     "billing.downgradeScheduled":
       "Cambio programado \u00b7 tu plan actual sigue vigente hasta el final del ciclo.",
     "billing.changeError": "No se pudo cambiar el plan. Intenta de nuevo.",
-    "billing.perMonth": "/mes",
+    "billing.monthlyPrice": "US$ {price}/mes",
     "billing.includedCredits": "US$ {amount} en cr\u00e9ditos",
     "billing.paused.exhausted.title": "Cobranzas pausadas \u00b7 cr\u00e9ditos agotados",
     "billing.paused.exhausted.body":

@@ -323,11 +323,65 @@ only — voicemail pickup counts as answered, unanswered calls bill zero). Messa
 bill per message. Each plan needs a Stripe **price** (`stripePriceId`); at startup the
 apiserver warns when a price's amount drifts from the plan's `monthlyPrice`.
 
-**Stripe setup**: create one recurring price per plan, then add a webhook endpoint for
-`checkout.session.completed`, `invoice.paid`, and `invoice.payment_failed` pointing at
-`POST https://<host>/api/stripe/webhook` (signature-verified; all effects idempotent).
-One Stripe customer per payer holds ONE subscription with one item per workspace, so an
-owner with several workspaces gets a single monthly charge on one card.
+#### Configuring plans (QCobro ↔ Stripe)
+
+A plan lives in **two places that must agree**: the `qcobro.json` catalog (what a
+workspace gets: allowance + per-channel rates) and a Stripe **recurring price** (what the
+card is charged). Setting one up:
+
+1. **Stripe** (dashboard or CLI): create a product per plan and a monthly recurring
+   price for it, in the billing currency:
+
+   ```sh
+   stripe products create --name "QCobro Growth"
+   stripe prices create --product prod_... --currency usd \
+     --unit-amount 2900 --recurring.interval month     # 29.00/mo
+   ```
+
+2. **qcobro.json**: add the plan to `billing.plans`. **Array order is the upgrade
+   path** — index 0 is the cheapest, and the console's "Mejorar plan" walks up the
+   array. Every plan must price **all seven meters**:
+
+   ```jsonc
+   {
+     "key": "growth", // stable id, kebab-case — never rename once sold
+     "name": { "en": "Growth", "es": "Crecimiento" },
+     "monthlyPrice": 29, // must match the Stripe price amount
+     "monthlyAllowance": 29, // credits granted each cycle (may differ: "pay 29, get 35")
+     "stripePriceId": "price_...", // the price created in step 1
+     "rates": {
+       "sms": { "perMessage": 0.008 },
+       "email": { "perMessage": 0.0004 },
+       "whatsappMessage": { "perMessage": 0.01 },
+       "voicePrerecorded": { "perMinute": 0.28, "increments": "15/15" },
+       "voiceAi": { "perMinute": 0.4, "increments": "15/15" },
+       "whatsappVoicePrerecorded": { "perMinute": 0.08, "increments": "15/15" }, // reserved
+       "whatsappVoiceAi": { "perMinute": 0.8, "increments": "15/15" } // reserved
+     }
+   }
+   ```
+
+3. **Restart the apiserver** and check the logs: it validates the catalog (duplicate
+   keys, missing meters, malformed increments all fail boot) and warns on
+   `[billing] price drift` when a `stripePriceId` charges a different amount than
+   `monthlyPrice`. Run `npm run billing:sim` to confirm the margin guard (BIL-5) —
+   it flags any rate below its provider floor so a plan can't sell channels at a loss.
+
+Rules of thumb: **changing a rate** is just a config edit — history never reprices
+(records are priced at write time), new dispatches use the new rate on the next restart.
+**Changing a monthly price** needs a NEW Stripe price (Stripe prices are immutable) —
+create it, swap the plan's `stripePriceId`, restart; existing subscriptions keep the old
+price until their next plan change. **Adding a plan** is append (or insert at its rank
+in the upgrade path). **Never delete or rename a plan key** that workspaces still
+reference — the engine fails closed (`credits_exhausted`) for workspaces pointing at an
+unknown key.
+
+**Stripe webhook**: add an endpoint for `checkout.session.completed`, `invoice.paid`,
+and `invoice.payment_failed` pointing at `POST https://<host>/api/stripe/webhook`
+(signature-verified; all effects idempotent), and put its signing secret in
+`billing.stripe.webhookSigningSecret`. One Stripe customer per payer holds ONE
+subscription with one item per workspace, so an owner with several workspaces gets a
+single monthly charge on one card.
 
 **Rollout**: ship with `enabled:false` (no metering, no gating — also the rollback
 switch). Enroll workspaces by creating their `WorkspaceBilling` rows (or via checkout);

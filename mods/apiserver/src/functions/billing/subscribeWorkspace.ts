@@ -9,6 +9,7 @@ import {
 } from "@qcobro/common";
 import { businessError } from "../businessError.js";
 import { planFromCatalog } from "./meters.js";
+import { isUniqueViolation } from "./prismaErrors.js";
 import type { StripeGateway } from "./stripeGateway.js";
 
 export type SubscribeWorkspaceResult =
@@ -47,7 +48,6 @@ export function createSubscribeWorkspace(
         workspaceRef: input.workspaceRef,
         ownerUserRef: input.ownerUserRef,
         planKey: plan.key,
-        customerEmail: input.ownerEmail,
         successUrl: input.successUrl,
         cancelUrl: input.cancelUrl
       });
@@ -70,28 +70,46 @@ export function createSubscribeWorkspace(
       sub.currentPeriodStart,
       sub.currentPeriodEnd
     );
-    await db.$transaction(async (tx) => {
-      await tx.workspaceBilling.create({
-        data: {
-          workspaceRef: input.workspaceRef,
-          billingAccountId: account.id,
-          planKey: plan.key,
-          stripeSubscriptionItemId: item.id,
-          cycleStart: sub.currentPeriodStart,
-          cycleEnd: sub.currentPeriodEnd
-        }
+    try {
+      await db.$transaction(async (tx) => {
+        await tx.workspaceBilling.create({
+          data: {
+            workspaceRef: input.workspaceRef,
+            billingAccountId: account.id,
+            planKey: plan.key,
+            stripeSubscriptionItemId: item.id,
+            cycleStart: sub.currentPeriodStart,
+            cycleEnd: sub.currentPeriodEnd
+          }
+        });
+        await tx.ledgerEntry.create({
+          data: {
+            workspaceRef: input.workspaceRef,
+            kind: "GRANT",
+            amountMicro: BigInt(grantMicro),
+            at: now,
+            // Item id as the idempotency key for this mid-cycle grant.
+            stripeInvoiceId: `item_${item.id}`
+          }
+        });
       });
-      await tx.ledgerEntry.create({
-        data: {
-          workspaceRef: input.workspaceRef,
-          kind: "GRANT",
-          amountMicro: BigInt(grantMicro),
-          at: now,
-          // Item id as the idempotency key for this mid-cycle grant.
-          stripeInvoiceId: `item_${item.id}`
-        }
-      });
-    });
+    } catch (err) {
+      // Check-then-act race: a concurrent subscribe won the workspaceRef
+      // unique. Compensate — remove the item we just invoiced (Stripe credits
+      // the proration) so the customer isn't charged for an orphan.
+      if (isUniqueViolation(err)) {
+        await stripe
+          .removeItem({ itemId: item.id })
+          .catch((removeErr: unknown) =>
+            console.error(
+              `[billing] failed to remove orphaned item ${item.id} after enroll race:`,
+              removeErr instanceof Error ? removeErr.message : removeErr
+            )
+          );
+        throw businessError("workspaceRef", "Workspace is already on a plan");
+      }
+      throw err;
+    }
     return { kind: "subscribed" };
   };
 

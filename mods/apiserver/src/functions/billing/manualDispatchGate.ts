@@ -1,8 +1,5 @@
 import {
-  estimateVoiceDebitMicro,
-  isMessageMeter,
-  priceMessageMicro,
-  resolveRate,
+  estimateDispatchCostMicro,
   type BillingClient,
   type BillingConfig,
   type BillingMeter
@@ -42,12 +39,12 @@ export async function assessManualDispatch(
 
   const plan = planFromCatalog(billing, enrollment.planKey);
   const overrides = parseStoredOverrides(enrollment.rateOverrides);
-  const estimatedCostMicro = isMessageMeter(meter)
-    ? priceMessageMicro(resolveRate(meter, plan.rates, overrides))
-    : estimateVoiceDebitMicro(
-        resolveRate(meter, plan.rates, overrides),
-        billing.voiceDebitEstimateSeconds
-      );
+  const estimatedCostMicro = estimateDispatchCostMicro(
+    meter,
+    plan.rates,
+    overrides,
+    billing.voiceDebitEstimateSeconds
+  );
 
   const balanceMicro = await workspaceBalanceMicroTx(db, workspaceRef);
   if (balanceMicro < estimatedCostMicro) {
