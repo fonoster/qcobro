@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { createIdentityClient } from "@fonoster/identity-client";
+import { getLogger } from "@fonoster/logger";
 import { appRouter } from "./trpc/index.js";
 import { createContext } from "./trpc/context.js";
 import { config } from "./config.js";
@@ -21,6 +22,8 @@ import {
   createProviderEventRecorder,
   type ProviderEventPrisma
 } from "./engine/eventSink.js";
+
+const logger = getLogger({ service: "server", filePath: import.meta.url });
 
 const app = express();
 const port = config.apiserver.port;
@@ -133,7 +136,7 @@ app.use(
 );
 
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  logger.verbose(`Server running on port ${port}`);
 });
 
 // External voice application for pre-recorded agents (own port).

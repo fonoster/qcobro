@@ -1,6 +1,9 @@
 import { createRequire } from "node:module";
 import type { ServerConfig, VoiceRequest, VoiceResponse } from "@fonoster/voice";
+import { getLogger } from "@fonoster/logger";
 import { config } from "../config.js";
+
+const logger = getLogger({ service: "voice", filePath: import.meta.url });
 
 // `@fonoster/voice` is CJS exposing the server as its `default` export. Under the
 // project's ESM runtime (tsx) the namespace interop double-wraps it, so resolve the
@@ -28,8 +31,8 @@ export function startVoiceServer(): void {
     async (req: VoiceRequest, res: VoiceResponse) => {
       const message = req.metadata?.message ?? "";
 
-      console.log(
-        `[voice] pre-recorded message (appRef=${req.appRef}, callRef=${req.callRef}):`,
+      logger.verbose(
+        `pre-recorded message (appRef=${req.appRef}, callRef=${req.callRef}):`,
         message
       );
 
@@ -39,5 +42,5 @@ export function startVoiceServer(): void {
     }
   );
 
-  console.log(`Voice server running on port ${port}`);
+  logger.verbose(`Voice server running on port ${port}`);
 }

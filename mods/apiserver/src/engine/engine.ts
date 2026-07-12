@@ -15,6 +15,7 @@ import {
   type TickReport,
   type WhatsAppClient
 } from "@qcobro/common";
+import { getLogger } from "@fonoster/logger";
 import { createTickRecorder, type TickRecorder } from "./recorder.js";
 import { createDispatchOutreach } from "../functions/outreach/dispatchOutreach.js";
 import { createReserveAttempt } from "../functions/campaigns/reserveAttempt.js";
@@ -23,6 +24,8 @@ import { createGetWorkspaceSettings } from "../functions/workspaceSettings/getWo
 import { isInWindow, isPastEndDate, type WindowCampaign } from "./window.js";
 import { runFunnel, type FunnelAccount } from "./funnel.js";
 import { createTokenBucket, perTickCapacity, type TokenBucket } from "./buckets.js";
+
+const logger = getLogger({ service: "engine", filePath: import.meta.url });
 
 /** Agent template with the dispatch configs the engine needs. */
 export interface EngineTemplate {
@@ -260,9 +263,7 @@ export function createEngine(deps: EngineDeps) {
     if (channel === "WHATSAPP") {
       const resolved = await deps.resolveWhatsApp(c.workspaceRef, c.whatsAppSenderPhoneNumberId!);
       if (!resolved) {
-        console.error(
-          `[engine] WhatsApp integration not found campaign=${c.id} workspace=${c.workspaceRef}`
-        );
+        logger.error(`WhatsApp integration not found campaign=${c.id} workspace=${c.workspaceRef}`);
         // Recorded as a failed dispatch so the scorecard's error rate sees it —
         // without this, a campaign failing 100% this way would judge as 0% errors.
         recorder.emit({
@@ -310,8 +311,8 @@ export function createEngine(deps: EngineDeps) {
     } catch (err) {
       // Attempt stays consumed (at-most-once); no gestión for a failed dispatch.
       // Surface the reason — a swallowed dispatch error is undebuggable in prod.
-      console.error(
-        `[engine] dispatch failed campaign=${c.id} account=${acc.id} channel=${channel}:`,
+      logger.error(
+        `dispatch failed campaign=${c.id} account=${acc.id} channel=${channel}:`,
         err instanceof Error ? err.message : err
       );
       recorder.emit({

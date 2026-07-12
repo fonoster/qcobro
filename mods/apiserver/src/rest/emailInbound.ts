@@ -8,6 +8,7 @@ import {
   type PortfolioAccountRecord,
   type ResendConfig
 } from "@qcobro/common";
+import { getLogger } from "@fonoster/logger";
 import type { ProviderEventRecorder } from "../engine/eventSink.js";
 import {
   createIngestEmailReply,
@@ -18,6 +19,8 @@ import {
 import { createRecordOutcome } from "../functions/campaigns/recordOutcome.js";
 import { createEmailAutopilot } from "../services/emailAutopilot.js";
 import { ResendEmailClient } from "../services/resendEmailClient.js";
+
+const logger = getLogger({ service: "email", filePath: import.meta.url });
 
 /** Prisma-backed {@link EmailInboundClient}: load the gestión + email agent config by token. */
 export function createPrismaEmailInboundClient(prisma: PrismaClient): EmailInboundClient {
@@ -268,7 +271,7 @@ export function createEmailInboundHandler(prisma: PrismaClient, deps: EmailInbou
       // Keep only the customer's new message — drop quoted history + signature.
       if (normalized.text) normalized.text = stripQuotedReply(normalized.text);
 
-      console.log("[email/inbound] reply received:", JSON.stringify(normalized));
+      logger.verbose("reply received:", JSON.stringify(normalized));
       const result = await ingest(normalized);
       res.status(200).json(result);
 
@@ -281,11 +284,11 @@ export function createEmailInboundHandler(prisma: PrismaClient, deps: EmailInbou
       });
     } catch (err) {
       if (err instanceof ValidationError) {
-        console.error("[email/inbound] 400:", JSON.stringify(err.toJSON()));
+        logger.error("400:", JSON.stringify(err.toJSON()));
         res.status(400).json(err.toJSON());
         return;
       }
-      console.error("[email/inbound] unexpected error:", err);
+      logger.error("unexpected error:", err);
       res.status(500).json({ error: "Failed to ingest email reply" });
     }
   };
