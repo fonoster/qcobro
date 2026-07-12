@@ -68,7 +68,10 @@
   },
   "whatsapp": {
     "apiBaseUrl": "https://graph.facebook.com",
-    "apiVersion": "v18.0"
+    "apiVersion": "v18.0",
+    "maxMessagesPerMinute": 60,
+    "appSecret": "CHANGE_ME",
+    "maxRepliesDefault": 3
   },
   "engine": {
     "enabled": true,
