@@ -174,11 +174,10 @@ export function ReachOutModal({
         )}
 
         {!isLoading && agentType === "VOICE_AI" && (
-          <TextareaGroup
+          <InputGroup
             id="reach-first-message"
             label={t("portfolios.reachOut.preview.VOICE_AI")}
             value={editFirstMessage}
-            rows={3}
             placeholder={t("portfolios.reachOut.firstMessageNotSet")}
             onChange={(e) => setEditFirstMessage(e.target.value)}
           />
