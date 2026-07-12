@@ -11,6 +11,9 @@
   "exports": {
     ".": "./dist/index.js"
   },
+  "bin": {
+    "engine-eval": "./dist/bin/engineEval.js"
+  },
   "scripts": {
     "build": "tsc -b --force",
     "clean": "rm -rf dist *.tsbuildinfo",
