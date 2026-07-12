@@ -31,6 +31,11 @@ services:
       LOGS_LEVEL: verbose
     volumes:
       - ./config/qcobro.json:/config/qcobro.json:ro
+    # TEMP FIX: expose the voice server port so Fonoster can reach it directly,
+    # working around a DNS resolution issue — see
+    # https://github.com/fonoster/qcobro/issues/28
+    ports:
+      - "50061:50061"
 
   webapp:
     image: ghcr.io/fonoster/qcobro-webapp:${QCOBRO_VERSION}
