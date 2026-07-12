@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.13.0](https://github.com/fonoster/qcobro/compare/v1.12.4...v1.13.0) (2026-07-12)
+
+### Features
+
+- **common:** engine flight-recorder contracts and deterministic scorecard judge ([72c3f88](https://github.com/fonoster/qcobro/commit/72c3f882425a5fcc66d32acc8aec0d1a23f8a201))
+- **common:** engine-eval npx CLI for judging a deployment ([193f959](https://github.com/fonoster/qcobro/commit/193f959e520f9a3f13ca9d26effc0fb99cefbd8c))
+
 ## [1.12.4](https://github.com/fonoster/qcobro/compare/v1.12.3...v1.12.4) (2026-07-10)
 
 ### Bug Fixes

@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.13.0](https://github.com/fonoster/qcobro/compare/v1.12.4...v1.13.0) (2026-07-12)
+
+### Features
+
+- **api:** record engine flight-recorder events with retention pruning ([6e85346](https://github.com/fonoster/qcobro/commit/6e85346e650624d0558379f0f0bf72d2680c8ebf))
+- **api:** sim clock/tick knobs, runner-driven recording, and apikey:create ([e0bf437](https://github.com/fonoster/qcobro/commit/e0bf43784d73312ca6d262ea54b1b94bc0aa359d))
+- **api:** workspace-scoped engine-events endpoint and provider-event capture ([c5f6f61](https://github.com/fonoster/qcobro/commit/c5f6f61d6b73847a7a43b79ca1cc9c9cc721725a))
+
 ## [1.12.4](https://github.com/fonoster/qcobro/compare/v1.12.3...v1.12.4) (2026-07-10)
 
 ### Bug Fixes

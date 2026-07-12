@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.13.0](https://github.com/fonoster/qcobro/compare/v1.12.4...v1.13.0) (2026-07-12)
+
+### Features
+
+- **api:** record engine flight-recorder events with retention pruning ([6e85346](https://github.com/fonoster/qcobro/commit/6e85346e650624d0558379f0f0bf72d2680c8ebf))
+- **api:** sim clock/tick knobs, runner-driven recording, and apikey:create ([e0bf437](https://github.com/fonoster/qcobro/commit/e0bf43784d73312ca6d262ea54b1b94bc0aa359d))
+- **api:** workspace-scoped engine-events endpoint and provider-event capture ([c5f6f61](https://github.com/fonoster/qcobro/commit/c5f6f61d6b73847a7a43b79ca1cc9c9cc721725a))
+- **common:** engine flight-recorder contracts and deterministic scorecard judge ([72c3f88](https://github.com/fonoster/qcobro/commit/72c3f882425a5fcc66d32acc8aec0d1a23f8a201))
+- **common:** engine-eval npx CLI for judging a deployment ([193f959](https://github.com/fonoster/qcobro/commit/193f959e520f9a3f13ca9d26effc0fb99cefbd8c))
+- **deploy:** route gRPC to the pre-recorded VoiceServer ([#22](https://github.com/fonoster/qcobro/issues/22)) ([e78f9e1](https://github.com/fonoster/qcobro/commit/e78f9e1eac5c909533e3a4597a9fbe4f1e353462))
+
 ## [1.12.4](https://github.com/fonoster/qcobro/compare/v1.12.3...v1.12.4) (2026-07-10)
 
 ### Bug Fixes
