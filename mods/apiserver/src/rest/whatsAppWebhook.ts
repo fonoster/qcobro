@@ -8,6 +8,7 @@ import {
   type PortfolioAccountRecord,
   type WhatsAppClient
 } from "@qcobro/common";
+import type { ProviderEventRecorder } from "../engine/eventSink.js";
 import {
   createIngestWhatsAppMessage,
   type WhatsAppGestionView,
@@ -24,6 +25,8 @@ export interface WhatsAppWebhookConfig {
     workspaceRef: string,
     phoneNumberId: string
   ) => Promise<{ client: WhatsAppClient; languageCode: string } | null>;
+  /** Flight recorder; statuses and inbound messages are recorded best-effort. */
+  recordEvent?: ProviderEventRecorder | null;
 }
 
 /**
@@ -170,7 +173,8 @@ function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAppInboun
 async function processEvents(
   body: ReturnType<typeof whatsAppWebhookSchema.parse>,
   db: WebhookDb,
-  ingest: ReturnType<typeof createIngestWhatsAppMessage>
+  ingest: ReturnType<typeof createIngestWhatsAppMessage>,
+  recordEvent?: ProviderEventRecorder
 ) {
   for (const entry of body.entry ?? []) {
     for (const change of entry.changes ?? []) {
@@ -202,6 +206,13 @@ async function processEvents(
 
         // Opt-out signals: a failed delivery status with error code 131050.
         for (const status of value.statuses ?? []) {
+          recordEvent?.({
+            providerRef: status.id,
+            providerAt: status.timestamp
+              ? new Date(Number(status.timestamp) * 1000).toISOString()
+              : undefined,
+            summary: { status: status.status ?? "unknown", optOut: isOptOut(status) }
+          });
           if (!isOptOut(status)) continue;
           const log = await db.accountContactLog.findFirst({
             where: { providerRef: status.id }
@@ -230,6 +241,16 @@ async function processEvents(
             timestamp: msg.timestamp,
             text,
             phoneNumberId
+          });
+          recordEvent?.({
+            // The matched gestión's providerRef lets the recorder attribute the
+            // event to a workspace; without it the row is invisible to every fetch.
+            providerRef: result.matched ? result.providerRef : undefined,
+            providerAt: msg.timestamp
+              ? new Date(Number(msg.timestamp) * 1000).toISOString()
+              : undefined,
+            matched: result.matched,
+            summary: { type: "inbound_message" }
           });
           if (result.matched) {
             console.log(
@@ -332,7 +353,7 @@ export function createWhatsAppWebhookHandlers(prisma: PrismaClient, cfg: WhatsAp
     }
 
     // Fire-and-forget after the ack; errors are caught inside processEvents.
-    processEvents(parsed.data, db, ingest).catch((err) =>
+    processEvents(parsed.data, db, ingest, cfg.recordEvent ?? undefined).catch((err) =>
       console.error("[whatsapp/webhook] processEvents threw:", err)
     );
   }

@@ -73,7 +73,7 @@ export type InboundWhatsAppMessageInput = z.infer<typeof inboundWhatsAppMessageS
 
 export type IngestWhatsAppResult =
   | { matched: false }
-  | { matched: true; id: string; action: string };
+  | { matched: true; id: string; action: string; providerRef?: string };
 
 function isWindowOpen(lastCustomerMessageAt: string, now: Date): boolean {
   return now.getTime() - new Date(lastCustomerMessageAt).getTime() < TWENTY_FOUR_HOURS_MS;
@@ -186,7 +186,7 @@ export function createIngestWhatsAppMessage(deps: IngestWhatsAppMessageDeps) {
       await deps.client.updateChannelData(g.id, channelData);
     }
 
-    return { matched: true, id: g.id, action };
+    return { matched: true, id: g.id, action, providerRef: g.providerRef ?? undefined };
   };
 
   return withErrorHandlingAndValidation(fn, inboundWhatsAppMessageSchema);

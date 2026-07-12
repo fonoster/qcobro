@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
+import { createIdentityClient } from "@fonoster/identity-client";
 import { appRouter } from "./trpc/index.js";
 import { createContext } from "./trpc/context.js";
 import { config } from "./config.js";
@@ -9,14 +10,26 @@ import { createContactLogHandler } from "./rest/contactLogs.js";
 import { createVoiceEventsHandler } from "./rest/voiceEvents.js";
 import { createEmailInboundHandler } from "./rest/emailInbound.js";
 import { createWhatsAppWebhookHandlers } from "./rest/whatsAppWebhook.js";
+import { createEngineEventsHandler } from "./rest/engineEvents.js";
 import { resolveWhatsAppClient } from "./services/resolveWhatsAppClient.js";
 import { createInsightGenerator } from "./services/insightGenerator.js";
 import { synthesizeSpeech } from "./services/elevenLabsTts.js";
 import { startVoiceServer } from "./voice/voiceServer.js";
 import { startEngine } from "./engine/start.js";
+import {
+  createPrismaEngineEventSink,
+  createProviderEventRecorder,
+  type ProviderEventPrisma
+} from "./engine/eventSink.js";
 
 const app = express();
 const port = config.apiserver.port;
+
+// Flight recorder (engine-events capability): inbound provider signals are recorded
+// alongside the engine's own tick events, best-effort, one recorder per source.
+const engineEventSink = createPrismaEngineEventSink(prisma);
+const providerEvents = (source: Parameters<typeof createProviderEventRecorder>[2]) =>
+  createProviderEventRecorder(prisma as unknown as ProviderEventPrisma, engineEventSink, source);
 
 app.use(cors());
 app.use(
@@ -33,7 +46,10 @@ app.get("/health", (_req, res) => {
 
 // External contact-log ingress (e.g. Fonoster voice callbacks). Workspace-scoped
 // HTTP Basic auth, gated by config; shares hot-path updates with the tRPC path.
-app.post("/api/contact-logs", createContactLogHandler(prisma, config));
+app.post(
+  "/api/contact-logs",
+  createContactLogHandler(prisma, config, providerEvents("contact-logs"))
+);
 
 // Fonoster autopilot events-hook for Voz IA calls (conversation.started / .ended).
 // FIXME(security): UNAUTHENTICATED — must be secured very soon (see handler note).
@@ -41,7 +57,8 @@ app.post(
   "/api/voice/events",
   createVoiceEventsHandler(prisma as never, {
     generator: createInsightGenerator(config.ai),
-    generation: config.ai?.generation ?? "onDemand"
+    generation: config.ai?.generation ?? "onDemand",
+    recordEvent: providerEvents("voice-events")
   })
 );
 
@@ -49,7 +66,11 @@ app.post(
 // token and run the autopilot decision loop. Verifies the shared secret when configured.
 app.post(
   "/api/email/inbound",
-  createEmailInboundHandler(prisma, { resend: config.resend, ai: config.ai })
+  createEmailInboundHandler(prisma, {
+    resend: config.resend,
+    ai: config.ai,
+    recordEvent: providerEvents("email-inbound")
+  })
 );
 
 // Meta WhatsApp Business API webhook: GET for the verify-token handshake (subscribe
@@ -59,10 +80,20 @@ const whatsapp = createWhatsAppWebhookHandlers(prisma, {
   ai: config.ai,
   maxRepliesDefault: config.whatsapp?.maxRepliesDefault ?? 3,
   resolveWhatsApp: (workspaceRef, phoneNumberId) =>
-    resolveWhatsAppClient(prisma as never, workspaceRef, config.whatsapp, phoneNumberId)
+    resolveWhatsAppClient(prisma as never, workspaceRef, config.whatsapp, phoneNumberId),
+  recordEvent: providerEvents("meta-whatsapp")
 });
 app.get("/api/whatsapp/webhook", (req, res) => void whatsapp.verify(req, res));
 app.post("/api/whatsapp/webhook", (req, res) => void whatsapp.events(req, res));
+
+// Read-only flight-recorder export (engine-events capability): workspace-scoped
+// event stream + engine parameters, consumed by the `engine-eval` CLI (@qcobro/common).
+// Auth is a workspace API key (accessKeyId:accessKeySecret) as HTTP Basic, validated
+// against the same Identity exchange the SDK's API-key login uses.
+app.get(
+  "/api/engine/events",
+  createEngineEventsHandler(prisma, config, createIdentityClient(config.identity.endpoint))
+);
 
 // Synthesize a pre-recorded agent's script to audio (ElevenLabs) so the Pre-grabada
 // gestión detail can play it. Cached in-memory per voice+text; 503 when TTS isn't
