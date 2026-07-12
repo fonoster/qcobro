@@ -19,10 +19,6 @@ export const DB_METER: Record<BillingMeter, DbBillingMeter> = {
   whatsappVoiceAi: "WHATSAPP_VOICE_AI"
 };
 
-export const COMMON_METER: Record<DbBillingMeter, BillingMeter> = Object.fromEntries(
-  Object.entries(DB_METER).map(([common, db]) => [db, common])
-) as Record<DbBillingMeter, BillingMeter>;
-
 /** Resolves a plan from the config catalog; unknown keys are a business error. */
 export function planFromCatalog(billing: NonNullable<BillingConfig>, planKey: string): BillingPlan {
   const plan = billing.plans.find((p) => p.key === planKey);

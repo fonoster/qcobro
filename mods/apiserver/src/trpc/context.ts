@@ -10,6 +10,7 @@ import { createIdentityClient } from "@fonoster/identity-client";
 import { FonosterVoiceApplicationClient } from "../services/fonosterVoiceApplicationClient.js";
 import { FonosterOutboundCallClient } from "../services/fonosterOutboundCallClient.js";
 import { TwilioSmsClient } from "../services/twilioSmsClient.js";
+import { createStripeGateway } from "../services/stripeGateway.js";
 import { ResendEmailClient } from "../services/resendEmailClient.js";
 import { createInsightGenerator } from "../services/insightGenerator.js";
 import { createGetWorkspaceSettings } from "../functions/workspaceSettings/getWorkspaceSettings.js";
@@ -59,6 +60,10 @@ const emailFrom = config.resend
 // Shared EXTERNAL app ref for all pre-recorded voice dispatch (points at the
 // embedded VoiceServer). Voz IA uses each template's own AUTOPILOT ref instead.
 const fonosterPrerecordedAppRef = config.fonoster?.prerecordedAppRef ?? null;
+
+// Stripe gateway (billing) — built once like the channel clients above, reached
+// by procedures through ctx (never constructed inside a router).
+const stripeGateway = createStripeGateway(config.billing);
 
 // AI-insight generator, gated on the `ai` config. Null when absent/disabled — the
 // generate-insight path then no-ops (gestiones stay unanalyzed).
@@ -122,6 +127,7 @@ export async function createContext(opts: CreateExpressContextOptions) {
     fonosterNumbers,
     twilioFromNumbers,
     fonosterPrerecordedAppRef,
+    stripeGateway,
     insightGenerator,
     aiGeneration: config.ai?.generation ?? "onDemand",
     timezone,

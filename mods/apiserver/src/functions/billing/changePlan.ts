@@ -68,6 +68,13 @@ export function createChangePlan(
         sub.currentPeriodEnd
       );
       await db.$transaction(async (tx) => {
+        // Idempotency inside the transaction: a concurrent/retried upgrade that
+        // already moved the plan must not void+grant a second time (the repeat
+        // price swap above is harmless — same price, no proration).
+        const current = await tx.workspaceBilling.findUnique({
+          where: { workspaceRef: input.workspaceRef }
+        });
+        if (current?.planKey === target.key) return;
         const remainder = await workspaceBalanceMicroTx(tx, input.workspaceRef);
         if (remainder > 0) {
           await tx.ledgerEntry.create({

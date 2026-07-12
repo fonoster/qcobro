@@ -63,7 +63,6 @@ export const subscribeWorkspaceSchema = z.object({
   workspaceRef: z.string().min(1),
   planKey: z.string().min(1),
   ownerUserRef: z.string().min(1),
-  ownerEmail: z.string().email().optional(),
   successUrl: z.string().url(),
   cancelUrl: z.string().url()
 });

@@ -1,9 +1,5 @@
-import {
-  cycleTurnoverSchema,
-  withErrorHandlingAndValidation,
-  type BillingClient,
-  type CycleTurnoverInput
-} from "@qcobro/common";
+import type { BillingClient, CycleTurnoverInput } from "@qcobro/common";
+import { isUniqueViolation } from "./prismaErrors.js";
 import { workspaceBalanceMicroTx } from "./workspaceBalance.js";
 
 /**
@@ -56,20 +52,4 @@ export async function cycleTurnoverTx(
     data: { cycleStart: new Date(input.cycleStart), cycleEnd: new Date(input.cycleEnd) }
   });
   return { applied: true, voidedMicro };
-}
-
-/** Prisma unique-constraint violation (P2002), without importing Prisma here. */
-function isUniqueViolation(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    (err as { code: unknown }).code === "P2002"
-  );
-}
-
-/** Factory: turn one workspace's cycle over in its own transaction. */
-export function createCycleTurnover(client: BillingClient) {
-  const fn = (input: CycleTurnoverInput) => client.$transaction((tx) => cycleTurnoverTx(tx, input));
-  return withErrorHandlingAndValidation(fn, cycleTurnoverSchema);
 }

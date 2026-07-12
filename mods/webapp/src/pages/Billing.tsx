@@ -9,16 +9,7 @@ import { Button } from "../components/ui/button.js";
 import { CreditMeterCard } from "../components/CreditMeterCard.js";
 import { BillingPausedBanner } from "../components/BillingPausedBanner.js";
 import { ManagePlanDialog } from "../components/ManagePlanDialog.js";
-
-/** Resolve a localized plan name (string or {lang: name} map). */
-function planLabel(name: unknown, language: string): string {
-  if (typeof name === "string") return name;
-  if (name && typeof name === "object") {
-    const map = name as Record<string, string>;
-    return map[language] ?? Object.values(map)[0] ?? "";
-  }
-  return "";
-}
+import { resolveLocalizedString } from "../lib/localizedString.js";
 
 /**
  * Facturación (billing-console spec): the credit meter and paused states are
@@ -79,7 +70,7 @@ export function Billing() {
 
       {data?.enabled && data.enrolled && (
         <CreditMeterCard
-          planName={planLabel(data.planName, language)}
+          planName={resolveLocalizedString(data.planName, language)}
           balance={data.balance}
           allowance={data.allowance}
           remainingFraction={data.allowanceMicro > 0 ? data.balanceMicro / data.allowanceMicro : 0}

@@ -77,6 +77,11 @@ function makeGateway(view?: Partial<StripeSubscriptionView>) {
     scheduleItemSwapAtPeriodEnd: async (input) => {
       calls.schedule.push(input);
     },
+    setItemWorkspaceRef: async ({ itemId, workspaceRef }) => {
+      const item = subscription.items.find((i) => i.id === itemId);
+      if (item) item.workspaceRef = workspaceRef;
+    },
+    removeItem: async () => undefined,
     getPriceUnitAmount: async () => null
   };
   return { gateway, calls, subscription };
@@ -161,6 +166,18 @@ describe("changePlan", () => {
     assert.ok(Math.abs(balance - 14_500_000) < 10_000, `balance ${balance}`);
   });
 
+  it("a repeated upgrade call does not double-void or double-grant", async () => {
+    const stub = enrolledStub(2_000_000);
+    const { gateway } = makeGateway();
+    const change = createChangePlan(stub.client, gateway, billing);
+    await change({ workspaceRef: "ws_1", targetPlanKey: "growth" });
+    const balanceAfterFirst = stub.ledgerEntries.reduce((s2, e) => s2 + Number(e.amountMicro), 0);
+    // Second call: rejected as already-on-plan; ledger untouched either way.
+    await assert.rejects(() => change({ workspaceRef: "ws_1", targetPlanKey: "growth" }));
+    const balanceAfterSecond = stub.ledgerEntries.reduce((s2, e) => s2 + Number(e.amountMicro), 0);
+    assert.equal(balanceAfterSecond, balanceAfterFirst);
+  });
+
   it("downgrade only schedules the swap; balance and plan stay until period end", async () => {
     const stub = makeBillingStub({
       workspaceBillings: [{ planKey: "growth", stripeSubscriptionItemId: "si_1" }],
@@ -191,6 +208,34 @@ describe("changePlan", () => {
 });
 
 describe("handleStripeEvent", () => {
+  it("stamps workspaceRef on the founding item so cycle turnover can find it", async () => {
+    const stub = makeBillingStub();
+    // Checkout-created item carries NO workspaceRef (Stripe puts the metadata
+    // on the subscription, not the item).
+    const { gateway } = makeGateway({
+      items: [{ id: "si_1", priceId: "price_starter", workspaceRef: null }]
+    });
+    await handleStripeEvent(stub.client, gateway, billing, {
+      type: "checkout.session.completed",
+      checkoutSessionId: "cs_1",
+      customerId: "cus_1",
+      subscriptionId: "sub_1",
+      workspaceRef: "ws_1",
+      ownerUserRef: "user_1",
+      planKey: "starter"
+    });
+    // The very next cycle invoice must renew the founding workspace.
+    await handleStripeEvent(stub.client, gateway, billing, {
+      type: "invoice.paid",
+      invoiceId: "in_2",
+      customerId: "cus_1",
+      subscriptionId: "sub_1",
+      billingReason: "subscription_cycle"
+    });
+    const grants = stub.ledgerEntries.filter((e) => e.kind === "GRANT");
+    assert.equal(grants.length, 2); // checkout grant + first cycle turnover
+  });
+
   it("checkout.session.completed provisions payer, enrollment, and initial grant — idempotently", async () => {
     const stub = makeBillingStub();
     const { gateway } = makeGateway();

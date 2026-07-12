@@ -91,6 +91,11 @@ function makeGateway(items: StripeSubscriptionView["items"]): StripeGateway {
       if (item) item.priceId = priceId;
     },
     scheduleItemSwapAtPeriodEnd: async () => undefined,
+    setItemWorkspaceRef: async ({ itemId, workspaceRef }) => {
+      const item = view.items.find((i) => i.id === itemId);
+      if (item) item.workspaceRef = workspaceRef;
+    },
+    removeItem: async () => undefined,
     getPriceUnitAmount: async () => null
   };
 }

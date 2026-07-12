@@ -22,7 +22,6 @@ export interface StripeGateway {
     workspaceRef: string;
     ownerUserRef: string;
     planKey: string;
-    customerEmail?: string;
     successUrl: string;
     cancelUrl: string;
   }): Promise<{ id: string; url: string | null }>;
@@ -38,6 +37,16 @@ export interface StripeGateway {
     priceId: string;
     workspaceRef: string;
   }): Promise<{ id: string }>;
+
+  /**
+   * Stamps `workspaceRef` on an item's metadata. Needed after Checkout:
+   * `subscription_data.metadata` lands on the SUBSCRIPTION, not its item, and
+   * the invoice.paid turnover correlates workspaces by ITEM metadata.
+   */
+  setItemWorkspaceRef(input: { itemId: string; workspaceRef: string }): Promise<void>;
+
+  /** Removes an item, crediting the proration (compensation for a failed enroll). */
+  removeItem(input: { itemId: string }): Promise<void>;
 
   /** Upgrade: swaps the item's price now, invoicing the proration immediately. */
   swapItemPrice(input: { itemId: string; priceId: string }): Promise<void>;

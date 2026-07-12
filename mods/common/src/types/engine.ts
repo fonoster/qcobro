@@ -15,6 +15,22 @@ export interface Clock {
 /** Channels the engine can dispatch (the subset `dispatchOutreach` supports). */
 export type EngineChannel = "VOICE_AI" | "VOICE_PRERECORDED" | "SMS" | "EMAIL" | "WHATSAPP";
 
+/**
+ * Which billing meter a dispatch on each channel consumes — THE single mapping
+ * (used by the engine tick, manual outreach, and any future dispatch surface,
+ * so the same traffic can never be metered differently on different paths).
+ */
+export const BILLING_METER_OF_CHANNEL: Record<
+  EngineChannel,
+  import("../billing/rates.js").BillingMeter
+> = {
+  VOICE_AI: "voiceAi",
+  VOICE_PRERECORDED: "voicePrerecorded",
+  SMS: "sms",
+  EMAIL: "email",
+  WHATSAPP: "whatsappMessage"
+};
+
 /** Why a campaign was not dispatched at all this tick. */
 export type CampaignSkipReason =
   | "not_active"

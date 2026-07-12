@@ -1,10 +1,14 @@
 import { TRPCError } from "@trpc/server";
 import {
+  BILLING_METER_OF_CHANNEL,
   buildOutreachContext,
+  createContactLogSchema,
   manualOutreachSchema,
+  ValidationError,
   type BillingClient,
   type BillingMeter,
-  type DispatchOutreachInput
+  type DispatchOutreachInput,
+  type EngineChannel
 } from "@qcobro/common";
 import { router, workspaceProcedure } from "../trpc.js";
 import { config } from "../../config.js";
@@ -12,14 +16,6 @@ import { createDispatchOutreach } from "../../functions/outreach/dispatchOutreac
 import { createRecordOutcome, recordOutcomeTx } from "../../functions/campaigns/recordOutcome.js";
 import { assessManualDispatch } from "../../functions/billing/manualDispatchGate.js";
 import { meterDispatchTx } from "../../functions/billing/meterDispatch.js";
-
-/** Manual-outreach template type → billing meter (WhatsApp is not manual-dispatchable). */
-const MANUAL_METER: Record<string, BillingMeter> = {
-  SMS: "sms",
-  EMAIL: "email",
-  VOICE_AI: "voiceAi",
-  VOICE_PRERECORDED: "voicePrerecorded"
-};
 
 /** An agent template with its four dispatchable channel configs loaded. */
 type TemplateWithConfigs = {
@@ -137,7 +133,11 @@ export const outreachRouter = router({
 
     // Billing gate (billing-enforcement spec): manual dispatches verify the
     // balance BEFORE any provider call and reject with a structured error.
-    const meter = MANUAL_METER[template.type];
+    // The SAME channel→meter mapping the engine uses, so manual and campaign
+    // dispatch can never meter the same traffic differently. buildDispatchRequest
+    // has already rejected non-dispatchable template types.
+    const meter: BillingMeter | undefined =
+      BILLING_METER_OF_CHANNEL[template.type as EngineChannel];
     const billingDb = ctx.prisma as unknown as BillingClient;
     const gate = meter
       ? await assessManualDispatch(billingDb, config.billing, workspaceRef, meter)
@@ -182,9 +182,13 @@ export const outreachRouter = router({
     };
     if (gate.kind === "metered" && config.billing) {
       const billing = config.billing;
+      // Same validation contract as createRecordOutcome — coverage must not
+      // depend on billing enrollment.
+      const parsed = createContactLogSchema.safeParse(logParams);
+      if (!parsed.success) throw new ValidationError(parsed.error);
       // Gestión + priced usage + ledger debit in ONE transaction (usage-ledger spec).
       await billingDb.$transaction(async (tx) => {
-        await recordOutcomeTx(tx as never, logParams);
+        await recordOutcomeTx(tx as never, parsed.data as typeof logParams);
         await meterDispatchTx(tx, billing, {
           workspaceRef,
           meter,

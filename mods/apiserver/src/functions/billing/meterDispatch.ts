@@ -38,6 +38,16 @@ export async function meterDispatchTx(
   });
   if (!enrollment) return null;
 
+  // Idempotent per provider ref: a retried dispatch (or a provider reusing a
+  // ref) must not double-debit — and must never abort the caller's transaction
+  // on the providerRef unique.
+  if (input.providerRef) {
+    const existing = await tx.usageRecord.findUnique({
+      where: { providerRef: input.providerRef }
+    });
+    if (existing) return existing;
+  }
+
   const plan = planFromCatalog(billing, enrollment.planKey);
   const overrides = parseStoredOverrides(enrollment.rateOverrides);
   const at = new Date(input.at);

@@ -1,15 +1,14 @@
 import {
+  BILLING_METER_OF_CHANNEL,
   bucketOf,
   buildOutreachContext,
-  estimateVoiceDebitMicro,
-  isMessageMeter,
+  createContactLogSchema,
+  estimateDispatchCostMicro,
   maskRecipient,
-  priceMessageMicro,
-  resolveRate,
+  ValidationError,
   type AccountDecision,
   type BillingClient,
   type BillingConfig,
-  type BillingMeter,
   type CampaignSnapshot,
   type CampaignTickReport,
   type Clock,
@@ -44,15 +43,6 @@ import {
   type CreditBucket,
   type TokenBucket
 } from "./buckets.js";
-
-/** Engine channel → billing meter (WhatsApp voice meters have no channel yet). */
-const METER_OF: Record<EngineChannel, BillingMeter> = {
-  VOICE_AI: "voiceAi",
-  VOICE_PRERECORDED: "voicePrerecorded",
-  SMS: "sms",
-  EMAIL: "email",
-  WHATSAPP: "whatsappMessage"
-};
 
 /**
  * A workspace's credit gate for one tick. `off` = billing disabled or workspace
@@ -205,8 +195,12 @@ export function createEngine(deps: EngineDeps) {
    */
   async function recordDispatch(params: CreateContactLogInput, meter: MeterDispatchInput | null) {
     if (!meter || !billingCfg) return record(params);
+    // Same validation contract as createRecordOutcome — coverage must not
+    // depend on whether the workspace happens to be metered.
+    const parsed = createContactLogSchema.safeParse(params);
+    if (!parsed.success) throw new ValidationError(parsed.error);
     return billingDb.$transaction(async (tx) => {
-      const log = await recordOutcomeTx(tx as never, params);
+      const log = await recordOutcomeTx(tx as never, parsed.data as CreateContactLogInput);
       await meterDispatchTx(tx, billingCfg, meter);
       return log;
     });
@@ -217,12 +211,10 @@ export function createEngine(deps: EngineDeps) {
     gate: Extract<CreditGate, { kind: "active" }>,
     channel: EngineChannel
   ): number {
-    const meter = METER_OF[channel];
-    if (isMessageMeter(meter)) {
-      return priceMessageMicro(resolveRate(meter, gate.rates, gate.overrides));
-    }
-    return estimateVoiceDebitMicro(
-      resolveRate(meter, gate.rates, gate.overrides),
+    return estimateDispatchCostMicro(
+      BILLING_METER_OF_CHANNEL[channel],
+      gate.rates,
+      gate.overrides,
       billingCfg!.voiceDebitEstimateSeconds
     );
   }
@@ -434,7 +426,7 @@ export function createEngine(deps: EngineDeps) {
       metered
         ? {
             workspaceRef: c.workspaceRef,
-            meter: METER_OF[channel],
+            meter: BILLING_METER_OF_CHANNEL[channel],
             at,
             campaignId: c.id,
             portfolioAccountId: acc.id,
@@ -496,6 +488,7 @@ export function createEngine(deps: EngineDeps) {
     // touch. Campaign iteration order is the de-facto priority order when the
     // bucket runs low (documented v1 behavior).
     const gates = new Map<string, CreditGate>();
+    const settingsCache = new Map<string, Awaited<ReturnType<typeof getSettings>>>();
     async function creditGateFor(workspaceRef: string): Promise<CreditGate> {
       if (!billingCfg) return { kind: "off" };
       const cached = gates.get(workspaceRef);
@@ -548,9 +541,14 @@ export function createEngine(deps: EngineDeps) {
         skipped: 0
       };
 
-      // Resolve this campaign's workspace settings once; its timezone drives the
-      // wall-clock window + daily-cap reset, its currency the rendered templates.
-      const ws = await getSettings(c.workspaceRef);
+      // Resolve this campaign's workspace settings once per WORKSPACE per tick
+      // (a tenant with N campaigns must not issue N identical reads); timezone
+      // drives the wall-clock window + daily-cap reset, currency the templates.
+      let ws = settingsCache.get(c.workspaceRef);
+      if (!ws) {
+        ws = await getSettings(c.workspaceRef);
+        settingsCache.set(c.workspaceRef, ws);
+      }
       const tz = ws.timezone;
       const reserve = createReserveAttempt(deps.reserveRecordClient as never, tz);
 
@@ -657,13 +655,12 @@ export function createEngine(deps: EngineDeps) {
           cr.skipped += 1;
           continue;
         }
-        // Credit debit before the channel token: both are tick-scoped and the
-        // ledger reseeds next tick, so a debit whose dispatch never happens
-        // (channel budget hit right after) costs nothing durable.
-        if (
-          gate.kind === "active" &&
-          !gate.bucket.tryDebit(estimateCostMicro(gate, ready.channel))
-        ) {
+        // Peek credits BEFORE taking a channel token, but only debit AFTER the
+        // token is granted — otherwise accounts blocked by the channel budget
+        // would burn in-tick credit headroom and mislabel later accounts as
+        // credits_exhausted.
+        const costMicro = gate.kind === "active" ? estimateCostMicro(gate, ready.channel) : 0;
+        if (gate.kind === "active" && gate.bucket.remainingMicro() < costMicro) {
           cr.decisions.push({
             portfolioAccountId: fa.portfolioAccountId,
             decision: "credits_exhausted"
@@ -681,6 +678,7 @@ export function createEngine(deps: EngineDeps) {
           cr.skipped += 1;
           continue;
         }
+        if (gate.kind === "active") gate.bucket.tryDebit(costMicro);
         const acc = candidateById.get(fa.portfolioAccountId)!;
         const { decision, providerRef } = await reserveAndDispatch(
           c,
