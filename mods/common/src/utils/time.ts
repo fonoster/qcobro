@@ -64,3 +64,28 @@ export function localWeekdayISO(date: Date, timeZone: string): number {
 export function localTimeHHMM(date: Date, timeZone: string): string {
   return localParts(date, timeZone).time;
 }
+
+/** The schedule fields a contact window comprises (a campaign row or an event snapshot). */
+export interface ScheduleWindow {
+  startDate: Date;
+  endDate: Date | null;
+  /** ISO weekdays (1 = Monday … 7 = Sunday). */
+  daysOfWeek: number[];
+  /** Local wall-clock bounds, `HH:MM` 24h. Windows do not span midnight. */
+  startTime: string;
+  endTime: string;
+}
+
+/**
+ * Whether `at` falls inside the schedule window, evaluated in `timeZone`. The
+ * single window rule shared by the engine's dispatch gate and the evaluator's
+ * SAF-1 check, so the judge can never disagree with the engine about a window.
+ */
+export function isWithinScheduleWindow(w: ScheduleWindow, at: Date, timeZone: string): boolean {
+  const { date, weekday, time } = localParts(at, timeZone);
+  if (date < localDateString(w.startDate, timeZone)) return false;
+  if (w.endDate && date > localDateString(w.endDate, timeZone)) return false;
+  if (!w.daysOfWeek.includes(weekday)) return false;
+  if (time < w.startTime || time > w.endTime) return false;
+  return true;
+}

@@ -10,5 +10,8 @@ export {
   localDateString,
   isSameLocalDay,
   localWeekdayISO,
-  localTimeHHMM
+  localTimeHHMM,
+  isWithinScheduleWindow,
+  type ScheduleWindow
 } from "./time.js";
+export { bucketOf, perTickCapacity, type PacingBucket } from "./pacing.js";

@@ -349,9 +349,15 @@ export const qcobroConfigSchema = z.object({
     .object({
       enabled: z.boolean().default(false),
       /** Seconds between engine ticks. */
-      tickSeconds: z.number().int().positive().default(60)
+      tickSeconds: z.number().int().positive().default(60),
+      /**
+       * Days the flight-recorder event stream (`engine_events`) is kept before the
+       * runner prunes it. `0` disables pruning. Telemetry only — gestiones are the
+       * record of contact attempts and are never pruned.
+       */
+      eventsRetentionDays: z.number().int().nonnegative().default(30)
     })
-    .default({ enabled: false, tickSeconds: 60 })
+    .prefault({})
 });
 
 export type IdentityConfig = z.infer<typeof identityConfigSchema>;
