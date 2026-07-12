@@ -70,4 +70,9 @@ export interface TickReport {
   at: string;
   campaigns: CampaignTickReport[];
   channelUsage: Partial<Record<EngineChannel, ChannelUsage>>;
+  /**
+   * Flight-recorder events collected during the tick (engine-events capability).
+   * The runner flushes them to the configured sink, best-effort, after the tick.
+   */
+  events?: import("../schemas/engineEvents.js").EngineEvent[];
 }
