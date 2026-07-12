@@ -1,7 +1,7 @@
 # Ship checkpoint — workspace-billing
 
 Started: 2026-07-11
-Current stage: 3 — Build (pending)
+Current stage: 5 — Sync (awaiting human gate)
 
 **Scope:** Usage-based billing for QCobro: durable priced-at-write-time usage ledger, plan
 catalog in qcobro.json (7 meters, 15/15 voice increments), monthly allowance with hard stop
@@ -10,21 +10,23 @@ item-per-workspace topology, billing console surfaces, and simulation + evaluati
 
 **Detected surfaces:** OpenSpec: yes · Pencil: yes (repo-root pencil.pen) · Storybook: yes · E2E: yes
 
-| #   | Stage           | Status  | Notes                                                                                                                                                             |
-| :-- | :-------------- | :------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0   | Frame           | done    | Change authored this session; branch feat/workspace-billing (== main)                                                                                             |
-| 1   | Design (Pencil) | done    | Approved by Pedro 2026-07-11. Facturación page b4rbrX, paused banners nTeH0/S4OZDu, plan modal YcJdj, notes k8650 — Administración clusters qpge1/Z3Yaxq          |
-| 2   | Spec reconcile  | done    | Design decisions folded into billing-console spec (Stripe-hosted surfaces, burn projection, modal-as-entry-point), design.md, tasks.md. `openspec validate` green |
-| 3   | Build           | pending |                                                                                                                                                                   |
-| 4   | Test            | pending |                                                                                                                                                                   |
-| 5   | Sync            | pending |                                                                                                                                                                   |
-| 6   | Archive         | pending |                                                                                                                                                                   |
+| #   | Stage           | Status  | Notes                                                                                                                                                                                                                                                          |
+| :-- | :-------------- | :------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0   | Frame           | done    | Change authored this session; branch feat/workspace-billing (== main)                                                                                                                                                                                          |
+| 1   | Design (Pencil) | done    | Approved by Pedro 2026-07-11. Facturación page b4rbrX, paused banners nTeH0/S4OZDu, plan modal YcJdj, notes k8650 — Administración clusters qpge1/Z3Yaxq                                                                                                       |
+| 2   | Spec reconcile  | done    | Design decisions folded into billing-console spec (Stripe-hosted surfaces, burn projection, modal-as-entry-point), design.md, tasks.md. `openspec validate` green                                                                                              |
+| 3   | Build           | done    | 23/24 tasks (commits 83deab6, fe49051, 1339f7c, f90e115, 187b777). Only 7.1 (staging metering-only verification) remains — deploy-time step                                                                                                                    |
+| 4   | Test            | done    | typecheck + eslint green; 100 common + 212 apiserver tests pass (incl. Postgres-backed engine integration + migration deploy); webapp builds; billing:sim scenario suite green (BIL-1…6). e2e billing.spec.ts authored but NOT executed (needs full dev stack) |
+| 5   | Sync            | pending |                                                                                                                                                                                                                                                                |
+| 6   | Archive         | pending |                                                                                                                                                                                                                                                                |
 
 Status values: `pending` · `in-progress` · `done` · `skipped` (with reason).
 
 ## Decision log
 
 Newest first. One line per meaningful decision or stage transition.
+
+- 2026-07-11 — Stages 3+4 done across five commits. Build decisions worth knowing: unenrolled workspaces dispatch UNMETERED (safe gradual rollout/backfill); engine fails CLOSED on misconfigured enrollments (credits_exhausted); added payment_failed campaign skip reason; downgrades avoid fragile schedule state by re-deriving planKey from the Stripe item price at invoice.paid turnover; voice usage rows freeze rate+increments at dispatch so settlement prices at dispatch-time rates. Open: task 7.1 (staging metering-only run) + e2e spec not yet executed. Next: /opsx:sync gate.
 
 - 2026-07-11 — Stage 2 done: billing-console spec gains "Payment surfaces are Stripe-hosted" requirement + meter shows renewal date/burn projection + modal-as-entry-point (MAY complete on Stripe-hosted page); design.md D9 updated, burn-rate open question resolved, GB47x marketing follow-up noted; tasks 4.2/5.2/5.3/5.4 aligned, 5.1 checked. Four requirements reworded so SHALL lands on the first line (parser quirk). `openspec validate` green.
 - 2026-07-11 — Stage 1 done: Pedro approved the designs.
