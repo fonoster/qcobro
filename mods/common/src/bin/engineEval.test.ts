@@ -1,5 +1,10 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync, symlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   buildThresholdOverrides,
   CliError,
@@ -133,5 +138,34 @@ describe("buildThresholdOverrides", () => {
       maxErrorRate: 0.05,
       livenessTicks: 8
     });
+  });
+});
+
+describe("entry-point self-invocation guard", () => {
+  // npm/npx always launch bins through a node_modules/.bin symlink, so the guard must
+  // compare resolved real paths, not raw argv[1]/import.meta.url strings — otherwise
+  // main() silently never runs (exit 0, no output). Spawn a real process through a
+  // symlink to lock that in; --help exits before any network call.
+  const sourcePath = fileURLToPath(new URL("./engineEval.ts", import.meta.url));
+
+  it("runs main() when invoked directly", () => {
+    const out = execFileSync(process.execPath, ["--import", "tsx", sourcePath, "--help"], {
+      encoding: "utf8"
+    });
+    assert.match(out, /Usage: engine-eval/);
+  });
+
+  it("runs main() when invoked through a symlink (npm/npx bin layout)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "engine-eval-symlink-"));
+    const linkPath = join(dir, "engine-eval-link.ts");
+    try {
+      symlinkSync(sourcePath, linkPath);
+      const out = execFileSync(process.execPath, ["--import", "tsx", linkPath, "--help"], {
+        encoding: "utf8"
+      });
+      assert.match(out, /Usage: engine-eval/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

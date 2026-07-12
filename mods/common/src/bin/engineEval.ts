@@ -1,5 +1,7 @@
 #!/usr/bin/env node
+import { realpathSync } from "node:fs";
 import { parseArgs } from "node:util";
+import { pathToFileURL } from "node:url";
 import { evaluate } from "../evaluation/evaluate.js";
 import {
   evaluationParametersSchema,
@@ -361,6 +363,10 @@ export async function main(
 }
 
 // Only run when this file is the process entry point (not when imported by tests).
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Compares resolved real paths, not raw strings: npm/npx always launch bins through
+// a node_modules/.bin symlink, so argv[1] is the symlink path while import.meta.url
+// is already resolved to the real file — a raw-string comparison never matches there,
+// silently skipping main() with no output and exit code 0.
+if (import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   main().then((code) => process.exit(code));
 }
