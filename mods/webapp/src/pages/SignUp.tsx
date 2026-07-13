@@ -38,65 +38,68 @@ export function SignUp() {
   const pending = signUp.isPending || login.isPending;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 px-4">
-      <Logo />
-      <Card className="w-full max-w-[400px] rounded-2xl border-slate-200 p-8 shadow-none">
-        <form onSubmit={onSubmit} className="flex flex-col gap-7">
-          <div className="flex flex-col gap-1.5">
-            <h1 className="text-2xl font-bold text-slate-900">{t("auth.signupTitle")}</h1>
-            <p className="text-sm text-slate-500">{t("auth.signupSubtitle")}</p>
-          </div>
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      <header className="flex h-[72px] w-full items-center justify-between border-b border-slate-200 bg-white px-10">
+        <Logo />
+        <p className="text-[13px] text-slate-500">
+          {t("auth.haveAccount")}{" "}
+          <Link to="/login" className="font-semibold text-emerald-700 hover:underline">
+            {t("auth.login")}
+          </Link>
+        </p>
+      </header>
+      <div className="flex flex-1 items-center justify-center px-4 py-10">
+        <Card className="w-full max-w-[400px] rounded-2xl border-slate-200 p-8 shadow-none">
+          <form onSubmit={onSubmit} className="flex flex-col gap-7">
+            <div className="flex flex-col gap-1.5">
+              <h1 className="text-2xl font-bold text-slate-900">{t("auth.signupTitle")}</h1>
+              <p className="text-sm text-slate-500">{t("auth.signupSubtitle")}</p>
+            </div>
 
-          <div className="flex flex-col gap-4">
-            <InputGroup
-              label={t("auth.name")}
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t("auth.namePlaceholder")}
-            />
-            <InputGroup
-              label={t("auth.email")}
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t("auth.emailPlaceholder")}
-            />
-            <InputGroup
-              label={t("auth.password")}
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t("auth.passwordPlaceholder")}
-              error={error ?? undefined}
-            />
-          </div>
+            <div className="flex flex-col gap-4">
+              <InputGroup
+                label={t("auth.name")}
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t("auth.namePlaceholder")}
+              />
+              <InputGroup
+                label={t("auth.email")}
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t("auth.emailPlaceholder")}
+              />
+              <InputGroup
+                label={t("auth.password")}
+                type="password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t("auth.passwordPlaceholder")}
+                error={error ?? undefined}
+              />
+            </div>
 
-          <Button type="submit" size="lg" className="w-full" disabled={pending}>
-            {t("auth.signup")}
-          </Button>
+            <Button type="submit" size="lg" className="w-full" disabled={pending}>
+              {t("auth.signup")}
+            </Button>
 
-          <div className="flex items-center gap-3">
-            <span className="h-px flex-1 bg-slate-200" />
-            <span className="text-[13px] text-slate-400">{t("auth.or")}</span>
-            <span className="h-px flex-1 bg-slate-200" />
-          </div>
+            <div className="flex items-center gap-3">
+              <span className="h-px flex-1 bg-slate-200" />
+              <span className="text-[13px] text-slate-400">{t("auth.or")}</span>
+              <span className="h-px flex-1 bg-slate-200" />
+            </div>
 
-          <GoogleButton type="button" size="lg" className="w-full">
-            {t("auth.continueGoogle")}
-          </GoogleButton>
-
-          <p className="text-center text-[13px] text-slate-500">
-            {t("auth.haveAccount")}{" "}
-            <Link to="/login" className="font-semibold text-emerald-700 hover:underline">
-              {t("auth.login")}
-            </Link>
-          </p>
-        </form>
-      </Card>
+            <GoogleButton type="button" size="lg" className="w-full">
+              {t("auth.continueGoogle")}
+            </GoogleButton>
+          </form>
+        </Card>
+      </div>
     </div>
   );
 }

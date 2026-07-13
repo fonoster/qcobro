@@ -69,56 +69,60 @@ export function VerifyContact() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 px-4">
-      <Logo />
-      <Card className="w-full max-w-[400px] rounded-2xl border-slate-200 p-8 shadow-none">
-        <form onSubmit={onSubmit} className="flex flex-col gap-7">
-          <div className="flex flex-col gap-1.5">
-            <h1 className="text-2xl font-bold text-slate-900">{t("verify.title")}</h1>
-            <p className="text-sm text-slate-500">{t("verify.subtitle")}</p>
-          </div>
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      <header className="flex h-[72px] w-full items-center border-b border-slate-200 bg-white px-10">
+        <Logo />
+      </header>
+      <div className="flex flex-1 items-center justify-center px-4 py-10">
+        <Card className="w-full max-w-[400px] rounded-2xl border-slate-200 p-8 shadow-none">
+          <form onSubmit={onSubmit} className="flex flex-col gap-7">
+            <div className="flex flex-col gap-1.5">
+              <h1 className="text-2xl font-bold text-slate-900">{t("verify.title")}</h1>
+              <p className="text-sm text-slate-500">{t("verify.subtitle")}</p>
+            </div>
 
-          <InputGroup
-            label={t("verify.codeLabel")}
-            required
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            autoFocus
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="••••••"
-            error={error ?? undefined}
-            hint={sent ? t("verify.sent") : undefined}
-          />
+            <InputGroup
+              label={t("verify.codeLabel")}
+              required
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              autoFocus
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="••••••"
+              error={error ?? undefined}
+              hint={sent ? t("verify.sent") : undefined}
+            />
 
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full"
-            disabled={verify.isPending || !code.trim()}
-          >
-            {verify.isPending ? t("verify.verifying") : t("verify.submit")}
-          </Button>
-
-          <div className="flex items-center justify-between text-[13px]">
-            <button
-              type="button"
-              onClick={onResend}
-              disabled={resending}
-              className="font-semibold text-emerald-700 hover:underline disabled:opacity-50"
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full"
+              disabled={verify.isPending || !code.trim()}
             >
-              {t("verify.resend")}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/workspaces")}
-              className="text-slate-500 hover:underline"
-            >
-              {t("verify.skip")}
-            </button>
-          </div>
-        </form>
-      </Card>
+              {verify.isPending ? t("verify.verifying") : t("verify.submit")}
+            </Button>
+
+            <div className="flex items-center justify-between text-[13px]">
+              <button
+                type="button"
+                onClick={onResend}
+                disabled={resending}
+                className="font-semibold text-emerald-700 hover:underline disabled:opacity-50"
+              >
+                {t("verify.resend")}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/workspaces")}
+                className="text-slate-500 hover:underline"
+              >
+                {t("verify.skip")}
+              </button>
+            </div>
+          </form>
+        </Card>
+      </div>
     </div>
   );
 }
