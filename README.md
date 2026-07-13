@@ -303,6 +303,53 @@ deploy) wires a certbot deploy-hook that copies the renewed cert into
 `config/certs` and restarts Envoy. It also respects Let's Encrypt rate limits —
 it only renews inside the expiry window. See **[`docs/deploy.md`](docs/deploy.md)**.
 
+## Admin Commands
+
+One-off operator tooling, published as `npx`-runnable bins in `@qcobro/common`
+(no repo checkout needed) — the same package/pattern as `engine-eval` above. This
+section grows as new admin commands are added; each one gets its own subsection.
+
+### `list-users` — account census
+
+Users and workspaces live in **Fonoster Identity's own Postgres database** (separate
+from the qcobro app DB — see `database.url` in `identity.json`), and Identity's gRPC
+surface has no admin-wide "list all users" call (`listWorkspaces`/`listWorkspaceMembers`
+are scoped to the caller's own token). `list-users` connects to that database directly
+and prints every user with their signup date and workspace count (owned + member,
+deduplicated), newest signups first:
+
+```bash
+npx -p @qcobro/common list-users --database-url "$QCOBRO_IDENTITY_DATABASE_URL"
+# or export QCOBRO_IDENTITY_DATABASE_URL first and drop the flag
+```
+
+```
+  email               name    created     workspaces
+  dana@example.com    Dana    2026-07-10  2
+  bruno@example.com   Bruno   2026-06-28  1
+  camila@example.com  Camila  2026-06-02  0
+```
+
+`--json` prints the same rows as JSON instead of a table. The connection string must
+include `?sslmode=require` for a DO managed database — matching the "Cleaning up
+gestiones" pattern above, `list-users` treats `sslmode=require` as "encrypted, not
+verified" (libpq/psql semantics), not node-postgres's stricter default.
+
+**Running it from a droplet with no local Node install** — any container with npm/npx
+works, e.g. the official Node image (same version this repo builds with):
+
+```bash
+docker run --rm -it \
+  -e QCOBRO_IDENTITY_DATABASE_URL="postgresql://user:pass@identity-db-host:25060/identity?sslmode=require" \
+  node:22-alpine \
+  npx -p @qcobro/common list-users
+```
+
+**Planned** (not yet built — see [issue #42](https://github.com/fonoster/qcobro/issues/42)
+for the full backlog): `list-workspaces` (name, owner, member count, plan/billing
+status), `list-orphaned-workspaces` (cleanup candidates), `billing-summary`
+(per-workspace plan/cycle/credit balance), `list-unverified-users` (signup funnel).
+
 ## Configuration
 
 All deployment settings live in `qcobro.json` (Zod-validated, never committed).

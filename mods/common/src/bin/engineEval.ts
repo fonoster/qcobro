@@ -9,6 +9,7 @@ import {
   type Scorecard
 } from "../evaluation/scorecard.js";
 import type { EngineEvent } from "../schemas/engineEvents.js";
+import { alignColumns } from "./tableFormat.js";
 
 /**
  * `engine-eval` — the npx-runnable judge client (engine-scorecard capability,
@@ -191,34 +192,6 @@ async function fetchEvents(
     throw new CliError(`Request failed: ${res.status} ${res.statusText}`);
   }
   return (await res.json()) as EventsResponse;
-}
-
-/**
- * Renders rows as aligned columns: each column as wide as its widest cell,
- * numeric-looking cells right-aligned, two spaces between columns. Width is
- * computed from the data, so alignment holds for any campaign name or count.
- */
-export function alignColumns(rows: string[][], indent = "  "): string[] {
-  const widths: number[] = [];
-  for (const row of rows) {
-    row.forEach((cell, i) => {
-      widths[i] = Math.max(widths[i] ?? 0, cell.length);
-    });
-  }
-  const numeric = /^[\d,.%]+$/;
-  return rows.map((row) =>
-    (
-      indent +
-      row
-        .map((cell, i) => {
-          const w = widths[i];
-          // Last column flows free; numbers right-align under their header.
-          if (i === row.length - 1) return cell;
-          return numeric.test(cell) ? cell.padStart(w) : cell.padEnd(w);
-        })
-        .join("  ")
-    ).trimEnd()
-  );
 }
 
 /** Renders the scorecard as a plain-ASCII, human-readable summary. */
