@@ -76,7 +76,7 @@ por `externalId` dentro de la cartera.
     ```
   </Tab>
   <Tab title="UPDATE_EXISTING">
-    Añade cuentas nuevas y refresca las que ya existen —un upsert. Úsalo para feeds
+    Añade cuentas nuevas y refresca las que ya existen: un upsert. Úsalo para feeds
     recurrentes que traen saldos o datos de contacto actualizados.
 
     ```ts
@@ -97,7 +97,7 @@ por `externalId` dentro de la cartera.
 <Warning>
   `REPLACE` **archiva** toda cuenta existente cuyo `externalId` falte en el lote, y expira las
   promesas de pago pendientes de esas cuentas. Envía siempre una instantánea completa con
-  `REPLACE` — un lote parcial archivará las cuentas que dejaste fuera.
+  `REPLACE`: un lote parcial archivará las cuentas que dejaste fuera.
 </Warning>
 
 ## Da forma a las filas de cuenta
