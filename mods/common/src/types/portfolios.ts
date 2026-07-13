@@ -13,6 +13,7 @@ export interface PortfolioRecord {
   accountCount: number;
   totalOutstandingBalance: number;
   recoveredAmount: number;
+  lastSyncedAt: Date | null;
   archivedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -63,8 +64,14 @@ export interface PortfolioClient {
     create(args: {
       data: Omit<
         PortfolioRecord,
-        "id" | "accountCount" | "recoveredAmount" | "archivedAt" | "createdAt" | "updatedAt"
-      > & { accountCount?: number; recoveredAmount?: number };
+        | "id"
+        | "accountCount"
+        | "recoveredAmount"
+        | "lastSyncedAt"
+        | "archivedAt"
+        | "createdAt"
+        | "updatedAt"
+      > & { accountCount?: number; recoveredAmount?: number; lastSyncedAt?: Date | null };
     }): Promise<PortfolioRecord>;
 
     update(args: {

@@ -20,6 +20,17 @@ function money(v: number, currency: string) {
   }).format(v);
 }
 
+function lastSynced(v: Date | string | null, language: string, never: string) {
+  if (!v) return never;
+  return new Intl.DateTimeFormat(language, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "numeric"
+  }).format(new Date(v));
+}
+
 type Portfolio = {
   id: string;
   name: string;
@@ -27,12 +38,13 @@ type Portfolio = {
   accountCount: number;
   totalOutstandingBalance: number;
   recoveredAmount: number;
+  lastSyncedAt: Date | string | null;
   archivedAt: Date | string | null;
   createdAt: Date | string;
 };
 
 export function Portfolios() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const wsCurrency = useWorkspaceCurrency();
   const navigate = useNavigate();
   const utils = trpc.useUtils();
@@ -112,6 +124,11 @@ export function Portfolios() {
             key: "recoveredAmount",
             header: t("portfolios.col.recovered"),
             render: (r) => money(r.recoveredAmount as number, wsCurrency)
+          },
+          {
+            key: "lastSyncedAt",
+            header: t("portfolios.col.lastSynced"),
+            render: (r) => lastSynced(r.lastSyncedAt, language, t("portfolios.lastSynced.never"))
           },
           {
             key: "id",

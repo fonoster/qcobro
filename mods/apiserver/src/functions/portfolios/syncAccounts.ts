@@ -90,7 +90,8 @@ export function createSyncAccounts(client: PortfolioClient) {
         where: { id: portfolioId },
         data: {
           accountCount: total,
-          totalOutstandingBalance: balanceAgg._sum.outstandingBalance ?? 0
+          totalOutstandingBalance: balanceAgg._sum.outstandingBalance ?? 0,
+          lastSyncedAt: new Date()
         }
       });
 

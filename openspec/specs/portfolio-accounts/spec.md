@@ -30,7 +30,7 @@ The apiserver SHALL accept a batch of account rows and a sync mode, then upsert 
 - **UPDATE_EXISTING**: Insert new rows and update all fields of accounts whose `loan_id` already exists. No deletions.
 - **REPLACE**: Insert new rows, update existing rows, and delete any account whose `loan_id` is present in the portfolio but absent from the incoming batch.
 
-After mutating account rows the transaction SHALL recompute and persist `accountCount` and `totalOutstandingBalance` on the parent portfolio.
+After mutating account rows the transaction SHALL recompute and persist `accountCount` and `totalOutstandingBalance` on the parent portfolio, and SHALL stamp the portfolio's `lastSyncedAt` with the completion time.
 
 #### Scenario: APPEND_ONLY adds new accounts without touching existing ones
 
@@ -66,12 +66,13 @@ After mutating account rows the transaction SHALL recompute and persist `account
 - **WHEN** a sync completes successfully
 - **THEN** the response includes the count of created, updated, and archived accounts
 - **AND** the total active account count in the portfolio after the operation
+- **AND** the portfolio's `lastSyncedAt` is updated to the completion time
 
 #### Scenario: Sync runs atomically
 
 - **WHEN** an error occurs mid-sync (e.g., a constraint violation on one row)
 - **THEN** the entire operation is rolled back
-- **AND** the portfolio's accounts and aggregate stats remain unchanged from before the sync
+- **AND** the portfolio's accounts, aggregate stats, and `lastSyncedAt` remain unchanged from before the sync
 
 ### Requirement: CSV column validation
 

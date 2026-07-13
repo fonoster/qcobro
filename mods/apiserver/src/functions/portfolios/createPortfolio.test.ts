@@ -13,6 +13,7 @@ function record(): PortfolioRecord {
     accountCount: 0,
     totalOutstandingBalance: 0,
     recoveredAmount: 0,
+    lastSyncedAt: null,
     archivedAt: null,
     createdAt: new Date(),
     updatedAt: new Date()
