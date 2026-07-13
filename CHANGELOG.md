@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.19.0](https://github.com/fonoster/qcobro/compare/v1.18.0...v1.19.0) (2026-07-13)
+
+### Features
+
+- **common:** add list-users admin CLI ([#43](https://github.com/fonoster/qcobro/issues/43)) ([56ddd07](https://github.com/fonoster/qcobro/commit/56ddd0768abe8201d2070febfb087c8fd0bb1b1c)), closes [#42](https://github.com/fonoster/qcobro/issues/42)
+
 # [1.18.0](https://github.com/fonoster/qcobro/compare/v1.17.0...v1.18.0) (2026-07-13)
 
 ### Features
