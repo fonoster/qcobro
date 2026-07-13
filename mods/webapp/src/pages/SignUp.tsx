@@ -88,12 +88,6 @@ export function SignUp() {
               {t("auth.signup")}
             </Button>
 
-            <div className="flex items-center gap-3">
-              <span className="h-px flex-1 bg-slate-200" />
-              <span className="text-[13px] text-slate-400">{t("auth.or")}</span>
-              <span className="h-px flex-1 bg-slate-200" />
-            </div>
-
             <GoogleButton type="button" size="lg" className="w-full">
               {t("auth.continueGoogle")}
             </GoogleButton>
