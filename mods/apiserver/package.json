@@ -1,6 +1,6 @@
 {
   "name": "@qcobro/apiserver",
-  "version": "1.15.0",
+  "version": "1.16.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -35,7 +35,7 @@
     "@fonoster/voice": "0.22.0",
     "@grpc/grpc-js": "^1.10.6",
     "@prisma/client": "^6.0.0",
-    "@qcobro/common": "^1.15.0",
+    "@qcobro/common": "^1.16.0",
     "@trpc/server": "^11.0.0",
     "cors": "^2.8.5",
     "express": "^5.0.0",
