@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.17.0](https://github.com/fonoster/qcobro/compare/v1.16.0...v1.17.0) (2026-07-13)
+
+### Features
+
+- **webapp:** add branding to auth pages, fix header/CTA inconsistencies ([#4](https://github.com/fonoster/qcobro/issues/4)) ([#40](https://github.com/fonoster/qcobro/issues/40)) ([d16ab63](https://github.com/fonoster/qcobro/commit/d16ab637c89340012012adae2f883d1e4ab18220))
+
 # [1.16.0](https://github.com/fonoster/qcobro/compare/v1.15.0...v1.16.0) (2026-07-13)
 
 ### Features
