@@ -6,6 +6,7 @@ import { PageHeader } from "../components/page-header.js";
 import { DataTable } from "../components/ui/data-table.js";
 import { Dialog } from "../components/ui/dialog.js";
 import { ConfirmDeleteDialog } from "../components/ui/confirm-delete-dialog.js";
+import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
 import { TextareaGroup } from "../components/ui/textarea.js";
 import { SelectGroup, FilterSelect } from "../components/ui/select.js";
@@ -23,6 +24,9 @@ type Template = {
 };
 
 const TYPE_FILTERS: AgentType[] = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL", "WHATSAPP"];
+
+/** Mirrors the deployment default (`resend`/`whatsapp` config's `maxRepliesDefault`). */
+const DEFAULT_MAX_REPLIES = 3;
 
 /** Documentation listing every supported template variable. */
 const VARS_DOC_URL = "https://docs.qcobro.com/guides/agent-templates#variables-disponibles";
@@ -231,25 +235,31 @@ function CreateAgentTemplateModal({
   const [type, setType] = useState<AgentType>("VOICE_AI");
   const [fields, setFields] = useState<Record<string, string>>({ language: "es" });
   const [error, setError] = useState<string | null>(null);
-  const templateIdDebounced = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [debouncedTemplateId, setDebouncedTemplateId] = useState("");
+  const templateNameDebounced = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [debouncedTemplateName, setDebouncedTemplateName] = useState("");
 
   const { data: voices } = trpc.config.voices.useQuery();
   const integration = trpc.whatsAppIntegration.get.useQuery(undefined, {
     enabled: type === "WHATSAPP"
   });
   const preview = trpc.whatsAppIntegration.previewTemplate.useQuery(
-    { templateId: debouncedTemplateId },
-    { enabled: type === "WHATSAPP" && debouncedTemplateId.length > 0 }
+    { templateName: debouncedTemplateName },
+    { enabled: type === "WHATSAPP" && debouncedTemplateName.length > 0 }
   );
+
+  // Clear the stale body immediately when the target name changes, so a lingering success
+  // from the previous name is never mistaken for the new one's — before this, changing the
+  // template name after a successful lookup silently kept showing (and would have saved) the
+  // old template's body until/unless the new lookup also succeeded. Guarded on non-empty so
+  // it doesn't fire on mount and mask the "enter a name" empty-state hint below.
+  useEffect(() => {
+    if (!debouncedTemplateName) return;
+    setFields((f) => ({ ...f, messageBody: "" }));
+  }, [debouncedTemplateName]);
 
   useEffect(() => {
     if (preview.data) {
-      setFields((f) => ({
-        ...f,
-        templateName: preview.data?.name ?? f.templateName ?? "",
-        messageBody: preview.data?.body ?? f.messageBody ?? ""
-      }));
+      setFields((f) => ({ ...f, messageBody: preview.data?.body ?? "" }));
     }
   }, [preview.data]);
 
@@ -260,9 +270,9 @@ function CreateAgentTemplateModal({
 
   function set(key: string, value: string) {
     setFields((f) => ({ ...f, [key]: value }));
-    if (key === "templateId") {
-      if (templateIdDebounced.current) clearTimeout(templateIdDebounced.current);
-      templateIdDebounced.current = setTimeout(() => setDebouncedTemplateId(value.trim()), 600);
+    if (key === "templateName") {
+      if (templateNameDebounced.current) clearTimeout(templateNameDebounced.current);
+      templateNameDebounced.current = setTimeout(() => setDebouncedTemplateName(value.trim()), 600);
     }
   }
 
@@ -316,7 +326,6 @@ function CreateAgentTemplateModal({
         payload = {
           ...base,
           type,
-          templateId: fields.templateId ?? "",
           templateName: fields.templateName ?? "",
           messageBody: fields.messageBody ?? "",
           systemPrompt: fields.systemPrompt ?? "",
@@ -456,6 +465,7 @@ function CreateAgentTemplateModal({
               label={t("agents.form.maxReplies")}
               id="a-email-maxreplies"
               type="number"
+              placeholder={String(DEFAULT_MAX_REPLIES)}
               value={fields.maxReplies ?? ""}
               onChange={(e) => set("maxReplies", e.target.value)}
             />
@@ -464,16 +474,16 @@ function CreateAgentTemplateModal({
 
         {type === "WHATSAPP" && (
           <>
-            {!integration.data && !integration.isLoading && (
+            {!integration.data?.connected && !integration.isLoading && (
               <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
                 {t("agents.form.noIntegrationWarning")}
               </p>
             )}
             <InputGroup
-              label={t("agents.form.templateId")}
-              id="a-wa-tid"
-              value={fields.templateId ?? ""}
-              onChange={(e) => set("templateId", e.target.value)}
+              label={t("agents.form.templateName")}
+              id="a-wa-tname"
+              value={fields.templateName ?? ""}
+              onChange={(e) => set("templateName", e.target.value)}
             />
             <TextareaGroup
               label={t("agents.form.templatePreview")}
@@ -483,11 +493,31 @@ function CreateAgentTemplateModal({
                 preview.isFetching
                   ? t("agents.form.templatePreviewLoading")
                   : (fields.messageBody ??
-                    (debouncedTemplateId ? "" : t("agents.form.templatePreviewEmpty")))
+                    (debouncedTemplateName ? "" : t("agents.form.templatePreviewEmpty")))
               }
               onChange={() => undefined}
               className="text-slate-500"
             />
+            {preview.isError && (
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-red-600">{t("agents.form.templatePreviewError")}</p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => preview.refetch()}
+                >
+                  {t("common.retry")}
+                </Button>
+              </div>
+            )}
+            {!preview.isFetching &&
+              !preview.isError &&
+              preview.isFetched &&
+              preview.data === null &&
+              integration.data?.connected && (
+                <p className="text-xs text-amber-700">{t("agents.form.templateNotFound")}</p>
+              )}
             <TextareaGroup
               label={t("agents.form.systemPrompt")}
               id="a-wa-prompt"
@@ -498,6 +528,7 @@ function CreateAgentTemplateModal({
               label={t("agents.form.maxReplies")}
               id="a-wa-maxreplies"
               type="number"
+              placeholder={String(DEFAULT_MAX_REPLIES)}
               value={fields.maxReplies ?? ""}
               onChange={(e) => set("maxReplies", e.target.value)}
             />
@@ -539,21 +570,27 @@ function EditAgentTemplateModal({
   const [fields, setFields] = useState<Record<string, string>>({});
   const [seeded, setSeeded] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const templateIdDebounced = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [debouncedTemplateId, setDebouncedTemplateId] = useState("");
+  const templateNameDebounced = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [debouncedTemplateName, setDebouncedTemplateName] = useState("");
 
+  const integration = trpc.whatsAppIntegration.get.useQuery(undefined, {
+    enabled: template.type === "WHATSAPP"
+  });
   const preview = trpc.whatsAppIntegration.previewTemplate.useQuery(
-    { templateId: debouncedTemplateId },
-    { enabled: template.type === "WHATSAPP" && debouncedTemplateId.length > 0 }
+    { templateName: debouncedTemplateName },
+    { enabled: template.type === "WHATSAPP" && debouncedTemplateName.length > 0 }
   );
+
+  // Clear the stale body immediately when the target name changes — see the matching
+  // comment in CreateAgentTemplateModal for why this can't just wait on preview.data.
+  useEffect(() => {
+    if (!debouncedTemplateName) return;
+    setFields((f) => ({ ...f, messageBody: "" }));
+  }, [debouncedTemplateName]);
 
   useEffect(() => {
     if (preview.data) {
-      setFields((f) => ({
-        ...f,
-        templateName: preview.data?.name ?? f.templateName ?? "",
-        messageBody: preview.data?.body ?? f.messageBody ?? ""
-      }));
+      setFields((f) => ({ ...f, messageBody: preview.data?.body ?? "" }));
     }
   }, [preview.data]);
 
@@ -568,15 +605,9 @@ function EditAgentTemplateModal({
       {};
     const f: Record<string, string> = {};
     for (const [k, v] of Object.entries(cfg)) {
-      // fonosterAppRef is an internal ref the operator never edits.
-      // templateId is the Prisma FK on voice/sms/email configs — skip it; for WHATSAPP
-      // the operator-facing field is metaTemplateId (shown as "templateId" in the form).
+      // fonosterAppRef is an internal ref the operator never edits; templateId is the
+      // Prisma FK to the parent AgentTemplate row, not an editable field.
       if (v != null && k !== "fonosterAppRef" && k !== "templateId") f[k] = String(v);
-    }
-    // Remap WHATSAPP: metaTemplateId → templateId for the form field.
-    if (full.whatsAppConfig && "metaTemplateId" in full.whatsAppConfig) {
-      f.templateId = String(full.whatsAppConfig.metaTemplateId ?? "");
-      delete f.metaTemplateId;
     }
     setFields(f);
     setSeeded(true);
@@ -589,9 +620,9 @@ function EditAgentTemplateModal({
 
   function set(key: string, value: string) {
     setFields((f) => ({ ...f, [key]: value }));
-    if (key === "templateId") {
-      if (templateIdDebounced.current) clearTimeout(templateIdDebounced.current);
-      templateIdDebounced.current = setTimeout(() => setDebouncedTemplateId(value.trim()), 600);
+    if (key === "templateName") {
+      if (templateNameDebounced.current) clearTimeout(templateNameDebounced.current);
+      templateNameDebounced.current = setTimeout(() => setDebouncedTemplateName(value.trim()), 600);
     }
   }
 
@@ -625,16 +656,15 @@ function EditAgentTemplateModal({
           subject: fields.subject,
           messageBody: fields.messageBody,
           systemPrompt: fields.systemPrompt,
-          ...(fields.maxReplies ? { maxReplies: Number(fields.maxReplies) } : {})
+          maxReplies: fields.maxReplies ? Number(fields.maxReplies) : null
         };
         break;
       case "WHATSAPP":
         config = {
-          metaTemplateId: fields.templateId,
           templateName: fields.templateName,
           messageBody: fields.messageBody,
           systemPrompt: fields.systemPrompt,
-          ...(fields.maxReplies ? { maxReplies: Number(fields.maxReplies) } : { maxReplies: null })
+          maxReplies: fields.maxReplies ? Number(fields.maxReplies) : null
         };
         break;
     }
@@ -768,6 +798,7 @@ function EditAgentTemplateModal({
                   label={t("agents.form.maxReplies")}
                   id="e-email-maxreplies"
                   type="number"
+                  placeholder={String(DEFAULT_MAX_REPLIES)}
                   value={fields.maxReplies ?? ""}
                   onChange={(e) => set("maxReplies", e.target.value)}
                 />
@@ -776,11 +807,16 @@ function EditAgentTemplateModal({
 
             {template.type === "WHATSAPP" && (
               <>
+                {!integration.data?.connected && !integration.isLoading && (
+                  <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                    {t("agents.form.noIntegrationWarning")}
+                  </p>
+                )}
                 <InputGroup
-                  label={t("agents.form.templateId")}
-                  id="e-wa-tid"
-                  value={fields.templateId ?? ""}
-                  onChange={(e) => set("templateId", e.target.value)}
+                  label={t("agents.form.templateName")}
+                  id="e-wa-tname"
+                  value={fields.templateName ?? ""}
+                  onChange={(e) => set("templateName", e.target.value)}
                 />
                 <TextareaGroup
                   label={t("agents.form.templatePreview")}
@@ -794,6 +830,26 @@ function EditAgentTemplateModal({
                   onChange={() => undefined}
                   className="text-slate-500"
                 />
+                {preview.isError && (
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-red-600">{t("agents.form.templatePreviewError")}</p>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => preview.refetch()}
+                    >
+                      {t("common.retry")}
+                    </Button>
+                  </div>
+                )}
+                {!preview.isFetching &&
+                  !preview.isError &&
+                  preview.isFetched &&
+                  preview.data === null &&
+                  integration.data?.connected && (
+                    <p className="text-xs text-amber-700">{t("agents.form.templateNotFound")}</p>
+                  )}
                 <TextareaGroup
                   label={t("agents.form.systemPrompt")}
                   id="e-wa-prompt"
@@ -804,6 +860,7 @@ function EditAgentTemplateModal({
                   label={t("agents.form.maxReplies")}
                   id="e-wa-maxreplies"
                   type="number"
+                  placeholder={String(DEFAULT_MAX_REPLIES)}
                   value={fields.maxReplies ?? ""}
                   onChange={(e) => set("maxReplies", e.target.value)}
                 />

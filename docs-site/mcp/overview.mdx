@@ -5,7 +5,7 @@ description: "@qcobro/mcp expone la API de QCobro como herramientas de Model Con
 
 `@qcobro/mcp` es un servidor [Model Context Protocol](https://modelcontextprotocol.io) para la
 API de QCobro. Envuelve el mismo [`@qcobro/sdk`](/sdk/overview) que usarías desde tu propio
-código, así que un cliente MCP (Claude Desktop u otro host compatible) puede listar, crear y
+código, así que un cliente MCP —Claude Desktop u otro host compatible— puede listar, crear y
 gestionar carteras en tu nombre, con la misma autenticación por API key de workspace que ya
 usa el SDK.
 
@@ -16,7 +16,7 @@ herramientas llegan a medida que el SDK cubra más recursos.
 
 Necesitas una API key de workspace: un `accessKeyId` y un `accessKeySecret`, creados desde la
 página de API Keys de la consola de QCobro. El rol de esa key controla por completo lo que el
-servidor puede hacer: crea una key con la que te sientas cómodo dejando actuar a un agente,
+servidor puede hacer — crea una key con la que te sientas cómodo dejando actuar a un agente,
 especialmente si vas a habilitar operaciones de escritura como crear o eliminar carteras.
 
 ## Configura Claude Desktop en un paso
@@ -35,7 +35,7 @@ Pasa `--url` si necesitas apuntar a un endpoint distinto del predeterminado
 
 <Tip>
   El comando conserva cualquier otro servidor MCP que ya tengas configurado (por ejemplo
-  `@fonoster/mcp`): solo añade o reemplaza la entrada `qcobro`.
+  `@fonoster/mcp`) — solo añade o reemplaza la entrada `qcobro`.
 </Tip>
 
 ## Configuración manual
@@ -50,7 +50,7 @@ Si prefieres editar el archivo tú mismo, añade esto a `claude_desktop_config.j
       "args": ["-y", "@qcobro/mcp@latest"],
       "env": {
         "QCOBRO_ENDPOINT": "https://api.qcobro.com",
-        "QCOBRO_ACCESS_KEY_ID": "WO6ueex0qan9ojhf820wgiae3qi5luy08y",
+        "QCOBRO_ACCESS_KEY_ID": "APvsqbjfxua7zvbupqvd8hfy72hix4b7mv",
         "QCOBRO_ACCESS_KEY_SECRET": "<tu-access-key-secret>",
         "QCOBRO_WORKSPACE": "WO6ueex0qan9ojhf820wgiae3qi5luy08y"
       }
@@ -66,7 +66,7 @@ Si prefieres editar el archivo tú mismo, añade esto a `claude_desktop_config.j
 | `QCOBRO_WORKSPACE` | Workspace en el que actuar (su `accessKeyId`) | Sí |
 | `QCOBRO_ENDPOINT` | URL base de la API (por defecto `https://api.qcobro.com`) | No |
 
-Son las mismas credenciales que `loginWithApiKey` y `useWorkspace` del SDK: el servidor no
+Son las mismas credenciales que `loginWithApiKey` y `useWorkspace` del SDK — el servidor no
 hace más que autenticarse con ellas y delegar cada llamada al SDK.
 
 <Warning>
@@ -88,7 +88,7 @@ hace más que autenticarse con ellas y delegar cada llamada al SDK.
 
 <Note>
   Cada herramienta valida su entrada contra el mismo esquema que ya valida el método del SDK al
-  que delega: no hay reglas paralelas que puedan desincronizarse. Una entrada inválida se
+  que delega — no hay reglas paralelas que puedan desincronizarse. Una entrada inválida se
   rechaza antes de que cualquier petición llegue a la API de QCobro.
 </Note>
 
@@ -99,7 +99,7 @@ Si una llamada a una herramienta falla con un error de autenticación, comprueba
 1. `QCOBRO_ACCESS_KEY_ID`/`QCOBRO_ACCESS_KEY_SECRET` son un par de API key válido y no
    expirado.
 2. `QCOBRO_WORKSPACE` es el `accessKeyId` de un workspace al que esa key pertenece.
-3. El rol de la key permite la operación que estás llamando. Una key de solo lectura
+3. El rol de la key permite la operación que estás llamando — una key de solo lectura
    rechazará `portfolios_create`, por ejemplo.
 
 ## Siguientes pasos

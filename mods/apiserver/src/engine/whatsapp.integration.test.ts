@@ -56,7 +56,6 @@ describe("whatsapp channel (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
         type: "WHATSAPP",
         whatsAppConfig: {
           create: {
-            metaTemplateId: "meta-tmpl-1",
             templateName: "saldo_pendiente",
             messageBody: "Hola {{firstName}}, su saldo es {{outstandingBalance}}."
           }

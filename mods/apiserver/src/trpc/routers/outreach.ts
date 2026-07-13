@@ -16,8 +16,9 @@ import { createDispatchOutreach } from "../../functions/outreach/dispatchOutreac
 import { createRecordOutcome, recordOutcomeTx } from "../../functions/campaigns/recordOutcome.js";
 import { assessManualDispatch } from "../../functions/billing/manualDispatchGate.js";
 import { meterDispatchTx } from "../../functions/billing/meterDispatch.js";
+import { resolveWhatsAppClient } from "../../services/resolveWhatsAppClient.js";
 
-/** An agent template with its four dispatchable channel configs loaded. */
+/** An agent template with its five dispatchable channel configs loaded. */
 type TemplateWithConfigs = {
   type: string;
   voiceAiConfig: {
@@ -28,14 +29,20 @@ type TemplateWithConfigs = {
   voicePrerecordedConfig: { fonosterAppRef: string | null; script: string } | null;
   smsConfig: { messageBody: string } | null;
   emailConfig: { subject: string; messageBody: string; systemPrompt: string } | null;
+  whatsAppConfig: { templateName: string; messageBody: string } | null;
 };
 
-/** Map a resolved template + destination + context into a normalized dispatch request. */
+/**
+ * Map a resolved template + destination + context into a normalized dispatch request.
+ * `languageCode` is only known for WHATSAPP (the workspace integration's `defaultLanguage`,
+ * resolved by the caller since it requires a DB read) — unused for every other channel.
+ */
 function buildDispatchRequest(
   template: TemplateWithConfigs,
   to: string,
   context: Record<string, unknown>,
-  prerecordedAppRef: string | null
+  prerecordedAppRef: string | null,
+  whatsAppLanguageCode?: string
 ): DispatchOutreachInput {
   switch (template.type) {
     case "SMS":
@@ -74,6 +81,22 @@ function buildDispatchRequest(
         subject: template.emailConfig.subject,
         body: template.emailConfig.messageBody
       };
+    case "WHATSAPP":
+      if (!template.whatsAppConfig)
+        throw new TRPCError({ code: "BAD_REQUEST", message: "WhatsApp config missing" });
+      if (!whatsAppLanguageCode)
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "WhatsApp integration not configured"
+        });
+      return {
+        channel: "WHATSAPP",
+        to,
+        context,
+        templateName: template.whatsAppConfig.templateName,
+        languageCode: whatsAppLanguageCode,
+        body: template.whatsAppConfig.messageBody
+      };
     default:
       throw new TRPCError({
         code: "BAD_REQUEST",
@@ -105,7 +128,8 @@ export const outreachRouter = router({
         voiceAiConfig: true,
         voicePrerecordedConfig: true,
         smsConfig: true,
-        emailConfig: true
+        emailConfig: true,
+        whatsAppConfig: true
       }
     });
     if (!template) throw new TRPCError({ code: "NOT_FOUND", message: "Agent template not found" });
@@ -119,8 +143,48 @@ export const outreachRouter = router({
 
     const to = isEmail ? account.email! : account.phone!;
 
+    // WhatsApp credentials are tenant-owned and resolved per-call (mirrors the campaigns
+    // engine). Campaigns require the operator to explicitly assign a sender number
+    // (senders aren't a fungible pool like voice/SMS — quality rating differs per number);
+    // manual outreach has no such assignment, so it deterministically takes the workspace's
+    // oldest/first-configured sender rather than an arbitrary unordered row.
+    let whatsAppClient = null;
+    let whatsAppLanguageCode: string | undefined;
+    if (template.type === "WHATSAPP") {
+      const sender = await ctx.prisma.whatsAppSenderNumber.findFirst({
+        where: { workspaceRef },
+        orderBy: { createdAt: "asc" }
+      });
+      if (!sender) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "WhatsApp dispatch has no configured sender numbers"
+        });
+      }
+      const resolved = await resolveWhatsAppClient(
+        ctx.prisma as never,
+        workspaceRef,
+        config.whatsapp,
+        sender.phoneNumberId
+      );
+      if (!resolved) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "WhatsApp integration not configured"
+        });
+      }
+      whatsAppClient = resolved.client;
+      whatsAppLanguageCode = resolved.languageCode;
+    }
+
     const context = buildOutreachContext(account, { currency: ctx.currency });
-    const base = buildDispatchRequest(template, to, context, ctx.fonosterPrerecordedAppRef);
+    const base = buildDispatchRequest(
+      template,
+      to,
+      context,
+      ctx.fonosterPrerecordedAppRef,
+      whatsAppLanguageCode
+    );
 
     // Apply operator overrides (pre-rendered on the client — safe to use as-is).
     const request: DispatchOutreachInput = {
@@ -154,6 +218,7 @@ export const outreachRouter = router({
       smsClient: ctx.smsClient,
       emailClient: ctx.emailClient,
       emailFrom: ctx.emailFrom,
+      whatsAppClient,
       fonosterNumbers: ctx.fonosterNumbers,
       twilioFromNumbers: ctx.twilioFromNumbers
     });

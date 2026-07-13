@@ -222,16 +222,17 @@ model EmailConfig {
 }
 
 model WhatsAppConfig {
-  templateId     String        @id
-  // The Meta-side template id the operator enters; QCobro resolves + previews from the WABA.
-  metaTemplateId String        @default("")
-  templateName   String
-  messageBody    String
+  templateId   String        @id
+  // The Meta-side template name the operator enters; QCobro resolves + previews from the
+  // WABA by this name (Meta's template-list API has no lookup by numeric id from the UI's
+  // perspective — operators only ever see/copy the name in Meta Business Manager).
+  templateName String
+  messageBody  String
   // Smart-agent decision brain for replies after the customer responds (mirrors EmailConfig).
-  systemPrompt   String        @default("")
+  systemPrompt String        @default("")
   // Per-agent cap on automated replies per gestión; null → deployment default.
-  maxReplies     Int?
-  template       AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  maxReplies   Int?
+  template     AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@map("whatsapp_configs")
 }
@@ -278,6 +279,13 @@ model WhatsAppIntegration {
   // Meta template-send language for this workspace's WhatsApp (e.g. es_DO); the single
   // source for the WhatsApp send language. Lives here so all WhatsApp config is together.
   defaultLanguage String
+  // Cached result of the last "is this WABA/token still reachable" check against Meta's
+  // Graph API, so the console's connected badge doesn't call Meta on every render/poll
+  // (see getWhatsAppIntegration.ts for the TTL). Null until the first check runs; also
+  // reset to null on upsert so a rotated token is re-validated instead of trusting a
+  // cached result for credentials that no longer exist.
+  lastCheckedAt   DateTime?
+  lastCheckedOk   Boolean?
   createdAt       DateTime               @default(now())
   updatedAt       DateTime               @updatedAt
   senderNumbers   WhatsAppSenderNumber[]

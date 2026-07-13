@@ -31,7 +31,12 @@ export function createUpsertWhatsAppIntegration(
         wabaId: input.wabaId,
         accessToken: input.accessToken,
         verifyToken: input.verifyToken,
-        defaultLanguage: input.defaultLanguage
+        defaultLanguage: input.defaultLanguage,
+        // Credentials changed — the last reachability check (if any) ran against the old
+        // token/WABA and no longer means anything. Clear it so the next `get` re-checks
+        // against Meta instead of trusting a cached result for credentials that are gone.
+        lastCheckedAt: null,
+        lastCheckedOk: null
       }
     });
     return {

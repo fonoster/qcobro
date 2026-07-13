@@ -11,6 +11,8 @@ import { createAddWhatsAppSenderNumber } from "./addWhatsAppSenderNumber.js";
 
 const WORKSPACE = "ws-test";
 
+const API_SETTINGS = { apiBaseUrl: "https://graph.facebook.com", apiVersion: "v18.0" };
+
 const BASE_INTEGRATION: WhatsAppIntegrationRecord = {
   id: "intg-1",
   workspaceRef: WORKSPACE,
@@ -18,6 +20,8 @@ const BASE_INTEGRATION: WhatsAppIntegrationRecord = {
   accessToken: "[ENCRYPTED]",
   verifyToken: "verify-abc",
   defaultLanguage: "es_DO",
+  lastCheckedAt: null,
+  lastCheckedOk: null,
   createdAt: new Date(),
   updatedAt: new Date()
 };
@@ -50,9 +54,21 @@ function makeClient(
         if (stored) {
           stored = { ...stored, ...(update as Partial<WhatsAppIntegrationRecord>) };
         } else {
-          stored = { id: "intg-new", ...create } as WhatsAppIntegrationRecord;
+          stored = {
+            id: "intg-new",
+            lastCheckedAt: null,
+            lastCheckedOk: null,
+            ...create
+          } as WhatsAppIntegrationRecord;
         }
         return stored!;
+      },
+      update: async ({ where, data }) => {
+        if (!stored || stored.workspaceRef !== where.workspaceRef) {
+          throw new Error("no integration to update");
+        }
+        stored = { ...stored, ...(data as Partial<WhatsAppIntegrationRecord>) };
+        return stored;
       }
     },
     whatsAppSenderNumber: {
@@ -113,6 +129,26 @@ describe("upsertWhatsAppIntegration", () => {
     assert.equal(stored()?.defaultLanguage, "en_US");
   });
 
+  it("clears the cached reachability check on rotation, so it's re-validated next read", async () => {
+    const checked = { ...BASE_INTEGRATION, lastCheckedAt: new Date(), lastCheckedOk: true };
+    const { client, stored } = makeClient(checked);
+    const fn = createUpsertWhatsAppIntegration(client, WORKSPACE);
+
+    await fn({
+      wabaId: "waba-999",
+      accessToken: "new-token",
+      verifyToken: "verify-xyz",
+      defaultLanguage: "en_US"
+    });
+
+    assert.equal(
+      stored()?.lastCheckedAt,
+      null,
+      "a stale check for the old token must not carry over to the new one"
+    );
+    assert.equal(stored()?.lastCheckedOk, null);
+  });
+
   it("rejects missing wabaId (validation)", async () => {
     const { client } = makeClient();
     const fn = createUpsertWhatsAppIntegration(client, WORKSPACE);
@@ -123,21 +159,100 @@ describe("upsertWhatsAppIntegration", () => {
 });
 
 describe("getWhatsAppIntegration", () => {
-  it("returns connected=false when no integration row exists", async () => {
+  it("returns connected=false when no integration row exists (and never calls Meta)", async () => {
     const { client } = makeClient(null);
-    const fn = createGetWhatsAppIntegration(client);
+    let calls = 0;
+    const fn = createGetWhatsAppIntegration(client, API_SETTINGS, async () => {
+      calls++;
+      return true;
+    });
     const view = await fn(WORKSPACE);
     assert.equal(view.connected, false);
+    assert.equal(calls, 0, "no row means nothing to check");
   });
 
-  it("returns connected=true with public fields, no token", async () => {
+  it("returns connected=true with public fields, no token, when the check succeeds", async () => {
     const { client } = makeClient(BASE_INTEGRATION);
-    const fn = createGetWhatsAppIntegration(client);
+    const fn = createGetWhatsAppIntegration(client, API_SETTINGS, async () => true);
     const view = await fn(WORKSPACE);
     assert.equal(view.connected, true);
     assert.equal(view.wabaId, "waba-123");
     assert.equal(view.verifyToken, "verify-abc");
     assert.ok(!("accessToken" in view));
+  });
+
+  it("returns connected=false when a stored row's token/WABA no longer checks out", async () => {
+    const { client } = makeClient(BASE_INTEGRATION);
+    const fn = createGetWhatsAppIntegration(client, API_SETTINGS, async () => false);
+    const view = await fn(WORKSPACE);
+    assert.equal(
+      view.connected,
+      false,
+      "a row existing is not enough — a revoked/expired token must not show connected"
+    );
+  });
+
+  it("treats a throwing checker as not connected instead of failing the read", async () => {
+    const { client } = makeClient(BASE_INTEGRATION);
+    const fn = createGetWhatsAppIntegration(client, API_SETTINGS, async () => {
+      throw new Error("network down");
+    });
+    const view = await fn(WORKSPACE);
+    assert.equal(view.connected, false);
+  });
+
+  it("passes the row's wabaId/accessToken and config API settings to the checker", async () => {
+    const { client } = makeClient(BASE_INTEGRATION);
+    let seen: unknown;
+    const fn = createGetWhatsAppIntegration(client, API_SETTINGS, async (settings) => {
+      seen = settings;
+      return true;
+    });
+    await fn(WORKSPACE);
+    assert.deepEqual(seen, {
+      wabaId: "waba-123",
+      accessToken: "[ENCRYPTED]",
+      apiBaseUrl: API_SETTINGS.apiBaseUrl,
+      apiVersion: API_SETTINGS.apiVersion
+    });
+  });
+
+  it("persists the check result on the row (lastCheckedAt/lastCheckedOk)", async () => {
+    const { client, stored } = makeClient(BASE_INTEGRATION);
+    const fn = createGetWhatsAppIntegration(client, API_SETTINGS, async () => true);
+    await fn(WORKSPACE);
+    assert.equal(stored()?.lastCheckedOk, true);
+    assert.ok(stored()?.lastCheckedAt instanceof Date);
+  });
+
+  it("reuses a fresh cached result without calling the checker again", async () => {
+    const fresh = { ...BASE_INTEGRATION, lastCheckedAt: new Date(), lastCheckedOk: true };
+    const { client } = makeClient(fresh);
+    let calls = 0;
+    const fn = createGetWhatsAppIntegration(client, API_SETTINGS, async () => {
+      calls++;
+      return false; // if this were called, connected would flip to false
+    });
+    const view = await fn(WORKSPACE);
+    assert.equal(view.connected, true, "cached lastCheckedOk should be trusted");
+    assert.equal(calls, 0, "the checker must not run again inside the TTL");
+  });
+
+  it("re-checks once the cached result is stale", async () => {
+    const stale = {
+      ...BASE_INTEGRATION,
+      lastCheckedAt: new Date(Date.now() - 10 * 60 * 1000), // 10 min ago, past the 5 min TTL
+      lastCheckedOk: true
+    };
+    const { client } = makeClient(stale);
+    let calls = 0;
+    const fn = createGetWhatsAppIntegration(client, API_SETTINGS, async () => {
+      calls++;
+      return false;
+    });
+    const view = await fn(WORKSPACE);
+    assert.equal(calls, 1, "a stale cache must trigger a fresh check");
+    assert.equal(view.connected, false, "the fresh (failing) result wins over the stale cache");
   });
 });
 

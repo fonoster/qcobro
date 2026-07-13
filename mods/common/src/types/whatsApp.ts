@@ -33,6 +33,12 @@ export interface WhatsAppIntegrationRecord {
   verifyToken: string;
   /** Meta template-send language for this workspace (e.g. `es_DO`). */
   defaultLanguage: string;
+  /**
+   * Cached result of the last Meta reachability check (see `getWhatsAppIntegration.ts`).
+   * Null until the first check runs, or right after the credentials are rotated.
+   */
+  lastCheckedAt: Date | null;
+  lastCheckedOk: boolean | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -69,6 +75,10 @@ export interface WhatsAppIntegrationClient {
       where: { workspaceRef: string };
       create: Record<string, unknown>;
       update: Record<string, unknown>;
+    }): Promise<WhatsAppIntegrationRecord>;
+    update(args: {
+      where: { workspaceRef: string };
+      data: Record<string, unknown>;
     }): Promise<WhatsAppIntegrationRecord>;
   };
   whatsAppSenderNumber: {
