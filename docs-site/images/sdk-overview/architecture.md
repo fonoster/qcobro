@@ -27,20 +27,26 @@ see `docs-site/CLAUDE.md`.)
 
 ## Node / edge spec
 
+Node/edge labels are in Spanish (the docs' authoring language); this spec documents them
+in English for editors, matching the convention used in `mcp-overview/overview.md`.
+
 ```
 Nodes:
-  Your runtime (boundary): Your code (Diagram/Node)
-  @qcobro/sdk (Diagram/Service) — steps: Authenticate (login / API key) → useWorkspace()
-  QCobro (boundary): The HTTPS API (Diagram/Node)
-  Authentication (Diagram/External) — login, API keys & tokens
+  Tu entorno / "TU ENTORNO" (boundary): Tu código (Diagram/Node, "Servicio o app en Node")
+  @qcobro/sdk (Diagram/Service, "Cliente TypeScript tipado") — steps:
+    1. Autentica: login() o API key
+    2. useWorkspace(): acota cada llamada
+  QCobro / "QCOBRO" (boundary): QCobro API (Diagram/Node, "La API HTTPS")
+  Autenticación (Diagram/External, "Login, API keys y tokens")
 
 Edges:
-  Your code   → @qcobro/sdk      our color    "calls"
-  @qcobro/sdk → The HTTPS API     our color    "HTTPS"
-  @qcobro/sdk ⇢ Authentication    input color  "login / refresh"
+  Tu código   → @qcobro/sdk    our color    "llama"
+  @qcobro/sdk → QCobro API      our color    "HTTPS"
+  @qcobro/sdk ⇢ Autenticación   input color  "login / refresh"
 
-Legend:  our = SDK request path · input = authentication
-Caption: @qcobro/sdk is a typed client over the QCobro API — the same API the console uses.
+Legend:  our = "Petición del SDK" · input = "Credenciales"
+Caption (on the page, sdk/overview.mdx): @qcobro/sdk es un cliente tipado sobre la API de
+QCobro: la misma API que usa la consola.
 ```
 
 ## Built from (Diagram Kit v1)
@@ -49,15 +55,15 @@ Components instanced (in `pencil.pen`, frame `Diagram Kit` = `dkktQ`):
 
 | Component            | id       | Used for                                       |
 | :------------------- | :------- | :--------------------------------------------- |
-| `Diagram/Node`       | `r2OWa2` | Your code, The HTTPS API                       |
+| `Diagram/Node`       | `r2OWa2` | Tu código, QCobro API                          |
 | `Diagram/Service`    | `UvobQ`  | the `@qcobro/sdk` node (Q mark + 2 step chips) |
-| `Diagram/External`   | `M9EyhC` | the Authentication card                        |
+| `Diagram/External`   | `M9EyhC` | the Autenticación card                         |
 | `Diagram/Edge Label` | `jHda2`  | every edge label pill                          |
 | `Diagram/Step`       | `RApC6`  | the numbered step chips inside Service         |
 | `Diagram/Arrow R`    | `X3UJwx` | rightward arrowheads                           |
 | `Diagram/Arrow D`    | `wkaMk`  | downward arrowheads                            |
 
-Colors come only from the `dgm-*` tokens. The two boundary frames (`Your runtime`,
+Colors come only from the `dgm-*` tokens. The two boundary frames (`Tu entorno`,
 `QCobro`), the connector lines, and the legend are token-bound frames (not components,
 since they vary per diagram). The auth edge uses `dgm-edge-input`; the request path uses
 `dgm-our`.
