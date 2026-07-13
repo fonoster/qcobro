@@ -319,8 +319,9 @@ and prints every user with their signup date and workspace count (owned + member
 deduplicated), newest signups first:
 
 ```bash
-npx -p @qcobro/common list-users --database-url "$QCOBRO_IDENTITY_DATABASE_URL"
+npx -y -p @qcobro/common list-users --database-url "$QCOBRO_IDENTITY_DATABASE_URL"
 # or export QCOBRO_IDENTITY_DATABASE_URL first and drop the flag
+# -y skips npx's "Ok to proceed?" install confirmation (useful in scripts/CI)
 ```
 
 ```
@@ -333,7 +334,11 @@ npx -p @qcobro/common list-users --database-url "$QCOBRO_IDENTITY_DATABASE_URL"
 `--json` prints the same rows as JSON instead of a table. The connection string must
 include `?sslmode=require` for a DO managed database — matching the "Cleaning up
 gestiones" pattern above, `list-users` treats `sslmode=require` as "encrypted, not
-verified" (libpq/psql semantics), not node-postgres's stricter default.
+verified" (libpq/psql semantics), not node-postgres's stricter default. It strips
+`sslmode` from the connection string before handing it to `pg`, because `pg` re-parses
+`connectionString` internally and merges the result over any explicit `ssl` option —
+leaving `sslmode` in place silently discards the override and reintroduces the
+self-signed-certificate failure this exists to avoid.
 
 **Running it from a droplet with no local Node install** — any container with npm/npx
 works, e.g. the official Node image (same version this repo builds with):
@@ -342,7 +347,7 @@ works, e.g. the official Node image (same version this repo builds with):
 docker run --rm -it \
   -e QCOBRO_IDENTITY_DATABASE_URL="postgresql://user:pass@identity-db-host:25060/identity?sslmode=require" \
   node:22-alpine \
-  npx -p @qcobro/common list-users
+  npx -y -p @qcobro/common list-users
 ```
 
 **Planned** (not yet built — see [issue #42](https://github.com/fonoster/qcobro/issues/42)
