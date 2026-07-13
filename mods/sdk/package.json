@@ -1,6 +1,6 @@
 {
   "name": "@qcobro/sdk",
-  "version": "1.16.0",
+  "version": "1.18.0",
   "description": "Developer-friendly TypeScript SDK for the QCobro API.",
   "type": "module",
   "exports": {
