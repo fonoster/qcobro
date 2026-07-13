@@ -29,7 +29,7 @@ De esta cuenta necesitarás tres datos para el siguiente paso: el **ID de tu WAB
 confirmar que los eventos entrantes vienen de tu WABA).
 
 <Warning>
-  QCobro no puede completar estos pasos por ti — son parte de la verificación de tu cuenta de
+  QCobro no puede completar estos pasos por ti: son parte de la verificación de tu cuenta de
   WhatsApp Business con Meta, no de la configuración de QCobro.
 </Warning>
 
@@ -42,7 +42,7 @@ confirmar que los eventos entrantes vienen de tu WABA).
   <Step title="Conecta tu WABA">
     En **Cuenta de WhatsApp Business**, completa el **WABA ID**, el **Token de acceso**, el
     **Token de verificación del webhook** y el **Idioma de plantilla por defecto** (por
-    ejemplo `es_DO`) — el idioma en que Meta enviará tus plantillas a los clientes. Guarda con
+    ejemplo `es_DO`): el idioma en que Meta enviará tus plantillas a los clientes. Guarda con
     **Guardar**.
   </Step>
   <Step title="Agrega un número remitente">
@@ -61,17 +61,17 @@ confirmar que los eventos entrantes vienen de tu WABA).
 QCobro envía WhatsApp mediante una **plantilla aprobada por Meta**, no un texto libre. Al
 solicitar la plantilla en tu cuenta de WhatsApp Business, ten en cuenta:
 
-- Usa la categoría **UTILITY** (transaccional) — es la que corresponde a recordatorios de
+- Usa la categoría **UTILITY** (transaccional): es la que corresponde a recordatorios de
   cobranza, no a mensajería de marketing.
 - Escribe los **parámetros de la plantilla con nombre** (named parameters), no posicionales
   (`{{1}}`, `{{2}}`). Los nombres deben coincidir **exactamente** con las [variables que
-  QCobro reconoce](/guides/agent-templates#lista-de-variables) — por ejemplo `firstName` u
-  `outstandingBalance` — así QCobro puede rellenar cada uno con el dato real de la cuenta al
+  QCobro reconoce](/guides/agent-templates#lista-de-variables), por ejemplo `firstName` u
+  `outstandingBalance`, así QCobro puede rellenar cada uno con el dato real de la cuenta al
   enviar.
 
 <Tip>
   Comparte la [lista de variables](/guides/agent-templates#lista-de-variables) con quien
-  redacte y someta la plantilla en Meta — es la referencia exacta de qué nombres usar.
+  redacte y someta la plantilla en Meta: es la referencia exacta de qué nombres usar.
 </Tip>
 
 Una vez que Meta aprueba la plantilla, anota su **ID de plantilla**: lo necesitarás al crear
@@ -81,13 +81,13 @@ el agente en QCobro.
 
 En [Agentes IA](/guides/agent-templates), crea un agente con **Tipo de canal** WhatsApp e
 ingresa el **ID de plantilla de Meta**. QCobro trae el texto ya aprobado y lo muestra de solo
-lectura como vista previa — no lo redactas ahí. Agrega un **Prompt del sistema** y, si quieres
+lectura como vista previa; no lo redactas ahí. Agrega un **Prompt del sistema** y, si quieres
 limitar cuántas veces responde automáticamente, un **Máximo de respuestas**: dentro de la
 ventana de 24 horas que abre la respuesta del cliente, el agente puede conversar con él
 siguiendo ese prompt.
 
 <Warning>
-  No puedes crear un agente de WhatsApp sin una integración conectada — conecta tu WABA
+  No puedes crear un agente de WhatsApp sin una integración conectada: conecta tu WABA
   primero.
 </Warning>
 

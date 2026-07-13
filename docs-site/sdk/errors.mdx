@@ -4,8 +4,8 @@ description: "El SDK valida las entradas en el cliente contra los esquemas compa
 ---
 
 El SDK valida las entradas de cada método **en el cliente**, contra los mismos esquemas de
-`@qcobro/common` que usa la API, **antes** de enviar la petición. Una entrada inválida —un
-lote vacío, un enum desconocido, un email malformado— lanza un `ValidationError` y **no
+`@qcobro/common` que usa la API, **antes** de enviar la petición. Una entrada inválida (un
+lote vacío, un enum desconocido, un email malformado) lanza un `ValidationError` y **no
 realiza ninguna llamada de red**.
 
 ## Captura un ValidationError
@@ -73,8 +73,8 @@ try {
 
 ## Errores del servidor frente a errores de validación
 
-La validación en el cliente solo atrapa entradas malformadas. Los errores que devuelve la API
-—como `UNAUTHORIZED` cuando falta o caduca la autenticación— llegan como errores de tRPC, no
+La validación en el cliente solo atrapa entradas malformadas. Los errores que devuelve la API,
+como `UNAUTHORIZED` cuando falta o caduca la autenticación, llegan como errores de tRPC, no
 como `ValidationError`.
 
 <Note>
