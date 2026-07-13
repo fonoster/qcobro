@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.19.2](https://github.com/fonoster/qcobro/compare/v1.19.1...v1.19.2) (2026-07-13)
+
+### Bug Fixes
+
+- **whatsapp:** validate connectivity, retry template fetch, look up by name, support manual outreach ([#46](https://github.com/fonoster/qcobro/issues/46)) ([a1d1dda](https://github.com/fonoster/qcobro/commit/a1d1dda2f1c3b8193721a7d0244645dfb50748d3)), closes [#13](https://github.com/fonoster/qcobro/issues/13) [#14](https://github.com/fonoster/qcobro/issues/14)
+
 ## [1.19.1](https://github.com/fonoster/qcobro/compare/v1.19.0...v1.19.1) (2026-07-13)
 
 **Note:** Version bump only for package @qcobro/webapp
