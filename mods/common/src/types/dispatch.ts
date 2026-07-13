@@ -92,7 +92,7 @@ export interface WhatsAppSendTemplateInput {
 }
 
 /**
- * A WhatsApp template resolved from Meta by id. Backs the agent-template modal's
+ * A WhatsApp template resolved from Meta by name. Backs the agent-template modal's
  * read-only preview and the stored `templateName`/`messageBody`.
  */
 export interface WhatsAppFetchedTemplate {
@@ -115,8 +115,13 @@ export interface WhatsAppClient {
   sendTemplate(input: WhatsAppSendTemplateInput): Promise<{ id: string }>;
   /** Send a free-form reply, valid only inside Meta's 24h window; resolves with the message id. */
   sendText(input: { to: string; body: string }): Promise<{ id: string }>;
-  /** Fetch a template by id (modal preview / config-time resolution). */
-  fetchTemplate(templateId: string): Promise<WhatsAppFetchedTemplate | null>;
+  /**
+   * Fetch a template by name (modal preview / config-time resolution). `language`
+   * disambiguates when the WABA has the same template name approved in more than one
+   * language (a workspace's `defaultLanguage` is passed here); when omitted, or when no
+   * template matches it, the first name match is returned.
+   */
+  fetchTemplate(templateName: string, language?: string): Promise<WhatsAppFetchedTemplate | null>;
 }
 
 /** Picks a sending number from a configured pool. Injectable for determinism. */

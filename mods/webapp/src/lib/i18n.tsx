@@ -305,7 +305,7 @@ export const messages = {
     "agents.form.messageBody": "Message body",
     "agents.form.senderId": "Sender ID (optional)",
     "agents.form.subject": "Subject",
-    "agents.form.maxReplies": "Max autopilot replies per case (optional)",
+    "agents.form.maxReplies": "Max autopilot replies per case",
     "agents.form.templateName": "Template name",
     "agents.form.voicePlaceholder": "Select a voice…",
     "agents.lang.es": "Spanish",
@@ -558,12 +558,11 @@ export const messages = {
     "integrations.senders.addError": "Could not add sender.",
     "integrations.senders.noIntegration": "Connect a WABA first.",
 
-    "agents.form.templateId": "Meta template ID",
     "agents.form.templatePreview": "Template preview (read-only)",
     "agents.form.templatePreviewLoading": "Fetching template…",
-    "agents.form.templatePreviewEmpty": "Enter a template ID above to preview.",
-    "agents.form.templatePreviewError":
-      "Couldn't load the preview from Meta. You can still save this agent — re-enter the template ID to retry, or fill in the message body below by hand.",
+    "agents.form.templatePreviewEmpty": "Enter a template name above to preview.",
+    "agents.form.templatePreviewError": "Couldn't load the preview from Meta.",
+    "agents.form.templateNotFound": "No template with that name was found in your WABA.",
     "agents.form.noIntegrationWarning":
       "No WhatsApp integration configured. Connect one in Integrations before creating this agent.",
 
@@ -873,7 +872,7 @@ export const messages = {
     "agents.form.messageBody": "Cuerpo del mensaje",
     "agents.form.senderId": "ID de remitente (opcional)",
     "agents.form.subject": "Asunto",
-    "agents.form.maxReplies": "Máx. respuestas del autopiloto por caso (opcional)",
+    "agents.form.maxReplies": "Máx. respuestas del autopiloto por caso",
     "agents.form.templateName": "Nombre de plantilla",
     "agents.form.voicePlaceholder": "Seleccione una voz…",
     "agents.lang.es": "Español",
@@ -1127,12 +1126,12 @@ export const messages = {
     "integrations.senders.addError": "No se pudo agregar el remitente.",
     "integrations.senders.noIntegration": "Conecta una WABA primero.",
 
-    "agents.form.templateId": "ID de plantilla Meta",
     "agents.form.templatePreview": "Vista previa de la plantilla (solo lectura)",
     "agents.form.templatePreviewLoading": "Cargando plantilla…",
-    "agents.form.templatePreviewEmpty": "Ingresa un ID de plantilla para ver la vista previa.",
-    "agents.form.templatePreviewError":
-      "No se pudo cargar la vista previa desde Meta. Puedes guardar este agente igual — vuelve a ingresar el ID de plantilla para reintentar, o completa el cuerpo del mensaje manualmente abajo.",
+    "agents.form.templatePreviewEmpty":
+      "Ingresa el nombre de la plantilla para ver la vista previa.",
+    "agents.form.templatePreviewError": "No se pudo cargar la vista previa desde Meta.",
+    "agents.form.templateNotFound": "No se encontró ninguna plantilla con ese nombre en tu WABA.",
     "agents.form.noIntegrationWarning":
       "Sin integración de WhatsApp configurada. Conéctala en Integraciones antes de crear este agente.",
 

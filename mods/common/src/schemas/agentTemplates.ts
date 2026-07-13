@@ -57,9 +57,8 @@ export const createAgentTemplateSchema = z.discriminatedUnion("type", [
   z.object({
     ...baseFields,
     type: z.literal("WHATSAPP"),
-    /** Meta template id the operator enters; QCobro resolves + previews the template from the WABA. */
-    templateId: z.string().min(1),
-    /** Resolved from `templateId` (read-only in the UI); the approved Meta template name to send. */
+    /** Meta template name the operator enters; QCobro resolves + previews the template from
+     * the WABA by this name, and it's the same name used to send. */
     templateName: z.string().min(1),
     /** Fetched template body (read-only preview); its `{{vars}}` are sent as named parameters. */
     messageBody: z.string().min(1),

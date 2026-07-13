@@ -44,7 +44,7 @@ describe("MetaWhatsAppClient.fetchTemplate retry/backoff", () => {
     }) as typeof fetch;
 
     const client = new MetaWhatsAppClient(SETTINGS);
-    const found = await client.fetchTemplate("tmpl-1");
+    const found = await client.fetchTemplate("saldo_pendiente");
 
     assert.equal(calls, 1);
     assert.equal(found?.name, "saldo_pendiente");
@@ -60,7 +60,7 @@ describe("MetaWhatsAppClient.fetchTemplate retry/backoff", () => {
     }) as typeof fetch;
 
     const client = new MetaWhatsAppClient(SETTINGS);
-    const found = await client.fetchTemplate("tmpl-1");
+    const found = await client.fetchTemplate("saldo_pendiente");
 
     assert.equal(calls, 3, "should retry twice before succeeding on the 3rd attempt");
     assert.equal(found?.name, "saldo_pendiente");
@@ -75,7 +75,7 @@ describe("MetaWhatsAppClient.fetchTemplate retry/backoff", () => {
     }) as typeof fetch;
 
     const client = new MetaWhatsAppClient(SETTINGS);
-    const found = await client.fetchTemplate("tmpl-1");
+    const found = await client.fetchTemplate("saldo_pendiente");
 
     assert.equal(calls, 2);
     assert.equal(found?.name, "saldo_pendiente");
@@ -89,7 +89,10 @@ describe("MetaWhatsAppClient.fetchTemplate retry/backoff", () => {
     }) as typeof fetch;
 
     const client = new MetaWhatsAppClient(SETTINGS);
-    await assert.rejects(() => client.fetchTemplate("tmpl-1"), /WhatsApp template fetch failed/);
+    await assert.rejects(
+      () => client.fetchTemplate("saldo_pendiente"),
+      /WhatsApp template fetch failed/
+    );
     assert.equal(calls, 3, "exactly 3 attempts, no more");
   });
 
@@ -101,7 +104,10 @@ describe("MetaWhatsAppClient.fetchTemplate retry/backoff", () => {
     }) as typeof fetch;
 
     const client = new MetaWhatsAppClient(SETTINGS);
-    await assert.rejects(() => client.fetchTemplate("tmpl-1"), /Invalid OAuth access token/);
+    await assert.rejects(
+      () => client.fetchTemplate("saldo_pendiente"),
+      /Invalid OAuth access token/
+    );
     assert.equal(calls, 1, "a 401 must fail fast, not retry");
   });
 
@@ -113,16 +119,51 @@ describe("MetaWhatsAppClient.fetchTemplate retry/backoff", () => {
     }) as typeof fetch;
 
     const client = new MetaWhatsAppClient(SETTINGS);
-    await assert.rejects(() => client.fetchTemplate("tmpl-1"));
+    await assert.rejects(() => client.fetchTemplate("saldo_pendiente"));
     assert.equal(calls, 1);
   });
 
-  it("returns null when the template id is not found in an otherwise-successful response", async () => {
+  it("returns null when the template name is not found in an otherwise-successful response", async () => {
     globalThis.fetch = (async () => jsonResponse(200, TEMPLATES_OK_BODY)) as typeof fetch;
 
     const client = new MetaWhatsAppClient(SETTINGS);
     const found = await client.fetchTemplate("does-not-exist");
     assert.equal(found, null);
+  });
+
+  it("prefers the template matching the given language when the name is ambiguous", async () => {
+    globalThis.fetch = (async () =>
+      jsonResponse(200, {
+        data: [
+          {
+            id: "tmpl-es",
+            name: "saldo_pendiente",
+            language: "es_DO",
+            status: "APPROVED",
+            components: [{ type: "BODY", text: "Hola {{1}}" }]
+          },
+          {
+            id: "tmpl-en",
+            name: "saldo_pendiente",
+            language: "en_US",
+            status: "APPROVED",
+            components: [{ type: "BODY", text: "Hi {{1}}" }]
+          }
+        ]
+      })) as typeof fetch;
+
+    const client = new MetaWhatsAppClient(SETTINGS);
+    const found = await client.fetchTemplate("saldo_pendiente", "en_US");
+    assert.equal(found?.language, "en_US");
+    assert.equal(found?.body, "Hi {{1}}");
+  });
+
+  it("falls back to the first match when no template matches the given language", async () => {
+    globalThis.fetch = (async () => jsonResponse(200, TEMPLATES_OK_BODY)) as typeof fetch;
+
+    const client = new MetaWhatsAppClient(SETTINGS);
+    const found = await client.fetchTemplate("saldo_pendiente", "fr_FR");
+    assert.equal(found?.language, "es_DO");
   });
 });
 

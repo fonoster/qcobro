@@ -222,16 +222,17 @@ model EmailConfig {
 }
 
 model WhatsAppConfig {
-  templateId     String        @id
-  // The Meta-side template id the operator enters; QCobro resolves + previews from the WABA.
-  metaTemplateId String        @default("")
-  templateName   String
-  messageBody    String
+  templateId   String        @id
+  // The Meta-side template name the operator enters; QCobro resolves + previews from the
+  // WABA by this name (Meta's template-list API has no lookup by numeric id from the UI's
+  // perspective — operators only ever see/copy the name in Meta Business Manager).
+  templateName String
+  messageBody  String
   // Smart-agent decision brain for replies after the customer responds (mirrors EmailConfig).
-  systemPrompt   String        @default("")
+  systemPrompt String        @default("")
   // Per-agent cap on automated replies per gestión; null → deployment default.
-  maxReplies     Int?
-  template       AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  maxReplies   Int?
+  template     AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@map("whatsapp_configs")
 }

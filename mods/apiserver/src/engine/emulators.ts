@@ -128,7 +128,7 @@ export class EmulatedWhatsAppClient implements WhatsAppClient {
       fail?: boolean;
       /** Provider-ready sender shown in the recorded log; the real client has it implicit. */
       from?: string;
-      /** Templates returned by `fetchTemplate`, keyed by template id. */
+      /** Templates returned by `fetchTemplate`, keyed by template name. */
       templates?: Record<string, WhatsAppFetchedTemplate>;
     } = {}
   ) {}
@@ -162,8 +162,8 @@ export class EmulatedWhatsAppClient implements WhatsAppClient {
     return { id };
   }
 
-  async fetchTemplate(templateId: string): Promise<WhatsAppFetchedTemplate | null> {
-    return this.opts.templates?.[templateId] ?? null;
+  async fetchTemplate(templateName: string): Promise<WhatsAppFetchedTemplate | null> {
+    return this.opts.templates?.[templateName] ?? null;
   }
 }
 

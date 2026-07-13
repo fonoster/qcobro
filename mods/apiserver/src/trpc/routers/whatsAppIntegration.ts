@@ -60,10 +60,10 @@ export const whatsAppIntegrationRouter = router({
       )(input);
     }),
 
-  // Backs the agent-template modal's read-only preview: fetch a Meta template by id from the
-  // workspace's WABA. Returns null when no integration exists or the id is unknown.
+  // Backs the agent-template modal's read-only preview: fetch a Meta template by name from
+  // the workspace's WABA. Returns null when no integration exists or the name is unknown.
   previewTemplate: workspaceProcedure
-    .input(z.object({ templateId: z.string().min(1) }))
+    .input(z.object({ templateName: z.string().min(1) }))
     .query(async ({ input, ctx }) => {
       const resolved = await resolveWhatsAppClient(
         ctx.prisma as never,
@@ -71,6 +71,6 @@ export const whatsAppIntegrationRouter = router({
         config.whatsapp
       );
       if (!resolved) return null;
-      return resolved.client.fetchTemplate(input.templateId);
+      return resolved.client.fetchTemplate(input.templateName, resolved.languageCode);
     })
 });

@@ -136,9 +136,14 @@ export class MetaWhatsAppClient implements WhatsAppClient {
   }
 
   /**
-   * Fetch a template by id for the modal preview. Meta exposes templates per WABA (not by
-   * id directly), so we list the WABA's templates and match. Returns null when the id is
-   * unknown. The body is the text of the template's BODY component.
+   * Fetch a template by name for the modal preview. Meta exposes templates per WABA, keyed
+   * by name (not a numeric id an operator would ever see or copy — Meta Business Manager and
+   * the API-setup page both surface the name), so we list the WABA's templates and match on
+   * it. Returns null when the name is unknown. The body is the text of the BODY component.
+   *
+   * A name can be approved in more than one language; `language` (the workspace's
+   * `defaultLanguage`) picks the right one among same-name matches. If none matches — or no
+   * language was given — the first match is used.
    *
    * Retries transient failures (5xx / 429 / network errors) with exponential backoff — the
    * agent-template create/edit modal depends on this call to populate the preview, and a
@@ -146,14 +151,18 @@ export class MetaWhatsAppClient implements WhatsAppClient {
    * errors are not retried since they won't succeed on a second try. Unlike `sendTemplate`/
    * `sendText`, retrying here is safe: it's a read with no side effects.
    */
-  async fetchTemplate(templateId: string): Promise<WhatsAppFetchedTemplate | null> {
+  async fetchTemplate(
+    templateName: string,
+    language?: string
+  ): Promise<WhatsAppFetchedTemplate | null> {
     const data = await this.withRetry(() => this.listTemplates());
-    const found = (data.data ?? []).find((t) => t.id === templateId);
+    const matches = (data.data ?? []).filter((t) => t.name === templateName);
+    const found = (language && matches.find((t) => t.language === language)) || matches[0];
     if (!found) return null;
     const body = found.components?.find((c) => c.type === "BODY")?.text ?? "";
     return {
-      id: found.id ?? templateId,
-      name: found.name ?? "",
+      id: found.id ?? "",
+      name: found.name ?? templateName,
       language: found.language ?? "",
       body,
       status: found.status ?? ""
