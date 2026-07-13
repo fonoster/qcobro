@@ -6,6 +6,7 @@ import { PageHeader } from "../components/page-header.js";
 import { DataTable } from "../components/ui/data-table.js";
 import { Dialog } from "../components/ui/dialog.js";
 import { ConfirmDeleteDialog } from "../components/ui/confirm-delete-dialog.js";
+import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
 import { TextareaGroup } from "../components/ui/textarea.js";
 import { SelectGroup, FilterSelect } from "../components/ui/select.js";
@@ -482,12 +483,25 @@ function CreateAgentTemplateModal({
               value={
                 preview.isFetching
                   ? t("agents.form.templatePreviewLoading")
-                  : (fields.messageBody ??
-                    (debouncedTemplateId ? "" : t("agents.form.templatePreviewEmpty")))
+                  : preview.isError
+                    ? t("agents.form.templatePreviewError")
+                    : (fields.messageBody ??
+                      (debouncedTemplateId ? "" : t("agents.form.templatePreviewEmpty")))
               }
               onChange={() => undefined}
               className="text-slate-500"
             />
+            {preview.isError && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="self-start"
+                onClick={() => preview.refetch()}
+              >
+                {t("common.retry")}
+              </Button>
+            )}
             <TextareaGroup
               label={t("agents.form.systemPrompt")}
               id="a-wa-prompt"
@@ -789,11 +803,24 @@ function EditAgentTemplateModal({
                   value={
                     preview.isFetching
                       ? t("agents.form.templatePreviewLoading")
-                      : (fields.messageBody ?? "")
+                      : preview.isError
+                        ? t("agents.form.templatePreviewError")
+                        : (fields.messageBody ?? "")
                   }
                   onChange={() => undefined}
                   className="text-slate-500"
                 />
+                {preview.isError && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="self-start"
+                    onClick={() => preview.refetch()}
+                  >
+                    {t("common.retry")}
+                  </Button>
+                )}
                 <TextareaGroup
                   label={t("agents.form.systemPrompt")}
                   id="e-wa-prompt"

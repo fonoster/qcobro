@@ -12,6 +12,7 @@ export const messages = {
     "language.label": "Language",
     "common.loading": "Loading…",
     "common.cancel": "Cancel",
+    "common.retry": "Retry",
     "table.searchPlaceholder": "Search…",
     "table.empty": "No results.",
     "table.rowCount": "Showing {start}–{end} of {total} results",
@@ -561,6 +562,8 @@ export const messages = {
     "agents.form.templatePreview": "Template preview (read-only)",
     "agents.form.templatePreviewLoading": "Fetching template…",
     "agents.form.templatePreviewEmpty": "Enter a template ID above to preview.",
+    "agents.form.templatePreviewError":
+      "Couldn't load the preview from Meta. You can still save this agent — re-enter the template ID to retry, or fill in the message body below by hand.",
     "agents.form.noIntegrationWarning":
       "No WhatsApp integration configured. Connect one in Integrations before creating this agent.",
 
@@ -574,6 +577,7 @@ export const messages = {
     "language.label": "Idioma",
     "common.loading": "Cargando…",
     "common.cancel": "Cancelar",
+    "common.retry": "Reintentar",
     "table.searchPlaceholder": "Buscar…",
     "table.empty": "Sin resultados.",
     "table.rowCount": "Mostrando {start}–{end} de {total} resultados",
@@ -1127,6 +1131,8 @@ export const messages = {
     "agents.form.templatePreview": "Vista previa de la plantilla (solo lectura)",
     "agents.form.templatePreviewLoading": "Cargando plantilla…",
     "agents.form.templatePreviewEmpty": "Ingresa un ID de plantilla para ver la vista previa.",
+    "agents.form.templatePreviewError":
+      "No se pudo cargar la vista previa desde Meta. Puedes guardar este agente igual — vuelve a ingresar el ID de plantilla para reintentar, o completa el cuerpo del mensaje manualmente abajo.",
     "agents.form.noIntegrationWarning":
       "Sin integración de WhatsApp configurada. Conéctala en Integraciones antes de crear este agente.",
 
