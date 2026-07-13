@@ -6,6 +6,7 @@ import { useI18n } from "../lib/i18n.js";
 import { Card } from "../components/ui/card.js";
 import { InputGroup } from "../components/ui/input.js";
 import { Button } from "../components/ui/button.js";
+import { Logo } from "../components/Logo.js";
 
 /**
  * Email contact verification, shown right after sign-up. The user is already
@@ -68,7 +69,8 @@ export function VerifyContact() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 px-4">
+      <Logo />
       <Card className="w-full max-w-[400px] rounded-2xl border-slate-200 p-8 shadow-none">
         <form onSubmit={onSubmit} className="flex flex-col gap-7">
           <div className="flex flex-col gap-1.5">
