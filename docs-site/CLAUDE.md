@@ -41,6 +41,12 @@ Fonoster house voice: second person, present-tense imperative, active, short sen
 task-first; precede every code block with a sentence saying what it does. QCobro is
 **multilingual** — never describe it as Spanish-only, and don't hardcode a default language.
 
+**No em-dashes in doc prose.** In Spanish, em-dash-set-off clauses read as an English/AI-
+writing tell, not native punctuation. Use a colon, comma, or parentheses instead. This
+applies to `.mdx` page prose (including `alt`/`caption` text) — not to this file, other
+internal Markdown (build docs, `ASSETS.md`), or code/commit content, which stay in English
+and follow normal conventions.
+
 ## The disclosure rule
 
 > _Does the hosted user touch, configure (in the console), or observe this?_ If yes,
