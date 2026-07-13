@@ -6,8 +6,8 @@ description: "@qcobro/sdk es un cliente TypeScript tipado sobre la API de QCobro
 `@qcobro/sdk` es el cliente oficial de TypeScript para la API de QCobro. Envuelve los mismos
 contratos tRPC sobre los que corre la consola de operador, así que las llamadas que haces
 desde tu propio backend están tipadas de extremo a extremo y se validan antes de tocar la
-red. Maneja QCobro desde tu sistema de origen —carga carteras, sincroniza cuentas, reacciona
-a los resultados— sin escribir HTTP a mano.
+red. Maneja QCobro desde tu sistema de origen (carga carteras, sincroniza cuentas, reacciona
+a los resultados) sin escribir HTTP a mano.
 
 ## Cómo funciona
 
@@ -16,7 +16,7 @@ apunta a `https://api.qcobro.com`. El cliente posee la conexión y el ciclo de v
 habla tRPC sobre HTTPS con la API de QCobro, que es la misma API que usa la consola de
 operador.
 
-<Frame caption="@qcobro/sdk es un cliente tipado sobre la API de QCobro — la misma API que usa la consola.">
+<Frame caption="@qcobro/sdk es un cliente tipado sobre la API de QCobro: la misma API que usa la consola.">
   <img src="/images/sdk-overview/architecture.png" alt="Diagrama: tu código llama al cliente @qcobro/sdk, que llama a la API de QCobro sobre HTTPS y se autentica; la consola de operador usa la misma API." />
 </Frame>
 
@@ -29,10 +29,10 @@ fragmento hace los cuatro.
 ```ts
 import { Client } from "@qcobro/sdk";
 
-// 1. Construye — apunta a https://api.qcobro.com por defecto.
+// 1. Construye: apunta a https://api.qcobro.com por defecto.
 const client = new Client();
 
-// 2. Autentícate — los tokens emitidos se guardan en el cliente.
+// 2. Autentícate: los tokens emitidos se guardan en el cliente.
 await client.login({ email: "me@acme.com", password: process.env.QCOBRO_PASSWORD! });
 
 // 3. Selecciona el workspace en el que actuar.
@@ -44,7 +44,7 @@ const portfolios = await client.portfolios.list();
 
 Casi todos los métodos están **acotados a un workspace**: el cliente debe estar autenticado y
 tener un workspace activo seleccionado antes de llamarlos. Seleccionar un workspace es solo
-`client.useWorkspace(accessKeyId)` — las llamadas siguientes actúan dentro de él.
+`client.useWorkspace(accessKeyId)`: las llamadas siguientes actúan dentro de él.
 
 ## Qué puedes hacer hoy
 
@@ -54,15 +54,15 @@ Las carteras ya están envueltas; todo lo demás de la API es accesible por el e
 
 <CardGroup cols={2}>
   <Card title="Gestionar carteras" icon="folder-open" href="/sdk/portfolios">
-    `client.portfolios` — lista, obtén, crea, actualiza, archiva y elimina las carteras de un
+    `client.portfolios`: lista, obtén, crea, actualiza, archiva y elimina las carteras de un
     workspace, y lista sus cuentas.
   </Card>
   <Card title="Sincronizar cuentas" icon="arrows-rotate" href="/sdk/sync-accounts">
-    `client.portfolios.syncAccounts` — carga por lotes filas de cuentas desde tu sistema de
+    `client.portfolios.syncAccounts`: carga por lotes filas de cuentas desde tu sistema de
     origen con los modos de fusión `APPEND_ONLY`, `UPDATE_EXISTING` o `REPLACE`.
   </Card>
   <Card title="Escape hatch" icon="plug" href="/sdk/reference">
-    `client.trpc` — el proxy tRPC tipado subyacente, para cualquier procedimiento que el SDK
+    `client.trpc`: el proxy tRPC tipado subyacente, para cualquier procedimiento que el SDK
     aún no envuelva. Prefiere los espacios de recurso donde existan.
   </Card>
   <Card title="Referencia del SDK" icon="book" href="/sdk/reference">
@@ -73,8 +73,8 @@ Las carteras ya están envueltas; todo lo demás de la API es accesible por el e
 ## La validación ocurre en el cliente
 
 Las entradas de los métodos se validan contra los esquemas compartidos de `@qcobro/common`
-**antes** de enviar cualquier petición. Una entrada inválida —un lote vacío, un enum
-desconocido, un email malformado— lanza un `ValidationError` estructurado, con detalle por
+**antes** de enviar cualquier petición. Una entrada inválida (un lote vacío, un enum
+desconocido, un email malformado) lanza un `ValidationError` estructurado, con detalle por
 campo, y nunca llega a la red.
 
 <Note>

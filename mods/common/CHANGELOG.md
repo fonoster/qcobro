@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.19.1](https://github.com/fonoster/qcobro/compare/v1.19.0...v1.19.1) (2026-07-13)
+
+### Bug Fixes
+
+- **common:** stop pg from clobbering list-users' SSL override ([#44](https://github.com/fonoster/qcobro/issues/44)) ([b5422dd](https://github.com/fonoster/qcobro/commit/b5422dd13233db4f8eec61348e34269d4bb3d9c4))
+
+# [1.19.0](https://github.com/fonoster/qcobro/compare/v1.18.0...v1.19.0) (2026-07-13)
+
+### Features
+
+- **common:** add list-users admin CLI ([#43](https://github.com/fonoster/qcobro/issues/43)) ([56ddd07](https://github.com/fonoster/qcobro/commit/56ddd0768abe8201d2070febfb087c8fd0bb1b1c)), closes [#42](https://github.com/fonoster/qcobro/issues/42)
+
 # [1.16.0](https://github.com/fonoster/qcobro/compare/v1.15.0...v1.16.0) (2026-07-13)
 
 ### Features

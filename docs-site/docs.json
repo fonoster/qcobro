@@ -40,6 +40,10 @@
         ]
       },
       {
+        "group": "MCP",
+        "pages": ["mcp/overview"]
+      },
+      {
         "group": "API reference",
         "pages": ["api/overview", "api/authentication", "api/contact-log"]
       },

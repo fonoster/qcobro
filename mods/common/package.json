@@ -1,6 +1,6 @@
 {
   "name": "@qcobro/common",
-  "version": "1.16.0",
+  "version": "1.19.1",
   "type": "module",
   "files": [
     "dist"
@@ -12,7 +12,8 @@
     ".": "./dist/index.js"
   },
   "bin": {
-    "engine-eval": "./dist/bin/engineEval.js"
+    "engine-eval": "./dist/bin/engineEval.js",
+    "list-users": "./dist/bin/listUsers.js"
   },
   "scripts": {
     "build": "tsc -b --force",
@@ -22,9 +23,11 @@
   },
   "dependencies": {
     "handlebars": "^4.7.9",
+    "pg": "^8.13.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {
+    "@types/pg": "^8.11.0",
     "tsx": "^4.0.0",
     "typescript": "^5.9.0"
   }
