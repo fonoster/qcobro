@@ -23575,6 +23575,38 @@
                       "children": [
                         {
                           "type": "frame",
+                          "id": "w1g8C",
+                          "name": "Estado de entrega",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "lgDyy",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Estado de entrega",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "c27LHZ",
+                              "name": "v",
+                              "fill": "#334155",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Enviado → Entregado",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
                           "id": "ttFeZ",
                           "name": "it",
                           "layout": "vertical",
@@ -23625,35 +23657,6 @@
                               "name": "v",
                               "fill": "#334155",
                               "content": "SMS",
-                              "fontFamily": "Inter",
-                              "fontSize": 13,
-                              "fontWeight": "500"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "UMHir",
-                          "name": "it",
-                          "layout": "vertical",
-                          "gap": 2,
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "pUHCz",
-                              "name": "l",
-                              "fill": "#94A3B8",
-                              "content": "Estado de entrega",
-                              "fontFamily": "Inter",
-                              "fontSize": 12,
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "text",
-                              "id": "FR7xt",
-                              "name": "v",
-                              "fill": "#334155",
-                              "content": "Entregado",
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "500"
@@ -23864,7 +23867,7 @@
                       "name": "i",
                       "width": 16,
                       "height": 16,
-                      "icon": "voicemail",
+                      "icon": "scroll-text",
                       "library": "lucide",
                       "fill": "#047857"
                     },
@@ -23873,7 +23876,7 @@
                       "id": "i6pGg1",
                       "name": "t",
                       "fill": "#0F172A",
-                      "content": "Mensaje reproducido",
+                      "content": "Guion reproducible",
                       "fontFamily": "Inter",
                       "fontSize": 14,
                       "fontWeight": "600"
@@ -24036,7 +24039,7 @@
                   "fill": "#475569",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "La llamada fue contestada y el mensaje pre-grabado se reprodujo íntegramente. Se recomienda dar seguimiento por Voz IA para confirmar la intención de pago del cliente.",
+                  "content": "La llamada fue contestada y duró 0:38. La duración no confirma que el mensaje se haya escuchado por completo; considere dar seguimiento por Voz IA para verificar la intención de pago.",
                   "lineHeight": 1.5,
                   "fontFamily": "Inter",
                   "fontSize": 13,
@@ -24078,7 +24081,7 @@
                       "id": "cvzZB",
                       "name": "v",
                       "fill": "$--green-900",
-                      "content": "Reproducido",
+                      "content": "Entregado",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "500"
@@ -24131,6 +24134,38 @@
                       "layout": "vertical",
                       "gap": 12,
                       "children": [
+                        {
+                          "type": "frame",
+                          "id": "G5OJWH",
+                          "name": "Estado de entrega",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "QtNZz",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Estado de entrega",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "m4aHr",
+                              "name": "v",
+                              "fill": "#334155",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Enviado → Entregado",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
                         {
                           "type": "frame",
                           "id": "X9P3im",
@@ -25282,6 +25317,38 @@
                       "children": [
                         {
                           "type": "frame",
+                          "id": "ebSxO",
+                          "name": "Estado de entrega",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "gS5o2",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Estado de entrega",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "mnMmw",
+                              "name": "v",
+                              "fill": "#334155",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Enviado → Contestado → Finalizada",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
                           "id": "H64pBj",
                           "name": "it",
                           "layout": "vertical",
@@ -26029,6 +26096,38 @@
                       "children": [
                         {
                           "type": "frame",
+                          "id": "kXIdg",
+                          "name": "Estado de entrega",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "TzjaE",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Estado de entrega",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "w9WJ9",
+                              "name": "v",
+                              "fill": "#334155",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Enviado → Entregado → Leído",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
                           "id": "pMjlE",
                           "name": "it",
                           "layout": "vertical",
@@ -26079,35 +26178,6 @@
                               "name": "v",
                               "fill": "#334155",
                               "content": "Email",
-                              "fontFamily": "Inter",
-                              "fontSize": 13,
-                              "fontWeight": "500"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "w9TlQ",
-                          "name": "it",
-                          "layout": "vertical",
-                          "gap": 2,
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "md4pg",
-                              "name": "l",
-                              "fill": "#94A3B8",
-                              "content": "Estado de entrega",
-                              "fontFamily": "Inter",
-                              "fontSize": 12,
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "text",
-                              "id": "XqBUB",
-                              "name": "v",
-                              "fill": "#334155",
-                              "content": "Abierto",
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "500"
@@ -73520,6 +73590,38 @@
                       "children": [
                         {
                           "type": "frame",
+                          "id": "hI5LG",
+                          "name": "Estado de entrega",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "sd4au",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Estado de entrega",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "cDku3",
+                              "name": "v",
+                              "fill": "#334155",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Enviado → Entregado → Leído → Respondido",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
                           "id": "R9ITb2",
                           "name": "it",
                           "layout": "vertical",
@@ -73570,35 +73672,6 @@
                               "name": "v",
                               "fill": "#334155",
                               "content": "WhatsApp",
-                              "fontFamily": "Inter",
-                              "fontSize": 13,
-                              "fontWeight": "500"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "eG2Ai",
-                          "name": "it",
-                          "layout": "vertical",
-                          "gap": 2,
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "MWwp0",
-                              "name": "l",
-                              "fill": "#94A3B8",
-                              "content": "Estado de entrega",
-                              "fontFamily": "Inter",
-                              "fontSize": 12,
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "text",
-                              "id": "b7IsS",
-                              "name": "v",
-                              "fill": "#334155",
-                              "content": "Leído",
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "500"
