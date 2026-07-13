@@ -88,14 +88,28 @@ export interface UserRow {
  * "Cleaning up gestiones" in the README) already accepts `sslmode=require` as
  * meaning "encrypted, not verified" (libpq/psql semantics) — match that here
  * so the same `DATABASE_URL`-style connection string works with both tools.
+ *
+ * Passing an explicit `ssl` override alongside `connectionString` is not
+ * enough: `pg`'s `ConnectionParameters` re-parses `connectionString` and
+ * merges that result *over* the config we pass (`Object.assign({}, config,
+ * parse(connectionString))`), and pg-connection-string no longer aliases
+ * `sslmode=require` to "don't verify" by default — so our override gets
+ * silently clobbered back to full verification. Stripping `sslmode` from the
+ * string leaves nothing for pg to re-derive `ssl` from, so the explicit
+ * override actually sticks.
  */
-function poolConfig(connectionString: string) {
+export function poolConfig(connectionString: string) {
   const sslRequested = /sslmode=(require|prefer|verify-ca|verify-full|no-verify)/.test(
     connectionString
   );
+  if (!sslRequested) {
+    return { connectionString };
+  }
+  const url = new URL(connectionString);
+  url.searchParams.delete("sslmode");
   return {
-    connectionString,
-    ssl: sslRequested ? { rejectUnauthorized: false } : undefined
+    connectionString: url.toString(),
+    ssl: { rejectUnauthorized: false }
   };
 }
 

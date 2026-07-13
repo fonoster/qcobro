@@ -10,6 +10,7 @@ import {
   formatTable,
   main,
   parseCliArgs,
+  poolConfig,
   resolveDatabaseUrl,
   type UserRow
 } from "./listUsers.js";
@@ -64,6 +65,31 @@ describe("resolveDatabaseUrl", () => {
         return true;
       }
     );
+  });
+});
+
+describe("poolConfig", () => {
+  it("leaves the connection string untouched when no sslmode is present", () => {
+    const config = poolConfig("postgresql://user:pass@host:5432/identity");
+    assert.equal(config.connectionString, "postgresql://user:pass@host:5432/identity");
+    assert.equal("ssl" in config, false);
+  });
+
+  it("strips sslmode and sets an explicit no-verify ssl override", () => {
+    const config = poolConfig("postgresql://user:pass@host:5432/identity?sslmode=require");
+    assert.equal(config.connectionString, "postgresql://user:pass@host:5432/identity");
+    assert.deepEqual(config.ssl, { rejectUnauthorized: false });
+  });
+
+  it("strips sslmode without disturbing other query params", () => {
+    const config = poolConfig(
+      "postgresql://user:pass@host:5432/identity?sslmode=verify-full&application_name=list-users"
+    );
+    assert.equal(
+      config.connectionString,
+      "postgresql://user:pass@host:5432/identity?application_name=list-users"
+    );
+    assert.deepEqual(config.ssl, { rejectUnauthorized: false });
   });
 });
 
