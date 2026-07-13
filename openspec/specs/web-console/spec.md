@@ -718,3 +718,19 @@ metadata" is expanded.
 - **WHEN** the account record gains a new field not covered by the basic-fields summary
 - **THEN** that field appears under "Ver metadata" once expanded, without requiring the
   dialog's basic-fields list to be updated
+
+### Requirement: Portfolio list shows last synced time
+
+The portfolio list page SHALL show a "last synced" column indicating the timestamp of the most recent completed CSV sync for each portfolio, formatted per the console's active locale.
+
+#### Scenario: Portfolio has been synced
+
+- **WHEN** an operator views the portfolio list
+- **AND** a portfolio's `lastSyncedAt` is set
+- **THEN** that portfolio's row shows the localized date/time of `lastSyncedAt`
+
+#### Scenario: Portfolio has never been synced
+
+- **WHEN** an operator views the portfolio list
+- **AND** a portfolio's `lastSyncedAt` is `null`
+- **THEN** that portfolio's row shows a localized "Never synced" placeholder instead of a date

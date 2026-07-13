@@ -153,6 +153,7 @@ describe("syncAccounts", () => {
     const s = stats();
     assert.equal(s.portfolioUpdate?.accountCount, 1);
     assert.equal(s.portfolioUpdate?.totalOutstandingBalance, 1000);
+    assert.ok(s.portfolioUpdate?.lastSyncedAt instanceof Date);
   });
 
   it("updates existing accounts in UPDATE_EXISTING mode", async () => {
@@ -192,12 +193,13 @@ describe("syncAccounts", () => {
   });
 
   it("throws ValidationError when rows array is empty", async () => {
-    const { client } = makeTx([]);
+    const { client, stats } = makeTx([]);
     const fn = createSyncAccounts(client as never);
 
     await assert.rejects(
       () => fn({ portfolioId: "p1", mode: "REPLACE", rows: [] }),
       ValidationError
     );
+    assert.equal(stats().portfolioUpdate, null);
   });
 });
