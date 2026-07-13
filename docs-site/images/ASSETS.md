@@ -40,6 +40,7 @@ All assets are **hosted-product, customer-facing** — no internals, infra, or c
 | Slug                           | Type                   | Audience            | Preset   | Page                        | Pencil node | Kit | Build doc                      |
 | :----------------------------- | :--------------------- | :------------------ | :------- | :-------------------------- | :---------- | :-- | :----------------------------- |
 | `sdk-overview/architecture`    | diagram (architecture) | customer / SDK      | 1600×900 | `sdk/overview`              | `H9oQOa`    | v1  | `sdk-overview/architecture.md` |
+| `mcp-overview/overview`        | diagram (architecture) | customer / MCP      | 1600×900 | `mcp/overview`              | `knSrg`     | v1  | `mcp-overview/overview.md`     |
 | `how-qcobro-works/flow`        | diagram (flow)         | customer            | 1600×900 | `concepts/how-qcobro-works` | `fjsng`     | v1  | `how-qcobro-works/flow.md`     |
 | `campaigns-engine/flow`        | diagram (flow)         | customer            | 1600×900 | `concepts/campaigns-engine` | `bDSCq`     | v1  | `campaigns-engine/flow.md`     |
 | `channels/fanout`              | diagram (hub-spoke)    | customer            | 1600×900 | `concepts/channels`         | `mqLe9`     | v1  | `channels/fanout.md`           |

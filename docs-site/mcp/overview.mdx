@@ -9,6 +9,10 @@ código, así que un cliente MCP —Claude Desktop u otro host compatible— pue
 gestionar carteras en tu nombre, con la misma autenticación por API key de workspace que ya
 usa el SDK.
 
+<Frame caption="@qcobro/mcp envuelve @qcobro/sdk para que un cliente MCP como Claude Desktop gestione QCobro directamente.">
+  <img src="/images/mcp-overview/overview.png" alt="Diagrama: Claude Desktop llama por MCP a @qcobro/mcp, que valida la API key de workspace y delega en @qcobro/sdk, el cual llama a la misma API HTTPS que usa la consola." />
+</Frame>
+
 Esta primera versión cubre el recurso de **carteras**, el mismo que el SDK envuelve hoy. Más
 herramientas llegan a medida que el SDK cubra más recursos.
 

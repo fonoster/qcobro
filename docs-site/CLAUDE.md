@@ -69,7 +69,13 @@ Code examples must use data values that match the actual format stored in QCobro
 placeholder IDs like `"ak_workspace_123"` or `"ws_abc123"` are wrong — they don't look like
 real data and confuse integrators. Use these formats:
 
-- **Workspace `accessKeyId`** (also used in `useWorkspace` and `loginWithApiKey`): `"WO6ueex0qan9ojhf820wgiae3qi5luy08y"` — starts with `WO`, followed by 34 lowercase alphanumeric characters. Always write the full ID; never truncate with `...`.
+- **Workspace `accessKeyId`** (used in `useWorkspace`, and as the `x-workspace` header /
+  `QCOBRO_WORKSPACE`): `"WO6ueex0qan9ojhf820wgiae3qi5luy08y"` — starts with `WO`, followed by
+  32 lowercase alphanumeric characters (34 total). Always write the full ID; never truncate.
+- **API key `accessKeyId`** (used in `loginWithApiKey` and `QCOBRO_ACCESS_KEY_ID` —
+  distinct from the workspace it acts in): `"APvsqbjfxua7zvbupqvd8hfy72hix4b7mv"` — starts
+  with `AP`, followed by 32 lowercase alphanumeric characters (34 total). Never reuse the `WO`
+  workspace example here; they're different entities with different prefixes.
 - **Email**: a realistic address like `"ops@acme.com"`.
 - **Secrets / passwords**: always `process.env.VARIABLE_NAME`, never a literal value.
 
