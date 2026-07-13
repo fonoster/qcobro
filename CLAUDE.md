@@ -48,3 +48,23 @@ Full guide, rationale, and scaffolding: `/ps:create-validated-function`
 
 Use **Conventional Commits** (`type(scope): subject`, e.g. `feat(api): add objectives router`).
 A Husky `commit-msg` hook runs commitlint and rejects non-conforming messages.
+
+## Worktrees
+
+Multiple agents work in this repo concurrently. To avoid two agents editing the same working
+tree/index, **start every new change (bug fix, feature, spec change) in its own worktree**
+instead of committing directly in whatever checkout the session opened in:
+
+- New work → call `EnterWorktree` (name it after the branch/change, e.g. `fix/list-users-ssl`)
+  before making edits. Design, implement, test, commit, and push from inside it.
+- Change merged → clean up immediately so `git branch`/`git worktree list` keep reflecting only
+  what's actually in flight:
+  - Same session that created the worktree: `ExitWorktree` with `action: "remove"`.
+  - Different/later session (PR merged after the creating session ended): remove it by hand —
+    ```
+    git worktree remove <path>
+    git branch -d <branch>     # -D if squash-merged, since local commits look unmerged
+    git fetch --prune          # drop stale remote-tracking refs
+    ```
+- Don't let merged branches or worktrees linger — a stale local branch or worktree next to
+  active ones is what causes confusion about what's actually shipped.
