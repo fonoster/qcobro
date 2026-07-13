@@ -278,6 +278,13 @@ model WhatsAppIntegration {
   // Meta template-send language for this workspace's WhatsApp (e.g. es_DO); the single
   // source for the WhatsApp send language. Lives here so all WhatsApp config is together.
   defaultLanguage String
+  // Cached result of the last "is this WABA/token still reachable" check against Meta's
+  // Graph API, so the console's connected badge doesn't call Meta on every render/poll
+  // (see getWhatsAppIntegration.ts for the TTL). Null until the first check runs; also
+  // reset to null on upsert so a rotated token is re-validated instead of trusting a
+  // cached result for credentials that no longer exist.
+  lastCheckedAt   DateTime?
+  lastCheckedOk   Boolean?
   createdAt       DateTime               @default(now())
   updatedAt       DateTime               @updatedAt
   senderNumbers   WhatsAppSenderNumber[]

@@ -33,7 +33,7 @@ function requireCloak(): void {
 
 export const whatsAppIntegrationRouter = router({
   get: workspaceProcedure.query(({ ctx }) =>
-    createGetWhatsAppIntegration(ctx.prisma as never)(ctx.workspace.accessKeyId)
+    createGetWhatsAppIntegration(ctx.prisma as never, config.whatsapp)(ctx.workspace.accessKeyId)
   ),
 
   listSenders: workspaceProcedure.query(({ ctx }) =>
