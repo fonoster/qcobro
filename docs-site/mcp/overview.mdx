@@ -1,0 +1,114 @@
+---
+title: "Servidor MCP"
+description: "@qcobro/mcp expone la API de QCobro como herramientas de Model Context Protocol, para que un asistente de IA como Claude gestione carteras directamente."
+---
+
+`@qcobro/mcp` es un servidor [Model Context Protocol](https://modelcontextprotocol.io) para la
+API de QCobro. Envuelve el mismo [`@qcobro/sdk`](/sdk/overview) que usarías desde tu propio
+código, así que un cliente MCP —Claude Desktop u otro host compatible— puede listar, crear y
+gestionar carteras en tu nombre, con la misma autenticación por API key de workspace que ya
+usa el SDK.
+
+Esta primera versión cubre el recurso de **carteras**, el mismo que el SDK envuelve hoy. Más
+herramientas llegan a medida que el SDK cubra más recursos.
+
+## Antes de empezar
+
+Necesitas una API key de workspace: un `accessKeyId` y un `accessKeySecret`, creados desde la
+página de API Keys de la consola de QCobro. El rol de esa key controla por completo lo que el
+servidor puede hacer — crea una key con la que te sientas cómodo dejando actuar a un agente,
+especialmente si vas a habilitar operaciones de escritura como crear o eliminar carteras.
+
+## Configura Claude Desktop en un paso
+
+```bash
+npx @qcobro/mcp config \
+  --access-key-id <accessKeyId> \
+  --access-key-secret <accessKeySecret> \
+  --workspace <workspaceAccessKeyId>
+```
+
+Este comando escribe (o combina con lo existente) el archivo `claude_desktop_config.json` de
+Claude Desktop, añadiendo una entrada `qcobro`. Reinicia Claude Desktop después de ejecutarlo.
+Pasa `--url` si necesitas apuntar a un endpoint distinto del predeterminado
+(`https://api.qcobro.com`).
+
+<Tip>
+  El comando conserva cualquier otro servidor MCP que ya tengas configurado (por ejemplo
+  `@fonoster/mcp`) — solo añade o reemplaza la entrada `qcobro`.
+</Tip>
+
+## Configuración manual
+
+Si prefieres editar el archivo tú mismo, añade esto a `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "qcobro": {
+      "command": "npx",
+      "args": ["-y", "@qcobro/mcp@latest"],
+      "env": {
+        "QCOBRO_ENDPOINT": "https://api.qcobro.com",
+        "QCOBRO_ACCESS_KEY_ID": "WO6ueex0qan9ojhf820wgiae3qi5luy08y",
+        "QCOBRO_ACCESS_KEY_SECRET": "<tu-access-key-secret>",
+        "QCOBRO_WORKSPACE": "WO6ueex0qan9ojhf820wgiae3qi5luy08y"
+      }
+    }
+  }
+}
+```
+
+| Variable | Descripción | Obligatoria |
+| --- | --- | :---: |
+| `QCOBRO_ACCESS_KEY_ID` | Id de la API key de workspace | Sí |
+| `QCOBRO_ACCESS_KEY_SECRET` | Secreto de la API key de workspace | Sí |
+| `QCOBRO_WORKSPACE` | Workspace en el que actuar (su `accessKeyId`) | Sí |
+| `QCOBRO_ENDPOINT` | URL base de la API (por defecto `https://api.qcobro.com`) | No |
+
+Son las mismas credenciales que `loginWithApiKey` y `useWorkspace` del SDK — el servidor no
+hace más que autenticarse con ellas y delegar cada llamada al SDK.
+
+<Warning>
+  El `accessKeySecret` se muestra una sola vez al crear la API key. Guárdalo en un gestor de
+  secretos; nunca lo compartas fuera de tu configuración local de Claude Desktop.
+</Warning>
+
+## Herramientas disponibles
+
+| Herramienta | Descripción |
+| --- | --- |
+| `portfolios_list` | Lista las carteras del workspace activo. Entrada opcional: `includeArchived`. |
+| `portfolios_get` | Obtiene una cartera por `id`. |
+| `portfolios_create` | Crea una cartera (`name`, `clientId`). |
+| `portfolios_update` | Actualiza una cartera; `archived: true`/`false` archiva o restaura. |
+| `portfolios_delete` | Elimina una cartera por `id`. |
+| `portfolios_list_accounts` | Lista una página de cuentas de una cartera (`portfolioId`, `limit`/`offset` opcionales), con el total. |
+| `portfolios_sync_accounts` | Sincroniza un lote de cuentas en una cartera (`portfolioId`, `mode`: `APPEND_ONLY` \| `UPDATE_EXISTING` \| `REPLACE`, `rows`). |
+
+<Note>
+  Cada herramienta valida su entrada contra el mismo esquema que ya valida el método del SDK al
+  que delega — no hay reglas paralelas que puedan desincronizarse. Una entrada inválida se
+  rechaza antes de que cualquier petición llegue a la API de QCobro.
+</Note>
+
+## Solución de problemas
+
+Si una llamada a una herramienta falla con un error de autenticación, comprueba que:
+
+1. `QCOBRO_ACCESS_KEY_ID`/`QCOBRO_ACCESS_KEY_SECRET` son un par de API key válido y no
+   expirado.
+2. `QCOBRO_WORKSPACE` es el `accessKeyId` de un workspace al que esa key pertenece.
+3. El rol de la key permite la operación que estás llamando — una key de solo lectura
+   rechazará `portfolios_create`, por ejemplo.
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Visión general del SDK" icon="cube" href="/sdk/overview">
+    El cliente TypeScript que `@qcobro/mcp` envuelve por dentro.
+  </Card>
+  <Card title="Gestionar carteras" icon="folder-open" href="/sdk/portfolios">
+    El detalle de cada operación de carteras, desde el lado del SDK.
+  </Card>
+</CardGroup>
