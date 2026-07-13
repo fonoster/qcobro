@@ -1,0 +1,36 @@
+{
+  "name": "@qcobro/mcp",
+  "version": "1.16.0",
+  "description": "Model Context Protocol server for the QCobro API.",
+  "type": "module",
+  "bin": {
+    "qcobro-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b --force",
+    "postbuild": "chmod +x ./dist/index.js",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test \"src/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@qcobro/common": "^1.16.0",
+    "@qcobro/sdk": "^1.16.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@qcobro/apiserver": "^1.16.0",
+    "@trpc/server": "^11.0.0",
+    "@types/express": "^5.0.0",
+    "express": "^5.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.9.0"
+  }
+}

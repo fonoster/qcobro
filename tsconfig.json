@@ -16,6 +16,7 @@
   "references": [
     { "path": "./mods/common" },
     { "path": "./mods/apiserver" },
-    { "path": "./mods/sdk" }
+    { "path": "./mods/sdk" },
+    { "path": "./mods/mcp" }
   ]
 }
