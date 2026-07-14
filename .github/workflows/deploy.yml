@@ -47,6 +47,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Resolve version
         id: version
@@ -55,8 +57,12 @@ jobs:
             v="${{ inputs.version }}"
             [ -n "$v" ] || v="v$(node -p "require('./lerna.json').version")"
           else
-            # docker-publish runs on vX.Y.Z tags; head_branch carries the tag name.
-            v="${{ github.event.workflow_run.head_branch }}"
+            # docker-publish now triggers on tag `create` (push-triggered tag runs are
+            # silenced by the release commit's "[skip ci]"), and GitHub doesn't document
+            # head_branch for create-triggered workflow_run events the way it does for
+            # push-triggered ones. head_sha (the tagged commit) is documented either way,
+            # so resolve the tag from that instead of trusting head_branch.
+            v="$(git describe --tags --exact-match "${{ github.event.workflow_run.head_sha }}")"
           fi
           [[ "$v" == v* ]] || v="v$v"
           if ! echo "$v" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then

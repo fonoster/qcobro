@@ -1,12 +1,13 @@
 name: Publish SDK to npm
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  # See docker-publish.yml: `create` (not `push: tags`) because the release commit
+  # carries "[skip ci]", which also silences push-triggered tag workflows.
+  create:
 
 jobs:
   publish:
+    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
     runs-on: ubuntu-latest
     permissions:
       contents: read

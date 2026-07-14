@@ -1,9 +1,12 @@
 name: Publish Docker Images
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  # Tag pushes use `create` instead of `push: tags` because the release commit is
+  # tagged "[skip ci]" (see lerna.json) to stop it from spawning a CI run — but
+  # GitHub's skip-ci check also silences `push`-triggered workflows for that same
+  # commit, tag push included. `create` fires on ref creation and isn't subject to
+  # skip-ci filtering, so it still fires for the release tag.
+  create:
   workflow_dispatch:
     inputs:
       tag:
@@ -17,6 +20,7 @@ env:
 
 jobs:
   build-and-push:
+    if: github.event_name == 'workflow_dispatch' || (github.ref_type == 'tag' && startsWith(github.ref_name, 'v'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
