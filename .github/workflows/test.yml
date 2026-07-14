@@ -18,6 +18,9 @@ on:
 
 jobs:
   build:
+    # Skip lerna's own bump commits — they only change version numbers and
+    # would otherwise cause a CI → Release → CI re-trigger loop.
+    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
