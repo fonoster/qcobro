@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.19.3](https://github.com/fonoster/qcobro/compare/v1.19.2...v1.19.3) (2026-07-14)
+
+### Bug Fixes
+
+- **docs:** restore em-dash removal in MCP overview, codify the rule ([#48](https://github.com/fonoster/qcobro/issues/48)) ([67621a4](https://github.com/fonoster/qcobro/commit/67621a41017bff64be133b2071895e0fa7b3ba57))
+- **webapp:** remove double border on WhatsApp initial message ([#50](https://github.com/fonoster/qcobro/issues/50)) ([b8e1fca](https://github.com/fonoster/qcobro/commit/b8e1fcaf0079d880d629fd500fd23ce19ea86805))
+
 ## [1.19.2](https://github.com/fonoster/qcobro/compare/v1.19.1...v1.19.2) (2026-07-13)
 
 ### Bug Fixes
