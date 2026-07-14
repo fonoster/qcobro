@@ -180,6 +180,18 @@ workspace's WhatsApp integration (`WhatsAppIntegration.defaultLanguage`; see
 - **WHEN** the engine dispatches an SMS using a template with `{{firstName}}` in the body
 - **THEN** the placeholder is replaced with the account holder's first name before sending
 
+#### Scenario: WhatsApp named parameters use Meta's snake_case format
+
+- **GIVEN** Meta rejects named template parameters that are not lowercase snake_case (e.g. it
+  accepts `{{first_name}}` but not `{{firstName}}`)
+- **WHEN** the engine dispatches a WhatsApp template whose body contains a snake_case
+  placeholder, e.g. `{{first_name}}` or `{{outstanding_balance}}`
+- **THEN** the engine maps it to the camelCase account field of the same name (`firstName`,
+  `outstandingBalance`) and sends the resolved value as that literal snake_case named
+  parameter
+- **AND** the documented variable reference lists each variable's WhatsApp (snake_case) name
+  alongside its camelCase name used by every other channel
+
 #### Scenario: WhatsApp template is fetched by id and previewed read-only
 
 - **WHEN** an operator creates a `WHATSAPP` agent template and enters a Meta template id

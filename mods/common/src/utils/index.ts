@@ -3,7 +3,9 @@ export {
   renderTemplate,
   extractTemplateTokens,
   buildOutreachContext,
-  pickRandomNumber
+  pickRandomNumber,
+  snakeToCamel,
+  renderWhatsAppTemplate
 } from "./outreach.js";
 export {
   localParts,

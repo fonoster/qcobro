@@ -17,13 +17,19 @@ customer's account context, and sent as `{ parameter_name, text }` body componen
 configured `templateName` and the **workspace-level** language code. The Meta API client SHALL be
 injected so unit tests run with an emulator and no live message is sent.
 
+Meta requires named parameters to be lowercase snake_case (e.g. `{{first_name}}`) and rejects
+camelCase placeholders outright, while the account context and every other channel's templates use
+camelCase field names (`firstName`). The system SHALL map each extracted snake_case token to its
+camelCase context field (`first_name` -> `firstName`) to resolve the value, while sending the
+`parameter_name` to Meta as the literal snake_case token from the approved template.
+
 #### Scenario: Template is sent with named parameters
 
 - **WHEN** the system dispatches a `WHATSAPP` template whose `messageBody` is
-  `"Hola {{firstName}}, su saldo es {{outstandingBalance}}"` to an account named "María López"
+  `"Hola {{first_name}}, su saldo es {{outstanding_balance}}"` to an account named "María López"
   with outstanding balance 1500
 - **THEN** the Meta client is called with the configured `templateName`, language code, and body
-  parameters `[{ parameter_name: "firstName", text: "María" }, { parameter_name: "outstandingBalance", text: "1500" }]`
+  parameters `[{ parameter_name: "first_name", text: "María" }, { parameter_name: "outstanding_balance", text: "1500" }]`
 - **AND** the returned provider message id is recorded as the gestión `providerRef`
 
 #### Scenario: Unapproved or mismatched template fails at send time

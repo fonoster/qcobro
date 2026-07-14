@@ -1,6 +1,6 @@
 import Handlebars from "handlebars";
 import type { PortfolioAccountRecord } from "../types/portfolios.js";
-import type { NumberSelector } from "../types/dispatch.js";
+import type { NumberSelector, WhatsAppTemplateParam } from "../types/dispatch.js";
 
 /**
  * `{{multiply a b}}` — coerces both operands to numbers; either operand being
@@ -125,3 +125,40 @@ export function buildOutreachContext(
 /** Default number selector: a uniform random pick from the pool. */
 export const pickRandomNumber: NumberSelector = (numbers) =>
   numbers[Math.floor(Math.random() * numbers.length)];
+
+/**
+ * Meta requires WhatsApp template named parameters to be lowercase snake_case
+ * (`{{first_name}}`) — it rejects camelCase placeholders outright, so a Meta template can
+ * never literally use the `firstName`-style names the render context and every other
+ * channel's Handlebars templates use. Converts a snake_case token to its camelCase context
+ * key, e.g. `first_name` -> `firstName`, `outstanding_balance` -> `outstandingBalance`. A
+ * token with no underscore is returned unchanged.
+ */
+export function snakeToCamel(token: string): string {
+  return token.replace(/_([A-Za-z0-9])/g, (_, c: string) => c.toUpperCase());
+}
+
+/**
+ * Resolves a WhatsApp template body's Meta named parameters against the outreach context,
+ * and builds a substituted copy of the body for display (live preview, gestión history).
+ * Each `{{snake_case_token}}` in the body maps to the camelCase context field of the same
+ * name (see {@link snakeToCamel}); `parameterName` sent to Meta stays the literal token as
+ * written in the approved template — only the context lookup is translated.
+ */
+export function renderWhatsAppTemplate(
+  body: string,
+  context: Record<string, unknown>
+): { renderedBody: string; params: WhatsAppTemplateParam[] } {
+  const params = extractTemplateTokens(body).map((token) => ({
+    parameterName: token,
+    text: renderTemplate(`{{${snakeToCamel(token)}}}`, context)
+  }));
+  let renderedBody = body;
+  for (const { parameterName, text } of params) {
+    renderedBody = renderedBody.replace(
+      new RegExp(`\\{\\{\\s*${parameterName}\\s*\\}\\}`, "g"),
+      text
+    );
+  }
+  return { renderedBody, params };
+}

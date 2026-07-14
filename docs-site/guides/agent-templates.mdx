@@ -78,7 +78,7 @@ enviarse:
 | Canal | ¿Variables? | Dónde escribirlas |
 | --- | --- | --- |
 | **SMS** | Sí | Cuerpo del mensaje |
-| **WhatsApp** | Sí | En los parámetros con nombre de tu plantilla de Meta, ver [Integración de WhatsApp](/guides/whatsapp) |
+| **WhatsApp** | Sí, con otro formato de nombre | En los parámetros con nombre de tu plantilla de Meta, ver [Integración de WhatsApp](/guides/whatsapp) |
 | **Correo** | Sí | Asunto y Cuerpo del mensaje |
 | **Voz pregrabada** | Sí | Guion (se locuta por voz, así que pasa por el mismo reemplazo) |
 | **Voz IA** | No | Se personaliza distinto, ver [Personalizar Voz IA](#personalizar-voz-ia) |
@@ -91,26 +91,36 @@ enviarse:
 
 ### Lista de variables
 
-| Variable | Qué inserta |
-| --- | --- |
-| `{{firstName}}` | El primer nombre de la cuenta. |
-| `{{fullName}}` | El nombre completo. |
-| `{{principalAmount}}` | El monto principal de la deuda. |
-| `{{outstandingBalance}}` | El saldo pendiente. |
-| `{{currency}}` | La moneda del espacio de trabajo (por ejemplo, `CRC`). |
-| `{{daysPastDue}}` | Los días de atraso. |
-| `{{missedInstallments}}` | El número de cuotas vencidas. |
-| `{{termsAmount}}` | El monto de cada cuota. |
-| `{{termsFrequency}}` | La frecuencia de pago (por ejemplo, mensual). |
-| `{{termsLength}}` | El número total de cuotas. |
-| `{{lastPaymentAmount}}` | El monto del último pago registrado. |
-| `{{lastPaymentDate}}` | La fecha del último pago registrado. |
-| `{{customerSegment}}` | El segmento de la cuenta. |
-| `{{negotiationOptions}}` | Las opciones de negociación de la cuenta. |
-| `{{bestTimeToCall}}` | La mejor hora para llamar. |
-| `{{phone}}` | El teléfono de la cuenta. |
-| `{{externalId}}` | Tu identificador externo de la cuenta. |
-| `{{isDue}}` | Si la cuenta está vencida (`daysPastDue` mayor que cero). |
+La columna **En WhatsApp** es el nombre que debes usar al escribir el parámetro con nombre en
+tu plantilla de Meta; en los demás canales usa la columna **Variable** tal cual.
+
+| Variable | En WhatsApp | Qué inserta |
+| --- | --- | --- |
+| `{{firstName}}` | `{{first_name}}` | El primer nombre de la cuenta. |
+| `{{fullName}}` | `{{full_name}}` | El nombre completo. |
+| `{{principalAmount}}` | `{{principal_amount}}` | El monto principal de la deuda. |
+| `{{outstandingBalance}}` | `{{outstanding_balance}}` | El saldo pendiente. |
+| `{{currency}}` | `{{currency}}` | La moneda del espacio de trabajo (por ejemplo, `CRC`). |
+| `{{daysPastDue}}` | `{{days_past_due}}` | Los días de atraso. |
+| `{{missedInstallments}}` | `{{missed_installments}}` | El número de cuotas vencidas. |
+| `{{termsAmount}}` | `{{terms_amount}}` | El monto de cada cuota. |
+| `{{termsFrequency}}` | `{{terms_frequency}}` | La frecuencia de pago (por ejemplo, mensual). |
+| `{{termsLength}}` | `{{terms_length}}` | El número total de cuotas. |
+| `{{lastPaymentAmount}}` | `{{last_payment_amount}}` | El monto del último pago registrado. |
+| `{{lastPaymentDate}}` | `{{last_payment_date}}` | La fecha del último pago registrado. |
+| `{{customerSegment}}` | `{{customer_segment}}` | El segmento de la cuenta. |
+| `{{negotiationOptions}}` | `{{negotiation_options}}` | Las opciones de negociación de la cuenta. |
+| `{{bestTimeToCall}}` | `{{best_time_to_call}}` | La mejor hora para llamar. |
+| `{{phone}}` | `{{phone}}` | El teléfono de la cuenta. |
+| `{{externalId}}` | `{{external_id}}` | Tu identificador externo de la cuenta. |
+| `{{isDue}}` | `{{is_due}}` | Si la cuenta está vencida (`daysPastDue` mayor que cero). |
+
+<Warning>
+  Meta exige que los parámetros con nombre de una plantilla sean **minúsculas y guion bajo**
+  (`{{first_name}}`); rechaza formatos como `{{firstName}}`. Al redactar tu plantilla en Meta
+  Business Manager, usa siempre la columna **En WhatsApp**. QCobro traduce ese nombre al dato
+  correspondiente de la cuenta automáticamente.
+</Warning>
 
 <Note>
   Si una cuenta no tiene un dato, su variable se reemplaza por texto vacío y el mensaje sigue

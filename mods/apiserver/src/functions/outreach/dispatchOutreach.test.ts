@@ -196,7 +196,7 @@ describe("dispatchOutreach", () => {
     assert.equal(calls.voice.length, 0);
   });
 
-  it("WHATSAPP sends the template with named params extracted from the message body", async () => {
+  it("WHATSAPP sends the template with snake_case named params mapped to the camelCase context", async () => {
     const { deps, calls } = makeDeps();
     const result = await createDispatchOutreach(deps)({
       channel: "WHATSAPP",
@@ -204,7 +204,9 @@ describe("dispatchOutreach", () => {
       context: { firstName: "Ana", outstandingBalance: 1500 },
       templateName: "recordatorio_pago",
       languageCode: "es_DO",
-      body: "Hola {{firstName}}, su saldo es {{outstandingBalance}}"
+      // Meta template bodies use lowercase snake_case placeholders — camelCase is rejected
+      // by Meta at template-approval time.
+      body: "Hola {{first_name}}, su saldo es {{outstanding_balance}}"
     });
 
     assert.equal(calls.whatsapp.length, 1);
@@ -217,10 +219,11 @@ describe("dispatchOutreach", () => {
     assert.equal(sent.to, "+50670000000");
     assert.equal(sent.templateName, "recordatorio_pago");
     assert.equal(sent.languageCode, "es_DO");
-    // Each {{var}} in the body becomes a named parameter rendered against the context.
+    // The parameter name sent to Meta stays the literal snake_case token from the approved
+    // template; only the value lookup is translated to the matching camelCase context field.
     assert.deepEqual(sent.params, [
-      { parameterName: "firstName", text: "Ana" },
-      { parameterName: "outstandingBalance", text: "1500" }
+      { parameterName: "first_name", text: "Ana" },
+      { parameterName: "outstanding_balance", text: "1500" }
     ]);
     assert.equal(result.channel, "WHATSAPP");
     assert.equal(result.providerRef, "wamid-1");

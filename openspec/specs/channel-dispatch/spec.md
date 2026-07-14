@@ -113,10 +113,14 @@ The dispatch layer SHALL support a `WHATSAPP` channel alongside the voice, SMS, 
 channels, and `DispatchChannel` SHALL include `WHATSAPP`. A WHATSAPP dispatch SHALL render the
 agent template's `messageBody` Handlebars `{{vars}}` against the account context and send them as
 named template parameters through an injected `WhatsAppClient`, returning a `DispatchResult` whose
-`providerRef` is the Meta message id. Unlike the voice and SMS clients — which are injected once at
-boot from deployment-global configuration — the `WhatsAppClient` SHALL be resolved per dispatch
-from the owning workspace's stored integration credentials and passed in by the caller, so
-`dispatchOutreach` remains pure and writes nothing to the database.
+`providerRef` is the Meta message id. Because Meta's named parameters are lowercase snake_case
+while the account context is camelCase, each `{{vars}}` token SHALL be mapped to its camelCase
+context field to resolve the value (see `whatsapp-channel` for the exact mapping); the
+`parameter_name` sent to Meta stays the literal token from the template. Unlike the voice and SMS
+clients — which are injected once at boot from deployment-global configuration — the
+`WhatsAppClient` SHALL be resolved per dispatch from the owning workspace's stored integration
+credentials and passed in by the caller, so `dispatchOutreach` remains pure and writes nothing to
+the database.
 
 #### Scenario: WHATSAPP dispatch sends through the resolved client
 
