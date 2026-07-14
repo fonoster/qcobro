@@ -265,8 +265,11 @@ export const messages = {
     "portfolios.reachOut.preview.VOICE_AI": "First message",
     "portfolios.reachOut.preview.VOICE_PRERECORDED": "Script",
     "portfolios.reachOut.preview.SMS": "Message",
+    "portfolios.reachOut.preview.WHATSAPP": "WhatsApp message",
     "portfolios.reachOut.preview.subject": "Subject",
     "portfolios.reachOut.preview.body": "Body",
+    "portfolios.reachOut.whatsAppReadOnly":
+      "This is the Meta-approved template with this customer's values filled in — the wording itself can't be edited per send.",
     "portfolios.reachOut.footnote": "The contact is recorded as a campaign-less gestión.",
     "portfolios.reachOut.firstMessageNotSet": "(Not set. Will wait for the customer to start)",
     "portfolios.reachOut.send": "Contact",
@@ -831,8 +834,11 @@ export const messages = {
     "portfolios.reachOut.preview.VOICE_AI": "Primer mensaje",
     "portfolios.reachOut.preview.VOICE_PRERECORDED": "Guión",
     "portfolios.reachOut.preview.SMS": "Mensaje",
+    "portfolios.reachOut.preview.WHATSAPP": "Mensaje de WhatsApp",
     "portfolios.reachOut.preview.subject": "Asunto",
     "portfolios.reachOut.preview.body": "Cuerpo",
+    "portfolios.reachOut.whatsAppReadOnly":
+      "Esta es la plantilla aprobada por Meta con los valores de este cliente ya completados — el texto en sí no se puede editar por envío.",
     "portfolios.reachOut.footnote": "El contacto queda registrado como una gestión, sin campaña.",
     "portfolios.reachOut.firstMessageNotSet": "(No definido. Esperará a que el cliente inicie)",
     "portfolios.reachOut.send": "Contactar",

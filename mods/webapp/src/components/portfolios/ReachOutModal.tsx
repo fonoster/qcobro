@@ -73,6 +73,9 @@ export function ReachOutModal({
     } else if (agentType === "VOICE_PRERECORDED") {
       const vc = tmpl.voicePrerecordedConfig as { script?: string } | undefined;
       setEditFirstMessage(vc?.script ? renderTemplate(vc.script, ctx) : "");
+    } else if (agentType === "WHATSAPP") {
+      const wc = tmpl.whatsAppConfig as { messageBody?: string } | undefined;
+      setEditBody(wc?.messageBody ? renderTemplate(wc.messageBody, ctx) : "");
     }
   }, [tmpl, agentType]);
 
@@ -181,6 +184,21 @@ export function ReachOutModal({
             placeholder={t("portfolios.reachOut.firstMessageNotSet")}
             onChange={(e) => setEditFirstMessage(e.target.value)}
           />
+        )}
+
+        {!isLoading && agentType === "WHATSAPP" && (
+          <>
+            <TextareaGroup
+              id="reach-whatsapp-body"
+              label={t("portfolios.reachOut.preview.WHATSAPP")}
+              value={editBody}
+              rows={3}
+              readOnly
+              onChange={() => undefined}
+              className="text-slate-500"
+            />
+            <p className="text-xs text-slate-400">{t("portfolios.reachOut.whatsAppReadOnly")}</p>
+          </>
         )}
 
         <p className="text-xs text-slate-400">{t("portfolios.reachOut.footnote")}</p>
