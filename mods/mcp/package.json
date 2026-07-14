@@ -1,6 +1,6 @@
 {
   "name": "@qcobro/mcp",
-  "version": "1.19.4",
+  "version": "1.19.5",
   "description": "Model Context Protocol server for the QCobro API.",
   "type": "module",
   "bin": {
@@ -21,12 +21,12 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@qcobro/common": "^1.19.4",
-    "@qcobro/sdk": "^1.19.4",
+    "@qcobro/common": "^1.19.5",
+    "@qcobro/sdk": "^1.19.5",
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@qcobro/apiserver": "^1.19.4",
+    "@qcobro/apiserver": "^1.19.5",
     "@trpc/server": "^11.0.0",
     "@types/express": "^5.0.0",
     "express": "^5.0.0",
