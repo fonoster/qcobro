@@ -420,7 +420,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
               {/* Initial template message */}
               {messageBody && (
-                <div className="flex flex-col gap-2.5 border-b border-slate-200 bg-emerald-50 px-4 py-4">
+                <div className="flex flex-col gap-2.5 bg-emerald-50 px-4 py-4">
                   <span className="text-[11px] font-semibold text-emerald-700">
                     {t("gestiones.detail.whatsAppAgent")}
                   </span>
