@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.19.4](https://github.com/fonoster/qcobro/compare/v1.19.3...v1.19.4) (2026-07-14)
+
+### Bug Fixes
+
+- **whatsapp:** correct template variable preview and Meta named-parameter mapping ([#53](https://github.com/fonoster/qcobro/issues/53)) ([9951417](https://github.com/fonoster/qcobro/commit/995141746127a390c238fb22982c1a42edddecf9))
+
 ## [1.19.3](https://github.com/fonoster/qcobro/compare/v1.19.2...v1.19.3) (2026-07-14)
 
 ### Bug Fixes

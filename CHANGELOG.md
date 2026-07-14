@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.19.4](https://github.com/fonoster/qcobro/compare/v1.19.3...v1.19.4) (2026-07-14)
+
+### Bug Fixes
+
+- **ci:** stop release commits from triggering CI/e2e at all ([#52](https://github.com/fonoster/qcobro/issues/52)) ([c47b8af](https://github.com/fonoster/qcobro/commit/c47b8affb211d38b6897145811ff7cf15ed0cb99))
+- **site:** replace fake customer logos with market segments ([#54](https://github.com/fonoster/qcobro/issues/54)) ([e988408](https://github.com/fonoster/qcobro/commit/e988408973fab7eb86b9478d629c0f85f2f63a40))
+- **whatsapp:** correct template variable preview and Meta named-parameter mapping ([#53](https://github.com/fonoster/qcobro/issues/53)) ([9951417](https://github.com/fonoster/qcobro/commit/995141746127a390c238fb22982c1a42edddecf9))
+
 ## [1.19.3](https://github.com/fonoster/qcobro/compare/v1.19.2...v1.19.3) (2026-07-14)
 
 ### Bug Fixes

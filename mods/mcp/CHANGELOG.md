@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.19.4](https://github.com/fonoster/qcobro/compare/v1.19.3...v1.19.4) (2026-07-14)
+
+**Note:** Version bump only for package @qcobro/mcp
+
 ## [1.19.2](https://github.com/fonoster/qcobro/compare/v1.19.1...v1.19.2) (2026-07-13)
 
 **Note:** Version bump only for package @qcobro/mcp
