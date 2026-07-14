@@ -560,8 +560,6 @@ export const messages = {
     "integrations.senders.addError": "Could not add sender.",
     "integrations.senders.noIntegration": "Connect a WABA first.",
 
-    "agents.form.whatsAppNamingHint":
-      "Meta requires named parameters in lowercase snake_case (e.g. {{first_name}}, {{outstanding_balance}}) — it rejects camelCase. See the variable reference for each field's WhatsApp name.",
     "agents.form.templatePreview": "Template preview (read-only)",
     "agents.form.templatePreviewLoading": "Fetching template…",
     "agents.form.templatePreviewEmpty": "Enter a template name above to preview.",
@@ -1132,8 +1130,6 @@ export const messages = {
     "integrations.senders.addError": "No se pudo agregar el remitente.",
     "integrations.senders.noIntegration": "Conecta una WABA primero.",
 
-    "agents.form.whatsAppNamingHint":
-      "Meta exige que los parámetros con nombre sean minúsculas y con guion bajo (por ejemplo {{first_name}}, {{outstanding_balance}}); rechaza camelCase. Consulta la lista de variables para el nombre de cada campo en WhatsApp.",
     "agents.form.templatePreview": "Vista previa de la plantilla (solo lectura)",
     "agents.form.templatePreviewLoading": "Cargando plantilla…",
     "agents.form.templatePreviewEmpty":
