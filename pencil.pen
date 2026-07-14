@@ -63708,7 +63708,7 @@
               "id": "Lu3fp",
               "name": "H",
               "fill": "$dgm-ink",
-              "content": "Where the SDK sits",
+              "content": "Dónde encaja el SDK",
               "fontFamily": "Inter",
               "fontSize": 28,
               "fontWeight": "800",
@@ -63719,7 +63719,7 @@
               "id": "j61cig",
               "name": "Sub",
               "fill": "$dgm-muted",
-              "content": "Your code drives QCobro through one typed client — the same API the operator console uses.",
+              "content": "Tu código impulsa QCobro a través de un único cliente tipado: la misma API que usa la consola de operador.",
               "fontFamily": "Inter",
               "fontSize": 15,
               "fontWeight": "500"
@@ -63731,7 +63731,7 @@
           "id": "CjD73",
           "x": 64,
           "y": 392,
-          "name": "Your runtime",
+          "name": "Tu entorno",
           "width": 300,
           "fill": "$dgm-canvas",
           "cornerRadius": "$dgm-radius-node",
@@ -63746,7 +63746,7 @@
               "id": "N6FehY",
               "name": "GroupLabel",
               "fill": "$dgm-muted",
-              "content": "YOUR RUNTIME",
+              "content": "TU ENTORNO",
               "fontFamily": "Inter",
               "fontSize": 11,
               "fontWeight": "700",
@@ -63763,10 +63763,10 @@
                   "icon": "code"
                 },
                 "IEyhb": {
-                  "content": "Your code"
+                  "content": "Tu código"
                 },
                 "bnM70": {
-                  "content": "Node service or app"
+                  "content": "Servicio o app en Node"
                 }
               }
             }
@@ -63785,19 +63785,19 @@
               "content": "@qcobro/sdk"
             },
             "U7Ump": {
-              "content": "Typed TypeScript client"
+              "content": "Cliente TypeScript tipado"
             },
             "D7lgWg/am2NQ": {
               "content": "1"
             },
             "D7lgWg/AVA4v": {
-              "content": "Authenticate — login() or API key"
+              "content": "Autentica: login() o API key"
             },
             "lK1ox/am2NQ": {
               "content": "2"
             },
             "lK1ox/AVA4v": {
-              "content": "useWorkspace() — scope every call"
+              "content": "useWorkspace(): acota cada llamada"
             }
           }
         },
@@ -63841,7 +63841,7 @@
                   "content": "QCobro API"
                 },
                 "bnM70": {
-                  "content": "The HTTPS API"
+                  "content": "La API HTTPS"
                 }
               }
             }
@@ -63851,7 +63851,7 @@
           "id": "zTKMs",
           "type": "ref",
           "ref": "M9EyhC",
-          "name": "Identity",
+          "name": "Autenticación",
           "x": 470,
           "y": 712,
           "width": 340,
@@ -63860,10 +63860,10 @@
               "icon": "shield-check"
             },
             "cVu61": {
-              "content": "Authentication"
+              "content": "Autenticación"
             },
             "rzk7J": {
-              "content": "Login, API keys & tokens"
+              "content": "Login, API keys y tokens"
             }
           }
         },
@@ -63905,7 +63905,7 @@
               "y": 451,
               "descendants": {
                 "WZCz0": {
-                  "content": "calls",
+                  "content": "llama",
                   "fill": "$dgm-our-deep"
                 }
               }
@@ -64007,7 +64007,7 @@
                   "id": "uNBPR",
                   "name": "l",
                   "fill": "$dgm-muted",
-                  "content": "SDK request",
+                  "content": "Petición del SDK",
                   "fontFamily": "Inter",
                   "fontSize": 12,
                   "fontWeight": "500"
@@ -64034,7 +64034,7 @@
                   "id": "RaNUM",
                   "name": "l",
                   "fill": "$dgm-muted",
-                  "content": "Authentication",
+                  "content": "Credenciales",
                   "fontFamily": "Inter",
                   "fontSize": 12,
                   "fontWeight": "500"
@@ -75131,6 +75131,373 @@
                       ]
                     }
                   ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "knSrg",
+      "x": 30959,
+      "y": -2057,
+      "name": "Diagram · MCP Overview (kit)",
+      "clip": true,
+      "width": 1600,
+      "height": 900,
+      "fill": "#FFFFFF",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "ZJhc1",
+          "x": 64,
+          "y": 56,
+          "name": "Title",
+          "layout": "vertical",
+          "gap": 6,
+          "children": [
+            {
+              "type": "text",
+              "id": "y6j1Gj",
+              "name": "H",
+              "fill": "$dgm-ink",
+              "content": "Cómo se conecta un cliente MCP",
+              "fontFamily": "Inter",
+              "fontSize": 28,
+              "fontWeight": "800",
+              "letterSpacing": -0.4
+            },
+            {
+              "type": "text",
+              "id": "oDCxQ",
+              "name": "Sub",
+              "fill": "$dgm-muted",
+              "content": "@qcobro/mcp envuelve @qcobro/sdk para que un cliente MCP como Claude Desktop gestione QCobro directamente.",
+              "fontFamily": "Inter",
+              "fontSize": 15,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "QFTK6",
+          "x": 64,
+          "y": 392,
+          "name": "Tu anfitrión MCP",
+          "width": 340,
+          "fill": "$dgm-canvas",
+          "cornerRadius": "$dgm-radius-node",
+          "stroke": "$dgm-border",
+          "strokeWidth": 1,
+          "layout": "vertical",
+          "gap": 12,
+          "padding": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "J68lS",
+              "name": "GroupLabel",
+              "fill": "$dgm-muted",
+              "content": "TU ANFITRIÓN MCP",
+              "fontFamily": "Inter",
+              "fontSize": 11,
+              "fontWeight": "700",
+              "letterSpacing": 0.6
+            },
+            {
+              "id": "QhayB",
+              "type": "ref",
+              "ref": "M9EyhC",
+              "name": "Claude Desktop",
+              "width": "fill_container",
+              "descendants": {
+                "kNqsg": {
+                  "fill": "#FDF1E3"
+                },
+                "l9zDAa": {
+                  "icon": "sparkles",
+                  "fill": "#D97706"
+                },
+                "cVu61": {
+                  "content": "Claude Desktop"
+                },
+                "rzk7J": {
+                  "content": "Cliente MCP"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "wMvV6",
+          "x": 1112,
+          "y": 360,
+          "name": "QCobro",
+          "width": 424,
+          "fill": "$dgm-canvas",
+          "cornerRadius": "$dgm-radius-node",
+          "stroke": "$dgm-border",
+          "strokeWidth": 1,
+          "layout": "vertical",
+          "gap": 14,
+          "padding": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "fLLUA",
+              "name": "GroupLabel",
+              "fill": "$dgm-muted",
+              "content": "QCOBRO",
+              "fontFamily": "Inter",
+              "fontSize": 11,
+              "fontWeight": "700",
+              "letterSpacing": 0.6
+            },
+            {
+              "id": "bAIvE",
+              "type": "ref",
+              "ref": "r2OWa2",
+              "name": "QCobro API",
+              "width": "fill_container",
+              "descendants": {
+                "NtG9t": {
+                  "icon": "server"
+                },
+                "IEyhb": {
+                  "content": "QCobro API"
+                },
+                "bnM70": {
+                  "content": "La misma API HTTPS"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "wyqJQ",
+          "type": "ref",
+          "ref": "UvobQ",
+          "name": "@qcobro/mcp",
+          "width": 360,
+          "x": 470,
+          "y": 392,
+          "descendants": {
+            "c2R6KN": {
+              "content": "@qcobro/mcp"
+            },
+            "U7Ump": {
+              "content": "Servidor Model Context Protocol"
+            },
+            "D7lgWg/am2NQ": {
+              "content": "1"
+            },
+            "D7lgWg/AVA4v": {
+              "content": "Valida credenciales — accessKeyId + secret"
+            },
+            "lK1ox/am2NQ": {
+              "content": "2"
+            },
+            "lK1ox/AVA4v": {
+              "content": "Delega en @qcobro/sdk"
+            }
+          }
+        },
+        {
+          "id": "u1XUoy",
+          "type": "ref",
+          "ref": "M9EyhC",
+          "name": "Autenticación",
+          "width": 340,
+          "x": 470,
+          "y": 712,
+          "descendants": {
+            "l9zDAa": {
+              "icon": "shield-check"
+            },
+            "cVu61": {
+              "content": "Autenticación"
+            },
+            "rzk7J": {
+              "content": "API key de workspace"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "Xj9Pk",
+          "x": 0,
+          "y": 0,
+          "name": "Connectors",
+          "width": 1600,
+          "height": 900,
+          "layout": "none",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "NccmG",
+              "x": 348,
+              "y": 462,
+              "name": "h",
+              "fill": "$dgm-our",
+              "width": 113,
+              "height": 2
+            },
+            {
+              "id": "Q42MCn",
+              "type": "ref",
+              "ref": "X3UJwx",
+              "name": "ar",
+              "fill": "$dgm-our",
+              "x": 461,
+              "y": 458
+            },
+            {
+              "id": "Y85KX",
+              "type": "ref",
+              "ref": "jHda2",
+              "name": "pill",
+              "x": 386,
+              "y": 451,
+              "descendants": {
+                "WZCz0": {
+                  "content": "llamadas MCP",
+                  "fill": "$dgm-our-deep"
+                }
+              }
+            },
+            {
+              "type": "rectangle",
+              "id": "V6X7p6",
+              "x": 830,
+              "y": 431,
+              "name": "h",
+              "fill": "$dgm-our",
+              "width": 289,
+              "height": 2
+            },
+            {
+              "id": "sE0QJ",
+              "type": "ref",
+              "ref": "X3UJwx",
+              "name": "ar",
+              "fill": "$dgm-our",
+              "x": 1119,
+              "y": 427
+            },
+            {
+              "id": "jU4V4",
+              "type": "ref",
+              "ref": "jHda2",
+              "name": "pill",
+              "x": 935,
+              "y": 407,
+              "descendants": {
+                "WZCz0": {
+                  "content": "HTTPS",
+                  "fill": "$dgm-our-deep"
+                }
+              }
+            },
+            {
+              "type": "rectangle",
+              "id": "UQ1ua",
+              "x": 559,
+              "y": 560,
+              "name": "v",
+              "fill": "$dgm-edge-input",
+              "width": 2,
+              "height": 143
+            },
+            {
+              "id": "GpX66",
+              "type": "ref",
+              "ref": "wkaMk",
+              "name": "ad",
+              "fill": "$dgm-edge-input",
+              "x": 555,
+              "y": 703
+            },
+            {
+              "id": "Zpvq7",
+              "type": "ref",
+              "ref": "jHda2",
+              "name": "pill",
+              "x": 466,
+              "y": 623,
+              "descendants": {
+                "WZCz0": {
+                  "content": "API key de workspace",
+                  "fill": "$dgm-muted"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "teuIN",
+          "x": 64,
+          "y": 806,
+          "name": "Legend",
+          "gap": 20,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "ApzPu",
+              "name": "item",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "E0lM0",
+                  "name": "ln",
+                  "fill": "$dgm-our",
+                  "width": 24,
+                  "height": 2
+                },
+                {
+                  "type": "text",
+                  "id": "MGUOb",
+                  "name": "l",
+                  "fill": "$dgm-muted",
+                  "content": "Petición MCP",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "f8PCu",
+              "name": "item",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "kC64H",
+                  "name": "ln",
+                  "fill": "$dgm-edge-input",
+                  "width": 24,
+                  "height": 2
+                },
+                {
+                  "type": "text",
+                  "id": "lM379",
+                  "name": "l",
+                  "fill": "$dgm-muted",
+                  "content": "Credenciales",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500"
                 }
               ]
             }
