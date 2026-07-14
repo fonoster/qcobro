@@ -1,6 +1,12 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { renderTemplate, buildOutreachContext, pickRandomNumber } from "./outreach.js";
+import {
+  renderTemplate,
+  buildOutreachContext,
+  pickRandomNumber,
+  snakeToCamel,
+  renderWhatsAppTemplate
+} from "./outreach.js";
 import type { PortfolioAccountRecord } from "../types/portfolios.js";
 
 function makeAccount(overrides: Partial<PortfolioAccountRecord> = {}): PortfolioAccountRecord {
@@ -142,5 +148,41 @@ describe("pickRandomNumber", () => {
   it("returns a number from the pool", () => {
     const pool = ["+1", "+2", "+3"];
     assert.ok(pool.includes(pickRandomNumber(pool)));
+  });
+});
+
+describe("snakeToCamel", () => {
+  it("converts a snake_case token to its camelCase context key", () => {
+    assert.equal(snakeToCamel("first_name"), "firstName");
+    assert.equal(snakeToCamel("outstanding_balance"), "outstandingBalance");
+    assert.equal(snakeToCamel("days_past_due"), "daysPastDue");
+  });
+
+  it("leaves a token with no underscore unchanged", () => {
+    assert.equal(snakeToCamel("currency"), "currency");
+    assert.equal(snakeToCamel("firstName"), "firstName");
+  });
+});
+
+describe("renderWhatsAppTemplate", () => {
+  it("maps snake_case Meta placeholders to the camelCase context field, keeping parameterName literal", () => {
+    const ctx = buildOutreachContext(makeAccount(), { currency: "CRC" });
+    const { renderedBody, params } = renderWhatsAppTemplate(
+      "Hola {{first_name}}, su saldo es {{outstanding_balance}} {{currency}}",
+      ctx
+    );
+    assert.equal(renderedBody, "Hola María, su saldo es 1500 CRC");
+    assert.deepEqual(params, [
+      { parameterName: "first_name", text: "María" },
+      { parameterName: "outstanding_balance", text: "1500" },
+      { parameterName: "currency", text: "CRC" }
+    ]);
+  });
+
+  it("returns no params for a template with no placeholders", () => {
+    const ctx = buildOutreachContext(makeAccount(), { currency: "CRC" });
+    const { renderedBody, params } = renderWhatsAppTemplate("Hola, recordatorio de pago.", ctx);
+    assert.equal(renderedBody, "Hola, recordatorio de pago.");
+    assert.deepEqual(params, []);
   });
 });

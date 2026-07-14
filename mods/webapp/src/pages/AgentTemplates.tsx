@@ -485,6 +485,7 @@ function CreateAgentTemplateModal({
               value={fields.templateName ?? ""}
               onChange={(e) => set("templateName", e.target.value)}
             />
+            <p className="text-xs text-slate-400">{t("agents.form.whatsAppNamingHint")}</p>
             <TextareaGroup
               label={t("agents.form.templatePreview")}
               id="a-wa-body"
@@ -818,6 +819,7 @@ function EditAgentTemplateModal({
                   value={fields.templateName ?? ""}
                   onChange={(e) => set("templateName", e.target.value)}
                 />
+                <p className="text-xs text-slate-400">{t("agents.form.whatsAppNamingHint")}</p>
                 <TextareaGroup
                   label={t("agents.form.templatePreview")}
                   id="e-wa-body"

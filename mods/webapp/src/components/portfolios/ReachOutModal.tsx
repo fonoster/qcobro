@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import { Bot } from "lucide-react";
-import { renderTemplate, buildOutreachContext, type PortfolioAccountRecord } from "@qcobro/common";
+import {
+  renderTemplate,
+  renderWhatsAppTemplate,
+  buildOutreachContext,
+  type PortfolioAccountRecord
+} from "@qcobro/common";
 import { trpc } from "../../lib/trpc.js";
 import { useI18n } from "../../lib/i18n.js";
 import { Dialog } from "../ui/dialog.js";
@@ -75,7 +80,7 @@ export function ReachOutModal({
       setEditFirstMessage(vc?.script ? renderTemplate(vc.script, ctx) : "");
     } else if (agentType === "WHATSAPP") {
       const wc = tmpl.whatsAppConfig as { messageBody?: string } | undefined;
-      setEditBody(wc?.messageBody ? renderTemplate(wc.messageBody, ctx) : "");
+      setEditBody(wc?.messageBody ? renderWhatsAppTemplate(wc.messageBody, ctx).renderedBody : "");
     }
   }, [tmpl, agentType]);
 

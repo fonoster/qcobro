@@ -64,10 +64,11 @@ solicitar la plantilla en tu cuenta de WhatsApp Business, ten en cuenta:
 - Usa la categoría **UTILITY** (transaccional): es la que corresponde a recordatorios de
   cobranza, no a mensajería de marketing.
 - Escribe los **parámetros de la plantilla con nombre** (named parameters), no posicionales
-  (`{{1}}`, `{{2}}`). Los nombres deben coincidir **exactamente** con las [variables que
-  QCobro reconoce](/guides/agent-templates#lista-de-variables), por ejemplo `firstName` u
-  `outstandingBalance`, así QCobro puede rellenar cada uno con el dato real de la cuenta al
-  enviar.
+  (`{{1}}`, `{{2}}`). Meta exige que estos nombres sean minúsculas y con guion bajo, por
+  ejemplo `{{first_name}}` u `{{outstanding_balance}}` (rechaza formatos como `firstName`).
+  Usa la columna **En WhatsApp** de las [variables que QCobro
+  reconoce](/guides/agent-templates#lista-de-variables): QCobro traduce cada nombre al dato
+  real de la cuenta al enviar.
 
 <Tip>
   Comparte la [lista de variables](/guides/agent-templates#lista-de-variables) con quien
