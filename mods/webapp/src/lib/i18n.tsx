@@ -451,7 +451,7 @@ export const messages = {
     "gestiones.insight.SMS": "Payment reminder sent to the customer with a payment link.",
     "gestiones.insight.VOICE_PRERECORDED":
       "Pre-recorded call answered; the message duration does not confirm it was heard in full.",
-    "gestiones.detail.call": "Collection call",
+    "gestiones.detail.call": "Recording",
     "gestiones.detail.agentSpeaker": "QCobro · AI voice",
     "gestiones.detail.customerSpeaker": "Customer",
     "gestiones.detail.analysisPending": "AI analysis pending",
@@ -1020,7 +1020,7 @@ export const messages = {
     "gestiones.insight.SMS": "Recordatorio de pago enviado al cliente con enlace de pago.",
     "gestiones.insight.VOICE_PRERECORDED":
       "Llamada pre-grabada contestada; la duración no confirma que el mensaje se haya escuchado por completo.",
-    "gestiones.detail.call": "Llamada de cobranza",
+    "gestiones.detail.call": "Grabación",
     "gestiones.detail.agentSpeaker": "QCobro · Voz IA",
     "gestiones.detail.customerSpeaker": "Cliente",
     "gestiones.detail.analysisPending": "Análisis IA pendiente",
