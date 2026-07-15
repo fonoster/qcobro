@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.19.6](https://github.com/fonoster/qcobro/compare/v1.19.5...v1.19.6) (2026-07-15)
+
+### Bug Fixes
+
+- **webapp:** generalize Voz IA gestión-detail call title ([#57](https://github.com/fonoster/qcobro/issues/57)) ([f90bab3](https://github.com/fonoster/qcobro/commit/f90bab348bedb1b4ad65b244075db861e7b98a4a))
+
 ## [1.19.4](https://github.com/fonoster/qcobro/compare/v1.19.3...v1.19.4) (2026-07-14)
 
 ### Bug Fixes
