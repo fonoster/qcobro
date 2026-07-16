@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   X,
@@ -9,7 +9,9 @@ import {
   MessagesSquare,
   Target,
   Mail,
-  MessageSquare
+  MessageSquare,
+  Copy,
+  Check
 } from "lucide-react";
 import type { EmailThreadMessage, TranscriptLine, WhatsAppThread } from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
@@ -64,6 +66,44 @@ function MetaItem({ label, value }: { label: string; value?: string | null }) {
     <div className="flex flex-col gap-0.5">
       <span className="text-xs text-slate-400">{label}</span>
       <span className="text-sm font-medium text-slate-700">{value}</span>
+    </div>
+  );
+}
+
+/**
+ * Gestión ID metadata field: shows a truncated UUID (first segment) with a copy
+ * control that writes the full id to the clipboard. The raw UUID is too long for the
+ * half-width metadata column, and operators only need it to copy for correlation/support.
+ */
+function GestionIdItem({ id }: { id: string }) {
+  const { t } = useI18n();
+  const [copied, setCopied] = useState(false);
+
+  const onCopy = () => {
+    void navigator.clipboard?.writeText(id).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-xs text-slate-400">{t("gestiones.detail.gestionId")}</span>
+      <div className="flex items-center gap-1.5">
+        <span className="font-mono text-sm font-medium text-slate-700">{`${id.slice(0, 8)}…`}</span>
+        <button
+          type="button"
+          onClick={onCopy}
+          aria-label={copied ? t("gestiones.detail.idCopied") : t("gestiones.detail.copyId")}
+          className="text-slate-400 transition-colors hover:text-slate-600"
+        >
+          {copied ? (
+            <Check className="h-3.5 w-3.5 text-emerald-600" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+        </button>
+      </div>
     </div>
   );
 }
@@ -723,6 +763,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                 label={isEmail ? t("gestiones.detail.email") : t("gestiones.detail.phone")}
                 value={toNumber}
               />
+              <GestionIdItem id={g.id} />
             </div>
           </div>
         )}
