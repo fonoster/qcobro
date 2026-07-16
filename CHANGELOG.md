@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.20.3](https://github.com/fonoster/qcobro/compare/v1.20.2...v1.20.3) (2026-07-16)
+
+### Bug Fixes
+
+- **apiserver:** scope WhatsApp inbound match by portfolio, not campaign ([#64](https://github.com/fonoster/qcobro/issues/64)) ([579eb3a](https://github.com/fonoster/qcobro/commit/579eb3a7eb4399ef6635f5fe8032ef966d89efde)), closes [#62](https://github.com/fonoster/qcobro/issues/62)
+
 ## [1.20.2](https://github.com/fonoster/qcobro/compare/v1.20.1...v1.20.2) (2026-07-16)
 
 ### Bug Fixes
