@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   renderTemplate,
   buildOutreachContext,
+  buildAutopilotContextLines,
   pickRandomNumber,
   snakeToCamel,
   renderWhatsAppTemplate
@@ -141,6 +142,66 @@ describe("renderTemplate + buildOutreachContext", () => {
     const ctx = buildOutreachContext(makeAccount(), { currency: "CRC" });
     assert.equal(renderTemplate("{{daysSince unknownField}}", ctx), "0");
     assert.equal(renderTemplate("{{daysUntil unknownField}}", ctx), "0");
+  });
+});
+
+describe("buildAutopilotContextLines", () => {
+  it("returns an empty array for undefined context", () => {
+    assert.deepEqual(buildAutopilotContextLines(undefined), []);
+  });
+
+  it("surfaces balance, terms, due status, and payment history for a past-due account", () => {
+    const ctx = buildOutreachContext(
+      makeAccount({
+        fullName: "Juan Pérez",
+        outstandingBalance: 9500,
+        principalAmount: 10000,
+        termsAmount: 500,
+        termsFrequency: "quincenal",
+        termsLength: 20,
+        daysPastDue: 15,
+        missedInstallments: 2,
+        lastPaymentDate: new Date("2026-06-01T00:00:00Z"),
+        lastPaymentAmount: 500
+      }),
+      { currency: "DOP" }
+    );
+    const lines = buildAutopilotContextLines(ctx);
+    assert.deepEqual(lines, [
+      "Cliente: Juan",
+      "Saldo pendiente: 9500 DOP",
+      "Monto original del préstamo: 10000 DOP",
+      "Cuota: 500 DOP (quincenal)",
+      "Plazo: 20 cuotas",
+      "Días de atraso: 15",
+      "Cuotas incumplidas: 2",
+      "Último pago de 500 DOP: 2026-06-01"
+    ]);
+  });
+
+  it("omits due-status and payment-history lines when they aren't meaningful", () => {
+    const ctx = buildOutreachContext(
+      makeAccount({
+        outstandingBalance: 0,
+        principalAmount: 0,
+        termsAmount: 0,
+        daysPastDue: 0,
+        missedInstallments: 0,
+        lastPaymentDate: null
+      }),
+      { currency: "USD" }
+    );
+    const lines = buildAutopilotContextLines(ctx);
+    assert.deepEqual(lines, ["Cliente: María", "Saldo pendiente: 0 USD"]);
+  });
+
+  it("never includes negotiationOptions, even when set on the account", () => {
+    const ctx = buildOutreachContext(
+      makeAccount({ negotiationOptions: "Puede ofrecer 20% de descuento si insiste" }),
+      { currency: "CRC" }
+    );
+    const lines = buildAutopilotContextLines(ctx);
+    assert.ok(lines.every((l) => !l.includes("20%") && !l.includes("descuento")));
   });
 });
 

@@ -3,6 +3,7 @@ export {
   renderTemplate,
   extractTemplateTokens,
   buildOutreachContext,
+  buildAutopilotContextLines,
   pickRandomNumber,
   snakeToCamel,
   renderWhatsAppTemplate
