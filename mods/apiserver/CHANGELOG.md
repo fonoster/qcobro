@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.22.0](https://github.com/fonoster/qcobro/compare/v1.21.0...v1.22.0) (2026-07-16)
+
+### Features
+
+- **apiserver:** give the WhatsApp/Email autopilot enough loan context to answer basic questions ([#68](https://github.com/fonoster/qcobro/issues/68)) ([696136e](https://github.com/fonoster/qcobro/commit/696136e191b5801cb5a9053bb8741a1acfe998a2))
+
 ## [1.20.5](https://github.com/fonoster/qcobro/compare/v1.20.4...v1.20.5) (2026-07-16)
 
 **Note:** Version bump only for package @qcobro/apiserver
