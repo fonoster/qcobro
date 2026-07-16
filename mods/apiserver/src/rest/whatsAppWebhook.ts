@@ -4,6 +4,7 @@ import type { PrismaClient } from "@prisma/client";
 import { getLogger } from "@fonoster/logger";
 import {
   buildOutreachContext,
+  normalizePhoneE164,
   whatsAppWebhookSchema,
   type AiConfig,
   type PortfolioAccountRecord,
@@ -113,10 +114,12 @@ function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAppInboun
       if (!sender) return null;
 
       // Find the most recent WHATSAPP gestión for this workspace dispatched to that phone.
-      const log = await prisma.accountContactLog.findFirst({
+      // Matched on E.164 (see normalizePhoneE164) — Meta's `channelData.path` equality
+      // can't normalize server-side, so we compare over a recent, bounded window.
+      const normalizedCustomer = normalizePhoneE164(customerPhone);
+      const candidates = await prisma.accountContactLog.findMany({
         where: {
           agentType: "WHATSAPP",
-          channelData: { path: ["to"], equals: customerPhone },
           campaign: { workspaceRef: sender.workspaceRef }
         },
         include: {
@@ -130,8 +133,15 @@ function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAppInboun
             include: { portfolio: true }
           }
         },
-        orderBy: { contactedAt: "desc" }
+        orderBy: { contactedAt: "desc" },
+        take: 50
       });
+      const log =
+        normalizedCustomer &&
+        candidates.find((c) => {
+          const to = (c.channelData as Record<string, unknown> | null)?.to;
+          return typeof to === "string" && normalizePhoneE164(to) === normalizedCustomer;
+        });
       if (!log || !log.portfolioAccount.phone) return null;
 
       const whatsAppCfg = log.campaign?.agentTemplate?.whatsAppConfig ?? null;
