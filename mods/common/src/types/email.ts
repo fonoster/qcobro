@@ -31,10 +31,10 @@ export type EmailAutopilotAction = "reply" | "ignore" | "resolve" | "escalate";
 /** Structured result of the autopilot decision step over a thread. */
 export interface EmailAutopilotDecision {
   action: EmailAutopilotAction;
-  /** Present when `action === "reply"`. */
-  replyBody?: string;
-  /** Outcome to record on the gestión, when the reply implies one. */
-  outcome?: string;
+  /** Present when `action === "reply"`. Gemini's JSON mode may send `null` instead of omitting. */
+  replyBody?: string | null;
+  /** Outcome to record on the gestión, when the reply implies one. May come back `null`. */
+  outcome?: string | null;
   /** Promise/objective details to capture, when applicable. */
   objective?: { type: string; amount?: number; dueDate?: string; note?: string } | null;
 }
