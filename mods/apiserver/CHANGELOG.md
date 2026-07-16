@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.20.4](https://github.com/fonoster/qcobro/compare/v1.20.3...v1.20.4) (2026-07-16)
+
+### Bug Fixes
+
+- **apiserver:** surface the real error in WhatsApp webhook processing failures ([#65](https://github.com/fonoster/qcobro/issues/65)) ([20c57cd](https://github.com/fonoster/qcobro/commit/20c57cde7a5cf9f67fd983bdc153771752d62e9a))
+
 ## [1.20.3](https://github.com/fonoster/qcobro/compare/v1.20.2...v1.20.3) (2026-07-16)
 
 ### Bug Fixes
