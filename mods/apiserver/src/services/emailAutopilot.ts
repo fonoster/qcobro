@@ -1,4 +1,5 @@
 import {
+  buildAutopilotContextLines,
   emailAutopilotDecisionSchema,
   type AiConfig,
   type EmailAutopilot,
@@ -11,10 +12,7 @@ function buildPrompt(req: EmailAutopilotRequest): string {
   const lines = req.thread
     .map((m) => `${m.direction === "outbound" ? "Agente" : "Cliente"}: ${m.body}`)
     .join("\n");
-  const ctx: string[] = [];
-  if (req.context?.customerName) ctx.push(`Cliente: ${req.context.customerName}`);
-  if (typeof req.context?.outstandingBalance === "number")
-    ctx.push(`Saldo pendiente: ${req.context.outstandingBalance}`);
+  const ctx = buildAutopilotContextLines(req.context);
   const language = req.language || "es";
   return [
     req.systemPrompt,
@@ -29,6 +27,8 @@ function buildPrompt(req: EmailAutopilotRequest): string {
       'relativas ("mañana", "el viernes", "la próxima semana") a esa fecha usando la fecha de hoy. ' +
       "Si el cliente no indica una fecha concreta, omite dueDate.",
     "Si el asunto no corresponde / está resuelto, usa resolve. Si requiere intervención humana, escalate.",
+    "Usa el Contexto para responder preguntas básicas del cliente sobre su préstamo (saldo, cuota, " +
+      "plazo, atraso, último pago). No inventes datos que no estén en el Contexto.",
     `Idioma de la respuesta: ${language}.`,
     ctx.length ? `Contexto — ${ctx.join(" · ")}` : "",
     "Hilo:",
