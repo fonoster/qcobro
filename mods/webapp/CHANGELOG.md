@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.20.0](https://github.com/fonoster/qcobro/compare/v1.19.6...v1.20.0) (2026-07-16)
+
+### Features
+
+- **webapp:** show Gestión ID in gestión-detail metadata ([#58](https://github.com/fonoster/qcobro/issues/58)) ([2d564b6](https://github.com/fonoster/qcobro/commit/2d564b6c89f18cdf9cee816a37f602655d49a067))
+
 ## [1.19.6](https://github.com/fonoster/qcobro/compare/v1.19.5...v1.19.6) (2026-07-15)
 
 ### Bug Fixes
