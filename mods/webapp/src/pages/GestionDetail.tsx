@@ -70,27 +70,35 @@ function MetaItem({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
+/** Values longer than this are shown as a prefix + ellipsis in {@link CopyableMetaItem}. */
+const ID_TRUNCATE_LENGTH = 8;
+
 /**
- * Gestión ID metadata field: shows a truncated UUID (first segment) with a copy
- * control that writes the full id to the clipboard. The raw UUID is too long for the
- * half-width metadata column, and operators only need it to copy for correlation/support.
+ * Metadata field for an identifier that can be long (Gestión UUID, account external id):
+ * shows the value truncated to {@link ID_TRUNCATE_LENGTH} chars (only when it actually
+ * exceeds that length) with a copy control that writes the full value to the clipboard.
+ * The raw value is often too long for the half-width metadata column, and operators only
+ * need it to copy for correlation/support.
  */
-function GestionIdItem({ id }: { id: string }) {
+function CopyableMetaItem({ label, value }: { label: string; value: string }) {
   const { t } = useI18n();
   const [copied, setCopied] = useState(false);
 
   const onCopy = () => {
-    void navigator.clipboard?.writeText(id).then(() => {
+    void navigator.clipboard?.writeText(value).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
   };
 
+  const displayValue =
+    value.length > ID_TRUNCATE_LENGTH ? `${value.slice(0, ID_TRUNCATE_LENGTH)}…` : value;
+
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-xs text-slate-400">{t("gestiones.detail.gestionId")}</span>
+      <span className="text-xs text-slate-400">{label}</span>
       <div className="flex items-center gap-1.5">
-        <span className="font-mono text-sm font-medium text-slate-700">{`${id.slice(0, 8)}…`}</span>
+        <span className="font-mono text-sm font-medium text-slate-700">{displayValue}</span>
         <button
           type="button"
           onClick={onCopy}
@@ -754,7 +762,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
               {durationStr && (
                 <MetaItem label={t("gestiones.detail.duration")} value={durationStr} />
               )}
-              <MetaItem
+              <CopyableMetaItem
                 label={t("gestiones.detail.account")}
                 value={g.portfolioAccount.externalId}
               />
@@ -763,7 +771,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                 label={isEmail ? t("gestiones.detail.email") : t("gestiones.detail.phone")}
                 value={toNumber}
               />
-              <GestionIdItem id={g.id} />
+              <CopyableMetaItem label={t("gestiones.detail.gestionId")} value={g.id} />
             </div>
           </div>
         )}
