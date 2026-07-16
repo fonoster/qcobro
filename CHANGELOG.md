@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.20.5](https://github.com/fonoster/qcobro/compare/v1.20.4...v1.20.5) (2026-07-16)
+
+### Bug Fixes
+
+- **common:** accept null outcome/replyBody from Gemini's JSON-mode autopilot response ([#66](https://github.com/fonoster/qcobro/issues/66)) ([a3fa86c](https://github.com/fonoster/qcobro/commit/a3fa86cda544312f574c65b2e56b89a8815fbf3d))
+
 ## [1.20.4](https://github.com/fonoster/qcobro/compare/v1.20.3...v1.20.4) (2026-07-16)
 
 ### Bug Fixes
