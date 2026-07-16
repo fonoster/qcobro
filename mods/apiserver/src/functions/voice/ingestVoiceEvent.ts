@@ -9,12 +9,10 @@ import {
 /** Minimal Prisma surface this ingestion needs. */
 export interface VoiceEventClient {
   accountContactLog: {
-    findMany(args: {
-      where: { agentType: string };
-      orderBy: { contactedAt: "desc" };
-      take: number;
+    findFirst(args: {
+      where: { agentType: string; providerRef: string };
       select: { id: true; channelData: true };
-    }): Promise<{ id: string; channelData: unknown }[]>;
+    }): Promise<{ id: string; channelData: unknown } | null>;
     update(args: {
       where: { id: string };
       data: { channelData: Record<string, unknown>; durationSeconds?: number };
@@ -27,28 +25,22 @@ export type IngestVoiceEventResult = { matched: false } | { matched: true; id: s
 /**
  * Ingests a Fonoster autopilot conversation event into the matching Voz IA gestión.
  *
- * The gestión is created at call placement by the dispatch layer with
- * `channelData.providerRef = callRef`; this updates that record by correlating on the
- * call ref. `conversation.started` records partial progress (a `startedAt` marker) so we
- * retain data even if the call never ends cleanly; `conversation.ended` adds the
- * transcript (from chatHistory), recording URL, and duration. AI analysis is produced
- * separately and is intentionally not written here.
+ * The gestión is created at call placement by the dispatch layer with the Fonoster call
+ * ref stored as the top-level `providerRef` column (see `engine.ts` / `recordOutcome`);
+ * this correlates on it via `event.callRef` and updates that record. `conversation.started`
+ * records partial progress (a `startedAt` marker) so we retain data even if the call never
+ * ends cleanly; `conversation.ended` adds the transcript (from chatHistory), recording URL,
+ * and duration. AI analysis is produced separately and is intentionally not written here.
  *
- * Correlation scans recent VOICE_AI logs in memory because SQLite cannot filter on a JSON
- * field; a future migration could promote `providerRef` to an indexed column.
+ * Correlation is a direct lookup on the indexed `providerRef` column — NOT on a
+ * `channelData.providerRef` JSON field, which the dispatch layer never writes.
  */
 export function createIngestVoiceEvent(client: VoiceEventClient) {
   const fn = async (event: VoiceConversationEvent): Promise<IngestVoiceEventResult> => {
-    const recent = await client.accountContactLog.findMany({
-      where: { agentType: "VOICE_AI" },
-      orderBy: { contactedAt: "desc" },
-      take: 500,
+    const match = await client.accountContactLog.findFirst({
+      where: { agentType: "VOICE_AI", providerRef: event.callRef },
       select: { id: true, channelData: true }
     });
-
-    const match = recent.find(
-      (r) => (r.channelData as { providerRef?: string } | null)?.providerRef === event.callRef
-    );
     if (!match) return { matched: false };
 
     const existing = (match.channelData as Record<string, unknown> | null) ?? {};
