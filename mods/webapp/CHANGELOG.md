@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.21.0](https://github.com/fonoster/qcobro/compare/v1.20.5...v1.21.0) (2026-07-16)
+
+### Features
+
+- **webapp:** make the account external ID copyable in gestión-detail metadata ([#67](https://github.com/fonoster/qcobro/issues/67)) ([6ea93a0](https://github.com/fonoster/qcobro/commit/6ea93a06bddbc8da8f06c4aedd33f2330c6162f1))
+
 ## [1.20.5](https://github.com/fonoster/qcobro/compare/v1.20.4...v1.20.5) (2026-07-16)
 
 **Note:** Version bump only for package @qcobro/webapp
