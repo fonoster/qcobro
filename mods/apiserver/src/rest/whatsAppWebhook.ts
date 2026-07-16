@@ -116,11 +116,17 @@ function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAppInboun
       // Find the most recent WHATSAPP gestión for this workspace dispatched to that phone.
       // Matched on E.164 (see normalizePhoneE164) — Meta's `channelData.path` equality
       // can't normalize server-side, so we compare over a recent, bounded window.
+      //
+      // Scoped via portfolioAccount.portfolio.workspaceRef, not campaign.workspaceRef:
+      // manual/ad-hoc outreach (see outreachRouter.dispatch) records a campaign-less
+      // gestión, and Prisma's nested filter on an optional relation drops rows where
+      // that relation is null — campaign.workspaceRef would silently exclude every
+      // manually-dispatched gestión from the candidate set.
       const normalizedCustomer = normalizePhoneE164(customerPhone);
       const candidates = await prisma.accountContactLog.findMany({
         where: {
           agentType: "WHATSAPP",
-          campaign: { workspaceRef: sender.workspaceRef }
+          portfolioAccount: { portfolio: { workspaceRef: sender.workspaceRef } }
         },
         include: {
           campaign: {
@@ -144,7 +150,18 @@ function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAppInboun
         });
       if (!log || !log.portfolioAccount.phone) return null;
 
-      const whatsAppCfg = log.campaign?.agentTemplate?.whatsAppConfig ?? null;
+      // Campaign dispatches resolve the template via campaign.agentTemplate; manual/ad-hoc
+      // outreach has no campaign and stores its template directly on the gestión instead.
+      const manualTemplate = log.campaign
+        ? null
+        : log.agentTemplateId
+          ? await prisma.agentTemplate.findUnique({
+              where: { id: log.agentTemplateId },
+              include: { whatsAppConfig: true }
+            })
+          : null;
+      const whatsAppCfg =
+        log.campaign?.agentTemplate?.whatsAppConfig ?? manualTemplate?.whatsAppConfig ?? null;
       const settings = await prisma.workspaceSettings.findUnique({
         where: { workspaceRef: sender.workspaceRef }
       });
