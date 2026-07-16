@@ -287,9 +287,12 @@ async function processEvents(
           }
         }
       } catch (err) {
+        // Winston (this logger's backend) silently drops a plain-string second argument —
+        // only an Error instance (message + stack) or a plain object render. Passing
+        // `err.message` here used to log an empty `{}` on every failure.
         logger.error(
           `error processing change field=${field}:`,
-          err instanceof Error ? err.message : err
+          err instanceof Error ? err : { err: String(err) }
         );
       }
     }
