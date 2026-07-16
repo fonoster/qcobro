@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.20.2](https://github.com/fonoster/qcobro/compare/v1.20.1...v1.20.2) (2026-07-16)
+
+### Bug Fixes
+
+- **apiserver:** match WhatsApp inbound messages by normalized E.164 phone ([#62](https://github.com/fonoster/qcobro/issues/62)) ([fc644ee](https://github.com/fonoster/qcobro/commit/fc644ee9cb8bd1e2552143bfa31bc143ef11263e))
+
 ## [1.20.1](https://github.com/fonoster/qcobro/compare/v1.20.0...v1.20.1) (2026-07-16)
 
 ### Bug Fixes
