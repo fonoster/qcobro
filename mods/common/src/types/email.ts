@@ -36,7 +36,7 @@ export interface EmailAutopilotDecision {
   /** Outcome to record on the gestión, when the reply implies one. May come back `null`. */
   outcome?: string | null;
   /** Promise/objective details to capture, when applicable. */
-  objective?: { type: string; amount?: number; dueDate?: string; note?: string } | null;
+  objective?: { amount?: number; dueDate?: string; note?: string } | null;
 }
 
 /** What the autopilot is given to decide on. */

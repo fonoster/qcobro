@@ -21,7 +21,7 @@ function buildPrompt(req: EmailAutopilotRequest): string {
     "Devuelve SOLO un objeto JSON con las claves: action, replyBody, outcome, objective.",
     "action ∈ reply | ignore | resolve | escalate.",
     "Cuando action = reply, replyBody es el cuerpo de la respuesta (en el idioma del cliente).",
-    "Si el cliente promete pagar, usa outcome = PAYMENT_PROMISE y objective { type, amount, dueDate }.",
+    "Si el cliente promete pagar, usa outcome = PAYMENT_PROMISE y objective { amount, dueDate }.",
     req.referenceDate ? `Hoy es ${req.referenceDate} (formato YYYY-MM-DD).` : "",
     "objective.dueDate DEBE ser una fecha absoluta en formato YYYY-MM-DD. Convierte expresiones " +
       'relativas ("mañana", "el viernes", "la próxima semana") a esa fecha usando la fecha de hoy. ' +
@@ -58,8 +58,7 @@ function mockDecide(req: EmailAutopilotRequest): EmailAutopilotDecision {
       action: "reply",
       replyBody:
         "Gracias por su respuesta. Registramos su compromiso de pago y le reenviamos el enlace para coordinarlo. Quedamos atentos.",
-      outcome: "PAYMENT_PROMISE",
-      objective: { type: "PAYMENT_PROMISE" }
+      outcome: "PAYMENT_PROMISE"
     };
   }
   if (/(no es|equivocad|no soy|número|baja|no escrib|no contact)/.test(lc)) {

@@ -24,7 +24,7 @@ describe("emailAutopilotDecisionSchema", () => {
     const parsed = emailAutopilotDecisionSchema.parse({
       action: "resolve",
       outcome: "PAYMENT_PROMISE",
-      objective: { type: "PAYMENT_PROMISE", amount: 100, dueDate: "2026-08-01" }
+      objective: { amount: 100, dueDate: "2026-08-01" }
     });
     assert.equal(parsed.outcome, "PAYMENT_PROMISE");
     assert.equal(parsed.objective?.amount, 100);

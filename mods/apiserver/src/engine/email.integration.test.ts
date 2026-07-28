@@ -142,7 +142,7 @@ describe("email channel (integration)", { skip: !RUN ? "no DATABASE_URL" : false
               action: "reply",
               replyBody: "Gracias, registramos su compromiso.",
               outcome: "PAYMENT_PROMISE",
-              objective: { type: "PAYMENT_PROMISE", amount: 500, dueDate: "2026-07-01" }
+              objective: { amount: 500, dueDate: "2026-07-01" }
             }
           : { action: "reply", replyBody: "otra respuesta" };
       }
