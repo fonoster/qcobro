@@ -14,7 +14,7 @@ import {
  * plus the reply thread). Email maps outbound→agent, inbound→customer so the same
  * analysis pipeline serves both channels.
  */
-function buildTranscript(channelData: unknown): TranscriptLine[] {
+export function buildTranscript(channelData: unknown): TranscriptLine[] {
   const cd = (channelData ?? {}) as {
     transcript?: TranscriptLine[];
     messageBody?: string;
