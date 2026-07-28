@@ -16,7 +16,6 @@ export const emailAutopilotDecisionSchema = z.object({
   outcome: z.string().nullish(),
   objective: z
     .object({
-      type: z.string(),
       amount: z.number().optional(),
       dueDate: z.string().optional(),
       note: z.string().optional()
