@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.22.1](https://github.com/fonoster/qcobro/compare/v1.22.0...v1.22.1) (2026-07-28)
+
+### Bug Fixes
+
+- **common:** drop unused objective.type from the autopilot decision schema ([#70](https://github.com/fonoster/qcobro/issues/70)) ([224d7cd](https://github.com/fonoster/qcobro/commit/224d7cdadc37e86edabe040abe8e62509eab5caa)), closes [#66](https://github.com/fonoster/qcobro/issues/66)
+
 # [1.22.0](https://github.com/fonoster/qcobro/compare/v1.21.0...v1.22.0) (2026-07-16)
 
 ### Features
