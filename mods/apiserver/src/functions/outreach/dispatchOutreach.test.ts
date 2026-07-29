@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import type { DispatchDeps, WhatsAppSendTemplateInput } from "@qcobro/common";
+import { DispatchError, type DispatchDeps, type WhatsAppSendTemplateInput } from "@qcobro/common";
 import { createDispatchOutreach } from "./dispatchOutreach.js";
 
 function makeDeps(overrides: Partial<DispatchDeps> = {}) {
@@ -163,7 +163,12 @@ describe("dispatchOutreach", () => {
           context: {},
           body: "hi"
         }),
-      /not configured/
+      (err: unknown) => {
+        assert.ok(err instanceof DispatchError);
+        assert.equal(err.kind, "SYSTEM_ERROR");
+        assert.match(err.message, /not configured/);
+        return true;
+      }
     );
     assert.equal(calls.sms.length, 0);
   });
@@ -257,12 +262,17 @@ describe("dispatchOutreach", () => {
           languageCode: "es_DO",
           body: "Hola {{firstName}}"
         }),
-      /not configured/
+      (err: unknown) => {
+        assert.ok(err instanceof DispatchError);
+        assert.equal(err.kind, "SYSTEM_ERROR");
+        assert.match(err.message, /not configured/);
+        return true;
+      }
     );
     assert.equal(calls.whatsapp.length, 0);
   });
 
-  it("wraps a provider failure in a generic message and preserves the original as cause", async () => {
+  it("wraps an unclassified provider failure as SYSTEM_ERROR with a generic message, preserving the original as cause", async () => {
     const providerError = new Error("Authenticate");
     const { deps } = makeDeps({
       smsClient: {
@@ -280,12 +290,38 @@ describe("dispatchOutreach", () => {
           body: "hi"
         }),
       (err: unknown) => {
-        assert.ok(err instanceof Error);
+        assert.ok(err instanceof DispatchError);
+        assert.equal(err.kind, "SYSTEM_ERROR");
         // The raw provider message (credentials, balance, etc.) must never reach a
         // customer-facing surface — only a generic reason, with the original chained.
         assert.doesNotMatch(err.message, /Authenticate/);
         assert.match(err.message, /SMS dispatch failed/);
         assert.equal(err.cause, providerError);
+        return true;
+      }
+    );
+  });
+
+  it("passes an already-classified DispatchError through unchanged (not re-wrapped)", async () => {
+    const rejected = new DispatchError("DELIVERY_REJECTED", "invalid recipient number");
+    const { deps } = makeDeps({
+      smsClient: {
+        sendMessage: async () => {
+          throw rejected;
+        }
+      }
+    });
+    await assert.rejects(
+      () =>
+        createDispatchOutreach(deps)({
+          channel: "SMS",
+          to: "+50670000000",
+          context: {},
+          body: "hi"
+        }),
+      (err: unknown) => {
+        assert.equal(err, rejected);
+        assert.equal((err as DispatchError).kind, "DELIVERY_REJECTED");
         return true;
       }
     );

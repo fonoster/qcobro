@@ -1,7 +1,8 @@
-import type {
-  WhatsAppClient,
-  WhatsAppFetchedTemplate,
-  WhatsAppSendTemplateInput
+import {
+  DispatchError,
+  type WhatsAppClient,
+  type WhatsAppFetchedTemplate,
+  type WhatsAppSendTemplateInput
 } from "@qcobro/common";
 
 /** Cap the provider call so an unreachable Meta endpoint can't hang the request/tick path. */
@@ -78,23 +79,41 @@ export class MetaWhatsAppClient implements WhatsAppClient {
   }
 
   private async post(body: Record<string, unknown>): Promise<{ id: string }> {
-    const res = await fetch(this.messagesUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.settings.accessToken}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(SEND_TIMEOUT_MS)
-    });
+    let res: Response;
+    try {
+      res = await fetch(this.messagesUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.settings.accessToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(SEND_TIMEOUT_MS)
+      });
+    } catch (err) {
+      // Never reached Meta at all — network failure or our own timeout abort.
+      throw new DispatchError(
+        "SYSTEM_ERROR",
+        `WhatsApp API request failed: ${err instanceof Error ? err.message : String(err)}`,
+        { cause: err }
+      );
+    }
     const data = (await res.json().catch(() => ({}))) as MetaSendResponse;
     if (!res.ok) {
       const message = data.error?.message ?? `HTTP ${res.status}`;
       const code = data.error?.code;
-      throw new Error(`WhatsApp API error: ${message}${code ? ` (Code: ${code})` : ""}`);
+      const detail = `WhatsApp API error: ${message}${code ? ` (Code: ${code})` : ""}`;
+      // 401/403 (expired/invalid token), 429 (rate limited), and 5xx mean Meta couldn't
+      // evaluate the request at all. Every other rejection (bad number, unapproved/
+      // rejected template, opted-out recipient) is a real delivery-side rejection.
+      const kind =
+        res.status === 401 || res.status === 403 || res.status === 429 || res.status >= 500
+          ? "SYSTEM_ERROR"
+          : "DELIVERY_REJECTED";
+      throw new DispatchError(kind, detail);
     }
     const id = data.messages?.[0]?.id;
-    if (!id) throw new Error("WhatsApp API returned no message id");
+    if (!id) throw new DispatchError("SYSTEM_ERROR", "WhatsApp API returned no message id");
     return { id };
   }
 

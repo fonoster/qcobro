@@ -28,6 +28,25 @@ describe("updateCampaignStatus", () => {
     assert.equal(stats().updateData?.status, "ACTIVE");
   });
 
+  it("sets pauseReason: MANUAL when an operator pauses a campaign", async () => {
+    const { client, stats } = makeClient("ACTIVE");
+    const fn = createUpdateCampaignStatus(client as never, "ws-1");
+
+    await fn({ id: "camp-1", status: "PAUSED" });
+
+    assert.equal(stats().updateData?.status, "PAUSED");
+    assert.equal(stats().updateData?.pauseReason, "MANUAL");
+  });
+
+  it("clears pauseReason when a campaign leaves PAUSED", async () => {
+    const { client, stats } = makeClient("PAUSED");
+    const fn = createUpdateCampaignStatus(client as never, "ws-1");
+
+    await fn({ id: "camp-1", status: "ACTIVE" });
+
+    assert.equal(stats().updateData?.pauseReason, null);
+  });
+
   it("rejects an invalid transition (PAUSED → COMPLETED)", async () => {
     const { client, stats } = makeClient("PAUSED");
     const fn = createUpdateCampaignStatus(client as never, "ws-1");

@@ -1,6 +1,10 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import { campaignStatusTransitions, type CampaignStatus } from "@qcobro/common";
+import {
+  campaignStatusTransitions,
+  type CampaignPauseReason,
+  type CampaignStatus
+} from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { Button } from "../components/ui/button.js";
@@ -8,6 +12,7 @@ import { Badge } from "../components/ui/badge.js";
 import { PageHeader } from "../components/page-header.js";
 import { SectionCard } from "../components/section-card.js";
 import { RowActionsMenu } from "../components/ui/row-actions-menu.js";
+import { CampaignAutopausedBanner } from "../components/CampaignAutopausedBanner.js";
 import { humanizeDays } from "../lib/campaignDays.js";
 
 function statusVariant(status: string) {
@@ -49,6 +54,7 @@ export function CampaignDetail() {
         id: string;
         name: string;
         status: CampaignStatus;
+        pauseReason: CampaignPauseReason | null;
         startDate: string;
         endDate: string | null;
         daysOfWeek: number[];
@@ -113,6 +119,8 @@ export function CampaignDetail() {
           ) : undefined
         }
       />
+
+      {c?.pauseReason === "AUTO_ERROR_THRESHOLD" && <CampaignAutopausedBanner />}
 
       <div className="grid grid-cols-2 gap-6">
         <SectionCard title={t("campaigns.title")}>

@@ -1,5 +1,10 @@
 import * as SDK from "@fonoster/sdk";
-import type { FonosterConfig, OutboundCallClient, OutboundCallInput } from "@qcobro/common";
+import {
+  DispatchError,
+  type FonosterConfig,
+  type OutboundCallClient,
+  type OutboundCallInput
+} from "@qcobro/common";
 
 type FonosterSettings = NonNullable<FonosterConfig>;
 
@@ -13,6 +18,47 @@ function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
       setTimeout(() => reject(new Error(`Fonoster ${label} timed out`)), CALL_TIMEOUT_MS)
     )
   ]);
+}
+
+/** The Fonoster SDK's gRPC client throws `ServiceError`s carrying a numeric `.code` (grpc.status). */
+interface GrpcServiceError {
+  code?: number;
+  message?: string;
+}
+
+function isGrpcServiceError(err: unknown): err is GrpcServiceError {
+  return typeof err === "object" && err !== null && "code" in err && typeof err.code === "number";
+}
+
+/**
+ * gRPC status codes that mean the call request was actually evaluated and rejected on the
+ * destination/appRef side (INVALID_ARGUMENT, FAILED_PRECONDITION) rather than a transport,
+ * auth (UNAUTHENTICATED/PERMISSION_DENIED), or availability failure.
+ */
+const DELIVERY_REJECTED_GRPC_CODES = new Set([
+  3 /* INVALID_ARGUMENT */, 9 /* FAILED_PRECONDITION */
+]);
+
+/**
+ * Classifies a failed login or `createCall`. A recognized carrier/invalid-destination gRPC
+ * code is `DELIVERY_REJECTED`; everything else (auth, network, timeout, unclassified) falls
+ * back to `SYSTEM_ERROR`, since only those two codes are ones we can confidently attribute
+ * to the destination rather than to Fonoster/the transport.
+ */
+export function classifyVoiceError(err: unknown): DispatchError {
+  if (isGrpcServiceError(err) && err.code !== undefined) {
+    const kind = DELIVERY_REJECTED_GRPC_CODES.has(err.code) ? "DELIVERY_REJECTED" : "SYSTEM_ERROR";
+    return new DispatchError(
+      kind,
+      `Fonoster call origination failed: ${err.message ?? `gRPC code ${err.code}`}`,
+      { cause: err }
+    );
+  }
+  return new DispatchError(
+    "SYSTEM_ERROR",
+    `Fonoster call origination failed: ${err instanceof Error ? err.message : String(err)}`,
+    { cause: err }
+  );
 }
 
 /**
@@ -54,16 +100,20 @@ export class FonosterOutboundCallClient implements OutboundCallClient {
   }
 
   async createCall(input: OutboundCallInput): Promise<{ ref: string }> {
-    const calls = await withTimeout(this.calls(), "login");
-    const { ref } = await withTimeout(
-      calls.createCall({
-        from: input.from,
-        to: input.to,
-        appRef: input.appRef,
-        metadata: input.metadata
-      }),
-      "createCall"
-    );
-    return { ref };
+    try {
+      const calls = await withTimeout(this.calls(), "login");
+      const { ref } = await withTimeout(
+        calls.createCall({
+          from: input.from,
+          to: input.to,
+          appRef: input.appRef,
+          metadata: input.metadata
+        }),
+        "createCall"
+      );
+      return { ref };
+    } catch (err) {
+      throw classifyVoiceError(err);
+    }
   }
 }

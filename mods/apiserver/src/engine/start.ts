@@ -47,7 +47,8 @@ export function startEngine(): EngineRunner | null {
     resolveWhatsApp: (workspaceRef, phoneNumberId) =>
       resolveWhatsAppClient(prisma as never, workspaceRef, config.whatsapp, phoneNumberId),
     tickSeconds: config.engine.tickSeconds,
-    billing: config.billing
+    billing: config.billing,
+    consecutiveSystemErrorPauseThreshold: config.engine.consecutiveSystemErrorPauseThreshold
   });
 
   const runner = createEngineRunner({

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import {
+  DispatchError,
   dispatchOutreachSchema,
   pickRandomNumber,
   renderTemplate,
@@ -11,13 +12,19 @@ import {
 } from "@qcobro/common";
 
 /**
- * Wraps a raw provider failure (Twilio/Resend/Fonoster/Meta) in a generic, safe-to-
- * display message — the raw error is a provider implementation detail (auth, balance,
- * rate limits) that shouldn't reach a customer-facing UI verbatim — while chaining the
- * original as `cause` so callers can still log the real reason.
+ * Preserves an already-classified `DispatchError` thrown by a provider client as-is —
+ * only the client talking to a given provider's API can tell `DELIVERY_REJECTED` from
+ * `SYSTEM_ERROR`. Anything else (a bug, a network-layer error the client didn't itself
+ * catch) is wrapped as `SYSTEM_ERROR`, never `DELIVERY_REJECTED`, so an unrecognized
+ * failure mode never gets mistaken for a real, budget-consuming contact attempt. The
+ * raw provider message (auth, balance, rate limits) is a provider implementation
+ * detail that shouldn't reach a customer-facing surface verbatim, so the wrapped
+ * message stays generic while the original is chained as `cause`.
  */
-function providerDispatchError(label: string, err: unknown): Error {
-  return new Error(
+function toDispatchError(label: string, err: unknown): DispatchError {
+  if (err instanceof DispatchError) return err;
+  return new DispatchError(
+    "SYSTEM_ERROR",
     `${label} dispatch failed. The provider rejected the request — check the workspace's provider configuration.`,
     { cause: err }
   );
@@ -38,10 +45,13 @@ export function createDispatchOutreach(deps: DispatchDeps) {
   const fn = async (params: DispatchOutreachInput): Promise<DispatchResult> => {
     if (params.channel === "SMS") {
       if (!deps.smsClient) {
-        throw new Error("SMS dispatch is not configured (missing Twilio settings)");
+        throw new DispatchError(
+          "SYSTEM_ERROR",
+          "SMS dispatch is not configured (missing Twilio settings)"
+        );
       }
       if (deps.twilioFromNumbers.length === 0) {
-        throw new Error("SMS dispatch has no configured sender numbers");
+        throw new DispatchError("SYSTEM_ERROR", "SMS dispatch has no configured sender numbers");
       }
       const from = params.from ?? pick(deps.twilioFromNumbers);
       const renderedBody = renderTemplate(params.body ?? "", params.context);
@@ -49,14 +59,17 @@ export function createDispatchOutreach(deps: DispatchDeps) {
       try {
         ({ sid } = await deps.smsClient.sendMessage({ from, to: params.to, body: renderedBody }));
       } catch (err) {
-        throw providerDispatchError("SMS", err);
+        throw toDispatchError("SMS", err);
       }
       return { channel: "SMS", providerRef: sid, from, to: params.to, renderedBody };
     }
 
     if (params.channel === "EMAIL") {
       if (!deps.emailClient || !deps.emailFrom) {
-        throw new Error("Email dispatch is not configured (missing Resend settings)");
+        throw new DispatchError(
+          "SYSTEM_ERROR",
+          "Email dispatch is not configured (missing Resend settings)"
+        );
       }
       // The per-attempt reply-to token IS the providerRef — inbound replies correlate by it.
       const token = randomUUID();
@@ -74,7 +87,7 @@ export function createDispatchOutreach(deps: DispatchDeps) {
           replyTo
         });
       } catch (err) {
-        throw providerDispatchError("Email", err);
+        throw toDispatchError("Email", err);
       }
       return {
         channel: "EMAIL",
@@ -94,7 +107,8 @@ export function createDispatchOutreach(deps: DispatchDeps) {
       // `renderWhatsAppTemplate` for the snake_case-to-camelCase context mapping Meta's
       // naming rules force on this channel alone.
       if (!deps.whatsAppClient) {
-        throw new Error(
+        throw new DispatchError(
+          "SYSTEM_ERROR",
           "WhatsApp dispatch is not configured (missing or unresolved workspace integration)"
         );
       }
@@ -110,7 +124,7 @@ export function createDispatchOutreach(deps: DispatchDeps) {
           params: namedParams
         }));
       } catch (err) {
-        throw providerDispatchError("WhatsApp", err);
+        throw toDispatchError("WhatsApp", err);
       }
       return {
         channel: "WHATSAPP",
@@ -123,13 +137,16 @@ export function createDispatchOutreach(deps: DispatchDeps) {
 
     // VOICE_AI | VOICE_PRERECORDED — originate a call to the synced application.
     if (!deps.outboundCallClient) {
-      throw new Error("Voice dispatch is not configured (missing Fonoster settings)");
+      throw new DispatchError(
+        "SYSTEM_ERROR",
+        "Voice dispatch is not configured (missing Fonoster settings)"
+      );
     }
     if (deps.fonosterNumbers.length === 0) {
-      throw new Error("Voice dispatch has no configured caller-ID numbers");
+      throw new DispatchError("SYSTEM_ERROR", "Voice dispatch has no configured caller-ID numbers");
     }
     if (!params.appRef) {
-      throw new Error("Voice dispatch requires a synced application ref");
+      throw new DispatchError("SYSTEM_ERROR", "Voice dispatch requires a synced application ref");
     }
 
     const from = params.from ?? pick(deps.fonosterNumbers);
@@ -157,7 +174,7 @@ export function createDispatchOutreach(deps: DispatchDeps) {
         metadata
       }));
     } catch (err) {
-      throw providerDispatchError("Voice", err);
+      throw toDispatchError("Voice", err);
     }
     return { channel: params.channel, providerRef: ref, from, to: params.to, renderedBody };
   };

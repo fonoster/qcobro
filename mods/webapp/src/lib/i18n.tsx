@@ -340,6 +340,7 @@ export const messages = {
     "campaigns.status.PAUSED": "Paused",
     "campaigns.status.COMPLETED": "Completed",
     "campaigns.status.ARCHIVED": "Archived",
+    "campaigns.list.autopausedReason": "Auto-paused · repeated errors",
     "campaigns.days.weekdays": "Weekdays",
     "campaigns.days.weekends": "Weekends",
     "campaigns.days.everyday": "Every day",
@@ -391,6 +392,9 @@ export const messages = {
     "campaigns.detail.triggers": "Triggers",
     "campaigns.detail.noTriggers": "No triggers configured.",
     "campaigns.detail.schedule": "Schedule",
+    "campaigns.detail.autopaused.title": "Campaign paused automatically",
+    "campaigns.detail.autopaused.body":
+      "This campaign paused itself after repeated system errors while dispatching (e.g. an outage or expired credentials) — no attempts were lost. Resolve the underlying issue, then reactivate when ready.",
 
     "gestiones.title": "Activity log",
     "gestiones.description": "Every outreach attempt across the workspace.",
@@ -912,6 +916,7 @@ export const messages = {
     "campaigns.status.PAUSED": "Pausada",
     "campaigns.status.COMPLETED": "Completada",
     "campaigns.status.ARCHIVED": "Archivada",
+    "campaigns.list.autopausedReason": "Pausada automáticamente · errores repetidos",
     "campaigns.days.weekdays": "Entre semana",
     "campaigns.days.weekends": "Fines de semana",
     "campaigns.days.everyday": "Todos los días",
@@ -963,6 +968,9 @@ export const messages = {
     "campaigns.detail.triggers": "Disparadores",
     "campaigns.detail.noTriggers": "Sin disparadores configurados.",
     "campaigns.detail.schedule": "Horario",
+    "campaigns.detail.autopaused.title": "Campaña pausada automáticamente",
+    "campaigns.detail.autopaused.body":
+      "Esta campaña se pausó sola tras errores de sistema repetidos al despachar (por ejemplo, una interrupción del servicio o credenciales vencidas) — no se perdió ningún intento. Resuelva el problema y luego reactívela cuando esté listo.",
 
     "gestiones.title": "Gestiones",
     "gestiones.description": "Cada intento de contacto en el espacio de trabajo.",

@@ -109,6 +109,7 @@ describe("whatsapp channel (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
       emailPerMinute: 0,
       whatsAppPerMinute: 60,
       tickSeconds: 60,
+      consecutiveSystemErrorPauseThreshold: 10,
       // Stands in for `resolveWhatsAppClient`: reads the real tenant integration + sender
       // rows (proving they were resolved by the engine per-call, not a global pool) but
       // swaps the network-calling Meta client for the emulator.

@@ -9,6 +9,9 @@ export const dispatchChannelSchema = z.enum([
   "WHATSAPP"
 ]);
 
+/** Classification of a dispatch failure (see `types/dispatch.ts`'s `DispatchError`). */
+export const dispatchErrorKindSchema = z.enum(["DELIVERY_REJECTED", "SYSTEM_ERROR"]);
+
 /**
  * A normalized dispatch request: a channel, a destination, the render context
  * (the customer's account fields), and the raw template body fields for that

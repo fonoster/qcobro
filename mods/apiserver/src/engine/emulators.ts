@@ -1,15 +1,30 @@
-import type {
-  EngineEvent,
-  EngineEventSink,
-  OutboundCallClient,
-  SmsClient,
-  EmailClient,
-  EmailSendInput,
-  OutboundCallInput,
-  WhatsAppClient,
-  WhatsAppFetchedTemplate,
-  WhatsAppSendTemplateInput
+import {
+  DispatchError,
+  type DispatchErrorKind,
+  type EngineEvent,
+  type EngineEventSink,
+  type OutboundCallClient,
+  type SmsClient,
+  type EmailClient,
+  type EmailSendInput,
+  type OutboundCallInput,
+  type WhatsAppClient,
+  type WhatsAppFetchedTemplate,
+  type WhatsAppSendTemplateInput
 } from "@qcobro/common";
+
+/**
+ * `fail: true` throws a `SYSTEM_ERROR` (matches an unclassified provider crash); pass an
+ * explicit `DispatchErrorKind` to simulate the other classification.
+ */
+type FailOpt = boolean | DispatchErrorKind;
+
+function failError(fail: true | DispatchErrorKind, label: string): DispatchError {
+  return new DispatchError(
+    fail === true ? "SYSTEM_ERROR" : fail,
+    `emulated ${label} dispatch failure`
+  );
+}
 
 /**
  * Channel emulators — TEST SUPPORT ONLY. They stand in for the real Fonoster/Twilio
@@ -49,10 +64,10 @@ export class EmulatedOutboundCallClient implements OutboundCallClient {
   private seq = 0;
   private readonly run = makeRunTag();
 
-  constructor(private readonly opts: { fail?: boolean } = {}) {}
+  constructor(private readonly opts: { fail?: FailOpt } = {}) {}
 
   async createCall(input: OutboundCallInput): Promise<{ ref: string }> {
-    if (this.opts.fail) throw new Error("emulated voice dispatch failure");
+    if (this.opts.fail) throw failError(this.opts.fail, "voice");
     const ref = `sim-call-${this.run}-${++this.seq}`;
     this.calls.push({
       channel: "voice",
@@ -72,10 +87,10 @@ export class EmulatedSmsClient implements SmsClient {
   private seq = 0;
   private readonly run = makeRunTag();
 
-  constructor(private readonly opts: { fail?: boolean } = {}) {}
+  constructor(private readonly opts: { fail?: FailOpt } = {}) {}
 
   async sendMessage(input: { from: string; to: string; body: string }): Promise<{ sid: string }> {
-    if (this.opts.fail) throw new Error("emulated sms dispatch failure");
+    if (this.opts.fail) throw failError(this.opts.fail, "sms");
     const sid = `sim-sms-${this.run}-${++this.seq}`;
     this.messages.push({
       channel: "sms",
@@ -94,10 +109,10 @@ export class EmulatedEmailClient implements EmailClient {
   private seq = 0;
   private readonly run = makeRunTag();
 
-  constructor(private readonly opts: { fail?: boolean } = {}) {}
+  constructor(private readonly opts: { fail?: FailOpt } = {}) {}
 
   async sendEmail(input: EmailSendInput): Promise<{ id: string }> {
-    if (this.opts.fail) throw new Error("emulated email dispatch failure");
+    if (this.opts.fail) throw failError(this.opts.fail, "email");
     const id = `sim-email-${this.run}-${++this.seq}`;
     this.emails.push({
       channel: "email",
@@ -125,7 +140,7 @@ export class EmulatedWhatsAppClient implements WhatsAppClient {
 
   constructor(
     private readonly opts: {
-      fail?: boolean;
+      fail?: FailOpt;
       /** Provider-ready sender shown in the recorded log; the real client has it implicit. */
       from?: string;
       /** Templates returned by `fetchTemplate`, keyed by template name. */
@@ -134,7 +149,7 @@ export class EmulatedWhatsAppClient implements WhatsAppClient {
   ) {}
 
   async sendTemplate(input: WhatsAppSendTemplateInput): Promise<{ id: string }> {
-    if (this.opts.fail) throw new Error("emulated whatsapp dispatch failure");
+    if (this.opts.fail) throw failError(this.opts.fail, "whatsapp");
     const id = `sim-wa-${this.run}-${++this.seq}`;
     this.messages.push({
       channel: "whatsapp",
@@ -149,7 +164,7 @@ export class EmulatedWhatsAppClient implements WhatsAppClient {
   }
 
   async sendText(input: { to: string; body: string }): Promise<{ id: string }> {
-    if (this.opts.fail) throw new Error("emulated whatsapp dispatch failure");
+    if (this.opts.fail) throw failError(this.opts.fail, "whatsapp");
     const id = `sim-wa-${this.run}-${++this.seq}`;
     this.messages.push({
       channel: "whatsapp",
