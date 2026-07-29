@@ -22,7 +22,7 @@
       — `functions/voice/decideVoiceOutcome.ts`: `VoiceDecisionClient`/`VoiceDecisionGestionView` + `createPrismaVoiceDecisionClient`.
 - [x] 2.2 Resolve `agentSystemPrompt` via `log.campaign?.agentTemplate?.voiceAiConfig` when a
       campaign is attached, else `agentTemplate.findUnique({ where: { id: log.agentTemplateId
-  } }, { include: { voiceAiConfig: true } })` for ad-hoc/follow-up dispatches — same
+} }, { include: { voiceAiConfig: true } })` for ad-hoc/follow-up dispatches — same
       dual-path pattern already implemented in `whatsAppWebhook.ts`.
 - [x] 2.3 Reuse (don't duplicate) `generateGestionInsight.ts`'s `buildTranscript`/transcript
       extraction from `channelData` — exported it and imported into `decideVoiceOutcome.ts`.
@@ -51,8 +51,8 @@
 ## 4. Bootstrap wiring
 
 - [x] 4.1 In `mods/apiserver/src/index.ts`, wire `decideOutcome: createDecideVoiceOutcome({
-    client: createPrismaVoiceDecisionClient(prisma), autopilot: createVoiceAutopilot(config.ai),
-    recordOutcome: createRecordOutcome(prisma as never), now: () => new Date() })` into
+  client: createPrismaVoiceDecisionClient(prisma), autopilot: createVoiceAutopilot(config.ai),
+  recordOutcome: createRecordOutcome(prisma as never), now: () => new Date() })` into
       `createVoiceEventsHandler`'s deps, alongside the existing
       `generator`/`generation`/`recordEvent`/`settleUsage`.
 
@@ -78,14 +78,14 @@
       `decideVoiceOutcome.test.ts` (campaign dispatch resolves via
       `campaign.agentTemplate.voiceAiConfig`; ad-hoc/follow-up — `campaignId` null — falls
       back to a direct `agentTemplateId` lookup), faked at the JS call-surface level (`as
-    never`), matching how this codebase already casts `prisma` at every wiring call site
+  never`), matching how this codebase already casts `prisma` at every wiring call site
       rather than reproducing the full generated `PrismaClient` type in tests (no existing
       test does this for the analogous WhatsApp resolver either).
 
 ## 6. Verification
 
 - [x] 6.1 `npm run --workspace mods/common build` (typecheck), `npm run --workspace
-    mods/apiserver typecheck`, `eslint` on all touched/new files, and the full test suites —
+  mods/apiserver typecheck`, `eslint` on all touched/new files, and the full test suites —
       all pass: 253/253 `mods/apiserver`, 132/132 `mods/common`.
 - [x] 6.2 No Postgres/Docker available in the sandbox for a live end-to-end run (no
       `docker-compose.yml` in the repo to provision one, either) — by user decision, did a
