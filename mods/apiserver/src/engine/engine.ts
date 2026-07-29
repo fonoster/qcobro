@@ -3,6 +3,7 @@ import {
   bucketOf,
   buildOutreachContext,
   createContactLogSchema,
+  DispatchError,
   estimateDispatchCostMicro,
   maskRecipient,
   ValidationError,
@@ -13,6 +14,7 @@ import {
   type CampaignTickReport,
   type Clock,
   type CreateContactLogInput,
+  type DispatchErrorKind,
   type DispatchOutreachInput,
   type EmailClient,
   type EngineChannel,
@@ -115,6 +117,8 @@ export interface EngineClient {
   listActiveCampaigns(): Promise<EngineCampaign[]>;
   listCandidates(campaignId: string, portfolioIds: string[]): Promise<EngineCandidate[]>;
   completeCampaign(id: string): Promise<void>;
+  /** Auto-pauses a campaign via the consecutive-system-error circuit breaker. */
+  autopauseCampaign(id: string): Promise<void>;
 }
 
 export interface EngineDeps {
@@ -136,6 +140,11 @@ export interface EngineDeps {
   tickSeconds: number;
   /** Hard cap on dispatches per tick across all campaigns (keeps ticks bounded). */
   perTickMax?: number;
+  /**
+   * Consecutive `SYSTEM_ERROR` dispatch failures (per campaign) before the engine
+   * auto-pauses that campaign. Resets on any success or `DELIVERY_REJECTED` failure.
+   */
+  consecutiveSystemErrorPauseThreshold: number;
   /**
    * Resolve a per-workspace WhatsApp client and its send language. Called once per
    * WHATSAPP dispatch; credentials are tenant-owned so the client cannot be injected
@@ -187,6 +196,10 @@ export function createEngine(deps: EngineDeps) {
   const getSettings = createGetWorkspaceSettings(deps.reserveRecordClient as never);
   const billingCfg = deps.billing?.enabled ? deps.billing : null;
   const billingDb = deps.reserveRecordClient as BillingClient;
+  // Consecutive-SYSTEM_ERROR circuit breaker: in-memory per campaign, survives across
+  // ticks (not just within one) but not a process restart — a restart naturally gives
+  // the campaign a fresh chance, so nothing durable is needed here.
+  const consecutiveSystemErrors = new Map<string, number>();
 
   /**
    * Writes the dispatch gestión and, when the workspace is metered, the priced
@@ -318,7 +331,16 @@ export function createEngine(deps: EngineDeps) {
     };
   }
 
-  /** Reserve (before send) → dispatch → record. Returns the per-account decision. */
+  /**
+   * Reserve (event only) → dispatch → reserve (DB counters, conditional) → record.
+   * Returns the per-account decision. The `attempt.reserved`/`dispatch.requested`
+   * telemetry events fire unconditionally (marking that the engine attempted this
+   * account this tick), but the actual attempt-budget counters (`reserve`, which
+   * increments `CampaignAccountState.attemptCount`/`attemptsToday` and
+   * `PortfolioAccount.totalAttempts`) are only committed once the outcome is known
+   * to be a success or a `DELIVERY_REJECTED` failure — a `SYSTEM_ERROR` never
+   * reached the recipient, so it must not erode the account's attempt budget.
+   */
   async function reserveAndDispatch(
     c: EngineCampaign,
     acc: EngineCandidate,
@@ -328,8 +350,8 @@ export function createEngine(deps: EngineDeps) {
     currency: string,
     recorder: TickRecorder,
     metered: boolean
-  ): Promise<{ decision: AccountDecision; providerRef?: string }> {
-    // For WHATSAPP, resolve the per-workspace client before reserving the attempt so a
+  ): Promise<{ decision: AccountDecision; providerRef?: string; errorKind?: DispatchErrorKind }> {
+    // For WHATSAPP, resolve the per-workspace client before attempting dispatch so a
     // missing integration skips cleanly without consuming an attempt slot.
     let whatsAppLanguageCode: string | undefined;
     let dispatchFn = dispatch;
@@ -339,6 +361,8 @@ export function createEngine(deps: EngineDeps) {
         logger.error(`WhatsApp integration not found campaign=${c.id} workspace=${c.workspaceRef}`);
         // Recorded as a failed dispatch so the scorecard's error rate sees it —
         // without this, a campaign failing 100% this way would judge as 0% errors.
+        // A missing integration is a config/system problem, not a delivery
+        // rejection, so it never consumes attempt budget (no `reserve` call below).
         recorder.emit({
           kind: "dispatch.failed",
           workspaceRef: c.workspaceRef,
@@ -346,18 +370,17 @@ export function createEngine(deps: EngineDeps) {
           portfolioAccountId: acc.id,
           channel,
           latencyMs: 0,
-          errorClass: "IntegrationMissing",
+          errorClass: "SYSTEM_ERROR",
           errorMessage: "WhatsApp integration not found for workspace",
           toMasked: maskRecipient(acc.phone ?? "")
         });
-        return { decision: "dispatch_failed" };
+        return { decision: "dispatch_failed", errorKind: "SYSTEM_ERROR" };
       }
       whatsAppLanguageCode = resolved.languageCode;
       dispatchFn = createDispatchOutreach({ ...baseDeps, whatsAppClient: resolved.client });
     }
 
     const at = deps.clock.now().toISOString();
-    await reserve({ campaignId: c.id, portfolioAccountId: acc.id, at });
     recorder.emit({
       kind: "attempt.reserved",
       workspaceRef: c.workspaceRef,
@@ -382,7 +405,11 @@ export function createEngine(deps: EngineDeps) {
         buildRequest(c, acc, channel, appRef, currency, whatsAppLanguageCode)
       );
     } catch (err) {
-      // Attempt stays consumed (at-most-once); no gestión for a failed dispatch.
+      // dispatchOutreach always throws a classified DispatchError; an unclassified
+      // throw (a bug, a provider client that didn't itself catch a failure) is
+      // treated as SYSTEM_ERROR — never DELIVERY_REJECTED for something we can't
+      // attribute to the recipient side.
+      const errorKind: DispatchErrorKind = err instanceof DispatchError ? err.kind : "SYSTEM_ERROR";
       // Surface the reason — a swallowed dispatch error is undebuggable in prod.
       // dispatchOutreach wraps provider failures in a generic message for any
       // customer-facing surface; the real provider detail rides as `.cause` — log
@@ -399,11 +426,17 @@ export function createEngine(deps: EngineDeps) {
         portfolioAccountId: acc.id,
         channel,
         latencyMs: Date.now() - dispatchStartedMs,
-        errorClass: rawErr instanceof Error ? rawErr.constructor.name : "Error",
-        errorMessage: rawErr instanceof Error ? rawErr.message : String(rawErr),
+        errorClass: errorKind,
+        errorMessage: err instanceof Error ? err.message : String(err),
         toMasked
       });
-      return { decision: "dispatch_failed" };
+      // Only a delivery-rejected failure means the provider actually reached the
+      // recipient side — that (like a success) consumes attempt budget. A
+      // SYSTEM_ERROR leaves the account's counters untouched so it stays eligible.
+      if (errorKind === "DELIVERY_REJECTED") {
+        await reserve({ campaignId: c.id, portfolioAccountId: acc.id, at });
+      }
+      return { decision: "dispatch_failed", errorKind };
     }
     recorder.emit({
       kind: "dispatch.succeeded",
@@ -415,6 +448,8 @@ export function createEngine(deps: EngineDeps) {
       latencyMs: Date.now() - dispatchStartedMs,
       toMasked
     });
+
+    await reserve({ campaignId: c.id, portfolioAccountId: acc.id, at });
 
     await recordDispatch(
       {
@@ -684,7 +719,7 @@ export function createEngine(deps: EngineDeps) {
         }
         if (gate.kind === "active") gate.bucket.tryDebit(costMicro);
         const acc = candidateById.get(fa.portfolioAccountId)!;
-        const { decision, providerRef } = await reserveAndDispatch(
+        const { decision, providerRef, errorKind } = await reserveAndDispatch(
           c,
           acc,
           ready.channel,
@@ -702,6 +737,30 @@ export function createEngine(deps: EngineDeps) {
           usage[ready.channel].dispatched += 1;
         } else {
           cr.skipped += 1;
+        }
+
+        // Consecutive-SYSTEM_ERROR circuit breaker: a success or DELIVERY_REJECTED
+        // means the channel is currently reachable and resets the count; a run of
+        // SYSTEM_ERROR past the configured threshold auto-pauses the campaign so it
+        // stops burning cycles on an outage instead of silently capping out every
+        // account's attempt budget one SYSTEM_ERROR at a time.
+        if (errorKind === "SYSTEM_ERROR") {
+          const count = (consecutiveSystemErrors.get(c.id) ?? 0) + 1;
+          consecutiveSystemErrors.set(c.id, count);
+          if (count >= deps.consecutiveSystemErrorPauseThreshold) {
+            consecutiveSystemErrors.delete(c.id);
+            await deps.db.autopauseCampaign(c.id);
+            recorder.emit({
+              kind: "campaign.autopaused",
+              workspaceRef: c.workspaceRef,
+              campaignId: c.id,
+              errorKind: "SYSTEM_ERROR",
+              consecutiveCount: count
+            });
+            break;
+          }
+        } else if (decision === "dispatched" || errorKind === "DELIVERY_REJECTED") {
+          consecutiveSystemErrors.delete(c.id);
         }
       }
 

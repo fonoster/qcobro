@@ -89,7 +89,8 @@ describe("email channel (integration)", { skip: !RUN ? "no DATABASE_URL" : false
       emailPerMinute: 1000, // high so other active campaigns can't starve this test
       whatsAppPerMinute: 0,
       resolveWhatsApp: async () => null,
-      tickSeconds: 60
+      tickSeconds: 60,
+      consecutiveSystemErrorPauseThreshold: 10
     });
   }
 

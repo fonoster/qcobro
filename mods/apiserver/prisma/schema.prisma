@@ -56,6 +56,13 @@ enum CampaignStatus {
   ARCHIVED
 }
 
+// Why a campaign is PAUSED — set on the same transition that sets status to PAUSED,
+// cleared whenever it leaves PAUSED. See the campaigns-engine circuit-breaker spec.
+enum CampaignPauseReason {
+  MANUAL
+  AUTO_ERROR_THRESHOLD
+}
+
 enum TriggerType {
   MAX_ATTEMPTS_PER_DAY
   DNC_CHECK
@@ -243,6 +250,9 @@ model Campaign {
   name                   String
   agentTemplateId        String
   status                 CampaignStatus         @default(ACTIVE)
+  // Null when not PAUSED. MANUAL = operator paused it; AUTO_ERROR_THRESHOLD = the
+  // consecutive-system-error circuit breaker paused it. Cleared on leaving PAUSED.
+  pauseReason            CampaignPauseReason?
   startDate              DateTime
   endDate                DateTime?
   startTime              String
@@ -416,6 +426,7 @@ enum EngineEventKind {
   DISPATCH_SUCCEEDED
   DISPATCH_FAILED
   PROVIDER_EVENT
+  CAMPAIGN_AUTOPAUSED
 }
 
 // Engine flight recorder (engine-events capability). Append-only telemetry, not a

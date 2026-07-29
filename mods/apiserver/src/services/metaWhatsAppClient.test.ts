@@ -1,5 +1,6 @@
 import { describe, it, afterEach } from "node:test";
 import assert from "node:assert/strict";
+import { DispatchError } from "@qcobro/common";
 import { MetaWhatsAppClient, checkWhatsAppConnection } from "./metaWhatsAppClient.js";
 
 const SETTINGS = {
@@ -201,6 +202,63 @@ describe("MetaWhatsAppClient send methods never retry", () => {
     const client = new MetaWhatsAppClient(SETTINGS);
     await assert.rejects(() => client.sendText({ to: "+18095551234", body: "hola" }));
     assert.equal(calls, 1);
+  });
+});
+
+describe("MetaWhatsAppClient send methods classify DispatchError.kind", () => {
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it("classifies a 400 recipient/template rejection as DELIVERY_REJECTED", async () => {
+    globalThis.fetch = (async () =>
+      jsonResponse(400, { error: { message: "Invalid recipient", code: 131026 } })) as typeof fetch;
+
+    const client = new MetaWhatsAppClient(SETTINGS);
+    await assert.rejects(
+      () =>
+        client.sendTemplate({
+          to: "+18095551234",
+          templateName: "saldo_pendiente",
+          languageCode: "es_DO",
+          params: []
+        }),
+      (err: unknown) => err instanceof DispatchError && err.kind === "DELIVERY_REJECTED"
+    );
+  });
+
+  it("classifies a 401 expired-token failure as SYSTEM_ERROR", async () => {
+    globalThis.fetch = (async () =>
+      jsonResponse(401, { error: { message: "Invalid OAuth access token" } })) as typeof fetch;
+
+    const client = new MetaWhatsAppClient(SETTINGS);
+    await assert.rejects(
+      () => client.sendText({ to: "+18095551234", body: "hola" }),
+      (err: unknown) => err instanceof DispatchError && err.kind === "SYSTEM_ERROR"
+    );
+  });
+
+  it("classifies a 5xx outage as SYSTEM_ERROR", async () => {
+    globalThis.fetch = (async () =>
+      jsonResponse(503, { error: { message: "Service unavailable" } })) as typeof fetch;
+
+    const client = new MetaWhatsAppClient(SETTINGS);
+    await assert.rejects(
+      () => client.sendText({ to: "+18095551234", body: "hola" }),
+      (err: unknown) => err instanceof DispatchError && err.kind === "SYSTEM_ERROR"
+    );
+  });
+
+  it("classifies a network failure as SYSTEM_ERROR (unclassifiable falls back safe)", async () => {
+    globalThis.fetch = (async () => {
+      throw new Error("network down");
+    }) as typeof fetch;
+
+    const client = new MetaWhatsAppClient(SETTINGS);
+    await assert.rejects(
+      () => client.sendText({ to: "+18095551234", body: "hola" }),
+      (err: unknown) => err instanceof DispatchError && err.kind === "SYSTEM_ERROR"
+    );
   });
 });
 

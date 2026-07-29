@@ -1,6 +1,7 @@
 import type { AgentType } from "../schemas/agentTemplates.js";
 import type {
   CampaignStatus,
+  CampaignPauseReason,
   CreateCampaignInput,
   UpdateCampaignInput,
   UpdateCampaignStatusInput,
@@ -20,6 +21,7 @@ export interface CampaignRecord {
   name: string;
   agentTemplateId: string;
   status: CampaignStatus;
+  pauseReason: CampaignPauseReason | null;
   startDate: Date;
   endDate: Date | null;
   daysOfWeek: number[];

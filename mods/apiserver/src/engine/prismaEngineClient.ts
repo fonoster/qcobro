@@ -107,6 +107,13 @@ export function createPrismaEngineClient(prisma: PrismaClient): EngineClient {
 
     async completeCampaign(id: string): Promise<void> {
       await prisma.campaign.update({ where: { id }, data: { status: "COMPLETED" } });
+    },
+
+    async autopauseCampaign(id: string): Promise<void> {
+      await prisma.campaign.update({
+        where: { id },
+        data: { status: "PAUSED", pauseReason: "AUTO_ERROR_THRESHOLD" }
+      });
     }
   };
 }

@@ -3,10 +3,12 @@ import assert from "node:assert/strict";
 import { PrismaClient } from "@prisma/client";
 import {
   billingConfigSchema,
+  DispatchError,
   evaluate,
   evaluationParametersSchema,
   type BillingConfig,
-  type EngineEvent
+  type EngineEvent,
+  type SmsClient
 } from "@qcobro/common";
 import { createEngine } from "./engine.js";
 import { createPrismaEngineClient } from "./prismaEngineClient.js";
@@ -69,8 +71,12 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
   }
 
   function makeEngine(
-    sms: EmulatedSmsClient,
-    opts: { perTickMax?: number; billing?: BillingConfig } = {}
+    sms: SmsClient,
+    opts: {
+      perTickMax?: number;
+      billing?: BillingConfig;
+      consecutiveSystemErrorPauseThreshold?: number;
+    } = {}
   ) {
     return createEngine({
       db: createPrismaEngineClient(prisma),
@@ -87,6 +93,7 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
       whatsAppPerMinute: 0,
       resolveWhatsApp: async () => null,
       tickSeconds: 60,
+      consecutiveSystemErrorPauseThreshold: opts.consecutiveSystemErrorPauseThreshold ?? 10,
       perTickMax: opts.perTickMax,
       billing: opts.billing
     });
@@ -177,20 +184,122 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
     );
   });
 
-  it("a crashed/failed dispatch consumes the attempt and is not retried", async () => {
+  it("a SYSTEM_ERROR dispatch failure does not consume the attempt — it is retried", async () => {
     const { campaignId } = await seedCampaign({ maxPerDay: 1, accounts: 1 });
 
-    // Tick 1: provider fails AFTER the reserve commits (simulates crash mid-dispatch).
+    // Tick 1: an unclassified/crashed provider failure defaults to SYSTEM_ERROR.
     const failing = new EmulatedSmsClient({ fail: true });
     const first = await makeEngine(failing).tick();
     const cr1 = first.campaigns.find((c) => c.campaignId === campaignId);
     assert.ok(cr1?.decisions.some((d) => d.decision === "dispatch_failed"));
     assert.equal(mine(failing).length, 0, "nothing actually sent");
 
+    const stateAfterFailure = await prisma.campaignAccountState.findFirst({
+      where: { campaignId }
+    });
+    assert.equal(stateAfterFailure, null, "SYSTEM_ERROR never reserves an attempt at all");
+
+    // Tick 2: a healthy provider — the account is still eligible (SYSTEM_ERROR never
+    // erodes the budget), so the retry actually dispatches.
+    const healthy = new EmulatedSmsClient();
+    const second = await makeEngine(healthy).tick();
+    assert.equal(mine(healthy).length, 1, "SYSTEM_ERROR does not block a later retry");
+    const cr2 = second.campaigns.find((c) => c.campaignId === campaignId);
+    assert.equal(cr2?.dispatched, 1);
+  });
+
+  it("a DELIVERY_REJECTED dispatch failure consumes the attempt and is not retried", async () => {
+    const { campaignId } = await seedCampaign({ maxPerDay: 1, accounts: 1 });
+
+    const rejecting = new EmulatedSmsClient({ fail: "DELIVERY_REJECTED" });
+    const first = await makeEngine(rejecting).tick();
+    const cr1 = first.campaigns.find((c) => c.campaignId === campaignId);
+    assert.ok(cr1?.decisions.some((d) => d.decision === "dispatch_failed"));
+    assert.equal(mine(rejecting).length, 0, "nothing actually sent");
+
+    const state = await prisma.campaignAccountState.findFirst({ where: { campaignId } });
+    assert.equal(state?.attemptCount, 1, "DELIVERY_REJECTED still consumes the attempt budget");
+
     // Tick 2: a healthy provider — the consumed attempt must NOT be retried this day.
     const healthy = new EmulatedSmsClient();
     await makeEngine(healthy).tick();
     assert.equal(mine(healthy).length, 0, "no retry of the consumed attempt (at-most-once)");
+  });
+
+  // ——— Consecutive-SYSTEM_ERROR circuit breaker ———
+
+  it("sustained SYSTEM_ERROR trips the breaker and auto-pauses the campaign", async () => {
+    const { campaignId } = await seedCampaign({ maxPerDay: 1, accounts: 5 });
+    const failing = new EmulatedSmsClient({ fail: true });
+
+    const report = await makeEngine(failing, {
+      consecutiveSystemErrorPauseThreshold: 3
+    }).tick();
+
+    const cr = report.campaigns.find((c) => c.campaignId === campaignId);
+    assert.equal(cr?.decisions.length, 3, "stops dispatching this campaign once the breaker trips");
+    assert.ok(cr?.decisions.every((d) => d.decision === "dispatch_failed"));
+
+    const campaign = await prisma.campaign.findUnique({ where: { id: campaignId } });
+    assert.equal(campaign?.status, "PAUSED");
+    assert.equal(campaign?.pauseReason, "AUTO_ERROR_THRESHOLD");
+
+    const autopaused = report.events?.find((e) => e.kind === "campaign.autopaused");
+    assert.ok(autopaused, "a campaign.autopaused event is recorded");
+    assert.equal((autopaused as { consecutiveCount: number }).consecutiveCount, 3);
+  });
+
+  it("a success or DELIVERY_REJECTED resets the consecutive-SYSTEM_ERROR counter", async () => {
+    const { campaignId } = await seedCampaign({ maxPerDay: 1, accounts: 5 });
+    let call = 0;
+    const sent: string[] = [];
+    // Fails twice (SYSTEM_ERROR), succeeds once (resets the counter), fails twice more —
+    // never 3 consecutive SYSTEM_ERROR failures, so the threshold-3 breaker must not trip.
+    const sequenced: SmsClient = {
+      async sendMessage(input) {
+        call += 1;
+        if (call === 3) {
+          sent.push(input.to);
+          return { sid: `sim-sms-seq-${call}` };
+        }
+        throw new DispatchError("SYSTEM_ERROR", "emulated transient failure");
+      }
+    };
+
+    const report = await makeEngine(sequenced, {
+      consecutiveSystemErrorPauseThreshold: 3
+    }).tick();
+
+    const cr = report.campaigns.find((c) => c.campaignId === campaignId);
+    assert.equal(cr?.dispatched, 1, "the one successful call went through");
+    assert.equal(sent.length, 1);
+
+    const campaign = await prisma.campaign.findUnique({ where: { id: campaignId } });
+    assert.equal(campaign?.status, "ACTIVE", "the breaker never tripped");
+    assert.equal(campaign?.pauseReason, null);
+
+    const autopaused = report.events?.find((e) => e.kind === "campaign.autopaused");
+    assert.equal(autopaused, undefined);
+  });
+
+  it("an auto-paused campaign stays paused on the next tick (no auto-resume)", async () => {
+    const { campaignId } = await seedCampaign({ maxPerDay: 1, accounts: 5 });
+    const failing = new EmulatedSmsClient({ fail: true });
+    await makeEngine(failing, { consecutiveSystemErrorPauseThreshold: 3 }).tick();
+
+    const pausedCampaign = await prisma.campaign.findUnique({ where: { id: campaignId } });
+    assert.equal(pausedCampaign?.status, "PAUSED");
+
+    // A later tick, even with a healthy provider, must not touch a PAUSED campaign —
+    // it's excluded from listActiveCampaigns, so nothing auto-resumes it.
+    const healthy = new EmulatedSmsClient();
+    const second = await makeEngine(healthy, { consecutiveSystemErrorPauseThreshold: 3 }).tick();
+    assert.equal(mine(healthy).length, 0, "no dispatch to a paused campaign");
+    assert.ok(!second.campaigns.some((c) => c.campaignId === campaignId));
+
+    const stillPaused = await prisma.campaign.findUnique({ where: { id: campaignId } });
+    assert.equal(stillPaused?.status, "PAUSED");
+    assert.equal(stillPaused?.pauseReason, "AUTO_ERROR_THRESHOLD");
   });
 
   // ——— Flight recorder + scorecard (engine-events / engine-scorecard) ———

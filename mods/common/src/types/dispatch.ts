@@ -8,6 +8,27 @@
 /** Channels the dispatch layer can trigger. */
 export type DispatchChannel = "VOICE_AI" | "VOICE_PRERECORDED" | "SMS" | "EMAIL" | "WHATSAPP";
 
+/** Classification of a dispatch failure — see the channel-dispatch spec. */
+export type DispatchErrorKind = "DELIVERY_REJECTED" | "SYSTEM_ERROR";
+
+/**
+ * Thrown by provider clients (WhatsApp/SMS/voice/email) on dispatch failure. `kind`
+ * distinguishes a failure that reached the recipient side of the provider request
+ * (`DELIVERY_REJECTED` — bad number, rejected template, opted out) from one where the
+ * provider call couldn't be evaluated at all (`SYSTEM_ERROR` — transport, auth, outage,
+ * timeout). Only the client talking to a given provider's API can interpret its error
+ * shape, so classification happens there, never guessed centrally in `dispatchOutreach`.
+ */
+export class DispatchError extends Error {
+  readonly kind: DispatchErrorKind;
+
+  constructor(kind: DispatchErrorKind, message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "DispatchError";
+    this.kind = kind;
+  }
+}
+
 /** Inputs for originating an outbound voice call (Fonoster). */
 export interface OutboundCallInput {
   /** Caller-ID number (E.164). */

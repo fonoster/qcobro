@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { dispatchChannelSchema } from "./dispatch.js";
+import { dispatchChannelSchema, dispatchErrorKindSchema } from "./dispatch.js";
 
 /**
  * Engine flight-recorder events. The engine (and the inbound provider webhooks)
@@ -27,7 +27,8 @@ export const engineEventKindSchema = z.enum([
   "dispatch.requested",
   "dispatch.succeeded",
   "dispatch.failed",
-  "provider.event"
+  "provider.event",
+  "campaign.autopaused"
 ]);
 
 export type EngineEventKind = z.infer<typeof engineEventKindSchema>;
@@ -151,8 +152,8 @@ const dispatchFailedSchema = workspaceScoped.extend({
   portfolioAccountId: z.string().min(1),
   channel: dispatchChannelSchema,
   latencyMs: z.number().nonnegative(),
-  /** Coarse classification (the error's constructor name or "Error"). */
-  errorClass: z.string(),
+  /** The dispatch failure's real `DispatchError.kind` — never a generic constructor name. */
+  errorClass: dispatchErrorKindSchema,
   errorMessage: z.string(),
   toMasked: z.string()
 });
@@ -174,6 +175,15 @@ const providerEventSchema = eventBase.extend({
   summary: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional()
 });
 
+const campaignAutopausedSchema = workspaceScoped.extend({
+  kind: z.literal("campaign.autopaused"),
+  campaignId: z.string().min(1),
+  /** The `DispatchError.kind` whose consecutive run tripped the breaker (always `SYSTEM_ERROR`). */
+  errorKind: dispatchErrorKindSchema,
+  /** The consecutive-failure count that reached the configured threshold. */
+  consecutiveCount: z.number().int().positive()
+});
+
 export const engineEventSchema = z.discriminatedUnion("kind", [
   tickStartedSchema,
   tickCompletedSchema,
@@ -183,7 +193,8 @@ export const engineEventSchema = z.discriminatedUnion("kind", [
   dispatchRequestedSchema,
   dispatchSucceededSchema,
   dispatchFailedSchema,
-  providerEventSchema
+  providerEventSchema,
+  campaignAutopausedSchema
 ]);
 
 export type EngineEvent = z.infer<typeof engineEventSchema>;
@@ -202,6 +213,7 @@ export type DispatchRequestedEvent = z.infer<typeof dispatchRequestedSchema>;
 export type DispatchSucceededEvent = z.infer<typeof dispatchSucceededSchema>;
 export type DispatchFailedEvent = z.infer<typeof dispatchFailedSchema>;
 export type ProviderEventEvent = z.infer<typeof providerEventSchema>;
+export type CampaignAutopausedEvent = z.infer<typeof campaignAutopausedSchema>;
 
 /**
  * Where engine events land. Prisma-backed in production, in-memory in tests,

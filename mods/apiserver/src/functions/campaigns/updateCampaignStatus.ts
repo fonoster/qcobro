@@ -30,7 +30,15 @@ export function createUpdateCampaignStatus(client: CampaignClient, workspaceRef:
       );
     }
 
-    return client.campaign.update({ where: { id: params.id }, data: { status: params.status } });
+    return client.campaign.update({
+      where: { id: params.id },
+      data: {
+        status: params.status,
+        // The operator-driven route always means a manual pause; pauseReason is
+        // cleared whenever the campaign leaves PAUSED (to any other status).
+        pauseReason: params.status === "PAUSED" ? "MANUAL" : null
+      }
+    });
   };
 
   return withErrorHandlingAndValidation(fn, updateCampaignStatusSchema);

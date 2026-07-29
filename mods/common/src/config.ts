@@ -421,7 +421,14 @@ export const qcobroConfigSchema = z.object({
        * runner prunes it. `0` disables pruning. Telemetry only — gestiones are the
        * record of contact attempts and are never pruned.
        */
-      eventsRetentionDays: z.number().int().nonnegative().default(30)
+      eventsRetentionDays: z.number().int().nonnegative().default(30),
+      /**
+       * Consecutive `SYSTEM_ERROR` dispatch failures (per campaign) before the engine
+       * auto-pauses that campaign (`Campaign.pauseReason: AUTO_ERROR_THRESHOLD`). Resets on
+       * any success or `DELIVERY_REJECTED` failure. Sized to ride out a short blip without
+       * silently burning through every account's attempt cap during a real outage.
+       */
+      consecutiveSystemErrorPauseThreshold: z.number().int().positive().default(10)
     })
     .prefault({})
 });

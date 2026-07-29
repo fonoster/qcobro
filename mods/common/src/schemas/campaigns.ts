@@ -4,6 +4,14 @@ export const campaignStatusSchema = z.enum(["PAUSED", "ACTIVE", "COMPLETED", "AR
 export type CampaignStatus = z.infer<typeof campaignStatusSchema>;
 
 /**
+ * Why a campaign is PAUSED: `MANUAL` (an operator paused it) or
+ * `AUTO_ERROR_THRESHOLD` (the engine's consecutive-system-error circuit breaker
+ * paused it). Null/absent when not paused; cleared whenever the campaign leaves PAUSED.
+ */
+export const campaignPauseReasonSchema = z.enum(["MANUAL", "AUTO_ERROR_THRESHOLD"]);
+export type CampaignPauseReason = z.infer<typeof campaignPauseReasonSchema>;
+
+/**
  * Valid status transitions. A new campaign starts ACTIVE (dispatching immediately).
  * COMPLETED is read-only. An ARCHIVED campaign can be restored to PAUSED — it never
  * resumes dispatch without an explicit later activation. The UI offers only the

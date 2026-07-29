@@ -20,7 +20,8 @@ const KIND: Record<EngineEvent["kind"], EngineEventKind> = {
   "dispatch.requested": "DISPATCH_REQUESTED",
   "dispatch.succeeded": "DISPATCH_SUCCEEDED",
   "dispatch.failed": "DISPATCH_FAILED",
-  "provider.event": "PROVIDER_EVENT"
+  "provider.event": "PROVIDER_EVENT",
+  "campaign.autopaused": "CAMPAIGN_AUTOPAUSED"
 };
 
 /** Spine fields that exist on some union members; absent ones store as null. */

@@ -1,4 +1,10 @@
-import type { EmailClient, EmailSendInput, ReceivedEmail, ResendConfig } from "@qcobro/common";
+import {
+  DispatchError,
+  type EmailClient,
+  type EmailSendInput,
+  type ReceivedEmail,
+  type ResendConfig
+} from "@qcobro/common";
 
 type ResendSettings = NonNullable<ResendConfig>;
 
@@ -16,30 +22,47 @@ export class ResendEmailClient implements EmailClient {
 
   async sendEmail(input: EmailSendInput): Promise<{ id: string }> {
     const from = input.fromName ? `${input.fromName} <${input.from}>` : input.from;
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.settings.apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        from,
-        to: input.to,
-        subject: input.subject,
-        text: input.body,
-        reply_to: [input.replyTo],
-        ...(input.inReplyTo
-          ? { headers: { "In-Reply-To": input.inReplyTo, References: input.inReplyTo } }
-          : {})
-      }),
-      signal: AbortSignal.timeout(SEND_TIMEOUT_MS)
-    });
+    let res: Response;
+    try {
+      res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.settings.apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          from,
+          to: input.to,
+          subject: input.subject,
+          text: input.body,
+          reply_to: [input.replyTo],
+          ...(input.inReplyTo
+            ? { headers: { "In-Reply-To": input.inReplyTo, References: input.inReplyTo } }
+            : {})
+        }),
+        signal: AbortSignal.timeout(SEND_TIMEOUT_MS)
+      });
+    } catch (err) {
+      // Never reached Resend at all — network failure or our own timeout abort.
+      throw new DispatchError(
+        "SYSTEM_ERROR",
+        `Resend send request failed: ${err instanceof Error ? err.message : String(err)}`,
+        { cause: err }
+      );
+    }
     if (!res.ok) {
       const detail = await res.text().catch(() => "");
-      throw new Error(`Resend send failed (${res.status}): ${detail}`);
+      // 401/403 (auth), 429 (rate limited), 5xx mean Resend couldn't evaluate the send at
+      // all. Any other rejection (invalid from/to address, hard bounce at send time) means
+      // Resend evaluated the request and refused it.
+      const kind =
+        res.status === 401 || res.status === 403 || res.status === 429 || res.status >= 500
+          ? "SYSTEM_ERROR"
+          : "DELIVERY_REJECTED";
+      throw new DispatchError(kind, `Resend send failed (${res.status}): ${detail}`);
     }
     const data = (await res.json()) as { id?: string };
-    if (!data.id) throw new Error("Resend send returned no message id");
+    if (!data.id) throw new DispatchError("SYSTEM_ERROR", "Resend send returned no message id");
     return { id: data.id };
   }
 
