@@ -3,6 +3,52 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.23.0](https://github.com/fonoster/qcobro/compare/v1.22.1...v1.23.0) (2026-07-28)
+
+### Features
+
+- **apiserver:** capture payment promises from Voz IA calls ([#71](https://github.com/fonoster/qcobro/issues/71)) ([a2b487d](https://github.com/fonoster/qcobro/commit/a2b487dee92ff565994c2c38080bf0797780ba5a))
+
+## [1.22.1](https://github.com/fonoster/qcobro/compare/v1.22.0...v1.22.1) (2026-07-28)
+
+### Bug Fixes
+
+- **common:** drop unused objective.type from the autopilot decision schema ([#70](https://github.com/fonoster/qcobro/issues/70)) ([224d7cd](https://github.com/fonoster/qcobro/commit/224d7cdadc37e86edabe040abe8e62509eab5caa)), closes [#66](https://github.com/fonoster/qcobro/issues/66)
+
+# [1.22.0](https://github.com/fonoster/qcobro/compare/v1.21.0...v1.22.0) (2026-07-16)
+
+### Features
+
+- **apiserver:** give the WhatsApp/Email autopilot enough loan context to answer basic questions ([#68](https://github.com/fonoster/qcobro/issues/68)) ([696136e](https://github.com/fonoster/qcobro/commit/696136e191b5801cb5a9053bb8741a1acfe998a2))
+
+## [1.20.5](https://github.com/fonoster/qcobro/compare/v1.20.4...v1.20.5) (2026-07-16)
+
+**Note:** Version bump only for package @qcobro/apiserver
+
+## [1.20.4](https://github.com/fonoster/qcobro/compare/v1.20.3...v1.20.4) (2026-07-16)
+
+### Bug Fixes
+
+- **apiserver:** surface the real error in WhatsApp webhook processing failures ([#65](https://github.com/fonoster/qcobro/issues/65)) ([20c57cd](https://github.com/fonoster/qcobro/commit/20c57cde7a5cf9f67fd983bdc153771752d62e9a))
+
+## [1.20.3](https://github.com/fonoster/qcobro/compare/v1.20.2...v1.20.3) (2026-07-16)
+
+### Bug Fixes
+
+- **apiserver:** scope WhatsApp inbound match by portfolio, not campaign ([#64](https://github.com/fonoster/qcobro/issues/64)) ([579eb3a](https://github.com/fonoster/qcobro/commit/579eb3a7eb4399ef6635f5fe8032ef966d89efde)), closes [#62](https://github.com/fonoster/qcobro/issues/62)
+
+## [1.20.2](https://github.com/fonoster/qcobro/compare/v1.20.1...v1.20.2) (2026-07-16)
+
+### Bug Fixes
+
+- **apiserver:** match WhatsApp inbound messages by normalized E.164 phone ([#62](https://github.com/fonoster/qcobro/issues/62)) ([fc644ee](https://github.com/fonoster/qcobro/commit/fc644ee9cb8bd1e2552143bfa31bc143ef11263e))
+
+## [1.20.1](https://github.com/fonoster/qcobro/compare/v1.20.0...v1.20.1) (2026-07-16)
+
+### Bug Fixes
+
+- **apiserver:** correlate voice events on the top-level providerRef column ([#61](https://github.com/fonoster/qcobro/issues/61)) ([38a0108](https://github.com/fonoster/qcobro/commit/38a01081ad78bab1240183fea2df32d2385ff9af))
+
 ## [1.19.4](https://github.com/fonoster/qcobro/compare/v1.19.3...v1.19.4) (2026-07-14)
 
 ### Bug Fixes

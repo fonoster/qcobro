@@ -105,7 +105,7 @@ describe("ingestEmailReply", () => {
       action: "reply",
       replyBody: "Registramos su compromiso.",
       outcome: "PAYMENT_PROMISE",
-      objective: { type: "PAYMENT_PROMISE", amount: 500, dueDate: "2026-07-01" }
+      objective: { amount: 500, dueDate: "2026-07-01" }
     });
     await createIngestEmailReply(deps as never)(inbound());
 

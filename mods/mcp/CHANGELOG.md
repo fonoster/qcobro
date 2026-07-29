@@ -3,6 +3,38 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.23.0](https://github.com/fonoster/qcobro/compare/v1.22.1...v1.23.0) (2026-07-28)
+
+**Note:** Version bump only for package @qcobro/mcp
+
+## [1.22.1](https://github.com/fonoster/qcobro/compare/v1.22.0...v1.22.1) (2026-07-28)
+
+**Note:** Version bump only for package @qcobro/mcp
+
+# [1.22.0](https://github.com/fonoster/qcobro/compare/v1.21.0...v1.22.0) (2026-07-16)
+
+**Note:** Version bump only for package @qcobro/mcp
+
+## [1.20.5](https://github.com/fonoster/qcobro/compare/v1.20.4...v1.20.5) (2026-07-16)
+
+**Note:** Version bump only for package @qcobro/mcp
+
+## [1.20.4](https://github.com/fonoster/qcobro/compare/v1.20.3...v1.20.4) (2026-07-16)
+
+**Note:** Version bump only for package @qcobro/mcp
+
+## [1.20.3](https://github.com/fonoster/qcobro/compare/v1.20.2...v1.20.3) (2026-07-16)
+
+**Note:** Version bump only for package @qcobro/mcp
+
+## [1.20.2](https://github.com/fonoster/qcobro/compare/v1.20.1...v1.20.2) (2026-07-16)
+
+**Note:** Version bump only for package @qcobro/mcp
+
+## [1.20.1](https://github.com/fonoster/qcobro/compare/v1.20.0...v1.20.1) (2026-07-16)
+
+**Note:** Version bump only for package @qcobro/mcp
+
 ## [1.19.4](https://github.com/fonoster/qcobro/compare/v1.19.3...v1.19.4) (2026-07-14)
 
 **Note:** Version bump only for package @qcobro/mcp

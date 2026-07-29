@@ -122,6 +122,65 @@ export function buildOutreachContext(
   };
 }
 
+/**
+ * Builds the "Contexto — ..." bullet lines an autopilot prompt (WhatsApp/Email) shows the
+ * model, from a {@link buildOutreachContext} result. Only factual account/loan data the
+ * customer already has a right to see — never `negotiationOptions` (internal, freeform
+ * admin notes on negotiation flexibility, not safe for the model to repeat verbatim).
+ *
+ * Skips fields that aren't meaningful for the current account (e.g. `daysPastDue` when the
+ * account isn't past due) so the model isn't fed noise, but always includes the ones that
+ * let it answer basic loan questions (balance, terms, due status, last payment) instead of
+ * just the outstanding balance — the model otherwise has nothing to work with beyond the
+ * balance and can't answer "how much do I owe in total" or "when's my next payment due".
+ */
+export function buildAutopilotContextLines(context: Record<string, unknown> | undefined): string[] {
+  if (!context) return [];
+  const lines: string[] = [];
+  const currency = typeof context.currency === "string" ? ` ${context.currency}` : "";
+
+  if (typeof context.firstName === "string" && context.firstName) {
+    lines.push(`Cliente: ${context.firstName}`);
+  }
+  if (typeof context.outstandingBalance === "number") {
+    lines.push(`Saldo pendiente: ${context.outstandingBalance}${currency}`);
+  }
+  if (typeof context.principalAmount === "number" && context.principalAmount > 0) {
+    lines.push(`Monto original del préstamo: ${context.principalAmount}${currency}`);
+  }
+  if (typeof context.termsAmount === "number" && context.termsAmount > 0) {
+    const freq =
+      typeof context.termsFrequency === "string" && context.termsFrequency
+        ? ` (${context.termsFrequency})`
+        : "";
+    lines.push(`Cuota: ${context.termsAmount}${currency}${freq}`);
+  }
+  if (typeof context.termsLength === "number" && context.termsLength > 0) {
+    lines.push(`Plazo: ${context.termsLength} cuotas`);
+  }
+  if (typeof context.daysPastDue === "number" && context.daysPastDue > 0) {
+    lines.push(`Días de atraso: ${context.daysPastDue}`);
+  }
+  if (typeof context.missedInstallments === "number" && context.missedInstallments > 0) {
+    lines.push(`Cuotas incumplidas: ${context.missedInstallments}`);
+  }
+  if (context.lastPaymentDate) {
+    const date =
+      context.lastPaymentDate instanceof Date
+        ? context.lastPaymentDate
+        : new Date(context.lastPaymentDate as string);
+    if (!Number.isNaN(date.getTime())) {
+      const amount =
+        typeof context.lastPaymentAmount === "number"
+          ? ` de ${context.lastPaymentAmount}${currency}`
+          : "";
+      lines.push(`Último pago${amount}: ${date.toISOString().slice(0, 10)}`);
+    }
+  }
+
+  return lines;
+}
+
 /** Default number selector: a uniform random pick from the pool. */
 export const pickRandomNumber: NumberSelector = (numbers) =>
   numbers[Math.floor(Math.random() * numbers.length)];

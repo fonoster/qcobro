@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   X,
@@ -9,7 +9,9 @@ import {
   MessagesSquare,
   Target,
   Mail,
-  MessageSquare
+  MessageSquare,
+  Copy,
+  Check
 } from "lucide-react";
 import type { EmailThreadMessage, TranscriptLine, WhatsAppThread } from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
@@ -64,6 +66,52 @@ function MetaItem({ label, value }: { label: string; value?: string | null }) {
     <div className="flex flex-col gap-0.5">
       <span className="text-xs text-slate-400">{label}</span>
       <span className="text-sm font-medium text-slate-700">{value}</span>
+    </div>
+  );
+}
+
+/** Values longer than this are shown as a prefix + ellipsis in {@link CopyableMetaItem}. */
+const ID_TRUNCATE_LENGTH = 8;
+
+/**
+ * Metadata field for an identifier that can be long (Gestión UUID, account external id):
+ * shows the value truncated to {@link ID_TRUNCATE_LENGTH} chars (only when it actually
+ * exceeds that length) with a copy control that writes the full value to the clipboard.
+ * The raw value is often too long for the half-width metadata column, and operators only
+ * need it to copy for correlation/support.
+ */
+function CopyableMetaItem({ label, value }: { label: string; value: string }) {
+  const { t } = useI18n();
+  const [copied, setCopied] = useState(false);
+
+  const onCopy = () => {
+    void navigator.clipboard?.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+
+  const displayValue =
+    value.length > ID_TRUNCATE_LENGTH ? `${value.slice(0, ID_TRUNCATE_LENGTH)}…` : value;
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-xs text-slate-400">{label}</span>
+      <div className="flex items-center gap-1.5">
+        <span className="font-mono text-sm font-medium text-slate-700">{displayValue}</span>
+        <button
+          type="button"
+          onClick={onCopy}
+          aria-label={copied ? t("gestiones.detail.idCopied") : t("gestiones.detail.copyId")}
+          className="text-slate-400 transition-colors hover:text-slate-600"
+        >
+          {copied ? (
+            <Check className="h-3.5 w-3.5 text-emerald-600" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+        </button>
+      </div>
     </div>
   );
 }
@@ -714,7 +762,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
               {durationStr && (
                 <MetaItem label={t("gestiones.detail.duration")} value={durationStr} />
               )}
-              <MetaItem
+              <CopyableMetaItem
                 label={t("gestiones.detail.account")}
                 value={g.portfolioAccount.externalId}
               />
@@ -723,6 +771,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                 label={isEmail ? t("gestiones.detail.email") : t("gestiones.detail.phone")}
                 value={toNumber}
               />
+              <CopyableMetaItem label={t("gestiones.detail.gestionId")} value={g.id} />
             </div>
           </div>
         )}

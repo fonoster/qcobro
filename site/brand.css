@@ -3,6 +3,7 @@
 /* Hero */
 .bk-hero{background:linear-gradient(160deg,#064E3B 0%,#047857 60%,#10B981 100%);padding:88px 48px;display:flex;justify-content:center}
 .bk-hero__inner{display:flex;flex-direction:column;align-items:center;gap:24px;max-width:680px;text-align:center}
+.bk-hero__inner .eyebrow{align-self:center}
 .bk-hero h1{font-size:56px;font-weight:800;letter-spacing:-1.5px;color:#fff;line-height:1.1}
 .bk-hero__sub{font-size:18px;line-height:1.6;color:rgba(255,255,255,.85);max-width:560px}
 .bk-hero__note{font-size:13px;color:rgba(255,255,255,.6);margin-top:-8px}

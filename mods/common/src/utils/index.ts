@@ -3,6 +3,7 @@ export {
   renderTemplate,
   extractTemplateTokens,
   buildOutreachContext,
+  buildAutopilotContextLines,
   pickRandomNumber,
   snakeToCamel,
   renderWhatsAppTemplate
@@ -17,3 +18,4 @@ export {
   type ScheduleWindow
 } from "./time.js";
 export { bucketOf, perTickCapacity, type PacingBucket } from "./pacing.js";
+export { normalizePhoneE164 } from "./normalizePhone.js";

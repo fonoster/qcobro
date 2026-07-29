@@ -4,10 +4,26 @@ import {
   type AiConfig,
   type EmailAutopilot,
   type EmailAutopilotDecision,
-  type EmailAutopilotRequest
+  type EmailAutopilotRequest,
+  type EmailThreadMessage,
+  type TranscriptLine
 } from "@qcobro/common";
 
-/** Render the thread + light context + the agent's system prompt into the user prompt. */
+/**
+ * Maps a Voz IA transcript onto the shared thread shape so the EMAIL/WhatsApp decision
+ * contract (`EmailAutopilotRequest.thread`) can be reused unchanged for voice — the
+ * inverse of the email↔transcript mapping `generateGestionInsight.ts` does for insights.
+ */
+export function transcriptToThread(transcript: TranscriptLine[]): EmailThreadMessage[] {
+  return transcript.map((line) => ({
+    direction: line.role === "customer" ? "inbound" : "outbound",
+    from: line.role,
+    at: "",
+    body: line.text
+  }));
+}
+
+/** Render the full call transcript + light context + the agent's system prompt into the prompt. */
 function buildPrompt(req: EmailAutopilotRequest): string {
   const lines = req.thread
     .map((m) => `${m.direction === "outbound" ? "Agente" : "Cliente"}: ${m.body}`)
@@ -17,21 +33,23 @@ function buildPrompt(req: EmailAutopilotRequest): string {
   return [
     req.systemPrompt,
     "",
-    "Eres el autopiloto de cobranza por correo. Decide la siguiente acción para el hilo.",
-    "Devuelve SOLO un objeto JSON con las claves: action, replyBody, outcome, objective.",
-    "action ∈ reply | ignore | resolve | escalate.",
-    "Cuando action = reply, replyBody es el cuerpo de la respuesta (en el idioma del cliente).",
-    "Si el cliente promete pagar, usa outcome = PAYMENT_PROMISE y objective { amount, dueDate }.",
+    "Eres el autopiloto de cobranza por voz (Voz IA). La llamada ya terminó — analiza la " +
+      "transcripción completa y decide el resultado de la gestión.",
+    "Devuelve SOLO un objeto JSON con las claves: action, outcome, objective.",
+    "action ∈ ignore | resolve | escalate. La llamada ya terminó: NUNCA uses reply.",
+    "Si el cliente prometió pagar durante la llamada, usa outcome = PAYMENT_PROMISE y " +
+      "objective { amount, dueDate }.",
     req.referenceDate ? `Hoy es ${req.referenceDate} (formato YYYY-MM-DD).` : "",
     "objective.dueDate DEBE ser una fecha absoluta en formato YYYY-MM-DD. Convierte expresiones " +
       'relativas ("mañana", "el viernes", "la próxima semana") a esa fecha usando la fecha de hoy. ' +
       "Si el cliente no indica una fecha concreta, omite dueDate.",
-    "Si el asunto no corresponde / está resuelto, usa resolve. Si requiere intervención humana, escalate.",
-    "Usa el Contexto para responder preguntas básicas del cliente sobre su préstamo (saldo, cuota, " +
+    "Usa resolve si el asunto quedó resuelto o no aplica ningún outcome especial. Usa escalate " +
+      "si se requiere intervención humana (reclamo, disputa, amenaza legal).",
+    "Usa el Contexto para interpretar preguntas del cliente sobre su préstamo (saldo, cuota, " +
       "plazo, atraso, último pago). No inventes datos que no estén en el Contexto.",
-    `Idioma de la respuesta: ${language}.`,
+    `Idioma de la transcripción: ${language}.`,
     ctx.length ? `Contexto — ${ctx.join(" · ")}` : "",
-    "Hilo:",
+    "Transcripción de la llamada:",
     lines
   ]
     .filter(Boolean)
@@ -48,30 +66,23 @@ function parseDecision(text: string): EmailAutopilotDecision {
   return emailAutopilotDecisionSchema.parse(JSON.parse(raw.slice(start, end + 1)));
 }
 
-/** Offline provider: a deterministic decision from the last customer message (no key/cost). */
+/** Offline provider: a deterministic decision from the customer's transcript lines (no key/cost). */
 function mockDecide(req: EmailAutopilotRequest): EmailAutopilotDecision {
   const inbound = req.thread.filter((m) => m.direction === "inbound");
-  const last = inbound[inbound.length - 1]?.body ?? "";
-  const lc = last.toLowerCase();
-  if (/(pag|abonar|transferir|deposit|el viernes|la semana|mañana)/.test(lc)) {
-    return {
-      action: "reply",
-      replyBody:
-        "Gracias por su respuesta. Registramos su compromiso de pago y le reenviamos el enlace para coordinarlo. Quedamos atentos.",
-      outcome: "PAYMENT_PROMISE"
-    };
+  const all = inbound
+    .map((m) => m.body)
+    .join(" ")
+    .toLowerCase();
+  if (/(pag|abonar|transferir|deposit|el viernes|la semana|mañana)/.test(all)) {
+    return { action: "resolve", outcome: "PAYMENT_PROMISE" };
   }
-  if (/(no es|equivocad|no soy|número|baja|no escrib|no contact)/.test(lc)) {
+  if (/(no es|equivocad|no soy|número|baja|no escrib|no contact)/.test(all)) {
     return { action: "resolve", outcome: "WRONG_NUMBER" };
   }
-  if (/(reclamo|abogad|demanda|queja)/.test(lc)) {
+  if (/(reclamo|abogad|demanda|queja)/.test(all)) {
     return { action: "escalate", outcome: "OTHER" };
   }
-  return {
-    action: "reply",
-    replyBody:
-      "Gracias por escribirnos. ¿Podría indicarnos cuándo podría regularizar su saldo para coordinar el pago?"
-  };
+  return { action: "resolve" };
 }
 
 async function googleDecide(
@@ -102,16 +113,19 @@ async function googleDecide(
 }
 
 /**
- * Builds the EMAIL autopilot from the `ai` config. When AI is absent/disabled it falls back
- * to the deterministic offline decider so the channel still works in dev/tests with no key.
- * Mirrors {@link createInsightGenerator}'s provider set (mock + google over REST).
+ * Builds the Voz IA autopilot decision step from the `ai` config. Unlike EMAIL/WhatsApp,
+ * this runs once per call (on `conversation.ended`, over the full final transcript) rather
+ * than per inbound turn — QCobro doesn't observe individual live turns of a Voz IA call.
+ * When AI is absent/disabled it falls back to the deterministic offline decider so the
+ * channel still works in dev/tests with no key. Mirrors {@link createEmailAutopilot}'s
+ * provider set (mock + google over REST).
  */
-export function createEmailAutopilot(ai: AiConfig): EmailAutopilot {
+export function createVoiceAutopilot(ai: AiConfig): EmailAutopilot {
   return {
     async decide(req: EmailAutopilotRequest): Promise<EmailAutopilotDecision> {
       if (!ai || !ai.enabled || ai.provider === "mock") return mockDecide(req);
       if (ai.provider === "google") return googleDecide(ai, buildPrompt(req));
-      throw new Error(`Email autopilot provider "${ai.provider}" adapter is not implemented yet`);
+      throw new Error(`Voice autopilot provider "${ai.provider}" adapter is not implemented yet`);
     }
   };
 }

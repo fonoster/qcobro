@@ -3,6 +3,40 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.22.1](https://github.com/fonoster/qcobro/compare/v1.22.0...v1.22.1) (2026-07-28)
+
+**Note:** Version bump only for package @qcobro/webapp
+
+# [1.22.0](https://github.com/fonoster/qcobro/compare/v1.21.0...v1.22.0) (2026-07-16)
+
+**Note:** Version bump only for package @qcobro/webapp
+
+# [1.21.0](https://github.com/fonoster/qcobro/compare/v1.20.5...v1.21.0) (2026-07-16)
+
+### Features
+
+- **webapp:** make the account external ID copyable in gestión-detail metadata ([#67](https://github.com/fonoster/qcobro/issues/67)) ([6ea93a0](https://github.com/fonoster/qcobro/commit/6ea93a06bddbc8da8f06c4aedd33f2330c6162f1))
+
+## [1.20.5](https://github.com/fonoster/qcobro/compare/v1.20.4...v1.20.5) (2026-07-16)
+
+**Note:** Version bump only for package @qcobro/webapp
+
+## [1.20.2](https://github.com/fonoster/qcobro/compare/v1.20.1...v1.20.2) (2026-07-16)
+
+**Note:** Version bump only for package @qcobro/webapp
+
+# [1.20.0](https://github.com/fonoster/qcobro/compare/v1.19.6...v1.20.0) (2026-07-16)
+
+### Features
+
+- **webapp:** show Gestión ID in gestión-detail metadata ([#58](https://github.com/fonoster/qcobro/issues/58)) ([2d564b6](https://github.com/fonoster/qcobro/commit/2d564b6c89f18cdf9cee816a37f602655d49a067))
+
+## [1.19.6](https://github.com/fonoster/qcobro/compare/v1.19.5...v1.19.6) (2026-07-15)
+
+### Bug Fixes
+
+- **webapp:** generalize Voz IA gestión-detail call title ([#57](https://github.com/fonoster/qcobro/issues/57)) ([f90bab3](https://github.com/fonoster/qcobro/commit/f90bab348bedb1b4ad65b244075db861e7b98a4a))
+
 ## [1.19.4](https://github.com/fonoster/qcobro/compare/v1.19.3...v1.19.4) (2026-07-14)
 
 ### Bug Fixes

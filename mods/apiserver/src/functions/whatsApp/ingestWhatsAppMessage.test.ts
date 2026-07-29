@@ -264,7 +264,7 @@ describe("ingestWhatsAppMessage — opt-out and outcomes", () => {
       action: "reply",
       replyBody: "Registramos su compromiso.",
       outcome: "PAYMENT_PROMISE",
-      objective: { type: "PAYMENT_PROMISE", amount: 500, dueDate: "2026-07-15" }
+      objective: { amount: 500, dueDate: "2026-07-15" }
     });
     const ingest = createIngestWhatsAppMessage(deps);
     await ingest(BASE_MSG);

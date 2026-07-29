@@ -9,6 +9,7 @@ import {
   createGenerateGestionInsight,
   type GenerateInsightClient
 } from "../functions/voice/generateGestionInsight.js";
+import type { DecideVoiceOutcomeResult } from "../functions/voice/decideVoiceOutcome.js";
 import type { ProviderEventRecorder } from "../engine/eventSink.js";
 
 const logger = getLogger({ service: "voice-events", filePath: import.meta.url });
@@ -28,6 +29,13 @@ export interface VoiceEventsDeps {
   settleUsage?:
     | ((input: { providerRef: string; answeredSeconds: number; at: string }) => Promise<unknown>)
     | null;
+  /**
+   * Voz IA payment-promise capture: runs the autopilot decision once over the final
+   * transcript and records outcome/Objective (payment-promises capability). Always
+   * provided — the underlying autopilot falls back to a deterministic mock when `ai`
+   * is absent/disabled, same as EMAIL/WhatsApp.
+   */
+  decideOutcome: (id: string) => Promise<DecideVoiceOutcomeResult>;
 }
 
 /**
@@ -35,7 +43,10 @@ export interface VoiceEventsDeps {
  * (conversation.started / conversation.ended). It correlates the event to the gestión
  * created at call placement and updates it with transcript, recording, and duration.
  * When `ai.generation` is `onIngestion`, it also generates the analysis inline once the
- * transcript has been stored.
+ * transcript has been stored. On `conversation.ended` it also runs the Voz IA autopilot
+ * decision once over the full transcript (`deps.decideOutcome`), capturing a
+ * `PaymentPromise` the same way EMAIL/WhatsApp do per reply — see the
+ * voice-payment-promise-capture change.
  *
  * FIXME(security): this endpoint is UNAUTHENTICATED and must be secured very soon —
  * the autopilot should sign requests (or carry a shared secret / workspace credential),
@@ -113,6 +124,19 @@ export function createVoiceEventsHandler(
         req.body?.eventType === "conversation.ended"
       ) {
         generate({ id: result.id }).catch(() => undefined);
+      }
+
+      // Payment-promise capture: best-effort, after responding — a decision failure
+      // (LLM error, malformed output) must not fail the webhook or affect the
+      // transcript/recording/billing work already done above.
+      if (result.matched && req.body?.eventType === "conversation.ended") {
+        deps
+          .decideOutcome(result.id)
+          .catch((err: unknown) =>
+            logger.error(
+              `voice outcome decision failed for callRef=${req.body?.callRef}: ${err instanceof Error ? err.message : err}`
+            )
+          );
       }
     } catch (err) {
       if (err instanceof ValidationError) {

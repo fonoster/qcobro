@@ -1,4 +1,5 @@
 import {
+  buildAutopilotContextLines,
   emailAutopilotDecisionSchema,
   type AiConfig,
   type EmailAutopilot,
@@ -11,10 +12,7 @@ function buildPrompt(req: EmailAutopilotRequest): string {
   const lines = req.thread
     .map((m) => `${m.direction === "outbound" ? "Agente" : "Cliente"}: ${m.body}`)
     .join("\n");
-  const ctx: string[] = [];
-  if (req.context?.customerName) ctx.push(`Cliente: ${req.context.customerName}`);
-  if (typeof req.context?.outstandingBalance === "number")
-    ctx.push(`Saldo pendiente: ${req.context.outstandingBalance}`);
+  const ctx = buildAutopilotContextLines(req.context);
   const language = req.language || "es";
   return [
     req.systemPrompt,
@@ -23,9 +21,11 @@ function buildPrompt(req: EmailAutopilotRequest): string {
     "Devuelve SOLO un objeto JSON con las claves: action, replyBody, outcome, objective.",
     "action ∈ reply | ignore | resolve | escalate.",
     "Cuando action = reply, replyBody es el cuerpo del mensaje de texto libre (en el idioma del cliente).",
-    "Si el cliente promete pagar, usa outcome = PAYMENT_PROMISE y objective { type, amount, dueDate }.",
+    "Si el cliente promete pagar, usa outcome = PAYMENT_PROMISE y objective { amount, dueDate }.",
     "Si el cliente pide que no le contacten (opt-out), usa outcome = OPT_OUT y action = resolve.",
     "Si el asunto no corresponde / está resuelto, usa resolve. Si requiere intervención humana, escalate.",
+    "Usa el Contexto para responder preguntas básicas del cliente sobre su préstamo (saldo, cuota, " +
+      "plazo, atraso, último pago). No inventes datos que no estén en el Contexto.",
     `Idioma de la respuesta: ${language}.`,
     ctx.length ? `Contexto — ${ctx.join(" · ")}` : "",
     "Hilo:",
@@ -57,8 +57,7 @@ function mockDecide(req: EmailAutopilotRequest): EmailAutopilotDecision {
       action: "reply",
       replyBody:
         "Gracias por su respuesta. Registramos su compromiso de pago y le compartimos los detalles para coordinarlo. Quedamos atentos.",
-      outcome: "PAYMENT_PROMISE",
-      objective: { type: "PAYMENT_PROMISE" }
+      outcome: "PAYMENT_PROMISE"
     };
   }
   if (/(no es|equivocad|no soy|número|no escrib|no contact)/.test(lc)) {

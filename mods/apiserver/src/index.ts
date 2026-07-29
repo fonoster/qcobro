@@ -11,6 +11,12 @@ import { createContactLogHandler } from "./rest/contactLogs.js";
 import { createVoiceEventsHandler } from "./rest/voiceEvents.js";
 import { createSettleVoiceUsage } from "./functions/billing/settleVoiceUsage.js";
 import { createRecordPrerecordedOutcome } from "./functions/voice/recordPrerecordedOutcome.js";
+import {
+  createDecideVoiceOutcome,
+  createPrismaVoiceDecisionClient
+} from "./functions/voice/decideVoiceOutcome.js";
+import { createRecordOutcome } from "./functions/campaigns/recordOutcome.js";
+import { createVoiceAutopilot } from "./services/voiceAutopilot.js";
 import { createStripeWebhookHandler } from "./rest/stripeWebhook.js";
 import {
   createStripeGateway,
@@ -72,7 +78,16 @@ app.post(
     recordEvent: providerEvents("voice-events"),
     // Billing settlement: replace the dispatch-time voice estimate with the
     // increment-billed amount for the answered duration (idempotent per ref).
-    settleUsage: config.billing?.enabled ? createSettleVoiceUsage(prisma as never) : null
+    settleUsage: config.billing?.enabled ? createSettleVoiceUsage(prisma as never) : null,
+    // Payment-promise capture: the Voz IA autopilot decision, run once over the final
+    // transcript on conversation.ended (payment-promises capability). Falls back to a
+    // deterministic mock when `ai` is absent/disabled, same as EMAIL/WhatsApp.
+    decideOutcome: createDecideVoiceOutcome({
+      client: createPrismaVoiceDecisionClient(prisma),
+      autopilot: createVoiceAutopilot(config.ai),
+      recordOutcome: createRecordOutcome(prisma as never),
+      now: () => new Date()
+    })
   })
 );
 

@@ -4,6 +4,7 @@ import type { PrismaClient } from "@prisma/client";
 import { getLogger } from "@fonoster/logger";
 import {
   buildOutreachContext,
+  normalizePhoneE164,
   whatsAppWebhookSchema,
   type AiConfig,
   type PortfolioAccountRecord,
@@ -113,11 +114,19 @@ function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAppInboun
       if (!sender) return null;
 
       // Find the most recent WHATSAPP gestión for this workspace dispatched to that phone.
-      const log = await prisma.accountContactLog.findFirst({
+      // Matched on E.164 (see normalizePhoneE164) — Meta's `channelData.path` equality
+      // can't normalize server-side, so we compare over a recent, bounded window.
+      //
+      // Scoped via portfolioAccount.portfolio.workspaceRef, not campaign.workspaceRef:
+      // manual/ad-hoc outreach (see outreachRouter.dispatch) records a campaign-less
+      // gestión, and Prisma's nested filter on an optional relation drops rows where
+      // that relation is null — campaign.workspaceRef would silently exclude every
+      // manually-dispatched gestión from the candidate set.
+      const normalizedCustomer = normalizePhoneE164(customerPhone);
+      const candidates = await prisma.accountContactLog.findMany({
         where: {
           agentType: "WHATSAPP",
-          channelData: { path: ["to"], equals: customerPhone },
-          campaign: { workspaceRef: sender.workspaceRef }
+          portfolioAccount: { portfolio: { workspaceRef: sender.workspaceRef } }
         },
         include: {
           campaign: {
@@ -130,11 +139,29 @@ function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAppInboun
             include: { portfolio: true }
           }
         },
-        orderBy: { contactedAt: "desc" }
+        orderBy: { contactedAt: "desc" },
+        take: 50
       });
+      const log =
+        normalizedCustomer &&
+        candidates.find((c) => {
+          const to = (c.channelData as Record<string, unknown> | null)?.to;
+          return typeof to === "string" && normalizePhoneE164(to) === normalizedCustomer;
+        });
       if (!log || !log.portfolioAccount.phone) return null;
 
-      const whatsAppCfg = log.campaign?.agentTemplate?.whatsAppConfig ?? null;
+      // Campaign dispatches resolve the template via campaign.agentTemplate; manual/ad-hoc
+      // outreach has no campaign and stores its template directly on the gestión instead.
+      const manualTemplate = log.campaign
+        ? null
+        : log.agentTemplateId
+          ? await prisma.agentTemplate.findUnique({
+              where: { id: log.agentTemplateId },
+              include: { whatsAppConfig: true }
+            })
+          : null;
+      const whatsAppCfg =
+        log.campaign?.agentTemplate?.whatsAppConfig ?? manualTemplate?.whatsAppConfig ?? null;
       const settings = await prisma.workspaceSettings.findUnique({
         where: { workspaceRef: sender.workspaceRef }
       });
@@ -260,9 +287,12 @@ async function processEvents(
           }
         }
       } catch (err) {
+        // Winston (this logger's backend) silently drops a plain-string second argument —
+        // only an Error instance (message + stack) or a plain object render. Passing
+        // `err.message` here used to log an empty `{}` on every failure.
         logger.error(
           `error processing change field=${field}:`,
-          err instanceof Error ? err.message : err
+          err instanceof Error ? err : { err: String(err) }
         );
       }
     }

@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.22.1](https://github.com/fonoster/qcobro/compare/v1.22.0...v1.22.1) (2026-07-28)
+
+### Bug Fixes
+
+- **common:** drop unused objective.type from the autopilot decision schema ([#70](https://github.com/fonoster/qcobro/issues/70)) ([224d7cd](https://github.com/fonoster/qcobro/commit/224d7cdadc37e86edabe040abe8e62509eab5caa)), closes [#66](https://github.com/fonoster/qcobro/issues/66)
+
+# [1.22.0](https://github.com/fonoster/qcobro/compare/v1.21.0...v1.22.0) (2026-07-16)
+
+### Features
+
+- **apiserver:** give the WhatsApp/Email autopilot enough loan context to answer basic questions ([#68](https://github.com/fonoster/qcobro/issues/68)) ([696136e](https://github.com/fonoster/qcobro/commit/696136e191b5801cb5a9053bb8741a1acfe998a2))
+
+## [1.20.5](https://github.com/fonoster/qcobro/compare/v1.20.4...v1.20.5) (2026-07-16)
+
+### Bug Fixes
+
+- **common:** accept null outcome/replyBody from Gemini's JSON-mode autopilot response ([#66](https://github.com/fonoster/qcobro/issues/66)) ([a3fa86c](https://github.com/fonoster/qcobro/commit/a3fa86cda544312f574c65b2e56b89a8815fbf3d))
+
+## [1.20.2](https://github.com/fonoster/qcobro/compare/v1.20.1...v1.20.2) (2026-07-16)
+
+### Bug Fixes
+
+- **apiserver:** match WhatsApp inbound messages by normalized E.164 phone ([#62](https://github.com/fonoster/qcobro/issues/62)) ([fc644ee](https://github.com/fonoster/qcobro/commit/fc644ee9cb8bd1e2552143bfa31bc143ef11263e))
+
 ## [1.19.4](https://github.com/fonoster/qcobro/compare/v1.19.3...v1.19.4) (2026-07-14)
 
 ### Bug Fixes
