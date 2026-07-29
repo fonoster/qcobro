@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.24.0](https://github.com/fonoster/qcobro/compare/v1.23.0...v1.24.0) (2026-07-29)
+
+### Features
+
+- classify outreach dispatch failures, auto-pause on sustained errors ([#73](https://github.com/fonoster/qcobro/issues/73)) ([b8e3080](https://github.com/fonoster/qcobro/commit/b8e30808e3ac7dc438569cbedf4c8c093ee8b56c)), closes [#51](https://github.com/fonoster/qcobro/issues/51) [#51](https://github.com/fonoster/qcobro/issues/51)
+
 ## [1.22.1](https://github.com/fonoster/qcobro/compare/v1.22.0...v1.22.1) (2026-07-28)
 
 ### Bug Fixes
