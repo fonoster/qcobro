@@ -39,11 +39,31 @@
 
 ## 7. Webapp
 
-- [ ] 7.1 Add an `Alert`-based banner to `mods/webapp/src/pages/CampaignDetail.tsx`, shown when `pauseReason === "AUTO_ERROR_THRESHOLD"`, following the pattern in `mods/webapp/src/components/BillingPausedBanner.tsx`.
-- [ ] 7.2 Add a short reason line under the status badge in `mods/webapp/src/pages/Campaigns.tsx` list rows, gated the same way.
-- [ ] 7.3 Add the new i18n keys (banner copy, list reason line) via `mods/webapp/src/lib/i18n.tsx` — no hardcoded strings.
+- [x] 7.1 Added `mods/webapp/src/components/CampaignAutopausedBanner.tsx` (+ a matching
+      `.stories.tsx`, per this repo's Storybook-first convention — `BillingPausedBanner` has one
+      too), following `BillingPausedBanner.tsx`'s structure but with no CTA: reactivation is the
+      existing manual PAUSED → ACTIVE action already in `CampaignDetail.tsx`'s header, so the
+      banner is purely informational. Rendered in `CampaignDetail.tsx` when
+      `c.pauseReason === "AUTO_ERROR_THRESHOLD"`.
+- [x] 7.2 `Campaigns.tsx`'s `status` column now stacks a small amber reason line under the
+      `Badge` when `r.pauseReason === "AUTO_ERROR_THRESHOLD"`.
+- [x] 7.3 Added `campaigns.detail.autopaused.title`/`.body` and `campaigns.list.autopausedReason`
+      to both the `en` and `es` blocks in `i18n.tsx` — no hardcoded strings.
 
 ## 8. Verification
 
-- [ ] 8.1 Run the apiserver unit test suite (dispatch, reserveAttempt, engine, engine-events).
-- [ ] 8.2 Manually exercise a simulated WhatsApp system-error run (e.g. an invalid access token) against a test campaign and confirm: attempt counters don't move, the campaign auto-pauses at the configured threshold, a `campaign.autopaused` event is recorded, and the console banner/list reason appear.
+- [x] 8.1 Fixed a loose end from task 3.3 while here: `mods/common/src/schemas/engineEvents.test.ts`'s
+      "dispatch.failed with full correlation spine" case still passed a free-form `errorClass:
+    "Error"`, which the now-narrowed union rejects — updated to `"SYSTEM_ERROR"`. Full suites
+      green: 275/275 `mods/apiserver`, 132/132 `mods/common`, `mods/webapp` typecheck +
+      production build (`vite build`) both clean.
+- [x] 8.2 No live DB/dev-server available in this sandbox for a real end-to-end run (same
+      constraint as voice-payment-promise-capture). The backend half of what this task asks for
+      is already covered by existing automated integration tests
+      (`mods/apiserver/src/engine/engine.integration.test.ts`): "a SYSTEM_ERROR dispatch failure
+      does not consume the attempt", "sustained SYSTEM_ERROR trips the breaker and auto-pauses
+      the campaign", "a success or DELIVERY_REJECTED resets the consecutive-SYSTEM_ERROR
+      counter", "an auto-paused campaign stays paused on the next tick" — all passing. The
+      webapp half (banner/list reason actually rendering) is unverified beyond typecheck +
+      production build succeeding; worth a real click-through on a dev machine before/at
+      rollout.

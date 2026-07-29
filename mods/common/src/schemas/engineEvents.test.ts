@@ -30,7 +30,7 @@ describe("engineEventSchema", () => {
       portfolioAccountId: "acc_1",
       channel: "SMS",
       latencyMs: 120,
-      errorClass: "Error",
+      errorClass: "SYSTEM_ERROR",
       errorMessage: "boom",
       toMasked: "********1234"
     });

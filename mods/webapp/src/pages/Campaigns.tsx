@@ -19,6 +19,7 @@ type Campaign = {
   id: string;
   name: string;
   status: CampaignStatus;
+  pauseReason: "MANUAL" | "AUTO_ERROR_THRESHOLD" | null;
   daysOfWeek: number[];
   startDate: Date | string;
   endDate: Date | string | null;
@@ -112,9 +113,16 @@ export function Campaigns() {
             key: "status",
             header: t("campaigns.col.status"),
             render: (r) => (
-              <Badge variant={statusVariant(r.status)}>
-                {t(`campaigns.status.${r.status}` as Parameters<typeof t>[0])}
-              </Badge>
+              <div className="flex flex-col items-start gap-1">
+                <Badge variant={statusVariant(r.status)}>
+                  {t(`campaigns.status.${r.status}` as Parameters<typeof t>[0])}
+                </Badge>
+                {r.pauseReason === "AUTO_ERROR_THRESHOLD" && (
+                  <span className="text-xs text-amber-700">
+                    {t("campaigns.list.autopausedReason")}
+                  </span>
+                )}
+              </div>
             )
           },
           {
