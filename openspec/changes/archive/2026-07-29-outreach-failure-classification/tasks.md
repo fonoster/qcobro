@@ -54,7 +54,7 @@
 
 - [x] 8.1 Fixed a loose end from task 3.3 while here: `mods/common/src/schemas/engineEvents.test.ts`'s
       "dispatch.failed with full correlation spine" case still passed a free-form `errorClass:
-    "Error"`, which the now-narrowed union rejects — updated to `"SYSTEM_ERROR"`. Full suites
+  "Error"`, which the now-narrowed union rejects — updated to `"SYSTEM_ERROR"`. Full suites
       green: 275/275 `mods/apiserver`, 132/132 `mods/common`, `mods/webapp` typecheck +
       production build (`vite build`) both clean.
 - [x] 8.2 No live DB/dev-server available in this sandbox for a real end-to-end run (same
