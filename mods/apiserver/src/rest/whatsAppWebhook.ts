@@ -100,8 +100,12 @@ function isOptOut(status: StatusRecord): boolean {
  * Build the Prisma-backed {@link WhatsAppInboundClient} used by the ingest function.
  * Loads the gestión by correlating via `phoneNumberId + customerPhone` (the most recent
  * WHATSAPP gestión our sender dispatched to that number).
+ *
+ * Exported (not just used internally) so its Prisma query shape — the direct, indexed/exact
+ * `channelData.to` match — has its own unit test coverage independent of the webhook's HTTP
+ * handler tests.
  */
-function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAppInboundClient {
+export function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAppInboundClient {
   return {
     async loadByPhoneAndSender(
       phoneNumberId: string,
@@ -113,19 +117,25 @@ function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAppInboun
       });
       if (!sender) return null;
 
-      // Find the most recent WHATSAPP gestión for this workspace dispatched to that phone.
-      // Matched on E.164 (see normalizePhoneE164) — Meta's `channelData.path` equality
-      // can't normalize server-side, so we compare over a recent, bounded window.
+      // Inbound numbers arrive digits-only from Meta with no format guarantee; short-circuit
+      // to "no match" without touching the DB when it doesn't even parse as a phone number.
+      const normalizedCustomer = normalizePhoneE164(customerPhone);
+      if (!normalizedCustomer) return null;
+
+      // Direct, exact match: `channelData.to` and `portfolioAccount.phone` are both written
+      // canonical E.164 at dispatch/import time (see syncAccounts.ts, dispatchOutreach.ts), so
+      // a JSON-path equality filter replaces the bounded recent-log scan + in-process
+      // normalization this used as a stopgap (see PR #62) before phone was canonical at rest.
       //
       // Scoped via portfolioAccount.portfolio.workspaceRef, not campaign.workspaceRef:
       // manual/ad-hoc outreach (see outreachRouter.dispatch) records a campaign-less
       // gestión, and Prisma's nested filter on an optional relation drops rows where
       // that relation is null — campaign.workspaceRef would silently exclude every
-      // manually-dispatched gestión from the candidate set.
-      const normalizedCustomer = normalizePhoneE164(customerPhone);
-      const candidates = await prisma.accountContactLog.findMany({
+      // manually-dispatched gestión from the candidate set (see PR #64).
+      const log = await prisma.accountContactLog.findFirst({
         where: {
           agentType: "WHATSAPP",
+          channelData: { path: ["to"], equals: normalizedCustomer },
           portfolioAccount: { portfolio: { workspaceRef: sender.workspaceRef } }
         },
         include: {
@@ -139,15 +149,8 @@ function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAppInboun
             include: { portfolio: true }
           }
         },
-        orderBy: { contactedAt: "desc" },
-        take: 50
+        orderBy: { contactedAt: "desc" }
       });
-      const log =
-        normalizedCustomer &&
-        candidates.find((c) => {
-          const to = (c.channelData as Record<string, unknown> | null)?.to;
-          return typeof to === "string" && normalizePhoneE164(to) === normalizedCustomer;
-        });
       if (!log || !log.portfolioAccount.phone) return null;
 
       // Campaign dispatches resolve the template via campaign.agentTemplate; manual/ad-hoc

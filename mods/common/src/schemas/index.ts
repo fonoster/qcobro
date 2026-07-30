@@ -15,3 +15,4 @@ export * from "./voiceEvent.js";
 export * from "./insight.js";
 export * from "./engineEvents.js";
 export * from "./billing.js";
+export * from "./phone.js";
