@@ -44,6 +44,10 @@
         "pages": ["mcp/overview"]
       },
       {
+        "group": "CLI",
+        "pages": ["cli/overview"]
+      },
+      {
         "group": "API reference",
         "pages": ["api/overview", "api/authentication", "api/contact-log"]
       },

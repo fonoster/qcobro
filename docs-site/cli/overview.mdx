@@ -1,0 +1,152 @@
+---
+title: "CLI de QCobro"
+description: "@qcobro/ctl es la herramienta de línea de comandos de QCobro: sincroniza carteras, crea agentes y configura clientes MCP sin salir de la terminal."
+---
+
+`@qcobro/ctl` es la herramienta de línea de comandos oficial de QCobro. Envuelve el mismo
+[`@qcobro/sdk`](/sdk/overview) que usarías desde tu propio código, así que cada comando habla
+con la misma API que la consola de operador y con la misma autenticación por API key de
+workspace.
+
+Instala un binario `qcobro` con comandos agrupados por recurso (`recurso:acción`), como
+`portfolios:list` o `agents:create`.
+
+## Instala la CLI
+
+Instálala globalmente, o invócala sin instalar con `npx`.
+
+<CodeGroup>
+```bash npm (global)
+npm install --global @qcobro/ctl
+```
+
+```bash npx
+npx @qcobro/ctl --help
+```
+
+</CodeGroup>
+
+## Inicia sesión
+
+Antes de usar cualquier comando que hable con la API, vincula un workspace a tu entorno local
+con `workspaces:login`. Te pide el endpoint, una API key de workspace (`accessKeyId` y
+`accessKeySecret`, creados desde la página de API Keys de la consola) y el workspace en el que
+esa key actúa.
+
+```bash
+qcobro workspaces:login
+```
+
+```txt
+This utility links a QCobro workspace to the CLI.
+Press ^C at any time to quit.
+? Endpoint https://api.qcobro.com
+? Access Key Id (API key, starts with AP) APvsqbjfxua7zvbupqvd8hfy72hix4b7mv
+? Access Key Secret ********
+? Workspace to act in (accessKeyId, starts with WO) WO6ueex0qan9ojhf820wgiae3qi5luy08y
+? Ready? Yes
+Done!
+```
+
+La CLI valida las credenciales contra la API antes de guardarlas. Puedes vincular varios
+workspaces; cada inicio de sesión nuevo pasa a ser el activo.
+
+<CardGroup cols={2}>
+  <Card title="workspaces:list" icon="list">
+    Muestra los workspaces vinculados y cuál está activo.
+  </Card>
+  <Card title="workspaces:use &lt;workspaceAccessKeyId&gt;" icon="right-left">
+    Cambia el workspace activo.
+  </Card>
+  <Card title="workspaces:active" icon="circle-check">
+    Muestra el workspace activo actual.
+  </Card>
+  <Card title="workspaces:logout &lt;workspaceAccessKeyId&gt;" icon="right-from-bracket">
+    Desvincula un workspace de tu entorno local.
+  </Card>
+</CardGroup>
+
+## Carteras
+
+Sincroniza, lista y consulta carteras del workspace activo.
+
+```bash
+# Sincroniza un lote de cuentas desde un archivo JSON.
+qcobro portfolios:sync --portfolio-id <id> --file cuentas.json --mode APPEND_ONLY
+
+# Lista las carteras del workspace activo.
+qcobro portfolios:list
+
+# Consulta una cartera por id.
+qcobro portfolios:get <id>
+```
+
+`portfolios:sync` lee un archivo JSON con un arreglo de filas de cuenta (el mismo formato que
+acepta [`client.portfolios.syncAccounts`](/sdk/sync-accounts)) y aplica uno de los modos de
+fusión: `APPEND_ONLY`, `UPDATE_EXISTING` o `REPLACE`.
+
+## Agentes
+
+Crea plantillas de agente y valida su sincronización con el proveedor de voz.
+
+```bash
+qcobro agents:create \
+  --type VOICE_AI \
+  --name "Cobranza suave" \
+  --voice sofia \
+  --system-prompt "Sé amable y directo." \
+  --language es
+```
+
+`agents:create` acepta los campos propios de cada tipo de canal (`VOICE_AI`,
+`VOICE_PRERECORDED`, `SMS`, `EMAIL`, `WHATSAPP`) como flags; ejecuta `qcobro agents:create
+--help` para ver el detalle completo por tipo.
+
+```bash
+qcobro agents:eval <templateId>
+```
+
+<Note>
+  `agents:eval` reintenta la sincronización de una plantilla de voz y reporta si quedó sincronizada.
+  Valida configuración, no conversación: hoy QCobro no tiene una función de evaluación
+  conversacional, así que este comando no simula llamadas ni prueba lo que diría el agente.
+</Note>
+
+## Configura un cliente MCP
+
+Si usas [`@qcobro/mcp`](/mcp/overview) con Claude Desktop u otro cliente compatible,
+`mcp:configure` escribe la entrada del servidor por ti en un solo paso.
+
+```bash
+qcobro mcp:configure
+```
+
+Con un workspace activo (tras `workspaces:login`), el comando reutiliza esas credenciales. Para
+un entorno sin sesión iniciada, pasa las credenciales explícitamente.
+
+```bash
+qcobro mcp:configure \
+  --access-key-id APvsqbjfxua7zvbupqvd8hfy72hix4b7mv \
+  --access-key-secret <tu-access-key-secret> \
+  --workspace WO6ueex0qan9ojhf820wgiae3qi5luy08y
+```
+
+El comando combina la entrada `qcobro` con el resto de tu configuración existente y conserva
+cualquier otro servidor MCP que ya tengas. Reinicia el cliente después de ejecutarlo.
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Visión general del SDK" icon="cube" href="/sdk/overview">
+    El cliente TypeScript que `@qcobro/ctl` envuelve por dentro.
+  </Card>
+  <Card title="Servidor MCP" icon="wand-magic-sparkles" href="/mcp/overview">
+    Qué configura `mcp:configure` y qué herramientas expone el servidor.
+  </Card>
+  <Card title="Gestionar carteras" icon="folder-open" href="/sdk/portfolios">
+    El detalle de cada operación de carteras, desde el lado del SDK.
+  </Card>
+  <Card title="Sincronizar cuentas" icon="arrows-rotate" href="/sdk/sync-accounts">
+    El formato de fila y los modos de fusión que usa `portfolios:sync`.
+  </Card>
+</CardGroup>

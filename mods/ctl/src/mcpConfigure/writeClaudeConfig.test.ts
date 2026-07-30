@@ -7,9 +7,9 @@ import { buildQCobroEntry, mergeClaudeConfig, writeClaudeConfig } from "./writeC
 
 const ENTRY = buildQCobroEntry({
   endpoint: "https://api.qcobro.com",
-  accessKeyId: "ak_1",
+  accessKeyId: "APvsqbjfxua7zvbupqvd8hfy72hix4b7mv",
   accessKeySecret: "secret",
-  workspace: "ws_1"
+  workspace: "WO6ueex0qan9ojhf820wgiae3qi5luy08y"
 });
 
 test("buildQCobroEntry shapes the mcpServers entry", () => {
@@ -18,9 +18,9 @@ test("buildQCobroEntry shapes the mcpServers entry", () => {
     args: ["-y", "@qcobro/mcp@latest"],
     env: {
       QCOBRO_ENDPOINT: "https://api.qcobro.com",
-      QCOBRO_ACCESS_KEY_ID: "ak_1",
+      QCOBRO_ACCESS_KEY_ID: "APvsqbjfxua7zvbupqvd8hfy72hix4b7mv",
       QCOBRO_ACCESS_KEY_SECRET: "secret",
-      QCOBRO_WORKSPACE: "ws_1"
+      QCOBRO_WORKSPACE: "WO6ueex0qan9ojhf820wgiae3qi5luy08y"
     }
   });
 });
@@ -56,7 +56,7 @@ test("mergeClaudeConfig falls back to an empty config on unparseable JSON, with 
 });
 
 test("writeClaudeConfig creates the file and parent directory when none exists", () => {
-  const dir = mkdtempSync(join(tmpdir(), "qcobro-mcp-"));
+  const dir = mkdtempSync(join(tmpdir(), "qcobro-ctl-"));
   const configPath = join(dir, "nested", "claude_desktop_config.json");
 
   const warning = writeClaudeConfig(configPath, ENTRY);
@@ -67,7 +67,7 @@ test("writeClaudeConfig creates the file and parent directory when none exists",
 });
 
 test("writeClaudeConfig merges into an existing file, preserving other entries", () => {
-  const dir = mkdtempSync(join(tmpdir(), "qcobro-mcp-"));
+  const dir = mkdtempSync(join(tmpdir(), "qcobro-ctl-"));
   const configPath = join(dir, "claude_desktop_config.json");
   writeFileSync(
     configPath,

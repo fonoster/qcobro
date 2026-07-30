@@ -1,6 +1,12 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
+/**
+ * Ported from `mods/mcp/src/config/writeClaudeConfig.ts` (behavior unchanged)
+ * as part of consolidating MCP-client configuration into `@qcobro/ctl`'s
+ * `mcp:configure` command.
+ */
+
 export interface McpServerEntry {
   command: string;
   args: string[];

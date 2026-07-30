@@ -17,6 +17,7 @@ export default tseslint.config(
       "**/.storybook/**",
       "**/storybook-static/**",
       "**/scripts/**",
+      "**/bin/**",
       "**/*.config.js"
     ]
   },
