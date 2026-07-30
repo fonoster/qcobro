@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.26.0](https://github.com/fonoster/qcobro/compare/v1.25.0...v1.26.0) (2026-07-30)
+
+### Features
+
+- **realtime:** stream Gestiones list and Gestión detail live over WebSocket ([#77](https://github.com/fonoster/qcobro/issues/77)) ([54b676b](https://github.com/fonoster/qcobro/commit/54b676b99ab1a43411d483c3b59682a29e5b2703)), closes [#60](https://github.com/fonoster/qcobro/issues/60)
+
 ## [1.24.1](https://github.com/fonoster/qcobro/compare/v1.24.0...v1.24.1) (2026-07-30)
 
 ### Bug Fixes
