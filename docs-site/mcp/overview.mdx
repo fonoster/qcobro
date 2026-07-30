@@ -10,7 +10,10 @@ gestionar carteras en tu nombre, con la misma autenticación por API key de work
 usa el SDK.
 
 <Frame caption="@qcobro/mcp envuelve @qcobro/sdk para que un cliente MCP como Claude Desktop gestione QCobro directamente.">
-  <img src="/images/mcp-overview/overview.png" alt="Diagrama: Claude Desktop llama por MCP a @qcobro/mcp, que valida la API key de workspace y delega en @qcobro/sdk, el cual llama a la misma API HTTPS que usa la consola." />
+  <img
+    src="/images/mcp-overview/overview.png"
+    alt="Diagrama: Claude Desktop llama por MCP a @qcobro/mcp, que valida la API key de workspace y delega en @qcobro/sdk, el cual llama a la misma API HTTPS que usa la consola."
+  />
 </Frame>
 
 Esta primera versión cubre el recurso de **carteras**, el mismo que el SDK envuelve hoy. Más
@@ -26,7 +29,7 @@ especialmente si vas a habilitar operaciones de escritura como crear o eliminar 
 ## Configura Claude Desktop en un paso
 
 ```bash
-npx @qcobro/mcp config \
+npx @qcobro/ctl mcp:configure \
   --access-key-id <accessKeyId> \
   --access-key-secret <accessKeySecret> \
   --workspace <workspaceAccessKeyId>
@@ -35,7 +38,9 @@ npx @qcobro/mcp config \
 Este comando escribe (o combina con lo existente) el archivo `claude_desktop_config.json` de
 Claude Desktop, añadiendo una entrada `qcobro`. Reinicia Claude Desktop después de ejecutarlo.
 Pasa `--url` si necesitas apuntar a un endpoint distinto del predeterminado
-(`https://api.qcobro.com`).
+(`https://api.qcobro.com`). Si ya iniciaste sesión con `qcobro workspaces:login`, puedes omitir
+los tres flags y `mcp:configure` usará tu workspace activo. Consulta
+[la CLI de QCobro](/cli/overview) para más detalles.
 
 <Tip>
   El comando conserva cualquier otro servidor MCP que ya tengas configurado (por ejemplo
@@ -63,12 +68,12 @@ Si prefieres editar el archivo tú mismo, añade esto a `claude_desktop_config.j
 }
 ```
 
-| Variable | Descripción | Obligatoria |
-| --- | --- | :---: |
-| `QCOBRO_ACCESS_KEY_ID` | Id de la API key de workspace | Sí |
-| `QCOBRO_ACCESS_KEY_SECRET` | Secreto de la API key de workspace | Sí |
-| `QCOBRO_WORKSPACE` | Workspace en el que actuar (su `accessKeyId`) | Sí |
-| `QCOBRO_ENDPOINT` | URL base de la API (por defecto `https://api.qcobro.com`) | No |
+| Variable                   | Descripción                                               | Obligatoria |
+| -------------------------- | --------------------------------------------------------- | :---------: |
+| `QCOBRO_ACCESS_KEY_ID`     | Id de la API key de workspace                             |     Sí      |
+| `QCOBRO_ACCESS_KEY_SECRET` | Secreto de la API key de workspace                        |     Sí      |
+| `QCOBRO_WORKSPACE`         | Workspace en el que actuar (su `accessKeyId`)             |     Sí      |
+| `QCOBRO_ENDPOINT`          | URL base de la API (por defecto `https://api.qcobro.com`) |     No      |
 
 Son las mismas credenciales que `loginWithApiKey` y `useWorkspace` del SDK: el servidor no
 hace más que autenticarse con ellas y delegar cada llamada al SDK.
@@ -80,20 +85,20 @@ hace más que autenticarse con ellas y delegar cada llamada al SDK.
 
 ## Herramientas disponibles
 
-| Herramienta | Descripción |
-| --- | --- |
-| `portfolios_list` | Lista las carteras del workspace activo. Entrada opcional: `includeArchived`. |
-| `portfolios_get` | Obtiene una cartera por `id`. |
-| `portfolios_create` | Crea una cartera (`name`, `clientId`). |
-| `portfolios_update` | Actualiza una cartera; `archived: true`/`false` archiva o restaura. |
-| `portfolios_delete` | Elimina una cartera por `id`. |
-| `portfolios_list_accounts` | Lista una página de cuentas de una cartera (`portfolioId`, `limit`/`offset` opcionales), con el total. |
+| Herramienta                | Descripción                                                                                                                    |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `portfolios_list`          | Lista las carteras del workspace activo. Entrada opcional: `includeArchived`.                                                  |
+| `portfolios_get`           | Obtiene una cartera por `id`.                                                                                                  |
+| `portfolios_create`        | Crea una cartera (`name`, `clientId`).                                                                                         |
+| `portfolios_update`        | Actualiza una cartera; `archived: true`/`false` archiva o restaura.                                                            |
+| `portfolios_delete`        | Elimina una cartera por `id`.                                                                                                  |
+| `portfolios_list_accounts` | Lista una página de cuentas de una cartera (`portfolioId`, `limit`/`offset` opcionales), con el total.                         |
 | `portfolios_sync_accounts` | Sincroniza un lote de cuentas en una cartera (`portfolioId`, `mode`: `APPEND_ONLY` \| `UPDATE_EXISTING` \| `REPLACE`, `rows`). |
 
 <Note>
-  Cada herramienta valida su entrada contra el mismo esquema que ya valida el método del SDK al
-  que delega: no hay reglas paralelas que puedan desincronizarse. Una entrada inválida se
-  rechaza antes de que cualquier petición llegue a la API de QCobro.
+  Cada herramienta valida su entrada contra el mismo esquema que ya valida el método del SDK al que
+  delega: no hay reglas paralelas que puedan desincronizarse. Una entrada inválida se rechaza antes
+  de que cualquier petición llegue a la API de QCobro.
 </Note>
 
 ## Solución de problemas

@@ -17,6 +17,7 @@
     { "path": "./mods/common" },
     { "path": "./mods/apiserver" },
     { "path": "./mods/sdk" },
-    { "path": "./mods/mcp" }
+    { "path": "./mods/mcp" },
+    { "path": "./mods/ctl" }
   ]
 }

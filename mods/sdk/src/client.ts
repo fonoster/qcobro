@@ -2,6 +2,7 @@ import { createTRPCClient, httpBatchLink, type CreateTRPCClient } from "@trpc/cl
 import type { AppRouter } from "@qcobro/apiserver";
 import type { LoginInput, ApiKeyLoginInput } from "@qcobro/common";
 import { PortfoliosResource } from "./resources/portfolios.js";
+import { AgentTemplatesResource } from "./resources/agentTemplates.js";
 
 /** Header the apiserver reads to scope a request to a workspace. */
 const WORKSPACE_HEADER = "x-workspace";
@@ -78,6 +79,9 @@ export class Client {
   /** Portfolio operations (list, get, create, update, delete, accounts, sync). */
   readonly portfolios: PortfoliosResource;
 
+  /** Agent template operations (list, get, create, sync). */
+  readonly agentTemplates: AgentTemplatesResource;
+
   #accessToken?: string;
   #refreshToken?: string;
   #workspace?: string;
@@ -110,6 +114,7 @@ export class Client {
     });
 
     this.portfolios = new PortfoliosResource(this.trpc, (fn) => this.request(fn));
+    this.agentTemplates = new AgentTemplatesResource(this.trpc, (fn) => this.request(fn));
   }
 
   /**

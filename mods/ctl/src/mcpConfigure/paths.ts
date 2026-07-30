@@ -1,7 +1,13 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-/** Resolves Claude Desktop's config file path for the given platform. */
+/**
+ * Resolves Claude Desktop's config file path for the given platform.
+ *
+ * Ported from `mods/mcp/src/config/paths.ts` (behavior unchanged) as part of
+ * consolidating MCP-client configuration into `@qcobro/ctl`'s `mcp:configure`
+ * command.
+ */
 export function claudeDesktopConfigPath(
   platform: NodeJS.Platform,
   env: Record<string, string | undefined>

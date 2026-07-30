@@ -16,7 +16,7 @@ this server can do: mint a key you're comfortable handing to an agent.
 ### One-command setup for Claude Desktop
 
 ```bash
-npx @qcobro/mcp config \
+npx @qcobro/ctl mcp:configure \
   --access-key-id <accessKeyId> \
   --access-key-secret <accessKeySecret> \
   --workspace <workspaceAccessKeyId>
@@ -24,7 +24,9 @@ npx @qcobro/mcp config \
 
 This writes (or merges into) Claude Desktop's `claude_desktop_config.json`, adding a `qcobro`
 entry. Restart Claude Desktop afterward. Pass `--url` to target a non-default endpoint (defaults
-to `https://api.qcobro.com`).
+to `https://api.qcobro.com`). If you've already run `qcobro workspaces:login`, you can omit all
+three flags and `mcp:configure` uses your active workspace. See
+[`@qcobro/ctl`](../ctl) for the full command.
 
 ### Manual setup
 

@@ -4,8 +4,9 @@
 
 `@qcobro/mcp` — a Model Context Protocol server wrapping `@qcobro/sdk`'s `Client`, exposing the
 `portfolios` resource as MCP tools for AI agents/tools (e.g. Claude Desktop) to call, authenticated
-with a workspace API key exactly as the SDK is. Includes a `config` CLI subcommand for self-service
-Claude Desktop setup.
+with a workspace API key exactly as the SDK is. MCP-client configuration (writing an entry into a
+client's config file, e.g. Claude Desktop's) is a `@qcobro/ctl` capability (`mcp:configure`), not
+part of this package — see the `ctl` spec.
 
 ## Requirements
 
@@ -70,40 +71,3 @@ independent validation rules are defined at the MCP layer.
   and a merge mode
 - **THEN** the accounts are synchronized into the target portfolio exactly as
   `client.portfolios.syncAccounts()` would perform it
-
-### Requirement: Self-service Claude Desktop configuration
-
-The `@qcobro/mcp` package SHALL provide a `config` CLI subcommand that writes or merges an
-`mcpServers` entry for QCobro into Claude Desktop's configuration file, given an endpoint URL and a
-workspace API key. The endpoint SHALL default to QCobro's production API endpoint when not
-specified.
-
-#### Scenario: Configuring with only required credentials
-
-- **WHEN** a user runs `npx @qcobro/mcp config --access-key-id <accessKeyId> --access-key-secret
-<accessKeySecret> --workspace <workspaceAccessKeyId>` without `--url`
-- **THEN** the command writes a `qcobro` entry into Claude Desktop's config pointing at QCobro's
-  default production endpoint, with the provided credentials set as environment variables
-
-#### Scenario: Configuring against a custom endpoint
-
-- **WHEN** a user runs the `config` subcommand with `--url` pointing at a non-default endpoint
-- **THEN** the written configuration uses that endpoint instead of the default
-
-#### Scenario: Existing Claude Desktop config is preserved
-
-- **WHEN** a user runs the `config` subcommand and `claude_desktop_config.json` already exists with
-  other MCP servers configured
-- **THEN** the existing entries are preserved and only the `qcobro` entry is added or replaced
-
-#### Scenario: No existing Claude Desktop config file
-
-- **WHEN** a user runs the `config` subcommand and no `claude_desktop_config.json` exists yet
-- **THEN** the command creates the file (and its parent directory, if needed) with a `qcobro` MCP
-  server entry
-
-#### Scenario: Missing required credential flags
-
-- **WHEN** a user runs the `config` subcommand without `--access-key-id`, `--access-key-secret`, or
-  `--workspace`
-- **THEN** the command fails with a clear error naming the missing flag and does not write any file
