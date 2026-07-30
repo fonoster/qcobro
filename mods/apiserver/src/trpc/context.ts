@@ -1,4 +1,5 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
+import type { CreateWSSContextFnOptions } from "@trpc/server/adapters/ws";
 import type {
   EmailClient,
   OutboundCallClient,
@@ -75,44 +76,51 @@ function headerValue(value: string | string[] | undefined): string | null {
 }
 
 /**
- * Builds the per-request tRPC context.
- *
- * Procedures reach shared services (Prisma, the Identity client) through here.
- * When the request carries a valid Identity access token, the authenticated
- * principal is resolved: the user, and — if a valid workspace header is present
- * and the user belongs to it — the active workspace and the caller's role there.
+ * Resolves the authenticated principal (and, when a workspace is both requested and
+ * the principal belongs to it, the active workspace) from a bearer token + requested
+ * workspace accessKeyId. Shared by both the HTTP context (reads these from headers)
+ * and the WebSocket context (reads these from the connection's `connectionParams`,
+ * since browsers cannot set custom headers on a WebSocket handshake) so the two
+ * transports can never resolve auth differently.
  */
-export async function createContext(opts: CreateExpressContextOptions) {
-  const token = opts.req.headers.authorization?.replace("Bearer ", "") ?? null;
+async function resolveAuth(
+  token: string | null,
+  requestedWorkspace: string | null
+): Promise<{ user: AuthedUser | null; workspace: ActiveWorkspace | null }> {
+  if (!token) return { user: null, workspace: null };
 
-  let user: AuthedUser | null = null;
+  const claims = await identity.verifyToken(token);
+  if (!claims) return { user: null, workspace: null };
+
+  const user: AuthedUser = { ref: claims.sub, accessKeyId: claims.accessKeyId };
   let workspace: ActiveWorkspace | null = null;
-
-  if (token) {
-    const claims = await identity.verifyToken(token);
-    if (claims) {
-      user = { ref: claims.sub, accessKeyId: claims.accessKeyId };
-      const requested = headerValue(opts.req.headers[WORKSPACE_HEADER]);
-      if (requested) {
-        const match = claims.access.find((a) => a.accessKeyId === requested);
-        if (match) {
-          workspace = { accessKeyId: match.accessKeyId, role: match.role };
-        }
-      }
+  if (requestedWorkspace) {
+    const match = claims.access.find((a) => a.accessKeyId === requestedWorkspace);
+    if (match) {
+      workspace = { accessKeyId: match.accessKeyId, role: match.role };
     }
   }
+  return { user, workspace };
+}
 
-  // Per-workspace timezone + currency, seeded (via column defaults) on first use.
-  // The placeholders below are only used when no workspace is active (e.g. auth routes),
-  // where neither value is consumed.
-  let timezone = "America/Costa_Rica";
-  let currency: "USD" | "DOP" = "USD";
-  if (workspace) {
-    const settings = await createGetWorkspaceSettings(prisma as never)(workspace.accessKeyId);
-    timezone = settings.timezone;
-    currency = settings.currency;
-  }
+/** Per-workspace timezone + currency, seeded (via column defaults) on first use. The
+ * defaults below are only used when no workspace is active (e.g. auth routes), where
+ * neither value is consumed. */
+async function resolveWorkspaceSettings(
+  workspace: ActiveWorkspace | null
+): Promise<{ timezone: string; currency: "USD" | "DOP" }> {
+  if (!workspace) return { timezone: "America/Costa_Rica", currency: "USD" };
+  const settings = await createGetWorkspaceSettings(prisma as never)(workspace.accessKeyId);
+  return { timezone: settings.timezone, currency: settings.currency };
+}
 
+/** The service singletons + resolved auth every context (HTTP or WS) exposes to procedures. */
+function assembleContext(
+  token: string | null,
+  user: AuthedUser | null,
+  workspace: ActiveWorkspace | null,
+  settings: { timezone: string; currency: "USD" | "DOP" }
+) {
   return {
     token,
     user,
@@ -130,9 +138,42 @@ export async function createContext(opts: CreateExpressContextOptions) {
     stripeGateway,
     insightGenerator,
     aiGeneration: config.ai?.generation ?? "onDemand",
-    timezone,
-    currency
+    timezone: settings.timezone,
+    currency: settings.currency
   };
+}
+
+/**
+ * Builds the per-request tRPC context for the HTTP (`/trpc`) transport.
+ *
+ * Procedures reach shared services (Prisma, the Identity client) through here.
+ * When the request carries a valid Identity access token, the authenticated
+ * principal is resolved: the user, and — if a valid workspace header is present
+ * and the user belongs to it — the active workspace and the caller's role there.
+ */
+export async function createContext(opts: CreateExpressContextOptions) {
+  const token = opts.req.headers.authorization?.replace("Bearer ", "") ?? null;
+  const requestedWorkspace = headerValue(opts.req.headers[WORKSPACE_HEADER]);
+  const { user, workspace } = await resolveAuth(token, requestedWorkspace);
+  const settings = await resolveWorkspaceSettings(workspace);
+  return assembleContext(token, user, workspace, settings);
+}
+
+/**
+ * Builds the per-connection tRPC context for the WebSocket (`/trpc-ws`) transport used by
+ * subscriptions (realtime-streaming capability). Browsers cannot set custom headers on a
+ * WebSocket handshake, so the token and active-workspace accessKeyId travel as
+ * `connectionParams` — sent by the client's `wsLink`/`createWSClient` as the connection's
+ * first message — instead of the `Authorization`/`x-workspace` headers the HTTP path reads.
+ * Resolution otherwise matches {@link createContext} exactly via the shared helpers above.
+ */
+export async function createWSContext(opts: CreateWSSContextFnOptions) {
+  const params = opts.info.connectionParams;
+  const token = params?.token ?? null;
+  const requestedWorkspace = params?.workspace ?? null;
+  const { user, workspace } = await resolveAuth(token, requestedWorkspace);
+  const settings = await resolveWorkspaceSettings(workspace);
+  return assembleContext(token, user, workspace, settings);
 }
 
 export type Context = Awaited<ReturnType<typeof createContext>>;

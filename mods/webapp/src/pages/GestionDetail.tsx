@@ -18,6 +18,7 @@ import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
 import { channelIcon, type Channel } from "../lib/channelIcon.js";
+import { useContactLogRealtime } from "../lib/useContactLogRealtime.js";
 
 // EMAIL is bidirectional (autopilot thread); the other two are one-way sends.
 const ONE_WAY: Channel[] = ["SMS", "VOICE_PRERECORDED"];
@@ -126,6 +127,11 @@ function formatDuration(seconds?: number | null): string | null {
 export function GestionDetailContent({ id, onClose }: { id: string; onClose: () => void }) {
   const { t } = useI18n();
   const wsCurrency = useWorkspaceCurrency();
+
+  // Realtime-streaming capability: the open gestión updates in place — delivery status,
+  // transcript/recording, AI insights, inbound replies, payment-promise changes — without
+  // the operator reloading.
+  useContactLogRealtime(id);
 
   const query = trpc.campaigns.contactLog.get.useQuery({ id });
   const g = query.data as

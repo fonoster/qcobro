@@ -1,10 +1,12 @@
 import express from "express";
 import cors from "cors";
+import { WebSocketServer } from "ws";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
+import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { createIdentityClient } from "@fonoster/identity-client";
 import { getLogger } from "@fonoster/logger";
 import { appRouter } from "./trpc/index.js";
-import { createContext } from "./trpc/context.js";
+import { createContext, createWSContext } from "./trpc/context.js";
 import { config } from "./config.js";
 import { prisma } from "./db.js";
 import { createContactLogHandler } from "./rest/contactLogs.js";
@@ -190,9 +192,26 @@ app.use(
   })
 );
 
-app.listen(port, () => {
+const httpServer = app.listen(port, () => {
   logger.verbose(`Server running on port ${port}`);
 });
+
+// Realtime-streaming capability: WebSocket transport for tRPC subscriptions, mounted on the
+// same HTTP server at a distinct path so it never competes with the `/trpc` HTTP batch mount.
+// Scoped to the Gestiones list / Gestión detail's `campaigns.contactLog.onChange` subscription
+// today; reusable by later screens on the same transport.
+const wss = new WebSocketServer({ server: httpServer, path: "/trpc-ws" });
+applyWSSHandler({
+  wss,
+  router: appRouter,
+  createContext: createWSContext,
+  // Detect dead connections (e.g. a laptop that slept) so their subscriptions clean up
+  // instead of leaking until the process notices the socket is gone.
+  keepAlive: { enabled: true, pingMs: 30_000, pongWaitMs: 5_000 }
+});
+for (const signal of ["SIGTERM", "SIGINT"] as const) {
+  process.on(signal, () => wss.close());
+}
 
 // External voice application for pre-recorded agents (own port). On call completion
 // the co-located server reports the answered duration IN-PROCESS (no HTTP callback):

@@ -1,8 +1,16 @@
 import { PrismaClient } from "@prisma/client";
 import { fieldEncryptionExtension } from "prisma-field-encryption";
 import { config } from "./config.js";
+import { contactLogEventsExtension } from "./services/contactLogEvents.js";
 
 const client = new PrismaClient({ datasourceUrl: config.database.url });
+
+// Realtime-streaming capability: emits a change signal on every accountContactLog /
+// paymentPromise write, covering every write path (manual create, engine dispatch, webhook
+// ingestion, AI insight generation, payment-promise resolution) from one place. `client`
+// (not the extended export below) is passed so the extension's own lookup query never
+// re-enters itself.
+const withContactLogEvents = client.$extends(contactLogEventsExtension(client));
 
 /**
  * When a cloak key is configured, transparently encrypt/decrypt `/// @encrypted`
@@ -25,8 +33,8 @@ if (cloakKey && !/^k1\.aesgcm256\.[A-Za-z0-9_-]+={0,2}$/.test(cloakKey)) {
   );
 }
 
-// The encryption extension intercepts queries transparently and does not change the
-// client's public surface, so we expose it as a plain PrismaClient for all consumers.
+// Both extensions intercept queries transparently and do not change the client's public
+// surface, so we expose the result as a plain PrismaClient for all consumers.
 export const prisma: PrismaClient = (cloakKey
-  ? client.$extends(fieldEncryptionExtension({ encryptionKey: cloakKey }))
-  : client) as unknown as PrismaClient;
+  ? withContactLogEvents.$extends(fieldEncryptionExtension({ encryptionKey: cloakKey }))
+  : withContactLogEvents) as unknown as PrismaClient;

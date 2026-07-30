@@ -14,6 +14,9 @@ export default defineConfig({
   server: {
     proxy: {
       "/trpc": "http://localhost:3000",
+      // WebSocket transport for tRPC subscriptions (realtime-streaming capability),
+      // separate from the /trpc HTTP batch mount above.
+      "/trpc-ws": { target: "ws://localhost:3000", ws: true },
       "/api": "http://localhost:3000"
     }
   }

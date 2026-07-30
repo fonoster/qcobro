@@ -7,6 +7,7 @@ import { FilterSelect } from "../components/ui/select.js";
 import { SlideOver } from "../components/ui/slide-over.js";
 import { GestionDetailContent } from "./GestionDetail.js";
 import { formatRelativeDate } from "../lib/relativeDate.js";
+import { useContactLogRealtime } from "../lib/useContactLogRealtime.js";
 import { PhoneCall, Voicemail, MessageSquare, Mail, MessageCircle } from "lucide-react";
 
 const PAGE_SIZE = 50;
@@ -46,6 +47,9 @@ export function Gestiones() {
   const [agentType, setAgentType] = useState("");
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Realtime-streaming capability: new/updated gestiones stream in without a manual refresh.
+  useContactLogRealtime();
 
   const { data } = trpc.campaigns.contactLog.list.useQuery({
     outcome: (outcome || undefined) as (typeof OUTCOMES)[number] | undefined,

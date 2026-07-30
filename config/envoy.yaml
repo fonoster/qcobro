@@ -35,7 +35,10 @@ static_resources:
                               - name: "content-type"
                                 string_match: { prefix: "application/grpc" }
                           route: { cluster: apiserver_voice, timeout: 0s }
-                        # tRPC and REST API → apiserver
+                        # tRPC and REST API → apiserver. This prefix also covers /trpc-ws
+                        # (the WebSocket transport for tRPC subscriptions, realtime-streaming
+                        # capability) — Envoy's HTTP/1.1 router upgrades WebSocket connections
+                        # automatically, no separate route or config needed.
                         - match: { prefix: "/trpc" }
                           route: { cluster: apiserver, timeout: 30s }
                         - match: { prefix: "/api" }

@@ -42,12 +42,14 @@
     "prisma-field-encryption": "^1.6.0",
     "stripe": "^22.3.1",
     "twilio": "^5.13.1",
+    "ws": "^8.18.0",
     "yaml": "^2.9.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/ws": "^8.5.0",
     "prisma": "^6.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.9.0"

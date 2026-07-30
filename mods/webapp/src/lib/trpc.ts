@@ -1,5 +1,5 @@
 import { createTRPCReact } from "@trpc/react-query";
-import { httpBatchLink } from "@trpc/client";
+import { createWSClient, httpBatchLink, splitLink, wsLink } from "@trpc/client";
 import { QueryClient } from "@tanstack/react-query";
 import type { AppRouter } from "@qcobro/apiserver";
 
@@ -17,18 +17,39 @@ export const REFRESH_TOKEN_KEY = "refreshToken";
 export const ID_TOKEN_KEY = "idToken";
 export const WORKSPACE_KEY = "workspace";
 
+// Realtime-streaming capability (Gestiones list / Gestión detail): a WebSocket client used
+// only for `subscription`-type operations (see splitLink below). `connectionParams` carries
+// the same auth the HTTP link sends as headers — browsers can't set custom headers on a
+// WebSocket handshake, so tRPC sends this as the connection's first message instead; the
+// server reads it in `createWSContext`. `lazy` keeps the socket closed whenever neither
+// screen has an active subscription, so opening it always picks up the current token/
+// workspace and nothing is held open app-wide.
+const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+const wsClient = createWSClient({
+  url: () => `${wsProtocol}//${window.location.host}/trpc-ws`,
+  connectionParams: () => ({
+    token: localStorage.getItem(ACCESS_TOKEN_KEY) ?? "",
+    workspace: localStorage.getItem(WORKSPACE_KEY) ?? ""
+  }),
+  lazy: { enabled: true, closeMs: 0 }
+});
+
 export const trpcClient = trpc.createClient({
   links: [
-    httpBatchLink({
-      url: "/trpc",
-      headers() {
-        const headers: Record<string, string> = {};
-        const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-        const workspace = localStorage.getItem(WORKSPACE_KEY);
-        if (token) headers.Authorization = `Bearer ${token}`;
-        if (workspace) headers["x-workspace"] = workspace;
-        return headers;
-      }
+    splitLink({
+      condition: (op) => op.type === "subscription",
+      true: wsLink({ client: wsClient }),
+      false: httpBatchLink({
+        url: "/trpc",
+        headers() {
+          const headers: Record<string, string> = {};
+          const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+          const workspace = localStorage.getItem(WORKSPACE_KEY);
+          if (token) headers.Authorization = `Bearer ${token}`;
+          if (workspace) headers["x-workspace"] = workspace;
+          return headers;
+        }
+      })
     })
   ]
 });
