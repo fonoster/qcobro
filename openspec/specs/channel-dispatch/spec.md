@@ -67,7 +67,7 @@ run with stubs and no live calls.
 
 - **WHEN** a voice dispatch runs but no Fonoster app ref exists (or no sending numbers are
   configured), or an SMS dispatch runs with no Twilio configuration
-- **THEN** dispatch fails with a structured error
+- **THEN** dispatch fails with a `DispatchError` whose `kind` is `SYSTEM_ERROR`
 - **AND** no partial outreach is attempted
 
 ### Requirement: Sending numbers rotate from a configured pool
@@ -134,5 +134,34 @@ the database.
 
 - **WHEN** a WHATSAPP dispatch runs for a workspace with no WhatsApp integration or no resolved
   sender number
-- **THEN** dispatch fails with a structured error
+- **THEN** dispatch fails with a `DispatchError` whose `kind` is `SYSTEM_ERROR`
 - **AND** no partial outreach is attempted
+
+### Requirement: Dispatch failures are classified as delivery-rejected or system-error
+
+Every provider client injected into `dispatchOutreach` (WhatsApp, SMS, voice, email) SHALL, on
+failure, throw a structured `DispatchError` carrying a `kind` of either `DELIVERY_REJECTED` (the
+provider reached the recipient side of the request and rejected or bounced it — an invalid
+number, an unapproved/rejected template, an opted-out recipient) or `SYSTEM_ERROR` (the provider
+call could not be evaluated at all — a transport failure, an authentication/credential failure,
+a provider-side outage, or a timeout). The classification SHALL be made by the provider client
+itself, since only it can interpret its provider's error shape. An error the provider client
+cannot classify SHALL default to `SYSTEM_ERROR`, never `DELIVERY_REJECTED`, so an unrecognized
+failure mode never gets mistaken for a real, budget-consuming contact attempt.
+
+#### Scenario: A provider rejection classifies as delivery-rejected
+
+- **WHEN** the WhatsApp client's send call receives a Meta API rejection for an invalid
+  recipient number or an unapproved template
+- **THEN** it throws a `DispatchError` with `kind: DELIVERY_REJECTED`
+
+#### Scenario: A transport or auth failure classifies as system-error
+
+- **WHEN** the WhatsApp client's send call fails due to a network error, a request timeout, or
+  an expired/invalid access token (Meta 5xx or 401/403)
+- **THEN** it throws a `DispatchError` with `kind: SYSTEM_ERROR`
+
+#### Scenario: An unclassifiable failure defaults to system-error
+
+- **WHEN** a provider client encounters a failure it cannot map to either kind
+- **THEN** it throws a `DispatchError` with `kind: SYSTEM_ERROR`

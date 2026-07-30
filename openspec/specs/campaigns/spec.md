@@ -24,6 +24,10 @@ A campaign in `ARCHIVED` status is hidden from default list views. `ARCHIVED` is
 terminal: an operator MAY restore an archived campaign, which returns it to `PAUSED` so it
 never resumes dispatch without an explicit later activation.
 
+A Campaign transitioned to `PAUSED` SHALL carry a `pauseReason` of either `MANUAL` (an operator
+paused it) or `AUTO_ERROR_THRESHOLD` (the engine's consecutive-system-error circuit breaker
+paused it). `pauseReason` SHALL be cleared whenever the campaign leaves `PAUSED`.
+
 #### Scenario: Operator creates a campaign in ACTIVE
 
 - **WHEN** an operator submits the create campaign form with a name, at least one
@@ -38,11 +42,13 @@ never resumes dispatch without an explicit later activation.
 - **THEN** no new dispatches are initiated
 - **AND** attempt counts and suppression state are preserved
 - **AND** the campaign can be returned to ACTIVE
+- **AND** `pauseReason` is set to `MANUAL`
 
 #### Scenario: Campaign transitions to ACTIVE
 
 - **WHEN** an operator sets a PAUSED campaign to ACTIVE
 - **THEN** the campaign status is saved as ACTIVE
+- **AND** `pauseReason` is cleared
 - **AND** the engine may begin dispatching to eligible accounts within the schedule window
 
 #### Scenario: Operator archives a campaign
@@ -61,6 +67,13 @@ never resumes dispatch without an explicit later activation.
 
 - **WHEN** the campaign list is loaded with no filter
 - **THEN** campaigns with status ARCHIVED are not included in the results
+
+#### Scenario: Engine auto-pauses a campaign with a distinct reason
+
+- **WHEN** the engine's consecutive-system-error circuit breaker trips for an ACTIVE campaign
+- **THEN** the campaign transitions to `PAUSED` with `pauseReason: AUTO_ERROR_THRESHOLD`
+- **AND** it behaves exactly as any other `PAUSED` campaign (invisible to the engine, no
+  dispatch, all data retained) until an operator reactivates it
 
 ### Requirement: Campaign deletion limited to campaigns with no attempts
 
@@ -156,6 +169,10 @@ A Campaign SHALL define `maxAttemptsPerAccount` (lifetime cap per account for th
 campaign) and `maxAttemptsPerDay` (daily cap per account). Both are mandatory at
 creation. The engine enforces these caps via `CampaignAccountState`.
 
+Only attempts that reach the recipient side of the dispatch — a successful send or a
+`DispatchError` with `kind: DELIVERY_REJECTED` — count toward these caps. An attempt that fails
+with `kind: SYSTEM_ERROR` SHALL NOT be counted, since the account was never actually reached.
+
 #### Scenario: Account excluded when lifetime cap reached
 
 - **WHEN** `CampaignAccountState.attemptCount` equals `Campaign.maxAttemptsPerAccount`
@@ -167,6 +184,13 @@ creation. The engine enforces these caps via `CampaignAccountState`.
 
 - **WHEN** `CampaignAccountState.attemptsToday` equals `Campaign.maxAttemptsPerDay`
 - **THEN** the engine SHALL skip that account until `attemptsToday` is reset at midnight
+
+#### Scenario: System-error failures do not erode the cap
+
+- **WHEN** an account has been dispatched to several times but every attempt failed with
+  `kind: SYSTEM_ERROR`
+- **THEN** `attemptCount` and `attemptsToday` remain at the value they held before those
+  attempts, and the account is not excluded by either cap on their account
 
 ### Requirement: Campaign-to-portfolio association (many-to-many)
 
