@@ -202,4 +202,61 @@ describe("syncAccounts", () => {
     );
     assert.equal(stats().portfolioUpdate, null);
   });
+
+  it("normalizes a non-canonical but parseable phone to E.164 at write time", async () => {
+    const { client } = makeTx([]);
+    let writtenPhone: unknown;
+    const originalCreate = (
+      client as unknown as {
+        portfolioAccount: { create: (args: { data: Record<string, unknown> }) => Promise<unknown> };
+      }
+    ).portfolioAccount.create;
+    (
+      client as unknown as {
+        portfolioAccount: { create: (args: { data: Record<string, unknown> }) => Promise<unknown> };
+      }
+    ).portfolioAccount.create = async (args) => {
+      writtenPhone = args.data.phone;
+      return originalCreate(args);
+    };
+    const fn = createSyncAccounts(client as never);
+
+    await fn({
+      portfolioId: "p1",
+      mode: "APPEND_ONLY",
+      rows: [{ ...BASE_ROW, phone: "1 (809) 123-4567" }]
+    });
+
+    assert.equal(writtenPhone, "+18091234567");
+  });
+
+  it("throws ValidationError and writes nothing when any row has an unparseable phone", async () => {
+    const { client, stats } = makeTx([]);
+    const fn = createSyncAccounts(client as never);
+
+    await assert.rejects(
+      () =>
+        fn({
+          portfolioId: "p1",
+          mode: "APPEND_ONLY",
+          rows: [BASE_ROW, { ...BASE_ROW, externalId: "C002", phone: "not-a-phone-number" }]
+        }),
+      ValidationError
+    );
+    // Validate-before-write: the transaction never opened, so nothing was created/updated,
+    // not even the otherwise-valid first row.
+    const s = stats();
+    assert.equal(s.createdCount, 0);
+    assert.equal(s.updatedCount, 0);
+    assert.equal(s.portfolioUpdate, null);
+  });
+
+  it("leaves phone null when the CSV row has no phone_number cell", async () => {
+    const { client, stats } = makeTx([]);
+    const fn = createSyncAccounts(client as never);
+
+    await fn({ portfolioId: "p1", mode: "APPEND_ONLY", rows: [BASE_ROW] });
+
+    assert.equal(stats().createdCount, 1);
+  });
 });

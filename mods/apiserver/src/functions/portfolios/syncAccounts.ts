@@ -1,4 +1,5 @@
 import {
+  createValidatePhoneE164,
   syncAccountsInputSchema,
   withErrorHandlingAndValidation,
   type PortfolioClient,
@@ -6,8 +7,23 @@ import {
 } from "@qcobro/common";
 
 export function createSyncAccounts(client: PortfolioClient) {
+  const validatePhone = createValidatePhoneE164();
+
   const fn = async (params: SyncAccountsInput) => {
     const { portfolioId, mode, rows } = params;
+
+    // Normalize every row's phone to canonical E.164 up front, before any DB write. An
+    // unparseable phone fails the whole sync call — same atomicity as every other invalid
+    // field on the row schema (e.g. a negative outstandingBalance already rejects the whole
+    // batch) — rather than silently persisting a non-canonical number that inbound WhatsApp
+    // matching (loadByPhoneAndSender) would then fail to correlate.
+    const normalizedPhones = new Map<string, string | null>();
+    for (const row of rows) {
+      normalizedPhones.set(
+        row.externalId,
+        row.phone ? await validatePhone({ phone: row.phone }) : null
+      );
+    }
 
     return client.$transaction(async (tx) => {
       const existing = await tx.portfolioAccount.findMany({
@@ -26,7 +42,7 @@ export function createSyncAccounts(client: PortfolioClient) {
         const { externalId, lastPaymentDate, ...rest } = row;
         const data = {
           fullName: rest.fullName,
-          phone: rest.phone ?? null,
+          phone: normalizedPhones.get(externalId) ?? null,
           email: rest.email ?? null,
           preferredLanguage: rest.preferredLanguage ?? null,
           bestTimeToCall: rest.bestTimeToCall ?? null,
