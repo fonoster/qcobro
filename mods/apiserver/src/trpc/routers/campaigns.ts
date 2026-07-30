@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { on } from "node:events";
 import {
   agentTypeSchema,
   campaignStatusSchema,
@@ -21,6 +22,11 @@ import { createCreateContactLog } from "../../functions/campaigns/createContactL
 import { createResolvePaymentPromise } from "../../functions/campaigns/resolvePaymentPromise.js";
 import { createFollowUpPaymentPromise } from "../../functions/campaigns/followUpPaymentPromise.js";
 import { createGenerateGestionInsight } from "../../functions/voice/generateGestionInsight.js";
+import {
+  contactLogEvents,
+  CONTACT_LOG_CHANGED,
+  type ContactLogChangeEvent
+} from "../../services/contactLogEvents.js";
 
 /** Gestión (contact-log) procedures scoped to the active workspace. */
 const contactLogRouter = router({
@@ -105,6 +111,31 @@ const contactLogRouter = router({
         prisma: ctx.prisma as never,
         generator: ctx.insightGenerator
       })(input);
+    }),
+
+  // Realtime-streaming capability: streams a change signal — `{ id }`, never row data —
+  // whenever a gestión (or a payment promise linked to one) in the caller's active
+  // workspace is created or updated. Unfiltered (no `id`) for the Gestiones list; scoped to
+  // one gestión (ownership-checked up front, same as `get`) for the Gestión detail view.
+  // Clients react by invalidating/refetching `list`/`get` — this procedure never pushes data.
+  onChange: workspaceProcedure
+    .input(z.object({ id: z.string().optional() }))
+    .subscription(async function* ({ ctx, input, signal }) {
+      if (input.id) {
+        await ctx.prisma.accountContactLog.findFirstOrThrow({
+          where: {
+            id: input.id,
+            portfolioAccount: { portfolio: { workspaceRef: ctx.workspace.accessKeyId } }
+          },
+          select: { id: true }
+        });
+      }
+      for await (const [event] of on(contactLogEvents, CONTACT_LOG_CHANGED, { signal })) {
+        const change = event as ContactLogChangeEvent;
+        if (change.workspaceRef !== ctx.workspace.accessKeyId) continue;
+        if (input.id && change.id !== input.id) continue;
+        yield { id: change.id };
+      }
     })
 });
 
