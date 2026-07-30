@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.24.1](https://github.com/fonoster/qcobro/compare/v1.24.0...v1.24.1) (2026-07-30)
+
+### Bug Fixes
+
+- **whatsapp:** normalize phone numbers at rest for inbound matching ([#75](https://github.com/fonoster/qcobro/issues/75)) ([1b20745](https://github.com/fonoster/qcobro/commit/1b20745cd3c62b308737553675d014007d43f113)), closes [#63](https://github.com/fonoster/qcobro/issues/63) [#62](https://github.com/fonoster/qcobro/issues/62) [#64](https://github.com/fonoster/qcobro/issues/64)
+
 # [1.24.0](https://github.com/fonoster/qcobro/compare/v1.23.0...v1.24.0) (2026-07-29)
 
 ### Features
