@@ -26,10 +26,15 @@ página de API Keys de la consola de QCobro. El rol de esa key controla por comp
 servidor puede hacer: crea una key con la que te sientas cómodo dejando actuar a un agente,
 especialmente si vas a habilitar operaciones de escritura como crear o eliminar carteras.
 
-## Configura Claude Desktop en un paso
+## Configura Claude Desktop con la CLI
+
+Instala [la CLI de QCobro](/cli/overview) y usa `mcp:configure` para que escriba la
+configuración por ti.
 
 ```bash
-npx @qcobro/ctl mcp:configure \
+npm install --global @qcobro/ctl
+
+qcobro mcp:configure \
   --access-key-id <accessKeyId> \
   --access-key-secret <accessKeySecret> \
   --workspace <workspaceAccessKeyId>
@@ -39,13 +44,15 @@ Este comando escribe (o combina con lo existente) el archivo `claude_desktop_con
 Claude Desktop, añadiendo una entrada `qcobro`. Reinicia Claude Desktop después de ejecutarlo.
 Pasa `--url` si necesitas apuntar a un endpoint distinto del predeterminado
 (`https://api.qcobro.com`). Si ya iniciaste sesión con `qcobro workspaces:login`, puedes omitir
-los tres flags y `mcp:configure` usará tu workspace activo. Consulta
-[la CLI de QCobro](/cli/overview) para más detalles.
+los tres flags y `mcp:configure` usará tu workspace activo.
 
 <Tip>
   El comando conserva cualquier otro servidor MCP que ya tengas configurado (por ejemplo
   `@fonoster/mcp`): solo añade o reemplaza la entrada `qcobro`.
 </Tip>
+
+Si prefieres no instalar la CLI, edita `claude_desktop_config.json` tú mismo con la
+configuración manual de la siguiente sección.
 
 ## Configuración manual
 
