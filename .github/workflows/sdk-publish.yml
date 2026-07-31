@@ -36,8 +36,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build SDK and its workspace dependencies
-        run: npx lerna run build --scope=@qcobro/sdk --include-dependencies
+      - name: Build SDK, ctl, and their workspace dependencies
+        run: npx lerna run build --scope={@qcobro/sdk,@qcobro/ctl} --include-dependencies
 
       # lerna's fixed-mode version bump only touches packages a release's commits actually
       # scope to, so mods/common (or mods/sdk) can sit at an already-published version on
@@ -61,6 +61,17 @@ jobs:
             echo "@qcobro/sdk@$version is already published — skipping (unchanged this release)."
           else
             npm publish --workspace=mods/sdk
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @qcobro/ctl (if version changed)
+        run: |
+          version=$(node -p "require('./mods/ctl/package.json').version")
+          if npm view "@qcobro/ctl@$version" version >/dev/null 2>&1; then
+            echo "@qcobro/ctl@$version is already published — skipping (unchanged this release)."
+          else
+            npm publish --workspace=mods/ctl
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
