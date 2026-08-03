@@ -4,6 +4,7 @@ export * from "./userSettings.js";
 export * from "./agentTemplates.js";
 export * from "./campaigns.js";
 export * from "./voiceApplication.js";
+export * from "./agentEvaluations.js";
 export * from "./dispatch.js";
 export * from "./email.js";
 export * from "./whatsApp.js";

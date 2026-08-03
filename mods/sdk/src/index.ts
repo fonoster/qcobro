@@ -11,6 +11,7 @@ export { Client } from "./client.js";
 export type { ClientOptions, Tokens } from "./client.js";
 export { PortfoliosResource } from "./resources/portfolios.js";
 export { AgentTemplatesResource } from "./resources/agentTemplates.js";
+export { AgentEvaluationsResource } from "./resources/agentEvaluations.js";
 
 // Schemas for inputs the apiserver defines inline (not in `@qcobro/common`), so
 // other packages (e.g. `@qcobro/mcp`, `@qcobro/ctl`) can validate against the

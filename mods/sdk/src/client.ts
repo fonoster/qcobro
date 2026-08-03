@@ -1,8 +1,16 @@
-import { createTRPCClient, httpBatchLink, type CreateTRPCClient } from "@trpc/client";
+import {
+  createTRPCClient,
+  createWSClient,
+  httpBatchLink,
+  splitLink,
+  wsLink,
+  type CreateTRPCClient
+} from "@trpc/client";
 import type { AppRouter } from "@qcobro/apiserver";
 import type { LoginInput, ApiKeyLoginInput } from "@qcobro/common";
 import { PortfoliosResource } from "./resources/portfolios.js";
 import { AgentTemplatesResource } from "./resources/agentTemplates.js";
+import { AgentEvaluationsResource } from "./resources/agentEvaluations.js";
 
 /** Header the apiserver reads to scope a request to a workspace. */
 const WORKSPACE_HEADER = "x-workspace";
@@ -39,6 +47,13 @@ export interface ClientOptions {
   refreshToken?: string;
   /** The accessKeyId of the workspace to act in. Also settable via {@link Client.useWorkspace}. */
   workspace?: string;
+  /**
+   * `WebSocket` implementation used for subscriptions (`agentEvaluations.evaluate`) —
+   * the `realtime-streaming` transport at `/trpc-ws`. Defaults to the global `WebSocket`
+   * (stable in modern Node and every browser). Provide a ponyfill in older Node runtimes
+   * that lack it.
+   */
+  WebSocket?: typeof WebSocket;
   /**
    * When `true` (the default), an `UNAUTHORIZED` response triggers a single
    * token refresh and one replay of the failed request, provided a refresh
@@ -79,8 +94,11 @@ export class Client {
   /** Portfolio operations (list, get, create, update, delete, accounts, sync). */
   readonly portfolios: PortfoliosResource;
 
-  /** Agent template operations (list, get, create, sync). */
+  /** Agent template operations (list, get, create, sync, preview). */
   readonly agentTemplates: AgentTemplatesResource;
+
+  /** Agent evaluation operations (evaluate — streams over the WebSocket transport). */
+  readonly agentEvaluations: AgentEvaluationsResource;
 
   #accessToken?: string;
   #refreshToken?: string;
@@ -95,26 +113,46 @@ export class Client {
     this.#workspace = options.workspace;
     this.#autoRefresh = options.autoRefresh ?? true;
 
-    const url = `${(options.endpoint ?? DEFAULT_ENDPOINT).replace(/\/+$/, "")}/trpc`;
+    const base = (options.endpoint ?? DEFAULT_ENDPOINT).replace(/\/+$/, "");
+    const url = `${base}/trpc`;
+    // Realtime-streaming capability's WebSocket transport (`/trpc-ws`), used only for
+    // subscription-type operations (agentEvaluations.evaluate) — mirrors the webapp's
+    // `lib/trpc.ts` split exactly. `connectionParams` carries the same auth the HTTP link
+    // sends as headers, since a WebSocket handshake can't carry custom headers.
+    const wsClient = createWSClient({
+      url: () => `${base.replace(/^http/, "ws")}/trpc-ws`,
+      WebSocket: options.WebSocket,
+      connectionParams: () => ({
+        token: this.#accessToken ?? "",
+        workspace: this.#workspace ?? ""
+      }),
+      lazy: { enabled: true, closeMs: 0 }
+    });
+
     this.trpc = createTRPCClient<AppRouter>({
       links: [
-        httpBatchLink({
-          url,
-          fetch: options.fetch,
-          // Read current auth state on every request so a `login()` or
-          // `useWorkspace()` after construction applies without rebuilding.
-          headers: () => {
-            const headers: Record<string, string> = {};
-            if (this.#accessToken) headers.Authorization = `Bearer ${this.#accessToken}`;
-            if (this.#workspace) headers[WORKSPACE_HEADER] = this.#workspace;
-            return headers;
-          }
+        splitLink({
+          condition: (op) => op.type === "subscription",
+          true: wsLink({ client: wsClient }),
+          false: httpBatchLink({
+            url,
+            fetch: options.fetch,
+            // Read current auth state on every request so a `login()` or
+            // `useWorkspace()` after construction applies without rebuilding.
+            headers: () => {
+              const headers: Record<string, string> = {};
+              if (this.#accessToken) headers.Authorization = `Bearer ${this.#accessToken}`;
+              if (this.#workspace) headers[WORKSPACE_HEADER] = this.#workspace;
+              return headers;
+            }
+          })
         })
       ]
     });
 
     this.portfolios = new PortfoliosResource(this.trpc, (fn) => this.request(fn));
     this.agentTemplates = new AgentTemplatesResource(this.trpc, (fn) => this.request(fn));
+    this.agentEvaluations = new AgentEvaluationsResource(this.trpc);
   }
 
   /**

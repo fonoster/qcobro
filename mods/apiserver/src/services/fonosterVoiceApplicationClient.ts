@@ -3,6 +3,9 @@ import {
   ttsProductRefForVoice,
   type FonosterConfig,
   type VoiceApplicationClient,
+  type VoiceApplicationEvalInput,
+  type VoiceApplicationEvalEvent,
+  type VoiceApplicationEvalScenario,
   type VoiceApplicationInput
 } from "@qcobro/common";
 import { createRequire } from "node:module";
@@ -138,5 +141,90 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
   async deleteApplication(ref: string): Promise<void> {
     const apps = await withTimeout(this.apps(), "login");
     await withTimeout(apps.deleteApplication(ref), "deleteApplication");
+  }
+
+  /** Translates one eval scenario into Fonoster's `testCases.scenarios[]` shape. The
+   * telephony fields are placeholders — `evaluateIntelligence` grades the LLM's text/tool
+   * output, not real dialing, so any well-formed numbers satisfy the schema. `description`
+   * and every turn's `expected.text` are required by Fonoster's live service (confirmed
+   * empirically — not merely typed as required); `resolveEvalTarget` rejects a VOICE_AI
+   * scenario missing `expected.text` before this is ever called, so the fallback below is
+   * defense-in-depth, not the expected path. */
+  private buildEvalScenario(scenario: VoiceApplicationEvalScenario) {
+    return {
+      ref: scenario.ref,
+      description: scenario.description ?? scenario.ref,
+      telephonyContext: {
+        callDirection: "TO_PSTN",
+        ingressNumber: "+10000000000",
+        callerNumber: "+10000000000",
+        metadata: Object.fromEntries(
+          Object.entries(scenario.account).map(([key, value]) => [key, String(value)])
+        )
+      },
+      conversation: scenario.turns.map((turn) => {
+        if (!turn.expected?.text) {
+          throw new Error(
+            `VOICE_AI eval turn missing expected.text after resolveEvalTarget validation ` +
+              `(scenario "${scenario.ref}")`
+          );
+        }
+        return {
+          userInput: turn.input,
+          expected: {
+            text: turn.expected.text,
+            ...(turn.expected.tools
+              ? {
+                  tools: turn.expected.tools.map((t) => ({
+                    tool: t.tool,
+                    parameters: t.parameters ?? {}
+                  }))
+                }
+              : {})
+          }
+        };
+      })
+    };
+  }
+
+  /**
+   * Evaluates a `VOICE_AI` agent's conversation logic via Fonoster's
+   * `Applications.evaluateIntelligence` — no application ref required, ever: the request
+   * is just `{ intelligence: { productRef, config } }`, so an existing or ephemeral
+   * YAML-defined agent are evaluated identically (see design.md). Relays Fonoster's
+   * stream unchanged; this capability's runner is responsible for aggregating a
+   * run-level summary, since Fonoster itself only summarizes per scenario.
+   */
+  async *evaluate(input: VoiceApplicationEvalInput): AsyncGenerator<VoiceApplicationEvalEvent> {
+    const { autopilot } = this.settings;
+    const apps = await withTimeout(this.apps(), "login");
+    const request = {
+      intelligence: {
+        productRef: autopilot.llmProductRef,
+        config: {
+          conversationSettings: {
+            ...autopilotTemplate.conversationSettings,
+            ...(input.firstMessage ? { firstMessage: input.firstMessage } : {}),
+            systemPrompt: input.systemPrompt
+          },
+          languageModel: {
+            provider: autopilot.llmProvider,
+            model: autopilot.llmModel,
+            maxTokens: autopilot.maxTokens,
+            temperature: autopilot.temperature
+          },
+          testCases: {
+            evalsLanguageModel: { provider: "openai", model: autopilot.evalsModel },
+            scenarios: input.scenarios.map((s) => this.buildEvalScenario(s))
+          }
+        }
+      }
+    };
+    const stream = apps.evaluateIntelligence(
+      request as Parameters<SDK.Applications["evaluateIntelligence"]>[0]
+    );
+    for await (const event of stream) {
+      yield event as VoiceApplicationEvalEvent;
+    }
   }
 }

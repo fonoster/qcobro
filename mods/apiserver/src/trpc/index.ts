@@ -6,6 +6,7 @@ import { apiKeysRouter } from "./routers/apiKeys.js";
 import { profileRouter } from "./routers/profile.js";
 import { portfoliosRouter } from "./routers/portfolios.js";
 import { agentTemplatesRouter } from "./routers/agentTemplates.js";
+import { agentEvaluationsRouter } from "./routers/agentEvaluations.js";
 import { campaignsRouter } from "./routers/campaigns.js";
 import { configRouter } from "./routers/config.js";
 import { outreachRouter } from "./routers/outreach.js";
@@ -21,6 +22,7 @@ export const appRouter = router({
   profile: profileRouter,
   portfolios: portfoliosRouter,
   agentTemplates: agentTemplatesRouter,
+  agentEvaluations: agentEvaluationsRouter,
   campaigns: campaignsRouter,
   config: configRouter,
   outreach: outreachRouter,
