@@ -35,6 +35,7 @@
           "sdk/authentication",
           "sdk/portfolios",
           "sdk/sync-accounts",
+          "sdk/agent-evaluations",
           "sdk/errors",
           "sdk/reference"
         ]

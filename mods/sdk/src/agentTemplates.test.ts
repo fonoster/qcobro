@@ -86,6 +86,28 @@ test("get rejects an empty id before any request", async () => {
   assert.equal(calls.length, 0);
 });
 
+test("preview rejects an input with neither agentTemplateId nor yaml", async () => {
+  const { calls, fetchImpl } = recordingFetch();
+  const client = authedClient(fetchImpl);
+
+  await assert.rejects(
+    () => client.agentTemplates.preview({ account: { fullName: "María" } } as never),
+    ValidationError
+  );
+  assert.equal(calls.length, 0);
+});
+
+test("preview rejects a target missing the required account", async () => {
+  const { calls, fetchImpl } = recordingFetch();
+  const client = authedClient(fetchImpl);
+
+  await assert.rejects(
+    () => client.agentTemplates.preview({ agentTemplateId: "at_1" } as never),
+    ValidationError
+  );
+  assert.equal(calls.length, 0);
+});
+
 // ---------------------------------------------------------------------------
 // Golden path: in-process stub of the apiserver's agentTemplates router,
 // exercising the real tRPC wire protocol end to end (no database).

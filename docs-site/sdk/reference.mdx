@@ -1,6 +1,6 @@
 ---
 title: "Referencia del SDK"
-description: "Tipos y métodos exportados por @qcobro/sdk: Client, ClientOptions, Tokens, PortfoliosResource, ValidationError y FieldError."
+description: "Tipos y métodos exportados por @qcobro/sdk: Client, ClientOptions, Tokens, PortfoliosResource, AgentEvaluationsResource, ValidationError y FieldError."
 ---
 
 Resumen de lo que exporta `@qcobro/sdk`. Para las guías por tarea, empieza por
@@ -15,7 +15,9 @@ import {
   type ClientOptions,
   type Tokens,
   type FieldError,
-  PortfoliosResource
+  PortfoliosResource,
+  AgentTemplatesResource,
+  AgentEvaluationsResource
 } from "@qcobro/sdk";
 ```
 
@@ -25,6 +27,8 @@ import {
 | `ClientOptions` | interfaz | Opciones del constructor de `Client`. |
 | `Tokens` | interfaz | Tokens emitidos (`accessToken`, `refreshToken`, `idToken`). |
 | `PortfoliosResource` | clase | El recurso de carteras, accesible vía `client.portfolios`. |
+| `AgentTemplatesResource` | clase | El recurso de plantillas de agente, accesible vía `client.agentTemplates`. Incluye `preview` para canales sin conversación. |
+| `AgentEvaluationsResource` | clase | El recurso de evaluación de agentes, accesible vía `client.agentEvaluations`. |
 | `ValidationError` | clase | Error de validación en cliente, con detalle por campo. |
 | `FieldError` | interfaz | Un fallo de validación por campo (`field`, `message`, `code`). |
 
@@ -39,6 +43,8 @@ const client = new Client(options: ClientOptions);
 | Miembro | Firma | Descripción |
 | --- | --- | --- |
 | `portfolios` | `PortfoliosResource` | Operaciones de carteras (ver abajo). |
+| `agentTemplates` | `AgentTemplatesResource` | Operaciones de plantillas de agente, incluida `preview` (ver [Evaluar y previsualizar agentes](/sdk/agent-evaluations)). |
+| `agentEvaluations` | `AgentEvaluationsResource` | Evaluación de agentes (ver abajo). |
 | `trpc` | proxy tipado | Acceso directo a la API tRPC subyacente, para procedimientos que el SDK aún no envuelve. Prefiere los recursos cuando existan. |
 | `login` | `(input) => Promise<Tokens>` | Autentica con email y contraseña. |
 | `loginWithApiKey` | `(input) => Promise<Tokens>` | Autentica con una API key de workspace. |
@@ -67,6 +73,17 @@ acotados al workspace activo y validan su entrada en el cliente.
 
 Detalle de cada método en [Gestionar carteras](/sdk/portfolios) y
 [Sincronizar cuentas](/sdk/sync-accounts).
+
+## AgentEvaluationsResource
+
+Accesible vía `client.agentEvaluations`. No se construye directamente.
+
+| Método | Firma | Descripción |
+| --- | --- | --- |
+| `evaluate` | `({ agentTemplateId, scenarios } \| { yaml }) => AsyncGenerator<...>` | Evalúa un agente `VOICE_AI`, `EMAIL` o `WHATSAPP` y transmite un evento por turno, por escenario, y un resumen final. |
+
+Detalle completo, junto con `agentTemplates.preview` para `SMS`/`VOICE_PRERECORDED`, en
+[Evaluar y previsualizar agentes](/sdk/agent-evaluations).
 
 ## El escape hatch trpc
 

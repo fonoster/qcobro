@@ -87,7 +87,8 @@ fusión: `APPEND_ONLY`, `UPDATE_EXISTING` o `REPLACE`.
 
 ## Agentes
 
-Crea plantillas de agente y valida su sincronización con el proveedor de voz.
+Crea plantillas de agente, comprueba su comportamiento antes de usarlas, y sincroniza las de
+voz con el proveedor.
 
 ```bash
 qcobro agents:create \
@@ -102,15 +103,33 @@ qcobro agents:create \
 `VOICE_PRERECORDED`, `SMS`, `EMAIL`, `WHATSAPP`) como flags; ejecuta `qcobro agents:create
 --help` para ver el detalle completo por tipo.
 
+Para un agente `VOICE_AI`, `EMAIL` o `WHATSAPP`, `agents:eval` transmite el resultado de cada
+turno de un guion de prueba y termina con un veredicto general.
+
 ```bash
-qcobro agents:eval <templateId>
+# Contra un agente ya creado, con los escenarios en un archivo aparte.
+qcobro agents:eval --template-id <id> --scenarios escenarios.yaml
+
+# Contra una definición que todavía no existe (el YAML incluye sus propios escenarios).
+qcobro agents:eval --file plantilla-de-prueba.yaml
 ```
 
-<Note>
-  `agents:eval` reintenta la sincronización de una plantilla de voz y reporta si quedó sincronizada.
-  Valida configuración, no conversación: hoy QCobro no tiene una función de evaluación
-  conversacional, así que este comando no simula llamadas ni prueba lo que diría el agente.
-</Note>
+Para un agente `SMS` o `VOICE_PRERECORDED` (sin conversación que evaluar), `agents:preview`
+renderiza el mensaje o guion contra una cuenta de ejemplo.
+
+```bash
+qcobro agents:preview --template-id <id> --account cuenta.json
+```
+
+`agents:sync` reintenta la sincronización de una plantilla de voz con el proveedor y reporta si
+quedó sincronizada. Valida configuración, no conversación.
+
+```bash
+qcobro agents:sync <templateId>
+```
+
+Consulta [Evaluar y previsualizar agentes](/sdk/agent-evaluations) para el formato completo de
+escenarios y el detalle de cada evento.
 
 ## Configura un cliente MCP
 

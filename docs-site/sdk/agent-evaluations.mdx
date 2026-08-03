@@ -1,0 +1,205 @@
+---
+title: "Evaluar y previsualizar agentes"
+description: "Comprueba cómo se comporta un agente VOICE_AI, EMAIL o WHATSAPP con client.agentEvaluations.evaluate, o previsualiza un SMS o VOICE_PRERECORDED con client.agentTemplates.preview, antes de crearlo."
+---
+
+Antes de poner un agente en producción, quieres saber cómo va a comportarse. QCobro te da dos
+formas de comprobarlo, según el tipo de canal:
+
+- **`client.agentEvaluations.evaluate`**, para los canales con una conversación real
+  (`VOICE_AI`, `EMAIL`, `WHATSAPP`): ejecuta un guion de turnos contra el agente y transmite
+  el resultado de cada uno a medida que ocurre.
+- **`client.agentTemplates.preview`**, para los canales sin conversación (`SMS`,
+  `VOICE_PRERECORDED`): renderiza el mensaje o guion contra una cuenta de ejemplo, sin
+  transmisión ni turnos.
+
+Ambos métodos aceptan un agente **ya creado** (por su id) o una **definición sin crear
+todavía**, y ninguno de los dos crea nada en tu workspace: no se guarda ninguna plantilla de
+agente, gestión ni promesa de pago, sin importar el resultado.
+
+Todas las entradas se validan en el cliente contra los esquemas compartidos de
+`@qcobro/common` **antes** de enviar la petición: una entrada inválida lanza un
+`ValidationError` y nunca llega a la red.
+
+## Evalúa un agente ya creado
+
+Para un agente `VOICE_AI`, `EMAIL` o `WHATSAPP` que ya existe, pasa su `agentTemplateId` junto
+con los escenarios que quieres ejecutar. `evaluate` devuelve un iterable asíncrono: consúmelo
+con `for await`.
+
+```ts
+for await (const event of client.agentEvaluations.evaluate({
+  agentTemplateId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  scenarios: [
+    {
+      ref: "promesa-de-pago",
+      account: {
+        fullName: "María López",
+        principalAmount: 5000,
+        outstandingBalance: 4200
+      },
+      turns: [
+        {
+          input: "Sí puedo pagar el viernes",
+          expected: { action: "reply", outcome: "PAYMENT_PROMISE" }
+        }
+      ]
+    }
+  ]
+})) {
+  console.log(event);
+}
+```
+
+## Evalúa una definición antes de crearla
+
+Para iterar sobre un agente que todavía no existe, pasa `yaml` en lugar de `agentTemplateId`.
+El YAML reúne en un solo documento la definición del agente **y** sus escenarios, así que no
+hace falta crear nada para probar un cambio de `systemPrompt`.
+
+```ts
+const yaml = `
+type: EMAIL
+name: "Recordatorio amable"
+subject: "Recordatorio de pago"
+messageBody: "Hola {{firstName}}, tiene un saldo pendiente de {{outstandingBalance}}."
+systemPrompt: |
+  Eres un agente de cobranza amable. Si el cliente promete pagar, agradece y confirma
+  la fecha. Si pide no ser contactado, marca opt-out y detente.
+scenarios:
+  - ref: promesa-de-pago
+    account:
+      fullName: "María López"
+      principalAmount: 5000
+      outstandingBalance: 4200
+    turns:
+      - input: "Sí puedo pagar el viernes"
+        expected:
+          action: reply
+          outcome: PAYMENT_PROMISE
+`;
+
+for await (const event of client.agentEvaluations.evaluate({ yaml })) {
+  console.log(event);
+}
+```
+
+<Note>
+  Evaluar una definición en YAML no crea ninguna plantilla de agente. Es la forma de probar
+  un guion antes de decidir si vale la pena crearlo.
+</Note>
+
+## Da forma a los escenarios
+
+Cada escenario tiene una `account` (los datos de una cuenta de ejemplo: nombre, montos, días
+de atraso) y una lista ordenada de `turns`. Cada turno lleva el mensaje simulado del cliente
+(`input`) y, si quieres comprobar algo puntual, una expectativa opcional (`expected`). Un
+turno sin `expected` igual se ejecuta y se transmite, solo que no se evalúa nada en él.
+
+Lo que puede llevar `expected` depende del canal:
+
+<ParamField body="expected.action" type="string">
+  Para `EMAIL`/`WHATSAPP`: la acción que debería tomar el agente en ese turno (`reply`,
+  `ignore`, `resolve` o `escalate`).
+</ParamField>
+<ParamField body="expected.outcome" type="string">
+  Para `EMAIL`/`WHATSAPP`: el resultado que debería registrar el agente (por ejemplo
+  `PAYMENT_PROMISE`), cuando el turno debería capturar uno.
+</ParamField>
+<ParamField body="expected.text" type="object">
+  Para `VOICE_AI`: `{ type: "EXACT" | "SIMILAR", response }`. Compara la respuesta generada
+  por el agente contra `response`, de forma exacta o por similitud.
+</ParamField>
+<ParamField body="expected.tools" type="array">
+  Para `VOICE_AI`: acciones puntuales que el agente debería ejecutar en ese turno (por
+  ejemplo, terminar la llamada), como `[{ tool: "hangup" }]`.
+</ParamField>
+
+## Lee los eventos
+
+`evaluate` transmite un evento por cada turno a medida que se ejecuta, luego un evento por
+escenario terminado, y por último un resumen del run completo.
+
+```ts
+for await (const event of client.agentEvaluations.evaluate(input)) {
+  switch (event.type) {
+    case "turn":
+      // event.result: passed?, action?/outcome? (EMAIL/WHATSAPP), aiResponse? (VOICE_AI)
+      console.log(event.scenarioRef, event.result);
+      break;
+    case "scenarioSummary":
+      console.log(event.scenarioRef, event.overallPassed);
+      break;
+    case "summary":
+      // Verdicto general del run completo: "pass" | "fail".
+      console.log(event.verdict, event.scenarios);
+      break;
+    case "error":
+      console.error(event.message);
+      break;
+  }
+}
+```
+
+<Tip>
+  Un turno sin `expected` transmite su evento igual, con `passed` ausente: úsalo para observar
+  el comportamiento del agente antes de decidir qué comprobar.
+</Tip>
+
+## Previsualiza un canal estático
+
+`SMS` y `VOICE_PRERECORDED` no tienen conversación que evaluar: solo envían un mensaje o guion
+fijo. Para esos canales, `preview` renderiza el texto contra una cuenta de ejemplo, sin
+transmisión.
+
+```ts
+const { rendered } = await client.agentTemplates.preview({
+  agentTemplateId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  account: {
+    fullName: "María López",
+    principalAmount: 5000,
+    outstandingBalance: 4200
+  }
+});
+
+console.log(rendered);
+// "Hola María, su saldo pendiente es 4200."
+```
+
+Igual que `evaluate`, acepta una definición en YAML sin crear (solo los campos de `SMS` o
+`VOICE_PRERECORDED`, sin `scenarios`):
+
+```ts
+const yaml = `
+type: SMS
+name: "Recordatorio SMS"
+messageBody: "Hola {{firstName}}, tiene un saldo pendiente de {{outstandingBalance}}."
+`;
+
+const { rendered } = await client.agentTemplates.preview({
+  yaml,
+  account: { fullName: "María López", principalAmount: 5000, outstandingBalance: 4200 }
+});
+```
+
+<Warning>
+  `preview` solo acepta agentes `SMS` o `VOICE_PRERECORDED`. Para `VOICE_AI`, `EMAIL` o
+  `WHATSAPP`, usa `client.agentEvaluations.evaluate`.
+</Warning>
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="CLI de QCobro" icon="terminal" href="/cli/overview">
+    `agents:eval` y `agents:preview` envuelven estos mismos métodos desde la terminal.
+  </Card>
+  <Card title="Referencia del SDK" icon="cube" href="/sdk/reference">
+    Los tipos y métodos exportados, incluido `AgentEvaluationsResource`.
+  </Card>
+  <Card title="Crear plantillas de agente" icon="robot" href="/guides/agent-templates">
+    Cómo se crean y configuran los agentes que luego evalúas o previsualizas.
+  </Card>
+  <Card title="Validación y errores" icon="triangle-exclamation" href="/sdk/errors">
+    Captura los fallos de validación del cliente y lee el detalle por campo.
+  </Card>
+</CardGroup>

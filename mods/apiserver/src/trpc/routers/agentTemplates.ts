@@ -4,13 +4,15 @@ import {
   createAgentTemplateSchema,
   updateAgentTemplateSchema,
   deleteAgentTemplateSchema,
-  syncAgentTemplateSchema
+  syncAgentTemplateSchema,
+  previewInputSchema
 } from "@qcobro/common";
 import { router, workspaceProcedure } from "../trpc.js";
 import { createCreateAgentTemplate } from "../../functions/agentTemplates/createAgentTemplate.js";
 import { createUpdateAgentTemplate } from "../../functions/agentTemplates/updateAgentTemplate.js";
 import { createDeleteAgentTemplate } from "../../functions/agentTemplates/deleteAgentTemplate.js";
 import { createSyncAgentTemplate } from "../../functions/agentTemplates/syncAgentTemplate.js";
+import { createPreviewAgentTemplate } from "../../functions/agentEvaluations/previewAgentTemplate.js";
 
 export const agentTemplatesRouter = router({
   list: workspaceProcedure
@@ -78,5 +80,13 @@ export const agentTemplatesRouter = router({
     .input(deleteAgentTemplateSchema)
     .mutation(({ input, ctx }) =>
       createDeleteAgentTemplate(ctx.prisma as never, ctx.workspace.accessKeyId)(input)
+    ),
+
+  // agent-evaluations capability: render-only preview for SMS/VOICE_PRERECORDED (no
+  // conversation to evaluate — see `agentEvaluations.evaluate` for VOICE_AI/EMAIL/WHATSAPP).
+  preview: workspaceProcedure
+    .input(previewInputSchema)
+    .query(({ input, ctx }) =>
+      createPreviewAgentTemplate(ctx.prisma as never, ctx.workspace.accessKeyId)(input)
     )
 });

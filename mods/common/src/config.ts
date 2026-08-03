@@ -58,7 +58,16 @@ export const fonosterConfigSchema = z
         llmProvider: z.string().default("google"),
         llmModel: z.string().default("gemini-2.0-flash"),
         maxTokens: z.number().default(300),
-        temperature: z.number().default(0)
+        temperature: z.number().default(0),
+        /**
+         * Model for Fonoster's `evaluateIntelligence` judge (`testCases.evalsLanguageModel`) —
+         * a required field on every VOICE_AI eval request, always `provider: "openai"` (the only
+         * provider Fonoster's evals grader supports, independent of the agent's own
+         * `llmProvider`/`llmModel` above). Confirmed against the live service that Fonoster
+         * supplies its own default OpenAI key when none is given, so no apiKey field is exposed
+         * here yet — add one if a deployment ever needs its own quota.
+         */
+        evalsModel: z.string().default("gpt-4o-mini")
       })
       .default({
         sttProductRef: "stt.deepgram",
@@ -67,7 +76,8 @@ export const fonosterConfigSchema = z
         llmProvider: "google",
         llmModel: "gemini-2.0-flash",
         maxTokens: 300,
-        temperature: 0
+        temperature: 0,
+        evalsModel: "gpt-4o-mini"
       }),
     /**
      * Selectable voice catalog for voice agent templates (Voz IA + pre-recorded).

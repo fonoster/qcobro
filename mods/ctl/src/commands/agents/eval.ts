@@ -1,43 +1,80 @@
-import { Args } from "@oclif/core";
+import { readFileSync } from "node:fs";
+import { Flags } from "@oclif/core";
+import { parse as parseYaml } from "yaml";
+import type { EvalEvent } from "@qcobro/common";
 import { AuthenticatedCommand } from "../../AuthenticatedCommand.js";
 
 export default class Eval extends AuthenticatedCommand<typeof Eval> {
   static override readonly description =
-    "re-attempt an agent template's Fonoster sync and report the resulting status. " +
-    "This validates the template's configuration and its sync with Fonoster — " +
-    "QCobro has no conversational-intelligence evaluation feature today, so this " +
-    "does not test conversation behavior. Only VOICE_AI templates sync with " +
-    "Fonoster; other channel types are a no-op that leaves the template unchanged.";
-  static override readonly examples = ["<%= config.bin %> <%= command.id %> <templateId>"];
-  static override readonly args = {
-    templateId: Args.string({ description: "the agent template id", required: true })
+    "evaluate a VOICE_AI/EMAIL/WHATSAPP agent's conversation logic — either an existing " +
+    "template plus a scenarios file, or a standalone YAML eval template (agent definition " +
+    "plus its own embedded scenarios) that is never created. Streams each turn's result as " +
+    "it happens, then a final pass/fail summary; exits non-zero when the run fails. For a " +
+    "static SMS/VOICE_PRERECORDED render (no conversation), use `agents:preview` instead.";
+  static override readonly examples = [
+    "<%= config.bin %> <%= command.id %> --template-id <id> --scenarios scenarios.yaml",
+    "<%= config.bin %> <%= command.id %> --file eval-template.yaml"
+  ];
+  static override readonly flags = {
+    "template-id": Flags.string({ description: "an existing agent template id" }),
+    scenarios: Flags.string({
+      description: "path to a YAML file with the scenarios to run (used with --template-id)"
+    }),
+    file: Flags.string({
+      description: "path to a standalone YAML eval template (agent definition + embedded scenarios)"
+    })
   };
 
   public async run(): Promise<void> {
-    const { args } = await this.parse(Eval);
+    const { flags } = await this.parse(Eval);
     const client = await this.createSdkClient();
 
-    try {
-      await client.agentTemplates.sync({ id: args.templateId });
-    } catch (err) {
-      this.error(`Sync failed: ${err instanceof Error ? err.message : String(err)}`, { exit: 1 });
+    let anyFailed = false;
+    for await (const event of client.agentEvaluations.evaluate(this.buildInput(flags))) {
+      anyFailed = this.printEvent(event) || anyFailed;
     }
 
-    // `sync` doesn't echo the updated config, so re-fetch to report the
-    // resulting status — `get` includes each channel's child config.
-    const template = await client.agentTemplates.get({ id: args.templateId });
-    const voiceConfig = (template as { voiceAiConfig?: { fonosterAppRef?: string | null } })
-      .voiceAiConfig;
+    if (anyFailed) this.exit(1);
+  }
 
-    if (template.type !== "VOICE_AI") {
-      this.log(`${template.id} is type ${template.type}; sync is a no-op for non-voice templates.`);
-      return;
+  private buildInput(flags: {
+    "template-id": string | undefined;
+    scenarios: string | undefined;
+    file: string | undefined;
+  }) {
+    if (flags.file) {
+      return { yaml: readFileSync(flags.file, "utf8") };
     }
+    if (flags["template-id"] && flags.scenarios) {
+      const parsed = parseYaml(readFileSync(flags.scenarios, "utf8"));
+      const scenarios = Array.isArray(parsed)
+        ? parsed
+        : ((parsed as { scenarios?: unknown }).scenarios ?? parsed);
+      return {
+        agentTemplateId: flags["template-id"],
+        scenarios: scenarios as never
+      };
+    }
+    return this.error("Provide --file, or both --template-id and --scenarios.", { exit: 1 });
+  }
 
-    if (voiceConfig?.fonosterAppRef) {
-      this.log(`Synced: ${template.id} → fonosterAppRef=${voiceConfig.fonosterAppRef}`);
-    } else {
-      this.log(`Not synced: ${template.id} has no fonosterAppRef after the sync attempt.`);
+  /** Prints one evaluation event; returns true if it signals a failure. */
+  private printEvent(event: EvalEvent): boolean {
+    if (event.type === "turn") {
+      const verdict = event.result.passed === undefined ? "" : event.result.passed ? " ✓" : " ✗";
+      const detail = event.result.action ?? event.result.aiResponse ?? event.result.input;
+      this.log(`[${event.scenarioRef}] turn ${event.result.turnIndex}: ${detail}${verdict}`);
+      return event.result.passed === false;
     }
+    if (event.type === "scenarioSummary") {
+      this.log(`[${event.scenarioRef}] scenario ${event.overallPassed ? "PASSED" : "FAILED"}`);
+      return !event.overallPassed;
+    }
+    if (event.type === "summary") {
+      this.log(`Overall: ${event.verdict.toUpperCase()} (${event.scenarios.length} scenario(s))`);
+      return event.verdict === "fail";
+    }
+    this.log(`Error: ${event.message}`);
+    return true;
   }
 }

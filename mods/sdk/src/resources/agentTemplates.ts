@@ -1,12 +1,12 @@
 import type { CreateTRPCClient } from "@trpc/client";
 import type { AppRouter } from "@qcobro/apiserver";
-import { z } from "zod";
 import {
   createAgentTemplateSchema,
-  syncAgentTemplateSchema,
-  ValidationError
+  previewInputSchema,
+  syncAgentTemplateSchema
 } from "@qcobro/common";
 import { listAgentTemplatesSchema, getAgentTemplateSchema } from "../schemas.js";
+import { parse } from "../validate.js";
 
 type RouterClient = CreateTRPCClient<AppRouter>;
 type AgentTemplates = RouterClient["agentTemplates"];
@@ -16,13 +16,7 @@ type ListInput = Parameters<AgentTemplates["list"]["query"]>[0];
 type GetInput = Parameters<AgentTemplates["get"]["query"]>[0];
 type CreateInput = Parameters<AgentTemplates["create"]["mutate"]>[0];
 type SyncInput = Parameters<AgentTemplates["sync"]["mutate"]>[0];
-
-/** Validate `input` against `schema`, throwing a structured {@link ValidationError} on failure. */
-function parse<TSchema extends z.ZodType>(schema: TSchema, input: unknown): z.infer<TSchema> {
-  const result = schema.safeParse(input);
-  if (!result.success) throw new ValidationError(result.error);
-  return result.data;
-}
+type PreviewInput = Parameters<AgentTemplates["preview"]["query"]>[0];
 
 /** Runs a request, transparently refreshing + replaying once on `UNAUTHORIZED`. */
 type RequestRunner = <T>(fn: () => Promise<T>) => Promise<T>;
@@ -35,8 +29,9 @@ type RequestRunner = <T>(fn: () => Promise<T>) => Promise<T>;
  * shared `@qcobro/common` schemas before any request is sent — invalid input
  * throws a {@link ValidationError} and never reaches the network.
  *
- * `sync` re-attempts a voice template's Fonoster sync; it is not a
- * conversational-intelligence evaluation — QCobro has no such feature today.
+ * `sync` re-attempts a voice template's Fonoster sync — it is not a
+ * conversational-intelligence evaluation. For that, see `client.agentEvaluations.evaluate`
+ * (VOICE_AI/EMAIL/WHATSAPP) and `preview` below (SMS/VOICE_PRERECORDED render-only preview).
  *
  * Obtain an instance via `client.agentTemplates`; do not construct it directly.
  */
@@ -77,5 +72,15 @@ export class AgentTemplatesResource {
   async sync(input: SyncInput) {
     const parsed = parse(syncAgentTemplateSchema, input) as SyncInput;
     return this.#request(() => this.#trpc.agentTemplates.sync.mutate(parsed));
+  }
+
+  /**
+   * Render an `SMS`/`VOICE_PRERECORDED` template's message body or script against a
+   * sample account — no conversation, no streaming. Accepts either an existing template
+   * by id or a not-yet-created YAML definition (both alongside a sample `account`).
+   */
+  async preview(input: PreviewInput) {
+    const parsed = parse(previewInputSchema, input) as PreviewInput;
+    return this.#request(() => this.#trpc.agentTemplates.preview.query(parsed));
   }
 }
