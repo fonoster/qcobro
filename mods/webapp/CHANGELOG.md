@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.27.1](https://github.com/fonoster/qcobro/compare/v1.27.0...v1.27.1) (2026-08-03)
+
+### Bug Fixes
+
+- **gestiones:** generate AI insight for WhatsApp threads, fix mislabeled section ([#81](https://github.com/fonoster/qcobro/issues/81)) ([8755af2](https://github.com/fonoster/qcobro/commit/8755af229875e8faab24fc3ed4bfa0021cd165f8))
+
 # [1.27.0](https://github.com/fonoster/qcobro/compare/v1.26.0...v1.27.0) (2026-08-03)
 
 **Note:** Version bump only for package @qcobro/webapp
