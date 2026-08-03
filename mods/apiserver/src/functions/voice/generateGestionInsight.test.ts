@@ -90,6 +90,38 @@ describe("generateGestionInsight", () => {
     assert.equal(cap.updated?.aiSummary, "Resumen");
   });
 
+  it("generates analysis for a WHATSAPP gestión from its notice + reply thread", async () => {
+    const { generator, state } = makeGenerator();
+    const { prisma, cap } = makeClient({
+      aiSummary: null,
+      channelData: {
+        messageBody: "Estimado cliente, su cuenta presenta un saldo pendiente.",
+        whatsAppThread: {
+          customerPhone: "+18095551234",
+          agentReplyCount: 1,
+          lastCustomerMessageAt: "t1",
+          messages: [
+            {
+              direction: "inbound",
+              from: "+18095551234",
+              at: "t1",
+              body: "Puedo pagar el viernes."
+            },
+            { direction: "outbound", from: "agent", at: "t2", body: "Perfecto, registrado." }
+          ]
+        }
+      }
+    });
+
+    const result = await createGenerateGestionInsight({ prisma: prisma as never, generator })({
+      id: "g-1"
+    });
+
+    assert.deepEqual(result, { generated: true, insight: INSIGHT });
+    assert.equal(state.calls, 1);
+    assert.equal(cap.updated?.aiSummary, "Resumen");
+  });
+
   it("skips an EMAIL gestión that has no reply thread yet", async () => {
     const { generator, state } = makeGenerator();
     const { prisma, cap } = makeClient({

@@ -549,7 +549,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
           <Section
             icon={Sparkles}
             iconClass="text-violet-600"
-            title={t("gestiones.detail.emailAnalysis")}
+            title={t("gestiones.detail.whatsAppAnalysis")}
           >
             <div className="flex flex-col gap-3">
               {g.aiSummary ? (
