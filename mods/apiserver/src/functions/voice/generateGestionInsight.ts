@@ -5,24 +5,26 @@ import {
   type GenerateInsightInput,
   type GestionInsight,
   type InsightGenerator,
-  type TranscriptLine
+  type TranscriptLine,
+  type WhatsAppThreadMessage
 } from "@qcobro/common";
 
 /**
  * Build the conversation transcript an insight needs, from whichever channel record
- * the gestión carries: a voice `transcript`, or an email thread (the initial notice
- * plus the reply thread). Email maps outbound→agent, inbound→customer so the same
- * analysis pipeline serves both channels.
+ * the gestión carries: a voice `transcript`, or an email/WhatsApp thread (the initial
+ * notice plus the reply thread). Both text channels map outbound→agent, inbound→customer
+ * so the same analysis pipeline serves all of them.
  */
 export function buildTranscript(channelData: unknown): TranscriptLine[] {
   const cd = (channelData ?? {}) as {
     transcript?: TranscriptLine[];
     messageBody?: string;
     emailThread?: { messages?: EmailThreadMessage[] };
+    whatsAppThread?: { messages?: WhatsAppThreadMessage[] };
   };
   if (cd.transcript && cd.transcript.length > 0) return cd.transcript;
 
-  const thread = cd.emailThread?.messages;
+  const thread = cd.emailThread?.messages ?? cd.whatsAppThread?.messages;
   if (thread && thread.length > 0) {
     const lines: TranscriptLine[] = [];
     // The initial notice lives outside the reply thread; lead with it as the first

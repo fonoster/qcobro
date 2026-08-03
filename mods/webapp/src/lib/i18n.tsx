@@ -578,6 +578,7 @@ export const messages = {
     "gestiones.detail.whatsAppThread": "WhatsApp conversation",
     "gestiones.detail.whatsAppAgent": "Collections Team · AI",
     "gestiones.detail.whatsAppNoReply": "No customer reply yet.",
+    "gestiones.detail.whatsAppAnalysis": "WhatsApp analysis (AI insights)",
     "campaigns.form.whatsAppSender": "WhatsApp sender number",
     "campaigns.form.noWhatsAppSender": "Add a sender number in Integrations first."
   },
@@ -1156,6 +1157,7 @@ export const messages = {
     "gestiones.detail.whatsAppThread": "Conversación por WhatsApp",
     "gestiones.detail.whatsAppAgent": "Equipo de Cobranza · IA",
     "gestiones.detail.whatsAppNoReply": "Sin respuesta del cliente aún.",
+    "gestiones.detail.whatsAppAnalysis": "Análisis de WhatsApp (AI Insights)",
     "campaigns.form.whatsAppSender": "Número remitente de WhatsApp",
     "campaigns.form.noWhatsAppSender": "Agrega un número remitente en Integraciones primero."
   }
