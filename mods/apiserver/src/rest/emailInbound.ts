@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import type { PrismaClient } from "@prisma/client";
 import {
   buildOutreachContext,
+  parseLocale,
   ValidationError,
   type AiConfig,
   type PortfolioAccountRecord,
@@ -50,7 +51,7 @@ export function createPrismaEmailInboundClient(prisma: PrismaClient): EmailInbou
         agentMaxReplies: email?.maxReplies ?? null,
         accountContext: buildOutreachContext(
           log.portfolioAccount as unknown as PortfolioAccountRecord,
-          { currency: settings?.currency ?? "USD" }
+          { currency: settings?.currency ?? "USD", locale: parseLocale(settings?.locale) }
         )
       };
     },

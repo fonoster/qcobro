@@ -50,7 +50,7 @@ describe("previewAgentTemplate", () => {
     });
     const preview = createPreviewAgentTemplate(client(row), "ws_1");
     const result = await preview({ agentTemplateId: "at_1", account });
-    assert.equal(result.rendered, "Hola María, su saldo es 4200.");
+    assert.equal(result.rendered, "Hola María, su saldo es 4,200.");
   });
 
   it("renders a YAML-defined VOICE_PRERECORDED script without creating anything", async () => {
@@ -63,7 +63,7 @@ script: "Hola {{firstName}}, tiene un saldo de {{outstandingBalance}}."
 `;
     const preview = createPreviewAgentTemplate(client(null), "ws_1");
     const result = await preview({ yaml, account });
-    assert.equal(result.rendered, "Hola María, tiene un saldo de 4200.");
+    assert.equal(result.rendered, "Hola María, tiene un saldo de 4,200.");
   });
 
   it("rejects a VOICE_AI target with a structured validation error, not a render attempt", async () => {

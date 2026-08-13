@@ -1,9 +1,11 @@
-import type { Currency } from "../schemas/workspaceSettings.js";
+import type { Currency, Locale } from "../schemas/workspaceSettings.js";
 
 export interface WorkspaceSettingsRecord {
   workspaceRef: string;
   currency: Currency;
   timezone: string;
+  /** Governs how amounts are formatted in rendered outreach bodies. */
+  locale: Locale;
   createdAt: Date;
   updatedAt: Date;
 }

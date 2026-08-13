@@ -177,7 +177,7 @@ export const outreachRouter = router({
       whatsAppLanguageCode = resolved.languageCode;
     }
 
-    const context = buildOutreachContext(account, { currency: ctx.currency });
+    const context = buildOutreachContext(account, { currency: ctx.currency, locale: ctx.locale });
     const base = buildDispatchRequest(
       template,
       to,

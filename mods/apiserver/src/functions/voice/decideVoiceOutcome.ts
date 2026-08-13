@@ -1,6 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import {
   buildOutreachContext,
+  parseLocale,
   type CreateContactLogInput,
   type EmailAutopilot,
   type PortfolioAccountRecord
@@ -143,7 +144,7 @@ export function createPrismaVoiceDecisionClient(prisma: PrismaClient): VoiceDeci
         agentSystemPrompt: voiceCfg?.systemPrompt ?? "",
         accountContext: buildOutreachContext(
           log.portfolioAccount as unknown as PortfolioAccountRecord,
-          { currency: settings?.currency ?? "USD" }
+          { currency: settings?.currency ?? "USD", locale: parseLocale(settings?.locale) }
         )
       };
     }

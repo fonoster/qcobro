@@ -1,13 +1,4 @@
-# workspace-settings Specification
-
-## Purpose
-
-Per-workspace settings (currency, timezone) owned by the application — stored in the app
-database keyed by the Identity `workspaceRef`, never in the Identity service. Provides the
-record, its default/seed behavior, and read/update operations consumed by money formatting
-and campaign wall-clock interpretation.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Per-workspace settings record
 
@@ -55,24 +46,7 @@ stable.
   locale to the application default
 - **AND** a settings row is persisted with those values
 
-### Requirement: Read and update workspace settings
-
-The operator console SHALL be able to read and update the active workspace's `currency` and
-`timezone` through a workspace-scoped operation. Updates SHALL be validated against the
-shared schema (supported currency, non-empty IANA timezone) and SHALL apply only to the
-active workspace.
-
-#### Scenario: Operator updates currency and timezone
-
-- **WHEN** an operator saves a new currency and timezone for the active workspace
-- **THEN** the `WorkspaceSettings` row for that workspace is updated
-- **AND** subsequent currency formatting and campaign wall-clock interpretation use the new
-  values
-
-#### Scenario: Invalid settings are rejected
-
-- **WHEN** an update is submitted with an unsupported currency or an empty timezone
-- **THEN** it is rejected with a structured validation error and nothing is persisted
+## ADDED Requirements
 
 ### Requirement: Persisted locale is validated
 
@@ -85,19 +59,3 @@ deployment has not been verified against.
 
 - **WHEN** a `WorkspaceSettings` record is written with a locale outside the supported set
 - **THEN** it is rejected with a structured validation error and nothing is persisted
-
-### Requirement: Settings are written at workspace creation
-
-When a workspace is created, the system SHALL persist its `WorkspaceSettings` row from the
-currency and timezone supplied at creation. The seed-on-read default behavior remains as a
-backstop for workspaces created through any path that does not supply settings.
-
-#### Scenario: Creation persists the chosen settings
-
-- **WHEN** a workspace is created with a chosen currency and timezone
-- **THEN** a `WorkspaceSettings` row keyed by its `workspaceRef` is persisted with those values
-
-#### Scenario: A workspace created without supplied settings still resolves
-
-- **WHEN** a workspace is created by a path that supplies no settings (e.g. SDK, invite acceptance, seed)
-- **THEN** its settings still resolve via seed-on-read using the column defaults

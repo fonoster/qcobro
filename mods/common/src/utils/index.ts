@@ -17,6 +17,7 @@ export {
   isWithinScheduleWindow,
   type ScheduleWindow
 } from "./time.js";
+export { formatMoney, toNumber } from "./money.js";
 export { bucketOf, perTickCapacity, type PacingBucket } from "./pacing.js";
 export { normalizePhoneE164 } from "./normalizePhone.js";
 export { createValidatePhoneE164 } from "./validatePhone.js";

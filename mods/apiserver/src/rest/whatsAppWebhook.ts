@@ -4,6 +4,7 @@ import type { PrismaClient } from "@prisma/client";
 import { getLogger } from "@fonoster/logger";
 import {
   buildOutreachContext,
+  parseLocale,
   normalizePhoneE164,
   whatsAppWebhookSchema,
   type AiConfig,
@@ -182,7 +183,7 @@ export function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAp
         agentMaxReplies: whatsAppCfg?.maxReplies ?? null,
         accountContext: buildOutreachContext(
           log.portfolioAccount as unknown as PortfolioAccountRecord,
-          { currency: settings?.currency ?? "USD" }
+          { currency: settings?.currency ?? "USD", locale: parseLocale(settings?.locale) }
         )
       };
     },
