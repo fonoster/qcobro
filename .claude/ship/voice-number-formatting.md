@@ -32,7 +32,15 @@ Status values: `pending` · `in-progress` · `done` · `skipped` (with reason).
 
 Newest first. One line per meaningful decision or stage transition.
 
-- 2026-08-13 — Stage 4: common 167/167 and apiserver 310/312 green. The 2 apiserver failures
+- 2026-08-13 — Stage 4 completed for real: stood up an isolated dev stack (compose namespaced
+  the volume per-worktree, so no shared dev DB), applied the migration against real Postgres,
+  and ran `e2e/manual-outreach.spec.ts` green. It asserts the live console preview renders
+  `Hola María, su saldo es 4,800. Tel 1 7 8 5 3 1 7 8 0 7 0.` — formatted amount + digits
+  helper, end to end. apiserver is 319/319 once `config/qcobro.json` exists; the earlier 2
+  failures were purely the missing config, not a code issue.
+- 2026-08-13 — `e2e/helpers.ts` pinned `localhost:5173`, which fails the entire suite whenever
+  another checkout holds that port (Vite falls back to :5174/:5175). Made it port-agnostic.
+- 2026-08-13 — Stage 4 (first pass): common 167/167 and apiserver 310/312 green. The 2 apiserver failures
   (`apiKeys`, `campaigns.onChange`) are a missing git-ignored `config/qcobro.json`, absent from
   the main checkout too — unrelated to this change. E2E assertion updated in
   `e2e/manual-outreach.spec.ts` but NOT executed: no dev stack (same missing config).

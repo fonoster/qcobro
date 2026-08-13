@@ -63,7 +63,9 @@ export async function createFirstWorkspace(page: Page, name: string) {
   await page.getByRole("button", { name: "Nuevo espacio" }).click();
   await page.getByPlaceholder("Ej. Cartera Abril").fill(name);
   await page.getByRole("button", { name: "Crear espacio" }).click();
-  await expect(page).toHaveURL(/localhost:5173\/$/);
+  // Port-agnostic: Vite falls back to :5174/:5175 when another checkout already holds :5173,
+  // and pinning the port here fails the whole suite before it asserts anything real.
+  await expect(page).toHaveURL(/localhost:\d+\/$/);
 }
 
 /** Sign up, skip verification, and create a first workspace → dashboard. */

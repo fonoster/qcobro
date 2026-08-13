@@ -61,14 +61,12 @@
 
 ## 6. Tests and docs
 
-- [ ] 6.1 E2E: open the reach-out modal for an account with a known balance and assert the
-      preview shows the amount grouped (`9,500`), covering the preview/send parity risk —
-      **written** (extends `e2e/manual-outreach.spec.ts`, also asserts `{{digits phone}}`) but
-      **not executed**: needs a running dev stack, and the apiserver cannot boot without
-      `config/qcobro.json`, which is git-ignored and absent on this machine
+- [x] 6.1 E2E: open the reach-out modal for an account with a known balance and assert the
+      preview shows the amount grouped, covering the preview/send parity risk — extends
+      `e2e/manual-outreach.spec.ts`; passes against a live stack, asserting
+      `Hola María, su saldo es 4,800. Tel 1 7 8 5 3 1 7 8 0 7 0.`
 - [x] 6.2 Update `docs-site/guides/agent-templates.mdx`: amounts are formatted automatically,
       the `digits` helper, that a number typed literally into a script is not rewritten, and
       that helpers do not work on the WhatsApp channel
 - [x] 6.3 Run lint, typecheck and the full test suite green — common 167/167, apiserver
-      310/312 (the 2 failures are the same missing-`config/qcobro.json` env issue, present on
-      `main`); eslint clean; typecheck clean for common/apiserver/webapp
+      319/319, e2e green; eslint clean; typecheck clean for common/apiserver/webapp
