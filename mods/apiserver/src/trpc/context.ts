@@ -2,10 +2,13 @@ import type { CreateExpressContextOptions } from "@trpc/server/adapters/express"
 import type { CreateWSSContextFnOptions } from "@trpc/server/adapters/ws";
 import type {
   EmailClient,
+  Locale,
   OutboundCallClient,
   SmsClient,
   VoiceApplicationClient
 } from "@qcobro/common";
+import { DEFAULT_LOCALE, parseLocale } from "@qcobro/common";
+
 import { prisma } from "../db.js";
 import { createIdentityClient } from "@fonoster/identity-client";
 import { FonosterVoiceApplicationClient } from "../services/fonosterVoiceApplicationClient.js";
@@ -18,6 +21,16 @@ import { createEmailAutopilot } from "../services/emailAutopilot.js";
 import { createWhatsAppAutopilot } from "../services/whatsAppAutopilot.js";
 import { createGetWorkspaceSettings } from "../functions/workspaceSettings/getWorkspaceSettings.js";
 import { config } from "../config.js";
+
+/**
+ * The per-workspace settings every procedure reads off the context. `locale` rides along with
+ * `currency` so no call site has to fetch settings ad hoc just to format an amount.
+ */
+type WorkspaceRuntimeSettings = {
+  timezone: string;
+  currency: "USD" | "DOP";
+  locale: Locale;
+};
 
 export interface AuthedUser {
   ref: string;
@@ -114,15 +127,21 @@ async function resolveAuth(
   return { user, workspace };
 }
 
-/** Per-workspace timezone + currency, seeded (via column defaults) on first use. The
+/** Per-workspace timezone, currency + locale, seeded (via column defaults) on first use. The
  * defaults below are only used when no workspace is active (e.g. auth routes), where
- * neither value is consumed. */
+ * none of the values are consumed. */
 async function resolveWorkspaceSettings(
   workspace: ActiveWorkspace | null
-): Promise<{ timezone: string; currency: "USD" | "DOP" }> {
-  if (!workspace) return { timezone: "America/Costa_Rica", currency: "USD" };
+): Promise<WorkspaceRuntimeSettings> {
+  if (!workspace) {
+    return { timezone: "America/Costa_Rica", currency: "USD", locale: DEFAULT_LOCALE };
+  }
   const settings = await createGetWorkspaceSettings(prisma as never)(workspace.accessKeyId);
-  return { timezone: settings.timezone, currency: settings.currency };
+  return {
+    timezone: settings.timezone,
+    currency: settings.currency,
+    locale: parseLocale(settings.locale)
+  };
 }
 
 /** The service singletons + resolved auth every context (HTTP or WS) exposes to procedures. */
@@ -130,7 +149,7 @@ function assembleContext(
   token: string | null,
   user: AuthedUser | null,
   workspace: ActiveWorkspace | null,
-  settings: { timezone: string; currency: "USD" | "DOP" }
+  settings: WorkspaceRuntimeSettings
 ) {
   return {
     token,
@@ -154,7 +173,8 @@ function assembleContext(
     whatsAppMaxRepliesDefault,
     aiGeneration: config.ai?.generation ?? "onDemand",
     timezone: settings.timezone,
-    currency: settings.currency
+    currency: settings.currency,
+    locale: settings.locale
   };
 }
 

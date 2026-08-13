@@ -7,6 +7,7 @@ import {
   type PortfolioAccountRecord
 } from "@qcobro/common";
 import { trpc } from "../../lib/trpc.js";
+import { useWorkspaceLocale } from "../../lib/useWorkspaceCurrency.js";
 import { useI18n } from "../../lib/i18n.js";
 import { Dialog } from "../ui/dialog.js";
 import { SelectGroup } from "../ui/select.js";
@@ -32,6 +33,7 @@ export function ReachOutModal({
   onSuccess: () => void;
 }) {
   const { t } = useI18n();
+  const locale = useWorkspaceLocale();
   const [agentTemplateId, setAgentTemplateId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [editSubject, setEditSubject] = useState("");
@@ -63,7 +65,10 @@ export function ReachOutModal({
   // Populate editable fields with rendered template values once loaded.
   useEffect(() => {
     if (!tmpl || !agentType) return;
-    const ctx = buildOutreachContext(account as unknown as PortfolioAccountRecord, portfolio);
+    const ctx = buildOutreachContext(account as unknown as PortfolioAccountRecord, {
+      ...portfolio,
+      locale
+    });
 
     if (agentType === "EMAIL") {
       const ec = tmpl.emailConfig as { subject?: string; messageBody?: string } | undefined;
@@ -82,7 +87,7 @@ export function ReachOutModal({
       const wc = tmpl.whatsAppConfig as { messageBody?: string } | undefined;
       setEditBody(wc?.messageBody ? renderWhatsAppTemplate(wc.messageBody, ctx).renderedBody : "");
     }
-  }, [tmpl, agentType]);
+  }, [tmpl, agentType, locale]);
 
   const dispatch = trpc.outreach.dispatch.useMutation({
     onSuccess,

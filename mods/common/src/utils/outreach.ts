@@ -1,37 +1,102 @@
 import Handlebars from "handlebars";
 import type { PortfolioAccountRecord } from "../types/portfolios.js";
 import type { NumberSelector, WhatsAppTemplateParam } from "../types/dispatch.js";
+import { DEFAULT_LOCALE, type Locale } from "../schemas/workspaceSettings.js";
+import { formatMoney, toNumber } from "./money.js";
 
 /**
- * `{{multiply a b}}` — coerces both operands to numbers; either operand being
- * non-numeric (missing field, bad data) yields 0 rather than NaN, so a
- * malformed context never produces `NaN` in a customer-facing message.
+ * The workspace locale for the render in progress, read off the root context that
+ * {@link buildOutreachContext} builds. Helpers are registered once, globally, so the locale
+ * cannot be closed over at registration — it has to come from the context being rendered.
+ * A context assembled some other way (a bare object in a test, a legacy caller) falls back to
+ * the default rather than throwing mid-dispatch.
  */
-Handlebars.registerHelper("multiply", (a: unknown, b: unknown) => {
-  const x = Number(a);
-  const y = Number(b);
-  return Number.isFinite(x) && Number.isFinite(y) ? x * y : 0;
+function localeOf(options: unknown): Locale {
+  const root = (options as { data?: { root?: Record<string, unknown> } })?.data?.root;
+  const value = root?.locale;
+  if (typeof value !== "string" || value === "") return DEFAULT_LOCALE;
+  try {
+    // The supported-locale check belongs at the settings boundary, not here — re-checking it
+    // would make a helper silently ignore the workspace's own locale. All this guards is a
+    // malformed tag, which `Intl` throws a RangeError for; that must not surface as a
+    // template error in the middle of a customer-facing body.
+    new Intl.NumberFormat(value);
+    return value as Locale;
+  } catch {
+    return DEFAULT_LOCALE;
+  }
+}
+
+/**
+ * `{{multiply a b}}` — multiplies two amounts. Operands may be raw numbers or the
+ * locale-formatted amounts that money-typed context fields now render as (`"9,500"`), and the
+ * result is formatted the same way, so `{{multiply outstandingBalance 0.5}}` reads aloud like
+ * a stored balance. Either operand being non-numeric (missing field, bad data) yields 0
+ * rather than NaN, so a malformed context never produces `NaN` in a customer-facing message.
+ */
+Handlebars.registerHelper("multiply", (a: unknown, b: unknown, options: unknown) => {
+  const locale = localeOf(options);
+  const x = toNumber(a, locale);
+  const y = toNumber(b, locale);
+  return Number.isFinite(x) && Number.isFinite(y) ? formatMoney(x * y, locale) : 0;
 });
 
 /**
  * `{{eq a b}}` — strict equality, for branching on exact values (e.g.
- * `{{#if (eq customerSegment "variant_A")}}`).
+ * `{{#if (eq customerSegment "variant_A")}}`). Numeric operands are compared by value, so
+ * comparing a money-typed field against a number still works now that it renders formatted.
  */
-Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);
+Handlebars.registerHelper("eq", (a: unknown, b: unknown, options: unknown) => {
+  if (a === b) return true;
+  const locale = localeOf(options);
+  const x = toNumber(a, locale);
+  const y = toNumber(b, locale);
+  return Number.isFinite(x) && Number.isFinite(y) && x === y;
+});
 
 /**
  * `{{gt a b}}` / `{{gte a b}}` / `{{lt a b}}` / `{{lte a b}}` — numeric
  * comparisons for use inside `{{#if}}`, e.g. `{{#if (gte daysPastDue 30)}}`.
- * Operands are coerced with `Number()`; a non-numeric operand becomes `NaN`,
- * and every JS comparison against `NaN` is `false` — so a malformed context
- * makes the condition not match rather than throwing. `ge` is registered as
- * an alias of `gte` (both names are in common use).
+ * Operands are parsed with the workspace locale so a formatted amount compares by its
+ * underlying value; anything unparseable becomes `NaN`, and every JS comparison against
+ * `NaN` is `false` — so a malformed context makes the condition not match rather than
+ * throwing. `ge` is registered as an alias of `gte` (both names are in common use).
  */
-Handlebars.registerHelper("gt", (a: unknown, b: unknown) => Number(a) > Number(b));
-Handlebars.registerHelper("gte", (a: unknown, b: unknown) => Number(a) >= Number(b));
-Handlebars.registerHelper("ge", (a: unknown, b: unknown) => Number(a) >= Number(b));
-Handlebars.registerHelper("lt", (a: unknown, b: unknown) => Number(a) < Number(b));
-Handlebars.registerHelper("lte", (a: unknown, b: unknown) => Number(a) <= Number(b));
+Handlebars.registerHelper(
+  "gt",
+  (a: unknown, b: unknown, o: unknown) => toNumber(a, localeOf(o)) > toNumber(b, localeOf(o))
+);
+Handlebars.registerHelper(
+  "gte",
+  (a: unknown, b: unknown, o: unknown) => toNumber(a, localeOf(o)) >= toNumber(b, localeOf(o))
+);
+Handlebars.registerHelper(
+  "ge",
+  (a: unknown, b: unknown, o: unknown) => toNumber(a, localeOf(o)) >= toNumber(b, localeOf(o))
+);
+Handlebars.registerHelper(
+  "lt",
+  (a: unknown, b: unknown, o: unknown) => toNumber(a, localeOf(o)) < toNumber(b, localeOf(o))
+);
+Handlebars.registerHelper(
+  "lte",
+  (a: unknown, b: unknown, o: unknown) => toNumber(a, localeOf(o)) <= toNumber(b, localeOf(o))
+);
+
+/**
+ * `{{digits value}}` — renders a value's digits separated by single spaces
+ * (`"8092323333"` → `"8 0 9 2 3 2 3 3 3 3"`) so text-to-speech reads them one at a time
+ * instead of as a single quantity. Non-digit characters are dropped, so a stored
+ * `"+1 (809) 232-3333"` works as-is; an empty or missing value renders empty rather than
+ * aborting the dispatch.
+ *
+ * This one stays opt-in — only the template author knows a value should be spelled out.
+ * `{{digits phone}}` is right, `{{digits outstandingBalance}}` is not.
+ */
+Handlebars.registerHelper("digits", (value: unknown) => {
+  if (value === null || value === undefined) return "";
+  return String(value).replace(/\D/g, "").split("").join(" ");
+});
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -111,13 +176,26 @@ export function extractTemplateTokens(template: string): string[] {
  */
 export function buildOutreachContext(
   account: PortfolioAccountRecord,
-  opts: { currency: string }
+  opts: { currency: string; locale: Locale }
 ): Record<string, unknown> {
   const firstName = account.fullName.trim().split(/\s+/)[0] ?? "";
+  const money = (value: number | null): string | null =>
+    value === null ? null : formatMoney(value, opts.locale);
+
   return {
     ...account,
+    // Money-typed fields are formatted here rather than at each call site so every channel —
+    // and the console's live preview — renders the same text. Counts (daysPastDue,
+    // missedInstallments, termsLength) stay numeric: a count with a thousands separator is
+    // wrong, and `{{daysPastDue}}` reads correctly as-is.
+    outstandingBalance: money(account.outstandingBalance),
+    principalAmount: money(account.principalAmount),
+    termsAmount: money(account.termsAmount),
+    lastPaymentAmount: money(account.lastPaymentAmount),
     firstName,
     currency: opts.currency,
+    // Read by the numeric helpers to parse formatted operands back to numbers.
+    locale: opts.locale,
     isDue: account.daysPastDue > 0
   };
 }
@@ -138,22 +216,37 @@ export function buildAutopilotContextLines(context: Record<string, unknown> | un
   if (!context) return [];
   const lines: string[] = [];
   const currency = typeof context.currency === "string" ? ` ${context.currency}` : "";
+  const locale = typeof context.locale === "string" ? (context.locale as Locale) : DEFAULT_LOCALE;
+
+  /**
+   * Money-typed context fields are locale-formatted strings, not numbers, so these lines read
+   * the amount back through the locale rather than testing `typeof === "number"` — that guard
+   * would now silently drop every amount from the model's context.
+   */
+  const amount = (value: unknown): { text: string; value: number } | null => {
+    if (value === null || value === undefined) return null;
+    const parsed = toNumber(value, locale);
+    return Number.isFinite(parsed) ? { text: String(value), value: parsed } : null;
+  };
 
   if (typeof context.firstName === "string" && context.firstName) {
     lines.push(`Cliente: ${context.firstName}`);
   }
-  if (typeof context.outstandingBalance === "number") {
-    lines.push(`Saldo pendiente: ${context.outstandingBalance}${currency}`);
+  const balance = amount(context.outstandingBalance);
+  if (balance) {
+    lines.push(`Saldo pendiente: ${balance.text}${currency}`);
   }
-  if (typeof context.principalAmount === "number" && context.principalAmount > 0) {
-    lines.push(`Monto original del préstamo: ${context.principalAmount}${currency}`);
+  const principal = amount(context.principalAmount);
+  if (principal && principal.value > 0) {
+    lines.push(`Monto original del préstamo: ${principal.text}${currency}`);
   }
-  if (typeof context.termsAmount === "number" && context.termsAmount > 0) {
+  const installment = amount(context.termsAmount);
+  if (installment && installment.value > 0) {
     const freq =
       typeof context.termsFrequency === "string" && context.termsFrequency
         ? ` (${context.termsFrequency})`
         : "";
-    lines.push(`Cuota: ${context.termsAmount}${currency}${freq}`);
+    lines.push(`Cuota: ${installment.text}${currency}${freq}`);
   }
   if (typeof context.termsLength === "number" && context.termsLength > 0) {
     lines.push(`Plazo: ${context.termsLength} cuotas`);
@@ -170,11 +263,9 @@ export function buildAutopilotContextLines(context: Record<string, unknown> | un
         ? context.lastPaymentDate
         : new Date(context.lastPaymentDate as string);
     if (!Number.isNaN(date.getTime())) {
-      const amount =
-        typeof context.lastPaymentAmount === "number"
-          ? ` de ${context.lastPaymentAmount}${currency}`
-          : "";
-      lines.push(`Último pago${amount}: ${date.toISOString().slice(0, 10)}`);
+      const lastPayment = amount(context.lastPaymentAmount);
+      const paid = lastPayment ? ` de ${lastPayment.text}${currency}` : "";
+      lines.push(`Último pago${paid}: ${date.toISOString().slice(0, 10)}`);
     }
   }
 

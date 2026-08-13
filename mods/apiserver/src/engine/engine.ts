@@ -2,6 +2,7 @@ import {
   BILLING_METER_OF_CHANNEL,
   bucketOf,
   buildOutreachContext,
+  type Locale,
   createContactLogSchema,
   DispatchError,
   estimateDispatchCostMicro,
@@ -264,16 +265,26 @@ export function createEngine(deps: EngineDeps) {
     return { ok: true, channel, appRef };
   }
 
+  /**
+   * The workspace settings that shape rendered copy: the currency templates print and the
+   * locale amounts are formatted for. Threaded together rather than as parallel parameters,
+   * since every consumer needs both.
+   */
+  type WorkspaceFormatting = { currency: string; locale: Locale };
+
   /** Build the normalized dispatch request for an account (configs are pre-validated). */
   function buildRequest(
     c: EngineCampaign,
     acc: EngineCandidate,
     channel: EngineChannel,
     appRef: string | null,
-    currency: string,
+    settings: WorkspaceFormatting,
     whatsAppLanguageCode?: string
   ): DispatchOutreachInput {
-    const context = buildOutreachContext(acc as unknown as PortfolioAccountRecord, { currency });
+    const context = buildOutreachContext(acc as unknown as PortfolioAccountRecord, {
+      currency: settings.currency,
+      locale: settings.locale
+    });
     const t = c.agentTemplate!;
     if (channel === "SMS") {
       return { channel, to: acc.phone!, context, body: t.smsConfig?.messageBody ?? "" };
@@ -347,7 +358,7 @@ export function createEngine(deps: EngineDeps) {
     channel: EngineChannel,
     appRef: string | null,
     reserve: ReturnType<typeof createReserveAttempt>,
-    currency: string,
+    settings: WorkspaceFormatting,
     recorder: TickRecorder,
     metered: boolean
   ): Promise<{ decision: AccountDecision; providerRef?: string; errorKind?: DispatchErrorKind }> {
@@ -402,7 +413,7 @@ export function createEngine(deps: EngineDeps) {
     let result;
     try {
       result = await dispatchFn(
-        buildRequest(c, acc, channel, appRef, currency, whatsAppLanguageCode)
+        buildRequest(c, acc, channel, appRef, settings, whatsAppLanguageCode)
       );
     } catch (err) {
       // dispatchOutreach always throws a classified DispatchError; an unclassified
@@ -725,7 +736,7 @@ export function createEngine(deps: EngineDeps) {
           ready.channel,
           ready.appRef,
           reserve,
-          ws.currency,
+          ws,
           recorder,
           gate.kind === "active"
         );

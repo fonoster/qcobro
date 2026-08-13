@@ -1,6 +1,8 @@
 import {
   buildOutreachContext,
+  DEFAULT_LOCALE,
   type EvalAccountInput,
+  type Locale,
   type PortfolioAccountRecord
 } from "@qcobro/common";
 
@@ -14,8 +16,16 @@ const EPOCH = new Date(0);
  * re-implementing context assembly for eval. `buildOutreachContext` needs a full
  * `PortfolioAccountRecord`; this fills the DB-bookkeeping fields an eval author never
  * supplies (`id`, `portfolioId`, `externalId`, timestamps) with synthetic placeholders.
+ *
+ * Amounts are formatted for the deployment default locale rather than a workspace's: eval
+ * scenarios are authored in YAML and never read real portfolio data, so there is no workspace
+ * to inherit from. Identical to a real send while `supportedLocales` has one member — when a
+ * second market lands, the locale has to be threaded in from the calling procedure.
  */
-export function buildSyntheticAccountContext(account: EvalAccountInput): Record<string, unknown> {
+export function buildSyntheticAccountContext(
+  account: EvalAccountInput,
+  locale: Locale = DEFAULT_LOCALE
+): Record<string, unknown> {
   const record: PortfolioAccountRecord = {
     id: "eval",
     portfolioId: "eval",
@@ -39,5 +49,5 @@ export function buildSyntheticAccountContext(account: EvalAccountInput): Record<
     createdAt: EPOCH,
     updatedAt: EPOCH
   };
-  return buildOutreachContext(record, { currency: account.currency });
+  return buildOutreachContext(record, { currency: account.currency, locale });
 }

@@ -8,7 +8,9 @@ const CSV = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures", 
 /**
  * Manual outreach golden path: create an SMS agent, import an account, then open the
  * customer row's ⋯ "Contactar manualmente" modal and verify it requires an agent (no
- * campaign) and shows the channel + a rendered preview. Stops short of sending (live
+ * campaign) and shows the channel + a rendered preview. The preview also guards number
+ * formatting: amounts arrive grouped and `{{digits}}` spells a phone out, which is what
+ * text-to-speech needs on the pre-recorded voice channel. Stops short of sending (live
  * dispatch is covered by unit tests + manual smoke tests). Assumes the dev stack is
  * running (see playwright.config.ts).
  */
@@ -18,7 +20,7 @@ test.describe("manual outreach", () => {
     const stamp = Date.now();
     const portfolioName = `Cartera ${stamp}`;
     const agentName = `Recordatorio ${stamp}`;
-    const body = "Hola {{firstName}}, su saldo es {{outstandingBalance}}.";
+    const body = "Hola {{firstName}}, su saldo es {{outstandingBalance}}. Tel {{digits phone}}.";
 
     await signUpAndEnter(page, owner, `WS ${stamp}`);
 
@@ -58,7 +60,12 @@ test.describe("manual outreach", () => {
     // An agent is required (no campaign); selecting it shows the channel + preview.
     await page.getByLabel("Agente").selectOption({ label: agentName });
     await expect(page.getByText(/Se enviará por SMS/)).toBeVisible();
-    await expect(page.getByText("Hola María, su saldo es 4800.")).toBeVisible();
+    // The preview renders client-side while the dispatch renders server-side, so this line
+    // is what catches the two drifting apart: the amount must arrive grouped (4,800 — not
+    // 4800, which text-to-speech reads wrong) and {{digits}} must spell the phone out.
+    await expect(
+      page.getByText("Hola María, su saldo es 4,800. Tel 1 7 8 5 3 1 7 8 0 7 0.")
+    ).toBeVisible();
     await expect(page.getByRole("button", { name: "Contactar", exact: true })).toBeVisible();
   });
 });
