@@ -1,6 +1,6 @@
 {
   "name": "@qcobro/ctl",
-  "version": "1.28.0",
+  "version": "1.28.1",
   "description": "Command-line tool for QCobro developers, built on @qcobro/sdk.",
   "type": "module",
   "bin": {
@@ -40,8 +40,8 @@
     "@inquirer/prompts": "^7.1.0",
     "@oclif/core": "^4.0.34",
     "@oclif/plugin-warn-if-update-available": "^3.1.28",
-    "@qcobro/common": "^1.28.0",
-    "@qcobro/sdk": "^1.28.0",
+    "@qcobro/common": "^1.28.1",
+    "@qcobro/sdk": "^1.28.1",
     "chalk": "^5.3.0",
     "cliui": "^8.0.1",
     "yaml": "^2.9.0",
@@ -49,7 +49,7 @@
   },
   "devDependencies": {
     "@oclif/test": "^4.1.3",
-    "@qcobro/apiserver": "^1.28.0",
+    "@qcobro/apiserver": "^1.28.1",
     "@types/node": "22.10.1",
     "oclif": "^4.17.46",
     "tsx": "^4.0.0",
