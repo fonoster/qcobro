@@ -22,10 +22,17 @@ modo que elijas. Así mantienes la cartera al día con tu sistema de origen.
     Pulsa **Seleccionar archivo** y elige tu CSV. La consola valida el archivo y muestra
     cuántas cuentas están listas para importar.
 
-    <Tip>
-      ¿No tienes un CSV a mano? Descarga un [archivo de
-      ejemplo](/files/guides/import-accounts/ejemplo-cuentas.csv) con las columnas esperadas.
-    </Tip>
+    <Accordion title="Ver un CSV de ejemplo">
+      ¿No tienes un CSV a mano? Copia estas líneas en un archivo `.csv` y úsalo para probar
+      el importador. La primera fila son los encabezados que QCobro espera.
+
+      ```csv ejemplo-cuentas.csv
+      full_name,phone_number,email,principal_amount,terms_amount,terms_frequency,terms_length,days_past_due,outstanding_balance,missed_installments,last_payment_date,last_payment_amount,preferred_language,best_time_to_call,customer_segment,loan_id,negotiation_options
+      Rafael Antonio Guzmán,+18091234567,r.guzman@email.com,15000,750,weekly,24,30,9500,4,2026-04-03,750,es-DO,PM,control,LN001023,"[{""terms_amount"":600,""terms_frequency"":""weekly"",""terms_length"":11},{""terms_amount"":550,""terms_frequency"":""weekly"",""terms_length"":13}]"
+      María Altagracia Fernández,+18097654321,m.fernandez@email.com,20000,800,weekly,30,30,13200,4,2026-04-05,800,es-DO,AM,variant_A,LN001024,[]
+      Manuel Alejandro Peña,+18293456789,m.pena@email.com,10000,600,weekly,20,30,5500,4,2026-04-04,600,es-DO,PM,variant_A,LN001025,[]
+      ```
+    </Accordion>
   </Step>
   <Step title="Elige el modo de sincronización">
     Selecciona cómo tratar las cuentas existentes (ver la tabla de abajo).
