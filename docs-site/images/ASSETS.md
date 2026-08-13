@@ -7,6 +7,17 @@ Diagram Kit) and **scale** (a rebrand walks this table and re-exports each node)
 The rendered images are **artifacts** — never hand-edit them. Edit the build doc / kit,
 then re-export the node id.
 
+## What Mintlify will actually serve
+
+Only some file types are published as downloadable assets on our plan: images, `.mp4` /
+`.webm`, `.mp3` / `.wav`, `.json`, `.yaml`, `.css`, `.js`, and fonts. **`.csv`, `.pdf`,
+`.txt`, `.xml` and `.zip` are Enterprise-only** — committing one and linking to it builds
+fine and then 404s with `Asset not found` in production, with nothing failing in between.
+
+So don't ship a downloadable sample file. Inline the sample in the page (a code block, in an
+`<Accordion>` if it's long) so readers copy it out instead of downloading it. An
+`ejemplo-cuentas.csv` under `docs-site/files/` was removed for exactly this reason.
+
 ## Diagram Kit
 
 Shared, token-bound components live in `pencil.pen`, frame **`Diagram Kit`** (`dkktQ`).
