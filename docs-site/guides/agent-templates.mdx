@@ -74,8 +74,8 @@ en `Hola María, su saldo es 1,500 CRC`.
   Los montos se dan formato automáticamente, con separador de miles y con decimales solo
   cuando el monto los tiene: `1500` se inserta como `1,500` y `1500.5` como `1,500.50`. No
   tienes que escribir nada especial. Esto importa sobre todo en **voz pregrabada**: un monto
-  sin formato se lee mal en voz alta. Las cantidades que no son dinero —días de atraso, cuotas
-  incumplidas, número de cuotas— se insertan tal cual, sin separador.
+  sin formato se lee mal en voz alta. Las cantidades que no son dinero (días de atraso, cuotas
+  incumplidas, número de cuotas) se insertan tal cual, sin separador.
 </Note>
 
 ### Dónde funcionan
@@ -170,10 +170,17 @@ Para coordinar su pago, llámenos al {{digits phone}}.
 El teléfono `8092323333` se locuta entonces como `8 0 9 2 3 2 3 3 3 3`. También sirve para el
 identificador de la cuenta: `su número de cuenta {{digits externalId}}`.
 
+También funciona con un número fijo, escrito entre comillas, cuando el teléfono no viene de la
+cuenta sino de tu operación:
+
+```handlebars
+Para más información, llame a nuestra oficina al {{digits "8092323333"}}.
+```
+
 <Warning>
-  `{{digits}}` solo aplica a las variables. Un número que escribas directamente en el guion
-  —por ejemplo `llámenos al 8092323333`— se locuta tal cual y puede sonar mal. Si necesitas
-  incluir un número fijo, escríbelo separado por espacios: `8 0 9 2 3 2 3 3 3 3`.
+  Un número que escribas suelto en el guion (por ejemplo `llámenos al 8092323333`, sin
+  `{{digits}}`) se locuta tal cual y puede sonar mal. Envuélvelo siempre en
+  `{{digits "..."}}`.
 </Warning>
 
 Los ayudantes de comparación se usan junto con `{{#if}}` para condicionar el mensaje, por
