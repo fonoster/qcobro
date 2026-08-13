@@ -288,6 +288,21 @@ describe("digits helper", () => {
     assert.equal(renderTemplate("{{digits phone}}", ctx), "1 8 0 9 2 3 2 3 3 3 3");
   });
 
+  it("accepts a quoted literal, for a callback number that isn't on the account", () => {
+    // The operator's own office line has no context field to reference, so the literal form is
+    // the documented way to keep it from being read as one huge quantity.
+    const ctx = buildOutreachContext(makeAccount(), { currency: "DOP", locale: esDO });
+    assert.equal(
+      renderTemplate('Llámenos al {{digits "8092323333"}}.', ctx),
+      "Llámenos al 8 0 9 2 3 2 3 3 3 3."
+    );
+  });
+
+  it("renders empty for a value with no digits at all", () => {
+    const ctx = buildOutreachContext(makeAccount(), { currency: "DOP", locale: esDO });
+    assert.equal(renderTemplate('{{digits "sin numeros"}}', ctx), "");
+  });
+
   it("renders empty for a missing value instead of aborting the render", () => {
     const ctx = buildOutreachContext(makeAccount({ phone: null }), {
       currency: "DOP",
