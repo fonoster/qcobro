@@ -1,7 +1,7 @@
 # Ship checkpoint — voice-number-formatting
 
 Started: 2026-08-13
-Current stage: 5 — Sync (awaiting approval)
+Current stage: done — archived
 
 **Scope:** TTS mispronounces bare numbers on the pre-recorded voice channel. Money-typed
 render-context fields (`outstandingBalance`, `principalAmount`, `termsAmount`,
@@ -29,6 +29,9 @@ handles digit-by-digit reading of phones and account refs.
 Status values: `pending` · `in-progress` · `done` · `skipped` (with reason).
 
 ## Decision log
+
+- 2026-08-13 — Stages 5 and 6 done: delta specs synced into `openspec/specs/channel-dispatch`
+  and `openspec/specs/workspace-settings` (`openspec validate --specs` 41/41), change archived.
 
 Newest first. One line per meaningful decision or stage transition.
 
