@@ -65,7 +65,7 @@ export function Home() {
   const kpis: { label: string; value: string; meta: string }[] = [
     {
       label: t("home.kpi.recovered"),
-      value: money(recoveredTotal),
+      value: money(Math.trunc(recoveredTotal)),
       meta: t("home.kpi.recoveredMeta")
     },
     {
@@ -80,7 +80,7 @@ export function Home() {
     },
     {
       label: t("home.kpi.pendingBalance"),
-      value: money(outstandingTotal),
+      value: money(Math.trunc(outstandingTotal)),
       meta: t("home.kpi.pendingBalanceMeta")
     },
     {
