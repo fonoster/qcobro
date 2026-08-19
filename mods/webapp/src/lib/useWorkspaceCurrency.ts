@@ -34,7 +34,13 @@ export function useMoney(): (value: number) => string {
   return useCallback(
     (value: number) => {
       if (!Number.isFinite(value)) return "";
-      return (Number.isInteger(value) ? integer : fractional).format(value);
+      // Totals reach the console through SUM aggregates over Float columns (and a second
+      // client-side reduce on the dashboard), so a balance that is genuinely round arrives as
+      // 30001.000000000004. Rounding to cents here — at the display boundary, where the value
+      // stops being arithmetic and becomes text — is what makes `Number.isInteger` answer the
+      // question actually being asked: "does this amount have cents?"
+      const amount = Math.round(value * 100) / 100;
+      return (Number.isInteger(amount) ? integer : fractional).format(amount);
     },
     [integer, fractional]
   );
