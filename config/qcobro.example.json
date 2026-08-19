@@ -52,7 +52,8 @@
     "accountSid": "CHANGE_ME",
     "authToken": "CHANGE_ME",
     "fromNumbers": ["+15550000000"],
-    "maxSmsPerMinute": 60
+    "maxSmsPerMinute": 60,
+    "webhookBaseUrl": "https://your-tunnel.ngrok-free.dev"
   },
   "resend": {
     "apiKey": "re_CHANGE_ME",
