@@ -23,10 +23,18 @@ export function startEngine(): EngineRunner | null {
     return null;
   }
 
+  // One instance implements both ports (OutboundCallClient + VoiceCallStatusTracker) —
+  // shared so call-status tracking reuses the same authenticated Fonoster client/login
+  // rather than a second one.
+  const fonosterCallClient = config.fonoster
+    ? new FonosterOutboundCallClient(config.fonoster)
+    : null;
+
   const engine = createEngine({
     db: createPrismaEngineClient(prisma),
     reserveRecordClient: prisma,
-    outboundCallClient: config.fonoster ? new FonosterOutboundCallClient(config.fonoster) : null,
+    outboundCallClient: fonosterCallClient,
+    voiceCallStatusTracker: fonosterCallClient,
     smsClient: config.twilio ? new TwilioSmsClient(config.twilio) : null,
     emailClient: config.resend ? new ResendEmailClient(config.resend) : null,
     emailFrom: config.resend

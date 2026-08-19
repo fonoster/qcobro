@@ -1,9 +1,11 @@
 import * as SDK from "@fonoster/sdk";
 import {
   DispatchError,
+  type CallDetail,
   type FonosterConfig,
   type OutboundCallClient,
-  type OutboundCallInput
+  type OutboundCallInput,
+  type VoiceCallStatusTracker
 } from "@qcobro/common";
 
 type FonosterSettings = NonNullable<FonosterConfig>;
@@ -71,32 +73,36 @@ export function classifyVoiceError(err: unknown): DispatchError {
  * so login only happens once per process; a failed login is not memoized and is
  * retried on the next call.
  */
-export class FonosterOutboundCallClient implements OutboundCallClient {
+export class FonosterOutboundCallClient implements OutboundCallClient, VoiceCallStatusTracker {
   private readonly settings: FonosterSettings;
-  private callsPromise: Promise<SDK.Calls> | null = null;
+  private clientPromise: Promise<SDK.Client> | null = null;
 
   constructor(settings: FonosterSettings) {
     this.settings = settings;
   }
 
-  private calls(): Promise<SDK.Calls> {
-    if (!this.callsPromise) {
-      this.callsPromise = (async () => {
+  private client(): Promise<SDK.Client> {
+    if (!this.clientPromise) {
+      this.clientPromise = (async () => {
         const client = new SDK.Client({
           accessKeyId: this.settings.accessKeyId,
           ...(this.settings.endpoint ? { endpoint: this.settings.endpoint } : {})
         } as ConstructorParameters<typeof SDK.Client>[0]);
         await client.loginWithApiKey(this.settings.apiKey, this.settings.apiSecret);
-        return new SDK.Calls(client);
+        return client;
       })().catch((err) => {
         // A failed login must not be memoized — otherwise one transient auth error
         // (expired key, network blip) permanently breaks every future call for the
-        // life of this process, since callsPromise would stay set to a rejection.
-        this.callsPromise = null;
+        // life of this process, since clientPromise would stay set to a rejection.
+        this.clientPromise = null;
         throw err;
       });
     }
-    return this.callsPromise;
+    return this.clientPromise;
+  }
+
+  private async calls(): Promise<SDK.Calls> {
+    return new SDK.Calls(await this.client());
   }
 
   async createCall(input: OutboundCallInput): Promise<{ ref: string }> {
@@ -114,6 +120,31 @@ export class FonosterOutboundCallClient implements OutboundCallClient {
       return { ref };
     } catch (err) {
       throw classifyVoiceError(err);
+    }
+  }
+
+  /**
+   * Historical CDR lookup (Fonoster `Calls.GetCall`) — the sole call-status-tracking
+   * signal (see `voice-call-status-tracking`). Deliberately not the live `Calls.TrackCall`
+   * dial-progress stream: `DialStatus` has no value for "the call ended", only for
+   * whether the dial attempt connected, so it cannot report a normal hangup at all.
+   * The CDR reflects every outcome and needs no separate live stream — callers poll this
+   * with backoff until the call is actually over.
+   */
+  async getCallDetail(providerRef: string): Promise<CallDetail | null> {
+    const calls = await this.calls();
+    try {
+      const record = await calls.getCall(providerRef);
+      if (!record) return null;
+      return {
+        status: String(record.status),
+        durationSeconds: Math.max(0, Math.round(record.duration ?? 0))
+      };
+    } catch {
+      // Not found (call still in progress / never reached the CDR store yet) or a
+      // transient lookup failure — the caller retries with backoff; treat both as
+      // "not available yet".
+      return null;
     }
   }
 }

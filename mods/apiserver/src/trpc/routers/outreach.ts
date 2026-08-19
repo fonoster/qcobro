@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import { getLogger } from "@fonoster/logger";
 import {
   BILLING_METER_OF_CHANNEL,
   buildOutreachContext,
@@ -14,6 +15,10 @@ import { router, workspaceProcedure } from "../trpc.js";
 import { config } from "../../config.js";
 import { createDispatchOutreach } from "../../functions/outreach/dispatchOutreach.js";
 import { createRecordOutcome, recordOutcomeTx } from "../../functions/campaigns/recordOutcome.js";
+import { createRecordPrerecordedOutcome } from "../../functions/voice/recordPrerecordedOutcome.js";
+import { createRecordVoiceAiCallStatus } from "../../functions/voice/recordVoiceAiCallStatus.js";
+import { startVoiceCallStatusTracking } from "../../functions/voice/startVoiceCallStatusTracking.js";
+import { createSettleVoiceUsage } from "../../functions/billing/settleVoiceUsage.js";
 import { assessManualDispatch } from "../../functions/billing/manualDispatchGate.js";
 import { meterDispatchTx } from "../../functions/billing/meterDispatch.js";
 import { resolveWhatsAppClient } from "../../services/resolveWhatsAppClient.js";
@@ -103,6 +108,47 @@ function buildDispatchRequest(
         message: `Channel ${template.type} is not supported for manual outreach`
       });
   }
+}
+
+const logger = getLogger({ service: "outreach", filePath: import.meta.url });
+
+/**
+ * Wraps a call-status-tracking finalizer so it also settles the voice usage estimate to
+ * the real answered duration — call-status tracking is a completion path in its own
+ * right here (started at dispatch, not just a fallback something else already settles
+ * for), so it must settle usage itself, mirroring the VoiceServer/autopilot-webhook paths.
+ */
+function withVoiceUsageSettlement(
+  prisma: Parameters<typeof createSettleVoiceUsage>[0],
+  record: (input: {
+    providerRef: string;
+    answered: boolean;
+    answeredSeconds: number;
+    at: string;
+  }) => Promise<unknown>
+) {
+  const settle = config.billing?.enabled ? createSettleVoiceUsage(prisma) : null;
+  return async (input: {
+    providerRef: string;
+    answered: boolean;
+    answeredSeconds: number;
+    at: string;
+  }) => {
+    if (settle) {
+      void settle({
+        providerRef: input.providerRef,
+        answeredSeconds: input.answeredSeconds,
+        at: input.at
+      }).catch((err: unknown) =>
+        logger.error(
+          `[billing] call-status-tracking settlement failed providerRef=${input.providerRef}: ${
+            err instanceof Error ? err.message : err
+          }`
+        )
+      );
+    }
+    return record(input);
+  };
 }
 
 export const outreachRouter = router({
@@ -271,6 +317,27 @@ export const outreachRouter = router({
       });
     } else {
       await createRecordOutcome(ctx.prisma as never)(logParams);
+    }
+
+    // Fire-and-forget: must never add latency to this request or fail it. Started here
+    // — right after the dispatch-time OTHER placeholder is written — rather than from
+    // any channel-specific handler, so coverage does not depend on the call ever
+    // reaching one (see voice-call-status-tracking).
+    if (
+      (template.type === "VOICE_AI" || template.type === "VOICE_PRERECORDED") &&
+      ctx.voiceCallStatusTracker
+    ) {
+      const record =
+        template.type === "VOICE_AI"
+          ? createRecordVoiceAiCallStatus(ctx.prisma as never)
+          : createRecordPrerecordedOutcome(ctx.prisma as never);
+      startVoiceCallStatusTracking({
+        tracker: ctx.voiceCallStatusTracker,
+        channel: template.type,
+        providerRef: result.providerRef,
+        now: () => new Date(),
+        finalize: withVoiceUsageSettlement(ctx.prisma as never, record)
+      });
     }
 
     return result;

@@ -49,6 +49,35 @@ export interface OutboundCallClient {
   createCall(input: OutboundCallInput): Promise<{ ref: string }>;
 }
 
+/** The subset of a Fonoster CDR (`Calls.GetCall`) this codebase needs for outcome recovery. */
+export interface CallDetail {
+  /** Fonoster's SIP-cause-level `CallStatus` (e.g. `NORMAL_CLEARING`, `USER_BUSY`). */
+  status: string;
+  /** Answered duration in seconds, from the CDR (`endedAt - startedAt`). */
+  durationSeconds: number;
+}
+
+/**
+ * Ground-truth call disposition, reachable independently of whether the destination
+ * application (VoiceServer / autopilot) ever reports its own completion. See the
+ * `voice-call-status-tracking` change: closes the gap where a voice gestión is stuck at
+ * the dispatch-time `OTHER` placeholder because the channel's own completion path never
+ * fires (most commonly, the call was never answered).
+ *
+ * Deliberately CDR-only, not a live dial-progress stream (`Calls.TrackCall`): Fonoster's
+ * `DialStatus` has no "call ended" value at all — it is scoped to whether the dial
+ * attempt connected, not the resulting call's lifecycle, and the server never closes that
+ * stream for a call that connects and later hangs up normally (confirmed in Fonoster's
+ * own `createTrackCall.ts`: `stream.end()` is reachable only for the terminal
+ * BUSY/FAILED/NOANSWER dial statuses). The CDR is the one source that reflects every
+ * outcome, including a normal hangup, and needs no delay to gate against — a lookup
+ * simply returns nothing until the call is actually over.
+ */
+export interface VoiceCallStatusTracker {
+  /** Historical CDR lookup (Fonoster `Calls.GetCall`), polled with backoff until the call has ended. */
+  getCallDetail(providerRef: string): Promise<CallDetail | null>;
+}
+
 export interface SmsClient {
   /** Send an SMS; resolves with the provider message ref/sid. */
   sendMessage(input: { from: string; to: string; body: string }): Promise<{ sid: string }>;

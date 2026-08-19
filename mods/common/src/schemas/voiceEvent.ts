@@ -41,6 +41,23 @@ export const prerecordedCompletionSchema = z.object({
 });
 export type PrerecordedCompletionInput = z.infer<typeof prerecordedCompletionSchema>;
 
+/**
+ * Call-status-tracking-derived completion for a VOICE_AI gestión (see
+ * `voice-call-status-tracking`). Used only when the autopilot's own
+ * `conversation.started`/`conversation.ended` webhook never fires for the call — most
+ * commonly because it was never answered. `answered:false` finalizes `NO_ANSWER`;
+ * `answered:true` finalizes `DELIVERED` with a duration recovered from the Fonoster CDR
+ * (never fabricated), for the case where the call connected but the autopilot webhook was
+ * lost.
+ */
+export const voiceAiCallStatusCompletionSchema = z.object({
+  providerRef: z.string().min(1),
+  answered: z.boolean(),
+  answeredSeconds: z.number().int().nonnegative(),
+  at: z.string().min(1)
+});
+export type VoiceAiCallStatusCompletionInput = z.infer<typeof voiceAiCallStatusCompletionSchema>;
+
 /** A normalized transcript line stored in `channelData.transcript` for the console. */
 export interface TranscriptLine {
   role: "agent" | "customer";

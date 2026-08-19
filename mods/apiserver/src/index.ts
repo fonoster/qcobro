@@ -217,6 +217,10 @@ for (const signal of ["SIGTERM", "SIGINT"] as const) {
 // the co-located server reports the answered duration IN-PROCESS (no HTTP callback):
 // record DELIVERED + duration on the gestión, then settle usage to the answered
 // duration (idempotent per call ref). Both are best-effort and never break the call.
+// Call-status tracking (the recovery path for a call this handler never reaches at all)
+// is started at the dispatch sites instead (engine.ts, outreach.ts) — not here — since
+// coverage must not depend on the call ever reaching this handler. See
+// voice-call-status-tracking.
 const recordPrerecordedOutcome = createRecordPrerecordedOutcome(prisma as never);
 const settlePrerecordedUsage = config.billing?.enabled
   ? createSettleVoiceUsage(prisma as never)
