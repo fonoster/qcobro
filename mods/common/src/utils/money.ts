@@ -23,6 +23,42 @@ export function formatMoney(value: number, locale: Locale): string {
 }
 
 /**
+ * The two currency-styled formatters a workspace needs — one for whole amounts, one for
+ * amounts with cents — split so a caller rendering many amounts (a console table, holding
+ * these once per render) never reconstructs an Intl.NumberFormat per row. Picking between
+ * them by Number.isInteger is what makes cents appear only when present.
+ */
+export function createMoneyFormatters(
+  locale: Locale,
+  currency: string
+): { integer: Intl.NumberFormat; fractional: Intl.NumberFormat } {
+  const base = { style: "currency" as const, currency };
+  return {
+    integer: new Intl.NumberFormat(locale, {
+      ...base,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }),
+    fractional: new Intl.NumberFormat(locale, {
+      ...base,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  };
+}
+
+/**
+ * Formats an amount as currency for a workspace's locale — RD$32,000 for a round balance,
+ * RD$32,000.50 when there are cents. This is the console's money formatter; formatMoney
+ * above is for amounts read aloud, which carry no currency symbol.
+ */
+export function formatWorkspaceMoney(value: number, locale: Locale, currency: string): string {
+  if (!Number.isFinite(value)) return "";
+  const { integer, fractional } = createMoneyFormatters(locale, currency);
+  return (Number.isInteger(value) ? integer : fractional).format(value);
+}
+
+/**
  * The separators a locale uses, discovered from `Intl` rather than assumed — `9.500` is nine
  * thousand five hundred in es-ES and nine-and-a-half in es-DO, so stripping a hardcoded comma
  * would silently corrupt amounts the moment a second market is added.

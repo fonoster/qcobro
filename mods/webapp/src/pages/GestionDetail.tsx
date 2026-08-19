@@ -16,19 +16,12 @@ import {
 import type { EmailThreadMessage, TranscriptLine, WhatsAppThread } from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
-import { useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
+import { useMoney } from "../lib/useWorkspaceCurrency.js";
 import { channelIcon, type Channel } from "../lib/channelIcon.js";
 import { useContactLogRealtime } from "../lib/useContactLogRealtime.js";
 
 // EMAIL is bidirectional (autopilot thread); the other two are one-way sends.
 const ONE_WAY: Channel[] = ["SMS", "VOICE_PRERECORDED"];
-
-const currency = (n: number, code: string) =>
-  new Intl.NumberFormat("es", {
-    style: "currency",
-    currency: code,
-    minimumFractionDigits: 0
-  }).format(n);
 
 function Section({
   icon: Icon,
@@ -126,7 +119,7 @@ function formatDuration(seconds?: number | null): string | null {
 
 export function GestionDetailContent({ id, onClose }: { id: string; onClose: () => void }) {
   const { t } = useI18n();
-  const wsCurrency = useWorkspaceCurrency();
+  const money = useMoney();
 
   // Realtime-streaming capability: the open gestión updates in place — delivery status,
   // transcript/recording, AI insights, inbound replies, payment-promise changes — without
@@ -586,7 +579,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                       {t("gestiones.detail.paymentPromise")}
                     </span>
                     <span className="text-sm text-emerald-700">
-                      {p.amount != null ? `${currency(p.amount, wsCurrency)} · ` : ""}
+                      {p.amount != null ? `${money(p.amount)} · ` : ""}
                       {new Date(p.dueDate).toLocaleDateString()}
                     </span>
                   </div>
@@ -674,7 +667,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                       {t("gestiones.detail.paymentPromise")}
                     </span>
                     <span className="text-sm text-emerald-700">
-                      {p.amount != null ? `${currency(p.amount, wsCurrency)} · ` : ""}
+                      {p.amount != null ? `${money(p.amount)} · ` : ""}
                       {new Date(p.dueDate).toLocaleDateString()}
                     </span>
                   </div>
