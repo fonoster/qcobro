@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { formatMoney, toNumber } from "./money.js";
-import type { Locale } from "../schemas/workspaceSettings.js";
+import { formatMoney, formatWorkspaceMoney, toNumber } from "./money.js";
+import { DEFAULT_LOCALE, type Locale } from "../schemas/workspaceSettings.js";
 
 // es-DO is the only supported locale today. es-ES is exercised through a cast to prove the
 // separator handling is discovered from Intl rather than hardcoded to a comma — the day a
@@ -33,6 +33,34 @@ describe("formatMoney", () => {
   it("renders a non-finite amount as empty rather than 'NaN'", () => {
     assert.equal(formatMoney(NaN, esDO), "");
     assert.equal(formatMoney(Infinity, esDO), "");
+  });
+});
+
+describe("formatWorkspaceMoney", () => {
+  it("shows no decimals for a round amount", () => {
+    assert.equal(formatWorkspaceMoney(32000, esDO, "DOP"), "RD$32,000");
+  });
+
+  it("shows two decimals for a fractional amount", () => {
+    assert.equal(formatWorkspaceMoney(32000.5, esDO, "DOP"), "RD$32,000.50");
+  });
+
+  it("uses the workspace locale's grouping and symbol, not the bare currency code", () => {
+    const rendered = formatWorkspaceMoney(32000, esDO, "DOP");
+    assert.equal(rendered, "RD$32,000");
+    assert.notEqual(rendered, "32.000 DOP");
+  });
+
+  it("formats DEFAULT_LOCALE the same as es-DO, for the loading/unset fallback", () => {
+    assert.equal(
+      formatWorkspaceMoney(32000, DEFAULT_LOCALE, "DOP"),
+      formatWorkspaceMoney(32000, esDO, "DOP")
+    );
+  });
+
+  it("renders a non-finite amount as empty rather than 'NaN'", () => {
+    assert.equal(formatWorkspaceMoney(NaN, esDO, "DOP"), "");
+    assert.equal(formatWorkspaceMoney(Infinity, esDO, "DOP"), "");
   });
 });
 

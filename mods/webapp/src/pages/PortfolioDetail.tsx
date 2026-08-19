@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Eye, PhoneCall } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
-import { useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
+import { useMoney, useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
 import { DataTable, TableCellStack } from "../components/ui/data-table.js";
 import { Button } from "../components/ui/button.js";
 import { PageHeader } from "../components/page-header.js";
@@ -16,18 +16,13 @@ import { RowActionsMenu, type RowAction } from "../components/ui/row-actions-men
 
 const PAGE_SIZE = 50;
 
-function money(v: number, currency: string) {
-  return new Intl.NumberFormat("es", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 0
-  }).format(v);
-}
-
 export function PortfolioDetail() {
   const { id } = useParams<{ id: string }>();
   const { t } = useI18n();
+  // wsCurrency (the raw currency code) is still needed for the ReachOutModal's outreach
+  // preview below; money() is the shared workspace-locale formatter for this page's tables.
   const wsCurrency = useWorkspaceCurrency();
+  const money = useMoney();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [showSync, setShowSync] = useState(false);
@@ -95,7 +90,7 @@ export function PortfolioDetail() {
           {
             key: "outstandingBalance",
             header: t("portfolios.detail.col.balance"),
-            render: (r) => money(r.outstandingBalance as number, wsCurrency),
+            render: (r) => money(r.outstandingBalance as number),
             align: "right"
           },
           {
@@ -137,10 +132,7 @@ export function PortfolioDetail() {
         >
           <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4">
             {[
-              [
-                t("portfolios.detail.col.balance"),
-                money(viewDetail.outstandingBalance as number, wsCurrency)
-              ],
+              [t("portfolios.detail.col.balance"), money(viewDetail.outstandingBalance as number)],
               [t("portfolios.detail.col.dpd"), String(viewDetail.daysPastDue ?? "—")],
               [t("gestiones.detail.phone"), String(viewDetail.phone ?? "—")],
               [t("gestiones.detail.email"), String(viewDetail.email ?? "—")]

@@ -2,7 +2,7 @@ import { KeyRound } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n, type Language } from "../lib/i18n.js";
-import { useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
+import { useMoney } from "../lib/useWorkspaceCurrency.js";
 import { Card } from "../components/ui/card.js";
 import { CopyField } from "../components/CopyField.js";
 import { channelIcon } from "../lib/channelIcon.js";
@@ -38,7 +38,7 @@ function recoveryPct(recovered: number, outstanding: number): number {
 export function Home() {
   const { workspace } = useAuth();
   const { t, language } = useI18n();
-  const wsCurrency = useWorkspaceCurrency();
+  const money = useMoney();
   const workspaces = trpc.workspaces.list.useQuery();
   const active =
     workspaces.data?.items.find((w) => w.accessKeyId === workspace) ?? workspaces.data?.items[0];
@@ -60,13 +60,6 @@ export function Home() {
   const cs = contactStats.data;
   const contactRate = cs && cs.total > 0 ? Math.round((cs.contacted / cs.total) * 100) : 0;
   const activity = (recent.data?.items ?? []) as RecentGestion[];
-
-  const money = (v: number) =>
-    new Intl.NumberFormat(language, {
-      style: "currency",
-      currency: wsCurrency,
-      maximumFractionDigits: 0
-    }).format(v);
 
   // All KPIs are sourced from live workspace data.
   const kpis: { label: string; value: string; meta: string }[] = [

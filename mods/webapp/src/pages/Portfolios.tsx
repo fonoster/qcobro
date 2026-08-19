@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
-import { useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
+import { useMoney } from "../lib/useWorkspaceCurrency.js";
 import { PageHeader } from "../components/page-header.js";
 import { DataTable } from "../components/ui/data-table.js";
 import { Dialog } from "../components/ui/dialog.js";
@@ -11,14 +11,6 @@ import { InputGroup } from "../components/ui/input.js";
 import { Badge } from "../components/ui/badge.js";
 import { RowActionsMenu } from "../components/ui/row-actions-menu.js";
 import { CsvSyncModal } from "../components/portfolios/CsvSyncModal.js";
-
-function money(v: number, currency: string) {
-  return new Intl.NumberFormat("es", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 0
-  }).format(v);
-}
 
 function lastSynced(v: Date | string | null, language: string, never: string) {
   if (!v) return never;
@@ -45,7 +37,7 @@ type Portfolio = {
 
 export function Portfolios() {
   const { t, language } = useI18n();
-  const wsCurrency = useWorkspaceCurrency();
+  const money = useMoney();
   const navigate = useNavigate();
   const utils = trpc.useUtils();
 
@@ -118,12 +110,12 @@ export function Portfolios() {
           {
             key: "totalOutstandingBalance",
             header: t("portfolios.col.balance"),
-            render: (r) => money(r.totalOutstandingBalance as number, wsCurrency)
+            render: (r) => money(r.totalOutstandingBalance as number)
           },
           {
             key: "recoveredAmount",
             header: t("portfolios.col.recovered"),
-            render: (r) => money(r.recoveredAmount as number, wsCurrency)
+            render: (r) => money(r.recoveredAmount as number)
           },
           {
             key: "lastSyncedAt",
