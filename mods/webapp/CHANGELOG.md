@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.29.1](https://github.com/fonoster/qcobro/compare/v1.29.0...v1.29.1) (2026-08-19)
+
+### Bug Fixes
+
+- **webapp:** format money with workspace locale, not generic "es" ([#97](https://github.com/fonoster/qcobro/issues/97)) ([e0ac6bd](https://github.com/fonoster/qcobro/commit/e0ac6bd257ef8e6740f719d74f5df0877d1b55a7)), closes [#94](https://github.com/fonoster/qcobro/issues/94)
+
 # [1.29.0](https://github.com/fonoster/qcobro/compare/v1.28.2...v1.29.0) (2026-08-19)
 
 **Note:** Version bump only for package @qcobro/webapp
