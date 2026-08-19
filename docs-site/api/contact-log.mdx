@@ -47,10 +47,12 @@ Solo cuatro campos son obligatorios; el resto es opcional y enriquece la gestió
   Momento del contacto, como cadena de fecha-hora ISO.
 </ParamField>
 <ParamField body="outcome" type="string" required>
-  Resultado de la gestión. Uno de `DELIVERED`, `NOT_DELIVERED`, `NO_ANSWER`,
+  Resultado de la gestión. Uno de `DISPATCHED`, `DELIVERED`, `NOT_DELIVERED`, `NO_ANSWER`,
   `PAYMENT_PROMISE`, `PARTIAL_PAYMENT_AGREED`, `NEW_TERMS`, `CALLBACK_REQUESTED`,
   `DISPUTE_RAISED`, `INFORMATION_REQUEST`, `RESOLVED`, `PAID`, `WRONG_NUMBER`, `OPT_OUT`,
-  `REFUSED`, `OTHER`.
+  `REFUSED`. Usa `DISPATCHED` solo para dejar constancia de que el contacto se envió y el
+  resultado todavía no se conoce: no cuenta como una gestión exitosa hasta que se reporte con
+  un resultado posterior.
 </ParamField>
 <ParamField body="campaignId" type="string">
   Campaña a la que pertenece la gestión, si proviene de una campaña.

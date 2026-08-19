@@ -27,7 +27,7 @@ function makeClient(record: { id: string; outcome: string; channelData: unknown 
 
 describe("recordVoiceAiCallStatus", () => {
   it("terminal tracking failure → NO_ANSWER with zero duration", async () => {
-    const { client, cap } = makeClient({ id: "g-1", outcome: "OTHER", channelData: null });
+    const { client, cap } = makeClient({ id: "g-1", outcome: "DISPATCHED", channelData: null });
 
     const result = await createRecordVoiceAiCallStatus(client as never)({
       providerRef: "call-abc",
@@ -44,7 +44,7 @@ describe("recordVoiceAiCallStatus", () => {
   it("CDR recovery, answered → DELIVERED with the real duration", async () => {
     const { client, cap } = makeClient({
       id: "g-1",
-      outcome: "OTHER",
+      outcome: "DISPATCHED",
       channelData: { appRef: "app-1" }
     });
 
@@ -90,7 +90,7 @@ describe("recordVoiceAiCallStatus", () => {
   });
 
   it("rejects invalid input with a ValidationError and never touches the database", async () => {
-    const { client, cap } = makeClient({ id: "g-1", outcome: "OTHER", channelData: {} });
+    const { client, cap } = makeClient({ id: "g-1", outcome: "DISPATCHED", channelData: {} });
 
     await assert.rejects(
       () =>

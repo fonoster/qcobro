@@ -21,6 +21,7 @@ const CHANNEL_ICON: Record<string, typeof MessageSquare> = {
 };
 
 const OUTCOMES = [
+  "DISPATCHED",
   "DELIVERED",
   "NOT_DELIVERED",
   "NO_ANSWER",
@@ -34,8 +35,7 @@ const OUTCOMES = [
   "PAID",
   "WRONG_NUMBER",
   "OPT_OUT",
-  "REFUSED",
-  "OTHER"
+  "REFUSED"
 ] as const;
 
 const AGENT_TYPES = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL"] as const;

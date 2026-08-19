@@ -65,7 +65,7 @@ function mockDecide(req: EmailAutopilotRequest): EmailAutopilotDecision {
     return { action: "resolve", outcome: "WRONG_NUMBER" };
   }
   if (/(reclamo|abogad|demanda|queja)/.test(lc)) {
-    return { action: "escalate", outcome: "OTHER" };
+    return { action: "escalate" };
   }
   return {
     action: "reply",

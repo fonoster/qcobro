@@ -61,7 +61,12 @@ describe("recordOutcome", () => {
 
   it("enriches the existing gestión by providerRef instead of duplicating", async () => {
     const { client, cap } = makeClient({
-      existing: { id: "log-1", outcome: "OTHER", providerRef: "ref-1", channelData: { from: "x" } }
+      existing: {
+        id: "log-1",
+        outcome: "DISPATCHED",
+        providerRef: "ref-1",
+        channelData: { from: "x" }
+      }
     });
     await createRecordOutcome(client as never)({
       ...BASE,
@@ -99,12 +104,72 @@ describe("recordOutcome", () => {
     assert.equal(cap.promiseCreated, undefined, "non-payment outcome creates no promise");
   });
 
-  it("never downgrades a real outcome with a dispatch-time OTHER", async () => {
+  it("never downgrades a real outcome with a dispatch-time DISPATCHED", async () => {
     const { client, cap } = makeClient({
       existing: { id: "log-1", outcome: "PAYMENT_PROMISE", providerRef: "ref-1", channelData: {} }
     });
-    await createRecordOutcome(client as never)({ ...BASE, outcome: "OTHER", providerRef: "ref-1" });
+    await createRecordOutcome(client as never)({
+      ...BASE,
+      outcome: "DISPATCHED",
+      providerRef: "ref-1"
+    });
     assert.equal(cap.updated?.data.outcome, "PAYMENT_PROMISE", "kept the real outcome");
+  });
+
+  // Decision 2 truth table (design.md) — every row, via the rank comparison in recordOutcomeTx.
+  describe("no-downgrade rank rule (design.md Decision 2)", () => {
+    const cases: { existing: string; incoming: string; expected: string; why: string }[] = [
+      {
+        existing: "DISPATCHED",
+        incoming: "DELIVERED",
+        expected: "DELIVERED",
+        why: "channel finalizes the placeholder"
+      },
+      {
+        existing: "DISPATCHED",
+        incoming: "PAYMENT_PROMISE",
+        expected: "PAYMENT_PROMISE",
+        why: "conversation resolved before the CDR"
+      },
+      {
+        existing: "DELIVERED",
+        incoming: "PAYMENT_PROMISE",
+        expected: "PAYMENT_PROMISE",
+        why: "conversation upgrades the channel"
+      },
+      {
+        existing: "PAYMENT_PROMISE",
+        incoming: "DELIVERED",
+        expected: "PAYMENT_PROMISE",
+        why: "no downgrade — the spec'd guarantee (today's OTHER-only guard would fail this)"
+      },
+      {
+        existing: "PAYMENT_PROMISE",
+        incoming: "DISPATCHED",
+        expected: "PAYMENT_PROMISE",
+        why: "no downgrade"
+      },
+      {
+        existing: "PAYMENT_PROMISE",
+        incoming: "DISPUTE_RAISED",
+        expected: "DISPUTE_RAISED",
+        why: "equal rank — the thread moved on"
+      }
+    ];
+
+    for (const { existing, incoming, expected, why } of cases) {
+      it(`existing=${existing}, incoming=${incoming} → ${expected} (${why})`, async () => {
+        const { client, cap } = makeClient({
+          existing: { id: "log-1", outcome: existing, providerRef: "ref-1", channelData: {} }
+        });
+        await createRecordOutcome(client as never)({
+          ...BASE,
+          outcome: incoming as never,
+          providerRef: "ref-1"
+        });
+        assert.equal(cap.updated?.data.outcome, expected);
+      });
+    }
   });
 
   it("does not duplicate a PaymentPromise on re-delivery", async () => {

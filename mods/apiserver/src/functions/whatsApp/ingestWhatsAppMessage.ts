@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   withErrorHandlingAndValidation,
+  type ContactOutcome,
   type CreateContactLogInput,
   type EmailAutopilot,
   type EmailAutopilotDecision,
@@ -23,6 +24,8 @@ export interface WhatsAppGestionView {
   phoneNumberId: string;
   /** Meta message id stored at dispatch time — used to correlate recordOutcome. */
   providerRef: string | null;
+  /** The gestión's current outcome — checked so a reply can finalize a `DISPATCHED` row. */
+  outcome: ContactOutcome;
   channelData: Record<string, unknown> | null;
   agentSystemPrompt: string;
   agentMaxReplies: number | null;
@@ -91,6 +94,12 @@ function isWindowOpen(lastCustomerMessageAt: string, now: Date): boolean {
  *
  * 24 h window: if the customer's last message is more than 24 h old, free-form text is
  * forbidden by Meta; the action is escalated rather than sent.
+ *
+ * WhatsApp has no call detail record to fall back on: a correlated inbound message is
+ * itself proof the channel reached the destination, so a gestión still at `DISPATCHED` is
+ * finalized to `DELIVERED` before the autopilot decision is applied — otherwise a
+ * conversation the debtor actually answered would strand at `DISPATCHED` (and count as not
+ * contacted) whenever the autopilot escalates without classifying.
  */
 export function createIngestWhatsAppMessage(deps: IngestWhatsAppMessageDeps) {
   const fn = async (msg: InboundWhatsAppMessageInput): Promise<IngestWhatsAppResult> => {
@@ -100,6 +109,18 @@ export function createIngestWhatsAppMessage(deps: IngestWhatsAppMessageDeps) {
     const now = deps.now();
     const nowIso = now.toISOString();
     const existing = g.channelData ?? {};
+
+    if (g.outcome === "DISPATCHED") {
+      await deps.recordOutcome({
+        portfolioAccountId: g.portfolioAccountId,
+        campaignId: g.campaignId ?? undefined,
+        agentType: "WHATSAPP",
+        contactedAt: nowIso,
+        outcome: "DELIVERED",
+        providerRef: g.providerRef ?? undefined,
+        debtAmountSnapshot: g.debtAmountSnapshot ?? undefined
+      });
+    }
 
     // Load or initialize the WhatsApp thread stored on this gestión.
     const thread: WhatsAppThread = (existing.whatsAppThread as WhatsAppThread | undefined) ?? {
@@ -154,29 +175,33 @@ export function createIngestWhatsAppMessage(deps: IngestWhatsAppMessageDeps) {
 
     const channelData = { ...existing, whatsAppThread: thread };
 
-    if (decision.outcome) {
-      const validOutcomes = new Set([
-        "NO_ANSWER",
-        "PAYMENT_PROMISE",
-        "PARTIAL_PAYMENT_AGREED",
-        "CALLBACK_REQUESTED",
-        "RESOLVED",
-        "PAID",
-        "WRONG_NUMBER",
-        "OPT_OUT",
-        "REFUSED",
-        "OTHER"
-      ]);
-      const outcome = validOutcomes.has(decision.outcome)
+    // An answer outside the recognized set is an absence of a classification, not a
+    // result — write nothing (the DISPATCHED→DELIVERED finalization above, or whatever the
+    // channel layer already determined, stands).
+    const validOutcomes = new Set([
+      "NO_ANSWER",
+      "PAYMENT_PROMISE",
+      "PARTIAL_PAYMENT_AGREED",
+      "CALLBACK_REQUESTED",
+      "RESOLVED",
+      "PAID",
+      "WRONG_NUMBER",
+      "OPT_OUT",
+      "REFUSED"
+    ]);
+    const classifiedOutcome =
+      decision.outcome && validOutcomes.has(decision.outcome)
         ? (decision.outcome as CreateContactLogInput["outcome"])
-        : "OTHER";
+        : null;
+
+    if (classifiedOutcome) {
       const obj = decision.objective;
       await deps.recordOutcome({
         portfolioAccountId: g.portfolioAccountId,
         campaignId: g.campaignId ?? undefined,
         agentType: "WHATSAPP",
         contactedAt: nowIso,
-        outcome,
+        outcome: classifiedOutcome,
         providerRef: g.providerRef ?? undefined,
         debtAmountSnapshot: g.debtAmountSnapshot ?? undefined,
         channelData,

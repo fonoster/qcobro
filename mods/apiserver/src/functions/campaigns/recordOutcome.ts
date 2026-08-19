@@ -1,6 +1,7 @@
 import {
   createContactLogSchema,
   withErrorHandlingAndValidation,
+  CONTACT_OUTCOME_RANK,
   type AccountContactLogRecord,
   type CampaignClient,
   type CampaignTriggerRecord,
@@ -187,9 +188,11 @@ async function applyOutcomeEffectsTx(
  * effects — but does NOT count the attempt ({@link reserveAttempt} owns counters).
  *
  * Correlated by `providerRef`: when a row with that ref exists, it is enriched in place
- * (one gestión per attempt). A dispatch-time placeholder (`OTHER`) SHALL NOT downgrade a
- * real outcome already recorded by an earlier callback. When no `providerRef` is given,
- * a new gestión is always created.
+ * (one gestión per attempt). An outcome SHALL only move up — see {@link CONTACT_OUTCOME_RANK}
+ * (rank 0 = `DISPATCHED`, rank 1 = the four channel-failure results, rank 2 = everything
+ * else): an incoming outcome that ranks strictly lower than the one already recorded is
+ * dropped in favor of the existing one. When no `providerRef` is given, a new gestión is
+ * always created.
  */
 export async function recordOutcomeTx(
   tx: CampaignClient,
@@ -204,9 +207,9 @@ export async function recordOutcomeTx(
   let effectiveOutcome: ContactOutcome = params.outcome;
 
   if (existing) {
-    // Never downgrade: a placeholder OTHER must not overwrite a recorded real outcome.
+    // Never downgrade: keep the existing outcome when the incoming one knows strictly less.
     effectiveOutcome =
-      params.outcome === "OTHER" && existing.outcome !== "OTHER"
+      CONTACT_OUTCOME_RANK[params.outcome] < CONTACT_OUTCOME_RANK[existing.outcome]
         ? existing.outcome
         : params.outcome;
     const data = logData(params, contactedAt);

@@ -56,7 +56,7 @@ describe("createVoiceAutopilot — mock provider (no AI configured)", () => {
     assert.equal(decision.outcome, "WRONG_NUMBER");
   });
 
-  it("escalates on a complaint/dispute", async () => {
+  it("escalates on a complaint/dispute, carrying no outcome", async () => {
     const decision = await autopilot.decide({
       ...BASE_REQ,
       thread: transcriptToThread([
@@ -64,7 +64,7 @@ describe("createVoiceAutopilot — mock provider (no AI configured)", () => {
       ])
     });
     assert.equal(decision.action, "escalate");
-    assert.equal(decision.outcome, "OTHER");
+    assert.equal(decision.outcome, undefined);
   });
 
   it("resolves with no outcome when nothing notable happened", async () => {
@@ -129,7 +129,7 @@ describe("createVoiceAutopilot — google provider", () => {
   it("parses an unfenced JSON response", async () => {
     globalThis.fetch = (async () =>
       jsonResponse(200, {
-        candidates: [{ content: { parts: [{ text: '{"action":"escalate","outcome":"OTHER"}' }] } }]
+        candidates: [{ content: { parts: [{ text: '{"action":"escalate"}' }] } }]
       })) as typeof fetch;
 
     const autopilot = createVoiceAutopilot(cfg);

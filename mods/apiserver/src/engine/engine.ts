@@ -134,7 +134,7 @@ export interface EngineDeps {
   outboundCallClient: OutboundCallClient | null;
   /**
    * Real-time Fonoster call-status tracking, started for every VOICE_AI/VOICE_PRERECORDED
-   * dispatch right after the OTHER placeholder gestión is written — independent of
+   * dispatch right after the DISPATCHED placeholder gestión is written — independent of
    * whether the call ever reaches a channel-specific completion path (the pre-recorded
    * VoiceServer's answer/say/hangup flow, or the Voz IA autopilot webhook), since neither
    * is guaranteed for every failure mode. `null` disables the recovery path (e.g.
@@ -527,7 +527,7 @@ export function createEngine(deps: EngineDeps) {
         campaignId: c.id,
         agentType: channel,
         contactedAt: at,
-        outcome: "OTHER",
+        outcome: "DISPATCHED",
         debtAmountSnapshot: acc.outstandingBalance,
         providerRef: result.providerRef,
         channelData: { from: result.from, to: result.to, messageBody: result.renderedBody }
@@ -545,7 +545,7 @@ export function createEngine(deps: EngineDeps) {
     );
 
     // Fire-and-forget: must never add latency to the dispatch loop or fail this
-    // function. Started here — right after the dispatch-time OTHER placeholder is
+    // function. Started here — right after the dispatch-time DISPATCHED placeholder is
     // written — rather than from any channel-specific handler (VoiceServer /
     // autopilot webhook), so coverage does not depend on the call ever reaching one.
     if (

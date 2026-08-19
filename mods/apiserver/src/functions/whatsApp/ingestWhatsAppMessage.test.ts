@@ -19,6 +19,9 @@ const BASE_GESTION: WhatsAppGestionView = {
   workspaceRef: "ws-1",
   phoneNumberId: "pn-1",
   providerRef: "meta-msg-out-1",
+  // Already resolved by default so unrelated tests aren't affected by the
+  // DISPATCHED→DELIVERED finalization step; override explicitly to test it.
+  outcome: "DELIVERED",
   channelData: { from: "+15559990001", to: "+18091230001", messageBody: "Estimado cliente…" },
   agentSystemPrompt: "Eres un agente de cobranza amable.",
   agentMaxReplies: 3,
@@ -300,5 +303,70 @@ describe("ingestWhatsAppMessage — validation", () => {
     const deps = makeDeps();
     const ingest = createIngestWhatsAppMessage(deps);
     await assert.rejects(() => ingest({ ...BASE_MSG, from: "" }));
+  });
+});
+
+describe("ingestWhatsAppMessage — inbound reply proves delivery (design.md Decision 3)", () => {
+  it("finalizes a DISPATCHED gestión to DELIVERED before applying the autopilot decision", async () => {
+    const deps = makeDeps({ ...BASE_GESTION, outcome: "DISPATCHED" }, { action: "ignore" });
+    const ingest = createIngestWhatsAppMessage(deps);
+    await ingest(BASE_MSG);
+
+    assert.equal(deps.outcomes.length, 1);
+    const recorded = deps.outcomes[0] as { outcome: string; providerRef: string };
+    assert.equal(recorded.outcome, "DELIVERED");
+    assert.equal(recorded.providerRef, "meta-msg-out-1");
+  });
+
+  it("counts as contacted even when the autopilot escalates without classifying", async () => {
+    const gestionAtCap: WhatsAppGestionView = {
+      ...BASE_GESTION,
+      outcome: "DISPATCHED",
+      channelData: {
+        ...BASE_GESTION.channelData,
+        whatsAppThread: {
+          customerPhone: "+18091230001",
+          messages: [],
+          agentReplyCount: 3,
+          lastCustomerMessageAt: new Date("2026-06-30T09:00:00Z").toISOString()
+        }
+      }
+    };
+    const deps = makeDeps(gestionAtCap, { action: "reply", replyBody: "Hola de nuevo." });
+    const ingest = createIngestWhatsAppMessage(deps);
+    const result = await ingest(BASE_MSG);
+
+    assert.ok(result.matched);
+    assert.equal(result.matched && result.action, "escalate");
+    // Only the DELIVERED finalization is recorded — the reply-past-cap escalation
+    // carries no outcome of its own.
+    assert.equal(deps.outcomes.length, 1);
+    assert.equal((deps.outcomes[0] as { outcome: string }).outcome, "DELIVERED");
+  });
+
+  it("a later PAYMENT_PROMISE still upgrades the DELIVERED finalization", async () => {
+    const deps = makeDeps(
+      { ...BASE_GESTION, outcome: "DISPATCHED" },
+      {
+        action: "reply",
+        replyBody: "Registramos su compromiso.",
+        outcome: "PAYMENT_PROMISE",
+        objective: { amount: 500, dueDate: "2026-07-15" }
+      }
+    );
+    const ingest = createIngestWhatsAppMessage(deps);
+    await ingest(BASE_MSG);
+
+    assert.equal(deps.outcomes.length, 2, "the DELIVERED finalize, then the classified outcome");
+    assert.equal((deps.outcomes[0] as { outcome: string }).outcome, "DELIVERED");
+    assert.equal((deps.outcomes[1] as { outcome: string }).outcome, "PAYMENT_PROMISE");
+  });
+
+  it("does not finalize again when the gestión is already resolved", async () => {
+    const deps = makeDeps({ ...BASE_GESTION, outcome: "PAYMENT_PROMISE" }, { action: "ignore" });
+    const ingest = createIngestWhatsAppMessage(deps);
+    await ingest(BASE_MSG);
+
+    assert.equal(deps.outcomes.length, 0, "a second reply does not downgrade a recorded outcome");
   });
 });

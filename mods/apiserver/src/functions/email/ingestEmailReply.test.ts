@@ -17,6 +17,9 @@ function gestion(over: Partial<EmailGestionView> = {}): EmailGestionView {
     campaignId: "camp-1",
     debtAmountSnapshot: 5000,
     customerEmail: "cliente@example.com",
+    // Already resolved by default so unrelated tests aren't affected by the
+    // DISPATCHED→DELIVERED finalization step; override explicitly to test it.
+    outcome: "DELIVERED",
     channelData: { emailThread: { token: TOKEN, messages: [], agentReplyCount: 0 } },
     agentSystemPrompt: "Eres un agente de cobranza.",
     agentMaxReplies: null,
@@ -144,5 +147,50 @@ describe("ingestEmailReply", () => {
       (err) => err instanceof ValidationError
     );
     assert.equal(sends.length, 0, "side effect never fired on invalid input");
+  });
+
+  describe("inbound reply proves delivery (design.md Decision 3)", () => {
+    it("finalizes a DISPATCHED gestión to DELIVERED before applying the autopilot decision", async () => {
+      const { deps, outcomes } = harness(gestion({ outcome: "DISPATCHED" }), { action: "ignore" });
+      await createIngestEmailReply(deps as never)(inbound());
+
+      assert.equal(outcomes.length, 1);
+      assert.equal(outcomes[0].outcome, "DELIVERED");
+      assert.equal(outcomes[0].providerRef, TOKEN);
+    });
+
+    it("counts as contacted even when the autopilot escalates without classifying", async () => {
+      const { deps, outcomes } = harness(gestion({ outcome: "DISPATCHED" }), {
+        action: "escalate"
+      });
+      const res = await createIngestEmailReply(deps as never)(inbound());
+
+      assert.equal((res as { action: string }).action, "escalate");
+      // Only the DELIVERED finalization is recorded — escalate carries no outcome.
+      assert.equal(outcomes.length, 1);
+      assert.equal(outcomes[0].outcome, "DELIVERED");
+    });
+
+    it("a later PAYMENT_PROMISE still upgrades the DELIVERED finalization", async () => {
+      const { deps, outcomes } = harness(gestion({ outcome: "DISPATCHED" }), {
+        action: "resolve",
+        outcome: "PAYMENT_PROMISE",
+        objective: { amount: 500, dueDate: "2026-07-01" }
+      });
+      await createIngestEmailReply(deps as never)(inbound());
+
+      assert.equal(outcomes.length, 2, "the DELIVERED finalize, then the classified outcome");
+      assert.equal(outcomes[0].outcome, "DELIVERED");
+      assert.equal(outcomes[1].outcome, "PAYMENT_PROMISE");
+    });
+
+    it("does not finalize again when the gestión is already resolved", async () => {
+      const { deps, outcomes } = harness(gestion({ outcome: "PAYMENT_PROMISE" }), {
+        action: "ignore"
+      });
+      await createIngestEmailReply(deps as never)(inbound());
+
+      assert.equal(outcomes.length, 0, "a second reply does not downgrade a recorded outcome");
+    });
   });
 });

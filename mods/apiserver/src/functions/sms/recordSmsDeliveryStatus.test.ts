@@ -29,7 +29,7 @@ describe("recordSmsDeliveryStatus", () => {
   it("delivered → DELIVERED, channelData.deliveryStatus set, preserves existing channelData", async () => {
     const { client, cap } = makeClient({
       id: "g-1",
-      outcome: "OTHER",
+      outcome: "DISPATCHED",
       channelData: { messageSid: "SM123" }
     });
 
@@ -47,7 +47,7 @@ describe("recordSmsDeliveryStatus", () => {
   });
 
   it("undelivered → NOT_DELIVERED", async () => {
-    const { client, cap } = makeClient({ id: "g-1", outcome: "OTHER", channelData: null });
+    const { client, cap } = makeClient({ id: "g-1", outcome: "DISPATCHED", channelData: null });
 
     const result = await createRecordSmsDeliveryStatus(client as never)({
       providerRef: "SM123",
@@ -60,7 +60,7 @@ describe("recordSmsDeliveryStatus", () => {
   });
 
   it("failed → NOT_DELIVERED", async () => {
-    const { client } = makeClient({ id: "g-1", outcome: "OTHER", channelData: null });
+    const { client } = makeClient({ id: "g-1", outcome: "DISPATCHED", channelData: null });
 
     const result = await createRecordSmsDeliveryStatus(client as never)({
       providerRef: "SM123",
@@ -73,7 +73,7 @@ describe("recordSmsDeliveryStatus", () => {
 
   it("interim status (queued/sending/sent) updates deliveryStatus only, never finalizes", async () => {
     for (const status of ["queued", "sending", "sent"]) {
-      const { client, cap } = makeClient({ id: "g-1", outcome: "OTHER", channelData: null });
+      const { client, cap } = makeClient({ id: "g-1", outcome: "DISPATCHED", channelData: null });
 
       const result = await createRecordSmsDeliveryStatus(client as never)({
         providerRef: "SM123",
@@ -82,7 +82,7 @@ describe("recordSmsDeliveryStatus", () => {
       });
 
       assert.equal(result.matched, true);
-      assert.equal((result as { outcome: string }).outcome, "OTHER");
+      assert.equal((result as { outcome: string }).outcome, "DISPATCHED");
       assert.equal(cap.update?.data.outcome, undefined, status);
       const cd = cap.update?.data.channelData as Record<string, unknown>;
       assert.equal(cd.deliveryStatus, status);
@@ -119,7 +119,7 @@ describe("recordSmsDeliveryStatus", () => {
   });
 
   it("rejects invalid input with a ValidationError and never touches the database", async () => {
-    const { client, cap } = makeClient({ id: "g-1", outcome: "OTHER", channelData: {} });
+    const { client, cap } = makeClient({ id: "g-1", outcome: "DISPATCHED", channelData: {} });
 
     await assert.rejects(
       () =>

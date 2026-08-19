@@ -76,15 +76,15 @@ describe("decideVoiceOutcome", () => {
     assert.equal(outcomes[0].intentMetadata, undefined);
   });
 
-  it("defaults an unrecognized outcome string to OTHER", async () => {
+  it("writes no outcome when the model's answer doesn't parse against the recognized set", async () => {
     const { deps, outcomes } = harness(gestion(), {
       action: "resolve",
       outcome: "SOMETHING_THE_MODEL_MADE_UP"
     });
     const result = await createDecideVoiceOutcome(deps)("log-1");
 
-    assert.deepEqual(result, { decided: true, outcome: "OTHER" });
-    assert.equal(outcomes[0].outcome, "OTHER");
+    assert.deepEqual(result, { decided: true, outcome: null });
+    assert.equal(outcomes.length, 0, "leaves the channel layer's verdict in place");
   });
 
   it("records nothing when the decision carries no outcome", async () => {

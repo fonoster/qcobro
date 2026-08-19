@@ -2,6 +2,7 @@ import { z } from "zod";
 import { agentTypeSchema } from "./agentTemplates.js";
 
 export const contactOutcomeSchema = z.enum([
+  "DISPATCHED",
   "DELIVERED",
   "NOT_DELIVERED",
   "NO_ANSWER",
@@ -15,10 +16,49 @@ export const contactOutcomeSchema = z.enum([
   "PAID",
   "WRONG_NUMBER",
   "OPT_OUT",
-  "REFUSED",
-  "OTHER"
+  "REFUSED"
 ]);
 export type ContactOutcome = z.infer<typeof contactOutcomeSchema>;
+
+/**
+ * Outcomes that mean the channel did NOT prove it reached the destination:
+ * `DISPATCHED` (no result yet), plus the three terminal failure/pending results. An
+ * account counts as contacted when it has at least one gestión whose outcome is
+ * *not* in this set — see the `portfolios` contactability statistic. Exported as one
+ * definition (with {@link CONTACT_OUTCOME_RANK}) so the KPI query and the
+ * no-downgrade rule in `recordOutcomeTx` never re-derive it independently.
+ */
+export const CHANNEL_FAILED_OUTCOMES = [
+  "DISPATCHED",
+  "NOT_DELIVERED",
+  "NO_ANSWER",
+  "WRONG_NUMBER"
+] as const satisfies readonly ContactOutcome[];
+
+/**
+ * How much a layer knows, from least (0) to most (2). An outcome SHALL only move up:
+ * rank 0 is dispatch's own placeholder; rank 1 is what the channel layer (provider
+ * callback/CDR/inbound reply) can determine on its own; rank 2 is anything the
+ * conversation layer (autopilot) adds on top. `recordOutcomeTx` keeps the existing
+ * outcome when an incoming one ranks strictly lower — see design.md Decision 2.
+ */
+export const CONTACT_OUTCOME_RANK: Record<ContactOutcome, 0 | 1 | 2> = {
+  DISPATCHED: 0,
+  DELIVERED: 1,
+  NOT_DELIVERED: 1,
+  NO_ANSWER: 1,
+  WRONG_NUMBER: 1,
+  PAYMENT_PROMISE: 2,
+  PARTIAL_PAYMENT_AGREED: 2,
+  NEW_TERMS: 2,
+  CALLBACK_REQUESTED: 2,
+  DISPUTE_RAISED: 2,
+  INFORMATION_REQUEST: 2,
+  RESOLVED: 2,
+  PAID: 2,
+  OPT_OUT: 2,
+  REFUSED: 2
+};
 
 export const aiSentimentSchema = z.enum(["POSITIVE", "NEUTRAL", "NEGATIVE", "HOSTILE"]);
 export type AiSentiment = z.infer<typeof aiSentimentSchema>;

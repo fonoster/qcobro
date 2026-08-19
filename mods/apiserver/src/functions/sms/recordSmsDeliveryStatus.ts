@@ -37,10 +37,10 @@ const NOT_DELIVERED_STATUSES = new Set(["undelivered", "failed"]);
  * gestión's `outcome`; any other status (`queued`, `sending`, `sent`, ...) updates
  * visibility only.
  *
- * Idempotent per call ref: once the outcome has left the dispatch-time `OTHER` placeholder
- * (by a prior call to this function), a repeated or later terminal callback preserves the
- * existing outcome and does not overwrite it — Twilio may retry delivery of the callback
- * itself, and interim statuses can arrive after a terminal one out of order.
+ * Idempotent per call ref: once the outcome has left the dispatch-time `DISPATCHED`
+ * placeholder (by a prior call to this function), a repeated or later terminal callback
+ * preserves the existing outcome and does not overwrite it — Twilio may retry delivery of
+ * the callback itself, and interim statuses can arrive after a terminal one out of order.
  */
 export function createRecordSmsDeliveryStatus(client: SmsDeliveryStatusClient) {
   const fn = async (input: SmsStatusCallbackInput): Promise<RecordSmsDeliveryStatusResult> => {
@@ -58,10 +58,10 @@ export function createRecordSmsDeliveryStatus(client: SmsDeliveryStatusClient) {
       : NOT_DELIVERED_STATUSES.has(input.status)
         ? "NOT_DELIVERED"
         : null;
-    // Never downgrade a finalized outcome; only the dispatch-time OTHER is replaced, and
-    // only by a terminal status.
+    // Never downgrade a finalized outcome; only the dispatch-time DISPATCHED placeholder
+    // is replaced.
     const outcome: ContactOutcome | undefined =
-      terminal && match.outcome === "OTHER" ? terminal : undefined;
+      terminal && match.outcome === "DISPATCHED" ? terminal : undefined;
 
     await client.accountContactLog.update({
       where: { id: match.id },

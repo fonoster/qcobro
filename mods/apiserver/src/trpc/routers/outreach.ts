@@ -280,7 +280,7 @@ export const outreachRouter = router({
       agentTemplateId: input.agentTemplateId,
       agentType: template.type as DispatchOutreachInput["channel"],
       contactedAt: at,
-      outcome: "OTHER" as const,
+      outcome: "DISPATCHED" as const,
       notes: "Contacto manual",
       debtAmountSnapshot: account.outstandingBalance,
       providerRef: result.providerRef,
@@ -320,7 +320,7 @@ export const outreachRouter = router({
     }
 
     // Fire-and-forget: must never add latency to this request or fail it. Started here
-    // — right after the dispatch-time OTHER placeholder is written — rather than from
+    // — right after the dispatch-time DISPATCHED placeholder is written — rather than from
     // any channel-specific handler, so coverage does not depend on the call ever
     // reaching one (see voice-call-status-tracking).
     if (

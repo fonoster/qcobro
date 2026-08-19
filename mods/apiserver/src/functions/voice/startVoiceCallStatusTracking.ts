@@ -20,7 +20,7 @@ export interface StartVoiceCallStatusTrackingInput {
 /**
  * Starts call-status tracking for a just-dispatched voice call, fire-and-forget. Called
  * from **every** voice dispatch site — the campaigns engine tick and manual/ad-hoc
- * outreach alike — right after the dispatch-time `OTHER` placeholder gestión is written.
+ * outreach alike — right after the dispatch-time `DISPATCHED` placeholder gestión is written.
  *
  * Deliberately independent of any channel-specific completion path (the pre-recorded
  * VoiceServer's answer/say/hangup flow; the Voz IA autopilot webhook): those only fire for

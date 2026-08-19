@@ -10,6 +10,7 @@ import { createCreatePortfolio } from "../../functions/portfolios/createPortfoli
 import { createUpdatePortfolio } from "../../functions/portfolios/updatePortfolio.js";
 import { createDeletePortfolio } from "../../functions/portfolios/deletePortfolio.js";
 import { createSyncAccounts } from "../../functions/portfolios/syncAccounts.js";
+import { createContactStats } from "../../functions/portfolios/contactStats.js";
 
 export const portfoliosRouter = router({
   list: workspaceProcedure
@@ -30,18 +31,13 @@ export const portfoliosRouter = router({
     })
   ),
 
-  // Workspace contact-rate inputs: active accounts vs. those contacted at least once.
-  contactStats: workspaceProcedure.query(async ({ ctx }) => {
-    const base = {
-      archivedAt: null,
-      portfolio: { workspaceRef: ctx.workspace.accessKeyId }
-    };
-    const [total, contacted] = await Promise.all([
-      ctx.prisma.portfolioAccount.count({ where: base }),
-      ctx.prisma.portfolioAccount.count({ where: { ...base, lastContactedAt: { not: null } } })
-    ]);
-    return { total, contacted };
-  }),
+  // Workspace contact-rate inputs: active accounts vs. those actually reached at least
+  // once (a gestión outcome that proves the channel worked — see contactStats.ts). Not
+  // `lastContactedAt`, which is set at attempt-reservation time and would count every
+  // dispatch as a success.
+  contactStats: workspaceProcedure.query(({ ctx }) =>
+    createContactStats(ctx.prisma as never)(ctx.workspace.accessKeyId)
+  ),
 
   create: workspaceProcedure
     .input(createPortfolioSchema)

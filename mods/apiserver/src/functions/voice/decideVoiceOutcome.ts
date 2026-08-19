@@ -50,8 +50,7 @@ const VALID_OUTCOMES = new Set([
   "PAID",
   "WRONG_NUMBER",
   "OPT_OUT",
-  "REFUSED",
-  "OTHER"
+  "REFUSED"
 ]);
 
 /**
@@ -82,11 +81,14 @@ export function createDecideVoiceOutcome(deps: DecideVoiceOutcomeDeps) {
       referenceDate: deps.now().toISOString().slice(0, 10)
     });
 
-    if (!decision.outcome) return { decided: true, outcome: null };
+    // An escalation or an answer outside the recognized set is an absence of a
+    // classification, not a result — write nothing and leave the channel layer's
+    // verdict (already on this gestión from CDR/status-callback finalization) in place.
+    if (!decision.outcome || !VALID_OUTCOMES.has(decision.outcome)) {
+      return { decided: true, outcome: null };
+    }
 
-    const outcome = VALID_OUTCOMES.has(decision.outcome)
-      ? (decision.outcome as CreateContactLogInput["outcome"])
-      : "OTHER";
+    const outcome = decision.outcome as CreateContactLogInput["outcome"];
     const obj = decision.objective;
     await deps.recordOutcome({
       portfolioAccountId: g.portfolioAccountId,

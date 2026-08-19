@@ -31,14 +31,14 @@ export type RecordPrerecordedOutcomeResult =
  * Records a PRE-RECORDED call's result onto its gestión, IN-PROCESS (no HTTP callback).
  *
  * The gestión is created at dispatch with `providerRef = callRef` and a placeholder
- * `OTHER` outcome; this enriches that row on completion. `DELIVERED` means the call was
- * ANSWERED — never a claim that the account holder heard the message — and carries the
+ * `DISPATCHED` outcome; this enriches that row on completion. `DELIVERED` means the call
+ * was ANSWERED — never a claim that the account holder heard the message — and carries the
  * answered `durationSeconds` (the honest signal). Unanswered completions record
  * `NOT_DELIVERED` with zero duration.
  *
- * Idempotent per call ref: once the outcome is finalized (no longer `OTHER`), a repeated
- * completion preserves it and does not downgrade — mirroring `recordOutcomeTx`. Billing
- * settlement is triggered separately (and is itself idempotent via `settledAt`).
+ * Idempotent per call ref: once the outcome is finalized (no longer `DISPATCHED`), a
+ * repeated completion preserves it and does not downgrade — mirroring `recordOutcomeTx`.
+ * Billing settlement is triggered separately (and is itself idempotent via `settledAt`).
  */
 export function createRecordPrerecordedOutcome(client: PrerecordedOutcomeClient) {
   const fn = async (input: PrerecordedCompletionInput): Promise<RecordPrerecordedOutcomeResult> => {
@@ -49,8 +49,9 @@ export function createRecordPrerecordedOutcome(client: PrerecordedOutcomeClient)
     if (!match) return { matched: false };
 
     const reported: ContactOutcome = input.answered ? "DELIVERED" : "NOT_DELIVERED";
-    // Never downgrade a finalized outcome; only the dispatch-time OTHER is replaced.
-    const outcome: ContactOutcome = match.outcome === "OTHER" ? reported : match.outcome;
+    // Never downgrade a finalized outcome; only the dispatch-time DISPATCHED placeholder
+    // is replaced.
+    const outcome: ContactOutcome = match.outcome === "DISPATCHED" ? reported : match.outcome;
 
     const existing = (match.channelData as Record<string, unknown> | null) ?? {};
     const channelData: Record<string, unknown> = {

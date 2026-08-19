@@ -59,7 +59,7 @@ function makeDeps(over: Partial<SmsEventsDeps> = {}): SmsEventsDeps {
 describe("createSmsEventsHandler", () => {
   it("processes a validly signed delivered callback and finalizes the gestión", async () => {
     const { prisma, updates } = makePrisma({
-      SM123: { id: "SM123", outcome: "OTHER", channelData: null }
+      SM123: { id: "SM123", outcome: "DISPATCHED", channelData: null }
     });
     const body = { MessageSid: "SM123", MessageStatus: "delivered" };
     const signature = twilio.getExpectedTwilioSignature(AUTH_TOKEN, CALLBACK_URL, body);
@@ -78,7 +78,7 @@ describe("createSmsEventsHandler", () => {
 
   it("rejects a request with an invalid signature — no data is read or written", async () => {
     const { prisma, updates } = makePrisma({
-      SM123: { id: "SM123", outcome: "OTHER", channelData: null }
+      SM123: { id: "SM123", outcome: "DISPATCHED", channelData: null }
     });
     const body = { MessageSid: "SM123", MessageStatus: "delivered" };
 
@@ -120,7 +120,7 @@ describe("createSmsEventsHandler", () => {
 
   it("a signature computed for a different callback URL is rejected", async () => {
     const { prisma, updates } = makePrisma({
-      SM123: { id: "SM123", outcome: "OTHER", channelData: null }
+      SM123: { id: "SM123", outcome: "DISPATCHED", channelData: null }
     });
     const body = { MessageSid: "SM123", MessageStatus: "delivered" };
     // Signed for a different URL than the one this handler is configured with.

@@ -61,8 +61,8 @@ export interface CallDetail {
  * Ground-truth call disposition, reachable independently of whether the destination
  * application (VoiceServer / autopilot) ever reports its own completion. See the
  * `voice-call-status-tracking` change: closes the gap where a voice gestión is stuck at
- * the dispatch-time `OTHER` placeholder because the channel's own completion path never
- * fires (most commonly, the call was never answered).
+ * the dispatch-time `DISPATCHED` placeholder because the channel's own completion path
+ * never fires (most commonly, the call was never answered).
  *
  * Deliberately CDR-only, not a live dial-progress stream (`Calls.TrackCall`): Fonoster's
  * `DialStatus` has no "call ended" value at all — it is scoped to whether the dial

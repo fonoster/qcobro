@@ -37,9 +37,9 @@ export type RecordVoiceAiCallStatusResult =
  * with zero duration; `answered:true` finalizes `DELIVERED` with the answered duration
  * (recovered from the Fonoster CDR by the caller — never fabricated as zero).
  *
- * Idempotent per call ref: once the outcome has left the dispatch-time `OTHER` placeholder
- * (whether by the autopilot webhook or a prior call to this function), a repeated
- * completion preserves the existing outcome and does not overwrite it.
+ * Idempotent per call ref: once the outcome has left the dispatch-time `DISPATCHED`
+ * placeholder (whether by the autopilot webhook or a prior call to this function), a
+ * repeated completion preserves the existing outcome and does not overwrite it.
  */
 export function createRecordVoiceAiCallStatus(client: VoiceAiCallStatusClient) {
   const fn = async (
@@ -52,8 +52,9 @@ export function createRecordVoiceAiCallStatus(client: VoiceAiCallStatusClient) {
     if (!match) return { matched: false };
 
     const reported: ContactOutcome = input.answered ? "DELIVERED" : "NO_ANSWER";
-    // Never downgrade a finalized outcome; only the dispatch-time OTHER is replaced.
-    const outcome: ContactOutcome = match.outcome === "OTHER" ? reported : match.outcome;
+    // Never downgrade a finalized outcome; only the dispatch-time DISPATCHED placeholder
+    // is replaced.
+    const outcome: ContactOutcome = match.outcome === "DISPATCHED" ? reported : match.outcome;
 
     const existing = (match.channelData as Record<string, unknown> | null) ?? {};
     const channelData: Record<string, unknown> = {

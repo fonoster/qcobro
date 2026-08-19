@@ -46,6 +46,7 @@ export function createPrismaEmailInboundClient(prisma: PrismaClient): EmailInbou
         campaignId: log.campaignId,
         debtAmountSnapshot: log.debtAmountSnapshot,
         customerEmail: log.portfolioAccount.email,
+        outcome: log.outcome,
         channelData: (log.channelData as Record<string, unknown> | null) ?? null,
         agentSystemPrompt: email?.systemPrompt ?? "",
         agentMaxReplies: email?.maxReplies ?? null,

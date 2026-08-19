@@ -1,6 +1,7 @@
 import {
   inboundEmailSchema,
   withErrorHandlingAndValidation,
+  type ContactOutcome,
   type CreateContactLogInput,
   type EmailAutopilot,
   type EmailAutopilotDecision,
@@ -18,6 +19,8 @@ export interface EmailGestionView {
   debtAmountSnapshot: number | null;
   /** The customer's email (reply recipient). */
   customerEmail: string;
+  /** The gestión's current outcome — checked so a reply can finalize a `DISPATCHED` row. */
+  outcome: ContactOutcome;
   channelData: Record<string, unknown> | null;
   agentSystemPrompt: string;
   /** Per-agent reply cap; null → use the deployment default. */
@@ -77,6 +80,12 @@ function isAutoReply(headers?: Record<string, string>): boolean {
  * decision is `reply` and the per-attempt cap (min(agent, deployment default)) is not yet
  * reached, it generates + sends the reply and counts it. Outcomes/Objectives are captured
  * via {@link recordOutcomeTx} (never downgrade a real outcome; idempotent Objective).
+ *
+ * Email has no call detail record to fall back on: a reply is itself proof the channel
+ * reached the destination, so a gestión still at `DISPATCHED` is finalized to `DELIVERED`
+ * before the autopilot decision is applied — otherwise a thread the debtor actually
+ * answered would strand at `DISPATCHED` (and count as not contacted) whenever the autopilot
+ * escalates without classifying.
  */
 export function createIngestEmailReply(deps: IngestEmailReplyDeps) {
   const fn = async (inbound: InboundEmailInput): Promise<IngestEmailReplyResult> => {
@@ -93,6 +102,18 @@ export function createIngestEmailReply(deps: IngestEmailReplyDeps) {
       messages: [],
       agentReplyCount: 0
     };
+
+    if (g.outcome === "DISPATCHED") {
+      await deps.recordOutcome({
+        portfolioAccountId: g.portfolioAccountId,
+        campaignId: g.campaignId ?? undefined,
+        agentType: "EMAIL",
+        contactedAt: nowIso,
+        outcome: "DELIVERED",
+        providerRef: token,
+        debtAmountSnapshot: g.debtAmountSnapshot ?? undefined
+      });
+    }
 
     thread.messages.push({
       direction: "inbound",
@@ -146,24 +167,28 @@ export function createIngestEmailReply(deps: IngestEmailReplyDeps) {
 
     const channelData = { ...existing, emailThread: thread };
 
-    // When the reply implies an outcome, persist it (+ Objective/suppression) through
-    // recordOutcome, which also writes the merged channelData on the same gestión row.
-    if (decision.outcome) {
-      const validOutcomes = new Set([
-        "NO_ANSWER",
-        "PAYMENT_PROMISE",
-        "PARTIAL_PAYMENT_AGREED",
-        "CALLBACK_REQUESTED",
-        "RESOLVED",
-        "PAID",
-        "WRONG_NUMBER",
-        "OPT_OUT",
-        "REFUSED",
-        "OTHER"
-      ]);
-      const outcome = validOutcomes.has(decision.outcome)
+    // When the reply implies a *recognized* outcome, persist it (+ Objective/suppression)
+    // through recordOutcome, which also writes the merged channelData on the same gestión
+    // row. An answer outside the recognized set is an absence of a classification, not a
+    // result — write nothing (the DISPATCHED→DELIVERED finalization above, or whatever the
+    // channel layer already determined, stands).
+    const validOutcomes = new Set([
+      "NO_ANSWER",
+      "PAYMENT_PROMISE",
+      "PARTIAL_PAYMENT_AGREED",
+      "CALLBACK_REQUESTED",
+      "RESOLVED",
+      "PAID",
+      "WRONG_NUMBER",
+      "OPT_OUT",
+      "REFUSED"
+    ]);
+    const outcome =
+      decision.outcome && validOutcomes.has(decision.outcome)
         ? (decision.outcome as CreateContactLogInput["outcome"])
-        : "OTHER";
+        : null;
+
+    if (outcome) {
       const obj = decision.objective;
       await deps.recordOutcome({
         portfolioAccountId: g.portfolioAccountId,

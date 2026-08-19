@@ -178,6 +178,7 @@ export function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAp
         workspaceRef: sender.workspaceRef,
         phoneNumberId: log.campaign?.whatsAppSenderNumber?.phoneNumberId ?? phoneNumberId,
         providerRef: log.providerRef,
+        outcome: log.outcome,
         channelData: (log.channelData as Record<string, unknown> | null) ?? null,
         agentSystemPrompt: whatsAppCfg?.systemPrompt ?? "",
         agentMaxReplies: whatsAppCfg?.maxReplies ?? null,

@@ -79,6 +79,7 @@ enum TriggerType {
 }
 
 enum ContactOutcome {
+  DISPATCHED
   DELIVERED
   NOT_DELIVERED
   NO_ANSWER
@@ -93,7 +94,6 @@ enum ContactOutcome {
   WRONG_NUMBER
   OPT_OUT
   REFUSED
-  OTHER
 }
 
 enum IntentStatus {

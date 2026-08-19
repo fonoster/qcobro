@@ -37,7 +37,7 @@ describe("recordPrerecordedOutcome", () => {
   it("answered call → DELIVERED with duration, preserves channelData, stores script length", async () => {
     const { client, cap } = makeClient({
       id: "g-1",
-      outcome: "OTHER",
+      outcome: "DISPATCHED",
       channelData: { from: "+1999", to: "+1888" }
     });
 
@@ -53,7 +53,7 @@ describe("recordPrerecordedOutcome", () => {
   });
 
   it("unanswered call → NOT_DELIVERED with zero duration", async () => {
-    const { client, cap } = makeClient({ id: "g-1", outcome: "OTHER", channelData: null });
+    const { client, cap } = makeClient({ id: "g-1", outcome: "DISPATCHED", channelData: null });
 
     const result = await createRecordPrerecordedOutcome(client as never)({
       providerRef: "call-abc",
@@ -90,7 +90,7 @@ describe("recordPrerecordedOutcome", () => {
   });
 
   it("rejects invalid input with a ValidationError and never touches the database", async () => {
-    const { client, cap } = makeClient({ id: "g-1", outcome: "OTHER", channelData: {} });
+    const { client, cap } = makeClient({ id: "g-1", outcome: "DISPATCHED", channelData: {} });
 
     await assert.rejects(
       () =>
