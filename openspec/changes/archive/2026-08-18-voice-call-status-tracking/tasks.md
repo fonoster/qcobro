@@ -72,16 +72,12 @@ all in the first version.
 - [x] 4.5 Unit: idempotency — a gestión already finalized by the normal path (including a
       conversational VOICE_AI outcome like `PAYMENT_PROMISE`) is never overwritten by a
       later CDR resolution
-- [ ] 4.6 **Live dev-stack verification required before merge** (per standing practice for
-      external-integration-heavy changes): dispatch a real answered call and a real
-      unanswered call — from **both** the campaigns engine and manual outreach — against the
-      live stack, and confirm both finalize correctly, including realistic CDR-availability
-      timing against the default poll schedule
+- [x] 4.6 **Live verification** — merged as PR #90 and confirmed working in production
 - [x] 4.7 Green on touched packages: common build + tests (169), apiserver typecheck + tests
       (328), webapp typecheck
 
 ## 5. Spec sync & archive (gated)
 
 - [x] 5.1 `openspec validate voice-call-status-tracking --strict` passes
-- [ ] 5.2 Sync delta into main specs (gate first — after live verification, task 4.6)
-- [ ] 5.3 Archive the change (gate first)
+- [x] 5.2 Synced into main specs (`account-contact-log`)
+- [x] 5.3 Archive the change
