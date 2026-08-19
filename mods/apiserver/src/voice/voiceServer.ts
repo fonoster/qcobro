@@ -10,8 +10,10 @@ export interface VoiceServerDeps {
   /**
    * In-process completion sink, invoked when a pre-recorded call finishes playing.
    * Best-effort: a throw here MUST NOT break the call. The embedded verb handler only
-   * runs when the call is ANSWERED, so this reports `answered: true`; detecting a call
-   * that never picked up needs a separate Fonoster call-status signal.
+   * runs when the call is ANSWERED, so this reports `answered: true`. A call that never
+   * reaches this handler at all — never answered, or never even routed to this app — is
+   * instead recovered by call-status tracking started at dispatch time (see
+   * `startVoiceCallStatusTracking`, wired at the dispatch sites, not here).
    */
   onCompleted?: (completion: PrerecordedCompletionInput) => void;
 }
