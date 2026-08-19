@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.29.2](https://github.com/fonoster/qcobro/compare/v1.29.1...v1.29.2) (2026-08-19)
+
+### Bug Fixes
+
+- **webapp:** round money to cents before choosing a fraction-digit format ([#98](https://github.com/fonoster/qcobro/issues/98)) ([339bd1e](https://github.com/fonoster/qcobro/commit/339bd1e996cd2c8372750c4085f4b26b05f33574))
+
 ## [1.29.1](https://github.com/fonoster/qcobro/compare/v1.29.0...v1.29.1) (2026-08-19)
 
 ### Bug Fixes
