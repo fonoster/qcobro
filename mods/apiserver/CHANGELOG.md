@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.29.0](https://github.com/fonoster/qcobro/compare/v1.28.2...v1.29.0) (2026-08-19)
+
+### Features
+
+- **sms:** record real delivery status from Twilio's status callback ([#91](https://github.com/fonoster/qcobro/issues/91)) ([dbe07dd](https://github.com/fonoster/qcobro/commit/dbe07dd941b115002edf02108e2f1bbb6d037933))
+
 ## [1.28.2](https://github.com/fonoster/qcobro/compare/v1.28.1...v1.28.2) (2026-08-19)
 
 ### Bug Fixes
