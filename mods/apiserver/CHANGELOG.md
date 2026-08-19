@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.28.2](https://github.com/fonoster/qcobro/compare/v1.28.1...v1.28.2) (2026-08-19)
+
+### Bug Fixes
+
+- **voice:** close the OTHER-forever gap for VOICE_AI/VOICE_PRERECORDED calls ([#90](https://github.com/fonoster/qcobro/issues/90)) ([8b063d7](https://github.com/fonoster/qcobro/commit/8b063d793c39e4024805c4284830c56805827096))
+
 ## [1.28.1](https://github.com/fonoster/qcobro/compare/v1.28.0...v1.28.1) (2026-08-13)
 
 **Note:** Version bump only for package @qcobro/apiserver
