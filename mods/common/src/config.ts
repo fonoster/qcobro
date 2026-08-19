@@ -144,7 +144,14 @@ export const twilioConfigSchema = z
      * send per minute, deployment-wide (the sender pool is shared by all workspaces).
      * Reserve `0` to pause SMS dispatch.
      */
-    maxSmsPerMinute: z.number().int().nonnegative().default(60)
+    maxSmsPerMinute: z.number().int().nonnegative().default(60),
+    /**
+     * Public base URL Twilio can reach. When set, outbound SMS registers a
+     * `statusCallback` at `${webhookBaseUrl}/api/sms/events` so delivery status
+     * returns as a gestión update (see the sms-events-hook capability). When absent,
+     * SMS remains fire-and-forget with no delivery-status update of any kind.
+     */
+    webhookBaseUrl: z.string().url().optional()
   })
   .optional();
 

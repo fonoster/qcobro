@@ -50,18 +50,36 @@ export function classifySmsError(err: unknown): DispatchError {
   );
 }
 
+/**
+ * Builds the Twilio `statusCallback` URL from a configured `webhookBaseUrl`, or `undefined`
+ * when unconfigured (SMS then sends exactly as fire-and-forget as it does without this
+ * capability). Pulled out as a pure function so the URL-building logic is unit-testable
+ * without mocking the `twilio` SDK client itself.
+ */
+export function buildSmsStatusCallbackUrl(webhookBaseUrl?: string): string | undefined {
+  return webhookBaseUrl ? `${webhookBaseUrl.replace(/\/+$/, "")}/api/sms/events` : undefined;
+}
+
 /** Twilio-backed {@link SmsClient}. Sends a single SMS and returns its message sid. */
 export class TwilioSmsClient implements SmsClient {
   private readonly client: ReturnType<typeof twilio>;
+  /** Registered with every send when configured; see the sms-events-hook capability. */
+  private readonly statusCallback: string | undefined;
 
   constructor(settings: TwilioSettings) {
     this.client = twilio(settings.accountSid, settings.authToken);
+    this.statusCallback = buildSmsStatusCallbackUrl(settings.webhookBaseUrl);
   }
 
   async sendMessage(input: { from: string; to: string; body: string }): Promise<{ sid: string }> {
     try {
       const message = await withTimeout(
-        this.client.messages.create({ from: input.from, to: input.to, body: input.body }),
+        this.client.messages.create({
+          from: input.from,
+          to: input.to,
+          body: input.body,
+          ...(this.statusCallback ? { statusCallback: this.statusCallback } : {})
+        }),
         "messages.create"
       );
       return { sid: message.sid };

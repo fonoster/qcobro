@@ -1,6 +1,26 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { classifySmsError } from "./twilioSmsClient.js";
+import { buildSmsStatusCallbackUrl, classifySmsError } from "./twilioSmsClient.js";
+
+describe("buildSmsStatusCallbackUrl", () => {
+  it("builds the callback URL when a webhookBaseUrl is configured", () => {
+    assert.equal(
+      buildSmsStatusCallbackUrl("https://qcobro.example.com"),
+      "https://qcobro.example.com/api/sms/events"
+    );
+  });
+
+  it("strips a trailing slash before appending the path", () => {
+    assert.equal(
+      buildSmsStatusCallbackUrl("https://qcobro.example.com/"),
+      "https://qcobro.example.com/api/sms/events"
+    );
+  });
+
+  it("returns undefined when no webhookBaseUrl is configured", () => {
+    assert.equal(buildSmsStatusCallbackUrl(undefined), undefined);
+  });
+});
 
 describe("classifySmsError", () => {
   it("classifies a 400 invalid-number rejection as DELIVERY_REJECTED", () => {

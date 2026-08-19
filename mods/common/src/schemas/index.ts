@@ -13,6 +13,7 @@ export * from "./dispatch.js";
 export * from "./email.js";
 export * from "./whatsApp.js";
 export * from "./voiceEvent.js";
+export * from "./smsEvent.js";
 export * from "./insight.js";
 export * from "./engineEvents.js";
 export * from "./billing.js";

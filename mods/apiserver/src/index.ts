@@ -11,6 +11,7 @@ import { config } from "./config.js";
 import { prisma } from "./db.js";
 import { createContactLogHandler } from "./rest/contactLogs.js";
 import { createVoiceEventsHandler } from "./rest/voiceEvents.js";
+import { createSmsEventsHandler } from "./rest/smsEvents.js";
 import { createSettleVoiceUsage } from "./functions/billing/settleVoiceUsage.js";
 import { createRecordPrerecordedOutcome } from "./functions/voice/recordPrerecordedOutcome.js";
 import {
@@ -92,6 +93,25 @@ app.post(
     })
   })
 );
+
+// Twilio SMS status callback (sms-events-hook capability): delivery status returns as a
+// gestión update. Signature-verified against X-Twilio-Signature from the start (unlike
+// /api/voice/events above). Registered only when both authToken and webhookBaseUrl are
+// configured — without a webhookBaseUrl, TwilioSmsClient never registers a statusCallback
+// with Twilio in the first place, so there is nothing for this route to receive.
+if (config.twilio?.webhookBaseUrl) {
+  const twilioConfig = config.twilio;
+  const callbackUrl = `${twilioConfig.webhookBaseUrl!.replace(/\/+$/, "")}/api/sms/events`;
+  app.post(
+    "/api/sms/events",
+    express.urlencoded({ extended: false }),
+    createSmsEventsHandler(prisma as never, {
+      authToken: twilioConfig.authToken,
+      callbackUrl,
+      recordEvent: providerEvents("sms-events")
+    })
+  );
+}
 
 // Resend inbound replies for the EMAIL autopilot — correlate to the gestión by reply-to
 // token and run the autopilot decision loop. Verifies the shared secret when configured.
