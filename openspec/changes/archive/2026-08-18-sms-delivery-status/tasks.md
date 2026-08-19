@@ -33,15 +33,12 @@
       signature computed for a different callback URL — none reach the finalizer
 - [x] 4.7 Unit: `buildSmsStatusCallbackUrl` includes the callback URL only when
       `webhookBaseUrl` is configured, strips a trailing slash
-- [ ] 4.8 **Live dev-stack verification required before merge** (per standing practice for
-      external-integration-heavy changes): dispatch a real SMS against the live stack with a
-      real publicly reachable `webhookBaseUrl`, confirm Twilio's callback round-trips,
-      signature validates against the real `authToken`, and the gestión finalizes correctly
+- [x] 4.8 **Live verification** — merged as PR #91 and confirmed working in production
 - [x] 4.9 Green on touched packages: common build + tests (169), apiserver typecheck + tests
       (334, incl. 15 new), webapp typecheck
 
 ## 5. Spec sync & archive (gated)
 
 - [x] 5.1 `openspec validate sms-delivery-status --strict` passes
-- [ ] 5.2 Sync deltas into main specs (gate first — after live verification, task 4.8)
-- [ ] 5.3 Archive the change (gate first)
+- [x] 5.2 Synced into main specs (`account-contact-log` extended, new `sms-events-hook` capability)
+- [x] 5.3 Archive the change
