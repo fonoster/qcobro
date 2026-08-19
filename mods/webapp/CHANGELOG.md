@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.29.3](https://github.com/fonoster/qcobro/compare/v1.29.2...v1.29.3) (2026-08-19)
+
+### Bug Fixes
+
+- **webapp:** show dashboard KPI money as whole units, no cents ([#99](https://github.com/fonoster/qcobro/issues/99)) ([2f8b4d4](https://github.com/fonoster/qcobro/commit/2f8b4d4536a4f427aca7212fce770f618fb59383))
+
 ## [1.29.2](https://github.com/fonoster/qcobro/compare/v1.29.1...v1.29.2) (2026-08-19)
 
 ### Bug Fixes
