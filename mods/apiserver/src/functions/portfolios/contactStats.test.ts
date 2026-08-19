@@ -9,13 +9,16 @@ const WORKSPACE = "WOworkspace1";
  * outcomes of its gestións (or none, for a never-attempted account). Mirrors the shape of
  * the real Prisma filter closely enough to exercise the query the factory builds.
  */
-function makeClient(accounts: { archived?: boolean; outcomes?: string[] }[]): ContactStatsClient {
+function makeClient(
+  accounts: { archived?: boolean; portfolioArchived?: boolean; outcomes?: string[] }[]
+): ContactStatsClient {
   return {
     portfolioAccount: {
       count: async (args) => {
         const { where } = args;
         return accounts.filter((a) => {
           if (a.archived) return false;
+          if (a.portfolioArchived && where.portfolio.archivedAt === null) return false;
           if (where.contactLogs) {
             const notIn = where.contactLogs.some.outcome.notIn;
             return (a.outcomes ?? []).some((o) => !notIn.includes(o));
@@ -63,6 +66,16 @@ describe("contactStats", () => {
   it("excludes archived accounts from both counts", async () => {
     const client = makeClient([
       { archived: true, outcomes: ["DELIVERED"] },
+      { outcomes: ["DELIVERED"] }
+    ]);
+    const result = await createContactStats(client)(WORKSPACE);
+    assert.deepEqual(result, { total: 1, contacted: 1 });
+  });
+
+  it("excludes accounts in an archived portfolio from both counts", async () => {
+    const client = makeClient([
+      { portfolioArchived: true, outcomes: ["DELIVERED"] },
+      { portfolioArchived: true, outcomes: ["NO_ANSWER"] },
       { outcomes: ["DELIVERED"] }
     ]);
     const result = await createContactStats(client)(WORKSPACE);
