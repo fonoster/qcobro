@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { ValidationError } from "@qcobro/common";
+import { ValidationError, type DeliveryReason, type Entrega } from "@qcobro/common";
 import { createRecordPrerecordedOutcome } from "./recordPrerecordedOutcome.js";
 
 interface Captured {
@@ -8,13 +8,20 @@ interface Captured {
   update?: { where: { id: string }; data: Record<string, unknown> };
 }
 
-function makeClient(record: { id: string; outcome: string; channelData: unknown } | null) {
+function makeClient(
+  record: {
+    id: string;
+    entrega: Entrega;
+    deliveryReason?: DeliveryReason | null;
+    channelData: unknown;
+  } | null
+) {
   const cap: Captured = {};
   const client = {
     accountContactLog: {
       findFirst: async () => {
         cap.findFirstCalled = true;
-        return record;
+        return record ? { deliveryReason: null, ...record } : null;
       },
       update: async (args: { where: { id: string }; data: Record<string, unknown> }) => {
         cap.update = args;
@@ -37,14 +44,19 @@ describe("recordPrerecordedOutcome", () => {
   it("answered call → DELIVERED with duration, preserves channelData, stores script length", async () => {
     const { client, cap } = makeClient({
       id: "g-1",
-      outcome: "OTHER",
+      entrega: "DISPATCHED",
       channelData: { from: "+1999", to: "+1888" }
     });
 
     const result = await createRecordPrerecordedOutcome(client as never)(ANSWERED);
 
-    assert.deepEqual(result, { matched: true, id: "g-1", outcome: "DELIVERED" });
-    assert.equal(cap.update?.data.outcome, "DELIVERED");
+    assert.deepEqual(result, {
+      matched: true,
+      id: "g-1",
+      entrega: "DELIVERED",
+      deliveryReason: null
+    });
+    assert.equal(cap.update?.data.entrega, "DELIVERED");
     assert.equal(cap.update?.data.durationSeconds, 22);
     const cd = cap.update?.data.channelData as Record<string, unknown>;
     assert.equal(cd.from, "+1999"); // existing preserved
@@ -52,32 +64,52 @@ describe("recordPrerecordedOutcome", () => {
     assert.ok(typeof cd.endedAt === "string");
   });
 
-  it("unanswered call → NOT_DELIVERED with zero duration", async () => {
-    const { client, cap } = makeClient({ id: "g-1", outcome: "OTHER", channelData: null });
+  it("unanswered call → FAILED with its reason and zero duration", async () => {
+    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: null });
 
     const result = await createRecordPrerecordedOutcome(client as never)({
       providerRef: "call-abc",
       answered: false,
       answeredSeconds: 0,
+      deliveryReason: "NO_ANSWER",
       at: "2026-07-12T10:00:00.000Z"
     });
 
-    assert.deepEqual(result, { matched: true, id: "g-1", outcome: "NOT_DELIVERED" });
+    assert.deepEqual(result, {
+      matched: true,
+      id: "g-1",
+      entrega: "FAILED",
+      deliveryReason: "NO_ANSWER"
+    });
+    assert.equal(cap.update?.data.entrega, "FAILED");
+    assert.equal(cap.update?.data.deliveryReason, "NO_ANSWER");
     assert.equal(cap.update?.data.durationSeconds, 0);
   });
 
-  it("idempotent: a finalized outcome is preserved, never downgraded", async () => {
-    const { client, cap } = makeClient({ id: "g-1", outcome: "DELIVERED", channelData: {} });
+  /** VOICE_PRERECORDED has no inbound path, so neither axis is ever written here. */
+  it("never writes camino or resultado", async () => {
+    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+
+    await createRecordPrerecordedOutcome(client as never)(ANSWERED);
+
+    assert.equal(cap.update?.data.camino, undefined);
+    assert.equal(cap.update?.data.resultado, undefined);
+  });
+
+  it("idempotent: entrega only advances, a finalized value is never downgraded", async () => {
+    const { client, cap } = makeClient({ id: "g-1", entrega: "DELIVERED", channelData: {} });
 
     const result = await createRecordPrerecordedOutcome(client as never)({
       providerRef: "call-abc",
       answered: false,
       answeredSeconds: 0,
+      deliveryReason: "NO_ANSWER",
       at: "2026-07-12T10:05:00.000Z"
     });
 
-    assert.deepEqual(result, { matched: true, id: "g-1", outcome: "DELIVERED" });
-    assert.equal(cap.update?.data.outcome, "DELIVERED");
+    assert.equal(result.matched && result.entrega, "DELIVERED");
+    assert.equal(cap.update?.data.entrega, undefined, "entrega not rewritten");
+    assert.equal(cap.update?.data.deliveryReason, undefined, "no reason on a delivered call");
   });
 
   it("returns matched:false and does not update when no gestión matches the callRef", async () => {
@@ -90,7 +122,7 @@ describe("recordPrerecordedOutcome", () => {
   });
 
   it("rejects invalid input with a ValidationError and never touches the database", async () => {
-    const { client, cap } = makeClient({ id: "g-1", outcome: "OTHER", channelData: {} });
+    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
 
     await assert.rejects(
       () =>

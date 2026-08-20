@@ -68,11 +68,11 @@ describe("createContactLog (reserve + record)", () => {
     const { client, cap } = makeClient();
     const fn = createCreateContactLog(client as never, TZ);
 
-    await fn({ ...BASE, outcome: "NO_ANSWER" });
+    await fn({ ...BASE, entrega: "FAILED", deliveryReason: "NO_ANSWER" });
 
     assert.equal(cap.accountUpdate?.lastContactedAt instanceof Date, true);
     assert.deepEqual(cap.accountUpdate?.totalAttempts, { increment: 1 });
-    // No hard outcome → the only account update is the reserve's hot-path bump.
+    // No hard resultado → the only account update is the reserve's hot-path bump.
     assert.equal("intentStatus" in (cap.accountUpdate ?? {}), false);
     assert.equal("suppressUntil" in (cap.accountUpdate ?? {}), false);
   });
@@ -83,7 +83,7 @@ describe("createContactLog (reserve + record)", () => {
 
     await fn({
       ...BASE,
-      outcome: "PAYMENT_PROMISE",
+      resultado: "PAYMENT_PROMISE",
       intentMetadata: { promisedAmount: 500, promisedDate: "2026-07-01T00:00:00.000Z" }
     });
 
@@ -102,7 +102,7 @@ describe("createContactLog (reserve + record)", () => {
     const { client, cap } = makeClient();
     const fn = createCreateContactLog(client as never, TZ);
 
-    await fn({ ...BASE, outcome: "NO_ANSWER" });
+    await fn({ ...BASE, entrega: "FAILED", deliveryReason: "NO_ANSWER" });
 
     assert.deepEqual(cap.stateUpdate?.attemptCount, { increment: 1 });
     // No prior state → today's count resets to 1 (a computed value, not an increment).
@@ -112,20 +112,27 @@ describe("createContactLog (reserve + record)", () => {
   });
 
   it("sets global intentStatus = INTENT_MET on RESOLVED and PAID", async () => {
-    for (const outcome of ["RESOLVED", "PAID"] as const) {
+    for (const resultado of ["RESOLVED", "PAID"] as const) {
       const { client, cap } = makeClient();
       const fn = createCreateContactLog(client as never, TZ);
-      await fn({ ...BASE, outcome });
+      await fn({ ...BASE, resultado });
       assert.equal(cap.accountUpdate?.intentStatus, "INTENT_MET");
     }
   });
 
-  it("maps WRONG_NUMBER and OPT_OUT to matching intentStatus", async () => {
-    for (const outcome of ["WRONG_NUMBER", "OPT_OUT"] as const) {
+  it("OPT_OUT and WRONG_PARTY set no account intentStatus — recorded on the gestión only", async () => {
+    for (const resultado of ["OPT_OUT", "WRONG_PARTY"] as const) {
       const { client, cap } = makeClient();
       const fn = createCreateContactLog(client as never, TZ);
-      await fn({ ...BASE, outcome });
-      assert.equal(cap.accountUpdate?.intentStatus, outcome);
+      await fn({ ...BASE, resultado });
+      assert.equal("intentStatus" in (cap.accountUpdate ?? {}), false);
     }
+  });
+
+  it("a FAILED entrega sets no account intentStatus", async () => {
+    const { client, cap } = makeClient();
+    const fn = createCreateContactLog(client as never, TZ);
+    await fn({ ...BASE, entrega: "FAILED", deliveryReason: "PROVIDER_ERROR" });
+    assert.equal("intentStatus" in (cap.accountUpdate ?? {}), false);
   });
 });

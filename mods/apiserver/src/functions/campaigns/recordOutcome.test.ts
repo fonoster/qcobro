@@ -54,24 +54,41 @@ const BASE = {
 describe("recordOutcome", () => {
   it("creates a new gestión when there is no providerRef", async () => {
     const { client, cap } = makeClient({ existing: null });
-    await createRecordOutcome(client as never)({ ...BASE, outcome: "NO_ANSWER" });
+    await createRecordOutcome(client as never)({
+      ...BASE,
+      entrega: "FAILED",
+      deliveryReason: "NO_ANSWER"
+    });
     assert.ok(cap.created, "should create");
     assert.equal(cap.updated, undefined, "should not update");
   });
 
   it("enriches the existing gestión by providerRef instead of duplicating", async () => {
     const { client, cap } = makeClient({
-      existing: { id: "log-1", outcome: "OTHER", providerRef: "ref-1", channelData: { from: "x" } }
+      existing: {
+        id: "log-1",
+        entrega: "DISPATCHED",
+        deliveryReason: null,
+        camino: null,
+        resultado: null,
+        providerRef: "ref-1",
+        channelData: { from: "x" }
+      }
     });
     await createRecordOutcome(client as never)({
       ...BASE,
-      outcome: "PAYMENT_PROMISE",
+      resultado: "PAYMENT_PROMISE",
       providerRef: "ref-1",
       intentMetadata: { promisedAmount: 500, promisedDate: "2026-07-01T00:00:00.000Z" }
     });
     assert.equal(cap.created, undefined, "should not create a duplicate");
     assert.equal(cap.updated?.id, "log-1");
-    assert.equal(cap.updated?.data.outcome, "PAYMENT_PROMISE");
+    assert.equal(cap.updated?.data.resultado, "PAYMENT_PROMISE");
+    // The axes are independent: recording a resultado does not itself advance entrega. Proof
+    // of delivery comes from the channel (a status callback, or an inbound reply in
+    // ingestEmailReply / ingestWhatsAppMessage), never inferred from the outcome — a FAILED
+    // delivery can legitimately carry a resultado when someone answers and hangs up.
+    assert.equal(cap.updated?.data.entrega, "DISPATCHED", "entrega untouched by a resultado");
     // Merges channel data from the dispatch-time row.
     assert.deepEqual(cap.updated?.data.channelData, { from: "x" });
     // PaymentPromise created for the payment outcome with amount + dueDate.
@@ -85,7 +102,7 @@ describe("recordOutcome", () => {
     const { client, cap } = makeClient({ existing: null });
     await createRecordOutcome(client as never)({
       ...BASE,
-      outcome: "PAYMENT_PROMISE",
+      resultado: "PAYMENT_PROMISE",
       intentMetadata: { promisedAmount: 9500, promisedDate: "mañana" }
     });
     const dueDate = cap.promiseCreated?.dueDate as Date;
@@ -95,26 +112,128 @@ describe("recordOutcome", () => {
 
   it("creates no PaymentPromise for a non-payment outcome", async () => {
     const { client, cap } = makeClient({ existing: null });
-    await createRecordOutcome(client as never)({ ...BASE, outcome: "NEW_TERMS" });
+    await createRecordOutcome(client as never)({ ...BASE, resultado: "NEW_TERMS" });
     assert.equal(cap.promiseCreated, undefined, "non-payment outcome creates no promise");
   });
 
-  it("never downgrades a real outcome with a dispatch-time OTHER", async () => {
+  it("never downgrades a recorded resultado with a later signal that carries none", async () => {
     const { client, cap } = makeClient({
-      existing: { id: "log-1", outcome: "PAYMENT_PROMISE", providerRef: "ref-1", channelData: {} }
+      existing: {
+        id: "log-1",
+        entrega: "DELIVERED",
+        deliveryReason: null,
+        camino: "ENGAGED",
+        resultado: "PAYMENT_PROMISE",
+        providerRef: "ref-1",
+        channelData: {}
+      }
     });
-    await createRecordOutcome(client as never)({ ...BASE, outcome: "OTHER", providerRef: "ref-1" });
-    assert.equal(cap.updated?.data.outcome, "PAYMENT_PROMISE", "kept the real outcome");
+    await createRecordOutcome(client as never)({ ...BASE, providerRef: "ref-1" });
+    assert.equal(cap.updated?.data.resultado, "PAYMENT_PROMISE", "kept the real resultado");
+    assert.equal(cap.updated?.data.camino, "ENGAGED", "kept the recorded camino");
+  });
+
+  /** entrega only ever advances: once it has left DISPATCHED it is never rewritten. */
+  it("never returns a finalized entrega to DISPATCHED", async () => {
+    const { client, cap } = makeClient({
+      existing: {
+        id: "log-1",
+        entrega: "FAILED",
+        deliveryReason: "NO_ANSWER",
+        camino: null,
+        resultado: null,
+        providerRef: "ref-1",
+        channelData: {}
+      }
+    });
+    await createRecordOutcome(client as never)({
+      ...BASE,
+      entrega: "DISPATCHED",
+      providerRef: "ref-1"
+    });
+    assert.equal(cap.updated?.data.entrega, "FAILED");
+    assert.equal(cap.updated?.data.deliveryReason, "NO_ANSWER");
+  });
+
+  /**
+   * The engine benches nobody for a wrong-party finding or an opt-out — both are recorded on
+   * the gestión and nothing else. Only a settled debt sets a global flag.
+   */
+  it("sets no global intentStatus for WRONG_PARTY or OPT_OUT", async () => {
+    for (const resultado of ["WRONG_PARTY", "OPT_OUT"] as const) {
+      const intentUpdates: unknown[] = [];
+      const { client } = makeClient({ existing: null });
+      (client.portfolioAccount as { update: unknown }).update = async (args: {
+        data: Record<string, unknown>;
+      }) => {
+        intentUpdates.push(args.data);
+        return {} as never;
+      };
+      await createRecordOutcome(client as never)({ ...BASE, resultado });
+      assert.deepEqual(intentUpdates, [], `${resultado} must not flag the account`);
+    }
+  });
+
+  /**
+   * Enrichment arrives from several sources, each knowing only its own fields: the dispatch
+   * writes the template and notes, the channel webhook writes the duration, the AI pass writes
+   * the insights. Whichever lands last must not erase what the others recorded — a Voz IA
+   * outcome decision carrying no duration used to null the one `ingestVoiceEvent` had stored
+   * moments earlier, and race the insight generator for the `ai*` columns.
+   */
+  it("merges enrichment forward instead of nulling what a previous signal recorded", async () => {
+    const { client, cap } = makeClient({
+      existing: {
+        id: "log-1",
+        entrega: "DELIVERED",
+        deliveryReason: null,
+        camino: "ENGAGED",
+        resultado: null,
+        providerRef: "ref-1",
+        channelData: { callSid: "call-1" },
+        durationSeconds: 134,
+        agentTemplateId: "tpl-1",
+        notes: "Contacto manual",
+        aiSummary: "El cliente reconoce la deuda.",
+        aiSentiment: "POSITIVE",
+        intentMetadata: { promisedAmount: 500 }
+      }
+    });
+
+    // A later signal that knows only the resultado.
+    await createRecordOutcome(client as never)({
+      ...BASE,
+      providerRef: "ref-1",
+      resultado: "CALLBACK_REQUESTED"
+    });
+
+    const d = cap.updated?.data ?? {};
+    assert.equal(d.resultado, "CALLBACK_REQUESTED", "the new value is applied");
+    assert.equal(d.durationSeconds, 134, "duration survives");
+    assert.equal(d.aiSummary, "El cliente reconoce la deuda.", "AI summary survives");
+    assert.equal(d.aiSentiment, "POSITIVE", "sentiment survives");
+    assert.equal(d.agentTemplateId, "tpl-1", "template survives");
+    assert.equal(d.notes, "Contacto manual", "notes survive");
+    assert.deepEqual(d.intentMetadata, { promisedAmount: 500 }, "intent metadata survives");
+    assert.deepEqual(d.channelData, { callSid: "call-1" }, "channel data merges");
   });
 
   it("does not duplicate a PaymentPromise on re-delivery", async () => {
     const { client, cap } = makeClient({
-      existing: { id: "log-1", outcome: "PAYMENT_PROMISE", providerRef: "ref-1", channelData: {} },
+      existing: {
+        id: "log-1",
+        entrega: "DELIVERED",
+        deliveryReason: null,
+        camino: "ENGAGED",
+        resultado: "PAYMENT_PROMISE",
+        providerRef: "ref-1",
+        channelData: {}
+      },
       existingPromise: { id: "promise-1" }
     });
     await createRecordOutcome(client as never)({
       ...BASE,
-      outcome: "PAYMENT_PROMISE",
+      resultado: "PAYMENT_PROMISE",
       providerRef: "ref-1",
       intentMetadata: { promisedAmount: 500 }
     });

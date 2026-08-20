@@ -8,7 +8,7 @@ const API = "http://localhost:3000";
 
 /**
  * Payment Promises worklist golden path: create a portfolio, import one account, seed a
- * VOICE_AI gestión with a PAYMENT_PROMISE outcome (which creates a PaymentPromise), then
+ * VOICE_AI gestión with a PAYMENT_PROMISE resultado (which creates a PaymentPromise), then
  * open the "Promesas de pago" worklist, verify the promise row + KPIs render, and resolve
  * it via the row menu (mark as paid). Assumes the dev stack is running.
  */
@@ -55,7 +55,9 @@ test.describe("payment promises — worklist", () => {
         portfolioAccountId: accountId,
         agentType: "VOICE_AI",
         contactedAt: new Date().toISOString(),
-        outcome: "PAYMENT_PROMISE",
+        entrega: "DELIVERED",
+        camino: "ENGAGED",
+        resultado: "PAYMENT_PROMISE",
         intentMetadata: { promisedAmount: 4820, promisedDate: "2026-12-01T00:00:00.000Z" },
         channelData: { to: "+525500000099", providerRef: `call-${stamp}` }
       }

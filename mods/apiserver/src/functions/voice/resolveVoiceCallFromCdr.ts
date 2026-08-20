@@ -1,12 +1,35 @@
-import type { VoiceCallStatusTracker } from "@qcobro/common";
+import type { DeliveryReason, VoiceCallStatusTracker } from "@qcobro/common";
 
 const NORMAL_CLEARING_STATUSES = new Set(["NORMAL_CLEARING"]);
+
+/**
+ * Fonoster's SIP-cause-level `CallStatus` → `deliveryReason`, for a call that did not
+ * clear normally. Only the codes this codebase branches on today are listed; anything else
+ * (or an unrecognized status) falls back to the generic `PROVIDER_ERROR` bucket.
+ */
+const CLEARING_CAUSE_REASON: Readonly<Record<string, DeliveryReason>> = {
+  NO_ANSWER: "NO_ANSWER", // Rang out — the destination never picked up.
+  NO_USER_RESPONSE: "NO_ANSWER",
+  ORIGINATOR_CANCEL: "NO_ANSWER", // Fonoster gave up before the destination answered.
+  USER_BUSY: "BUSY",
+  NETWORK_OUT_OF_ORDER: "UNREACHABLE",
+  DESTINATION_OUT_OF_ORDER: "UNREACHABLE",
+  NO_ROUTE_DESTINATION: "UNREACHABLE",
+  UNALLOCATED_NUMBER: "UNREACHABLE",
+  SUBSCRIBER_ABSENT: "UNREACHABLE"
+};
+
+function deliveryReasonForClearingCause(status: string): DeliveryReason {
+  return CLEARING_CAUSE_REASON[status] ?? "PROVIDER_ERROR";
+}
 
 export interface ResolveVoiceCallFromCdrDeps {
   tracker: Pick<VoiceCallStatusTracker, "getCallDetail">;
   finalize: (input: {
     providerRef: string;
     answered: boolean;
+    /** CDR-clearing-cause-derived reason, present only when `answered` is false. */
+    deliveryReason?: DeliveryReason;
     answeredSeconds: number;
     at: string;
   }) => Promise<unknown>;
@@ -58,6 +81,7 @@ export async function resolveVoiceCallFromCdr(
   await deps.finalize({
     providerRef,
     answered,
+    deliveryReason: answered ? undefined : deliveryReasonForClearingCause(detail.status),
     answeredSeconds: answered ? detail.durationSeconds : 0,
     at
   });

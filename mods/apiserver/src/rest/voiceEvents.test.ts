@@ -60,7 +60,7 @@ function makeDeps(
     generation: "onDemand",
     decideOutcome: async (id: string) => {
       decideCalls.push(id);
-      return { decided: true, outcome: null };
+      return { decided: true, resultado: null };
     },
     decideCalls,
     ...over

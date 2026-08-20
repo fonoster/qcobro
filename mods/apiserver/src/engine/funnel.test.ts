@@ -24,7 +24,7 @@ describe("runFunnel", () => {
     const accounts: FunnelAccount[] = [
       acct("ok"),
       acct("nophone", { phone: null }),
-      acct("optout", { intentStatus: "OPT_OUT" }),
+      acct("settled", { intentStatus: "INTENT_MET" }),
       acct("gsupp", { accountSuppressUntil: new Date("2026-06-24T00:00:00Z") }),
       acct("promise", {
         state: {
@@ -49,11 +49,32 @@ describe("runFunnel", () => {
     );
     const byId = Object.fromEntries(decisions.map((d) => [d.portfolioAccountId, d.decision]));
     assert.equal(byId.nophone, "no_phone");
-    assert.equal(byId.optout, "intent_suppressed");
+    assert.equal(byId.settled, "intent_suppressed");
     assert.equal(byId.gsupp, "account_suppressed");
     assert.equal(byId.promise, "promise_suppressed");
     assert.equal(byId.lifetime, "lifetime_cap");
     assert.equal(byId.daily, "daily_cap");
+  });
+
+  /**
+   * The engine benches nobody for a bad number or an opt-out claim any more. Both are recorded
+   * on the gestión; suppressing a contact point is an explicit Do Not Contact entry, reached
+   * through the DNC_CHECK trigger rather than inferred here.
+   */
+  it("suppresses only a settled debt, not a delivery failure or an opt-out", () => {
+    const accounts: FunnelAccount[] = [
+      acct("failed-delivery"),
+      acct("opted-out"),
+      acct("settled", { intentStatus: "INTENT_MET" })
+    ];
+    const { eligible, decisions } = runFunnel(CAMPAIGN, accounts, NOW, TZ);
+
+    assert.deepEqual(
+      eligible.map((a) => a.portfolioAccountId),
+      ["failed-delivery", "opted-out"]
+    );
+    const byId = Object.fromEntries(decisions.map((d) => [d.portfolioAccountId, d.decision]));
+    assert.equal(byId.settled, "intent_suppressed");
   });
 
   it("treats yesterday's attemptsToday as zero (daily reset by local date)", () => {

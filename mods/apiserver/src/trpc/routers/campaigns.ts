@@ -3,7 +3,8 @@ import { on } from "node:events";
 import {
   agentTypeSchema,
   campaignStatusSchema,
-  contactOutcomeSchema,
+  entregaSchema,
+  resultadoSchema,
   createCampaignSchema,
   updateCampaignSchema,
   updateCampaignStatusSchema,
@@ -33,7 +34,8 @@ const contactLogRouter = router({
   list: workspaceProcedure
     .input(
       z.object({
-        outcome: contactOutcomeSchema.optional(),
+        entrega: entregaSchema.optional(),
+        resultado: resultadoSchema.optional(),
         agentType: agentTypeSchema.optional(),
         portfolioId: z.string().optional(),
         campaignId: z.string().optional(),
@@ -49,7 +51,8 @@ const contactLogRouter = router({
           portfolioId: input.portfolioId,
           portfolio: { workspaceRef: ctx.workspace.accessKeyId }
         },
-        outcome: input.outcome,
+        entrega: input.entrega,
+        resultado: input.resultado,
         agentType: input.agentType,
         campaignId: input.campaignId,
         ...(input.from || input.to

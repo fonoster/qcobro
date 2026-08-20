@@ -71,35 +71,62 @@ enum CampaignPauseReason {
 enum TriggerType {
   MAX_ATTEMPTS_PER_DAY
   DNC_CHECK
-  WRONG_NUMBER
-  OPT_OUT
   PAYMENT_PROMISE
   INTENT_MET
   CALLBACK_REQUESTED
 }
 
-enum ContactOutcome {
+// A gestión answers up to three independent questions, one per axis. They were previously a
+// single `ContactOutcome` enum, which is why no value meant one thing.
+
+// Did the attempt reach the account holder's device or inbox?
+enum Entrega {
+  DISPATCHED
   DELIVERED
-  NOT_DELIVERED
+  FAILED
+}
+
+// Why delivery failed. Set if and only if `entrega` is FAILED. Split so a retry policy can
+// tell transient (NO_ANSWER, BUSY) from permanent (INVALID_DESTINATION, CHANNEL_UNSUPPORTED).
+enum DeliveryReason {
   NO_ANSWER
+  BUSY
+  UNREACHABLE
+  PROVIDER_ERROR
+  CHANNEL_UNSUPPORTED
+  INVALID_DESTINATION
+  REJECTED
+}
+
+// What path the interaction took once delivered. Null when none was observed — always so on
+// SMS and VOICE_PRERECORDED, which have no inbound path.
+enum Camino {
+  ENGAGED
+  ABANDONED
+  VOICEMAIL
+}
+
+// What came of the engagement. Null is the common case and means nothing came of it.
+enum Resultado {
   PAYMENT_PROMISE
-  PARTIAL_PAYMENT_AGREED
   NEW_TERMS
+  PAID
   CALLBACK_REQUESTED
   DISPUTE_RAISED
   INFORMATION_REQUEST
-  RESOLVED
-  PAID
-  WRONG_NUMBER
-  OPT_OUT
   REFUSED
-  OTHER
+  OPT_OUT
+  WRONG_PARTY
+  RESOLVED
 }
 
+// The only automatic global suppression: the debt is settled, so there is nothing left to
+// collect. WRONG_NUMBER and OPT_OUT were removed deliberately — the engine does not infer
+// suppression from a delivery failure or from an identity/opt-out claim made during an
+// interaction. Both are recorded on the gestión; acting on them is an explicit, labelled
+// decision on the workspace Do Not Contact list (see the DNC_CHECK trigger).
 enum IntentStatus {
   INTENT_MET
-  WRONG_NUMBER
-  OPT_OUT
 }
 
 enum PaymentPromiseStatus {
@@ -372,7 +399,10 @@ model AccountContactLog {
   agentType          AgentType
   contactedAt        DateTime
   durationSeconds    Int?
-  outcome            ContactOutcome
+  entrega            Entrega          @default(DISPATCHED)
+  deliveryReason     DeliveryReason?
+  camino             Camino?
+  resultado          Resultado?
   notes              String?
   debtAmountSnapshot Float?
   aiSummary          String?
@@ -398,7 +428,10 @@ model AccountContactLog {
   campaign           Campaign?        @relation(fields: [campaignId], references: [id], onDelete: SetNull)
   paymentPromises    PaymentPromise[]
 
+  // Contactability counts filter on entrega; the Gestiones list filters on both axes.
   @@index([portfolioAccountId, createdAt])
+  @@index([entrega])
+  @@index([resultado])
   @@map("account_contact_logs")
 }
 

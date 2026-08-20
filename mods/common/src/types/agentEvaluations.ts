@@ -22,7 +22,7 @@ export interface EvalStepResult {
   }[];
   /** EMAIL/WHATSAPP (the autopilot decision actually taken). */
   action?: EmailAutopilotAction;
-  outcome?: string | null;
+  resultado?: string | null;
 }
 
 export interface EvalScenarioSummary {

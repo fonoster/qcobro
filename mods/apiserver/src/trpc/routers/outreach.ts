@@ -8,6 +8,7 @@ import {
   ValidationError,
   type BillingClient,
   type BillingMeter,
+  type DeliveryReason,
   type DispatchOutreachInput,
   type EngineChannel
 } from "@qcobro/common";
@@ -123,6 +124,7 @@ function withVoiceUsageSettlement(
   record: (input: {
     providerRef: string;
     answered: boolean;
+    deliveryReason?: DeliveryReason;
     answeredSeconds: number;
     at: string;
   }) => Promise<unknown>
@@ -131,6 +133,7 @@ function withVoiceUsageSettlement(
   return async (input: {
     providerRef: string;
     answered: boolean;
+    deliveryReason?: DeliveryReason;
     answeredSeconds: number;
     at: string;
   }) => {
@@ -280,7 +283,7 @@ export const outreachRouter = router({
       agentTemplateId: input.agentTemplateId,
       agentType: template.type as DispatchOutreachInput["channel"],
       contactedAt: at,
-      outcome: "OTHER" as const,
+      entrega: "DISPATCHED" as const,
       notes: "Contacto manual",
       debtAmountSnapshot: account.outstandingBalance,
       providerRef: result.providerRef,
@@ -320,7 +323,7 @@ export const outreachRouter = router({
     }
 
     // Fire-and-forget: must never add latency to this request or fail it. Started here
-    // — right after the dispatch-time OTHER placeholder is written — rather than from
+    // — right after the dispatch-time DISPATCHED gestión is written — rather than from
     // any channel-specific handler, so coverage does not depend on the call ever
     // reaching one (see voice-call-status-tracking).
     if (

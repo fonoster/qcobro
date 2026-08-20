@@ -18,11 +18,11 @@ function buildPrompt(req: EmailAutopilotRequest): string {
     req.systemPrompt,
     "",
     "Eres el autopiloto de cobranza por WhatsApp. Decide la siguiente acción para el hilo.",
-    "Devuelve SOLO un objeto JSON con las claves: action, replyBody, outcome, objective.",
+    "Devuelve SOLO un objeto JSON con las claves: action, replyBody, resultado, objective.",
     "action ∈ reply | ignore | resolve | escalate.",
     "Cuando action = reply, replyBody es el cuerpo del mensaje de texto libre (en el idioma del cliente).",
-    "Si el cliente promete pagar, usa outcome = PAYMENT_PROMISE y objective { amount, dueDate }.",
-    "Si el cliente pide que no le contacten (opt-out), usa outcome = OPT_OUT y action = resolve.",
+    "Si el cliente promete pagar, usa resultado = PAYMENT_PROMISE y objective { amount, dueDate }.",
+    "Si el cliente pide que no le contacten (opt-out), usa resultado = OPT_OUT y action = resolve.",
     "Si el asunto no corresponde / está resuelto, usa resolve. Si requiere intervención humana, escalate.",
     "Usa el Contexto para responder preguntas básicas del cliente sobre su préstamo (saldo, cuota, " +
       "plazo, atraso, último pago). No inventes datos que no estén en el Contexto.",
@@ -50,21 +50,22 @@ function mockDecide(req: EmailAutopilotRequest): EmailAutopilotDecision {
   const last = inbound[inbound.length - 1]?.body ?? "";
   const lc = last.toLowerCase();
   if (/(stop|no contactar|baja|dar de baja|no quiero|no molest)/.test(lc)) {
-    return { action: "resolve", outcome: "OPT_OUT" };
+    return { action: "resolve", resultado: "OPT_OUT" };
   }
   if (/(pag|abonar|transferir|deposit|el viernes|la semana|mañana)/.test(lc)) {
     return {
       action: "reply",
       replyBody:
         "Gracias por su respuesta. Registramos su compromiso de pago y le compartimos los detalles para coordinarlo. Quedamos atentos.",
-      outcome: "PAYMENT_PROMISE"
+      resultado: "PAYMENT_PROMISE"
     };
   }
   if (/(no es|equivocad|no soy|número|no escrib|no contact)/.test(lc)) {
-    return { action: "resolve", outcome: "WRONG_NUMBER" };
+    return { action: "resolve", resultado: "WRONG_PARTY" };
   }
   if (/(reclamo|abogad|demanda|queja)/.test(lc)) {
-    return { action: "escalate", outcome: "OTHER" };
+    // escalate writes nothing beyond suppressing the auto-reply — it carries no resultado.
+    return { action: "escalate" };
   }
   return {
     action: "reply",

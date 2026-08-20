@@ -116,14 +116,23 @@ describe("ingestWhatsAppMessage — basic routing", () => {
     assert.equal(deps.waCalls[0]!.body, "Confirmado, le ayudamos.");
   });
 
-  it("appends inbound + outbound messages to the whatsAppThread in channelData", async () => {
+  it("appends inbound + outbound messages to the whatsAppThread in channelData, and records entrega/camino", async () => {
     const deps = makeDeps(BASE_GESTION, { action: "reply", replyBody: "Gracias." });
     const ingest = createIngestWhatsAppMessage(deps);
     await ingest(BASE_MSG);
 
-    const updated = deps.channelUpdates.get("log-1") as { whatsAppThread: { messages: unknown[] } };
-    assert.equal(updated.whatsAppThread.messages.length, 2);
-    const [inboundMsg, outboundMsg] = updated.whatsAppThread.messages as [
+    assert.equal(deps.outcomes.length, 1);
+    const recorded = deps.outcomes[0] as {
+      entrega: string;
+      camino: string;
+      resultado: unknown;
+      channelData: { whatsAppThread: { messages: unknown[] } };
+    };
+    assert.equal(recorded.entrega, "DELIVERED");
+    assert.equal(recorded.camino, "ENGAGED");
+    assert.equal(recorded.resultado, undefined);
+    assert.equal(recorded.channelData.whatsAppThread.messages.length, 2);
+    const [inboundMsg, outboundMsg] = recorded.channelData.whatsAppThread.messages as [
       { direction: string; body: string },
       { direction: string; body: string }
     ];
@@ -189,11 +198,12 @@ describe("ingestWhatsAppMessage — maxReplies cap", () => {
     const ingest = createIngestWhatsAppMessage(deps);
     await ingest(BASE_MSG);
 
-    const updated = deps.channelUpdates.get("log-1") as {
-      whatsAppThread: { messages: unknown[]; agentReplyCount: number };
+    assert.equal(deps.outcomes.length, 1);
+    const recorded = deps.outcomes[0] as {
+      channelData: { whatsAppThread: { messages: unknown[]; agentReplyCount: number } };
     };
-    assert.equal(updated.whatsAppThread.messages.length, 1); // only inbound, no outbound
-    assert.equal(updated.whatsAppThread.agentReplyCount, 3); // counter unchanged
+    assert.equal(recorded.channelData.whatsAppThread.messages.length, 1); // only inbound, no outbound
+    assert.equal(recorded.channelData.whatsAppThread.agentReplyCount, 3); // counter unchanged
   });
 });
 
@@ -244,44 +254,65 @@ describe("ingestWhatsAppMessage — 24h window", () => {
 });
 
 describe("ingestWhatsAppMessage — opt-out and outcomes", () => {
-  it("calls recordOutcome (not updateChannelData) when decision carries an outcome", async () => {
+  it("records entrega/camino/resultado, and OPT_OUT sets no account intentStatus (recorded on the gestión only)", async () => {
     const deps = makeDeps(BASE_GESTION, {
       action: "resolve",
-      outcome: "OPT_OUT"
+      resultado: "OPT_OUT"
     });
     const ingest = createIngestWhatsAppMessage(deps);
     await ingest(BASE_MSG);
 
     assert.equal(deps.outcomes.length, 1);
-    assert.equal(deps.channelUpdates.size, 0);
-    const recorded = deps.outcomes[0] as { outcome: string; providerRef: string };
-    assert.equal(recorded.outcome, "OPT_OUT");
+    const recorded = deps.outcomes[0] as {
+      entrega: string;
+      camino: string;
+      resultado: string;
+      providerRef: string;
+    };
+    assert.equal(recorded.entrega, "DELIVERED");
+    assert.equal(recorded.camino, "ENGAGED");
+    assert.equal(recorded.resultado, "OPT_OUT");
     assert.equal(recorded.providerRef, "meta-msg-out-1");
   });
 
-  it("captures PAYMENT_PROMISE outcome with objective details", async () => {
+  it("captures PAYMENT_PROMISE resultado with objective details", async () => {
     const deps = makeDeps(BASE_GESTION, {
       action: "reply",
       replyBody: "Registramos su compromiso.",
-      outcome: "PAYMENT_PROMISE",
+      resultado: "PAYMENT_PROMISE",
       objective: { amount: 500, dueDate: "2026-07-15" }
     });
     const ingest = createIngestWhatsAppMessage(deps);
     await ingest(BASE_MSG);
 
     assert.equal(deps.outcomes.length, 1);
-    const recorded = deps.outcomes[0] as { outcome: string; intentMetadata: unknown };
-    assert.equal(recorded.outcome, "PAYMENT_PROMISE");
+    const recorded = deps.outcomes[0] as { resultado: string; intentMetadata: unknown };
+    assert.equal(recorded.resultado, "PAYMENT_PROMISE");
     assert.deepEqual(recorded.intentMetadata, { promisedAmount: 500, promisedDate: "2026-07-15" });
   });
 
-  it("calls updateChannelData (not recordOutcome) when decision has no outcome", async () => {
+  it("collapses an unrecognized resultado string (e.g. a removed OTHER/WRONG_NUMBER) to null, still records entrega/camino", async () => {
+    const deps = makeDeps(BASE_GESTION, { action: "resolve", resultado: "OTHER" });
+    const ingest = createIngestWhatsAppMessage(deps);
+    await ingest(BASE_MSG);
+
+    assert.equal(deps.outcomes.length, 1);
+    const recorded = deps.outcomes[0] as { entrega: string; camino: string; resultado: unknown };
+    assert.equal(recorded.entrega, "DELIVERED");
+    assert.equal(recorded.camino, "ENGAGED");
+    assert.equal(recorded.resultado, undefined);
+  });
+
+  it("still records via recordOutcome (entrega/camino) when the decision has no resultado", async () => {
     const deps = makeDeps(BASE_GESTION, { action: "reply", replyBody: "Le ayudamos." });
     const ingest = createIngestWhatsAppMessage(deps);
     await ingest(BASE_MSG);
 
-    assert.equal(deps.outcomes.length, 0);
-    assert.ok(deps.channelUpdates.has("log-1"));
+    assert.equal(deps.outcomes.length, 1);
+    const recorded = deps.outcomes[0] as { entrega: string; camino: string; resultado: unknown };
+    assert.equal(recorded.entrega, "DELIVERED");
+    assert.equal(recorded.camino, "ENGAGED");
+    assert.equal(recorded.resultado, undefined);
   });
 
   it("does not send a reply when action=ignore", async () => {

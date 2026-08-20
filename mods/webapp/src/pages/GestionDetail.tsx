@@ -7,7 +7,6 @@ import {
   CheckCheck,
   PhoneCall,
   MessagesSquare,
-  Target,
   Mail,
   MessageSquare,
   Copy,
@@ -19,6 +18,8 @@ import { useI18n } from "../lib/i18n.js";
 import { useMoney } from "../lib/useWorkspaceCurrency.js";
 import { channelIcon, type Channel } from "../lib/channelIcon.js";
 import { useContactLogRealtime } from "../lib/useContactLogRealtime.js";
+import { entregaLabel, caminoPath, resultadoLabel } from "../lib/contactAxes.js";
+import { ResultadoRow } from "../components/ResultadoRow.js";
 
 // EMAIL is bidirectional (autopilot thread); the other two are one-way sends.
 const ONE_WAY: Channel[] = ["SMS", "VOICE_PRERECORDED"];
@@ -131,7 +132,10 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
     | {
         id: string;
         agentType: Channel;
-        outcome: string;
+        entrega: string;
+        deliveryReason: string | null;
+        camino: string | null;
+        resultado: string | null;
         contactedAt: string;
         durationSeconds: number | null;
         aiSummary: string | null;
@@ -226,55 +230,14 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         : t("gestiones.detail.sentMessage")
     : "";
 
-  // Delivery lifecycle as a reached-stage arrow progression, shown in the "Estado de
-  // entrega" metadata field. Only stages the attempt actually reached appear; threaded
-  // channels are capped at one full cycle by construction (each stage appended once).
-  const deliveryValue = ((): string => {
-    if (!g) return "";
-    const s = (k: string) => t(`gestiones.stage.${k}` as Parameters<typeof t>[0]);
-    const cd = (g.channelData ?? {}) as Record<string, unknown>;
-    const status = String(cd.deliveryStatus ?? "").toLowerCase();
-    const hasReply =
-      (emailThread?.messages?.some((m) => m.direction === "inbound") ?? false) ||
-      (whatsAppThread?.messages?.some((m) => m.direction === "inbound") ?? false);
-    let stages: string[];
-    switch (g.agentType) {
-      case "SMS":
-        stages =
-          g.outcome === "DELIVERED" || status.includes("deliver")
-            ? [s("sent"), s("delivered")]
-            : [s("sent")];
-        break;
-      case "VOICE_PRERECORDED":
-        stages = g.outcome === "DELIVERED" ? [s("sent"), s("delivered")] : [s("sent")];
-        break;
-      case "VOICE_AI":
-        stages =
-          g.durationSeconds != null || transcript.length > 0 || cd.endedAt
-            ? [s("sent"), s("answered"), s("finalized")]
-            : [s("sent")];
-        break;
-      case "EMAIL": {
-        const opened = !!cd.openedAt || status.includes("open");
-        stages = [s("sent")];
-        if (opened || hasReply || status.includes("deliver")) stages.push(s("delivered"));
-        if (opened || hasReply) stages.push(s("read"));
-        if (hasReply) stages.push(s("replied"));
-        break;
-      }
-      case "WHATSAPP": {
-        const read = status === "read" || hasReply;
-        stages = [s("sent")];
-        if (read || status.includes("deliver") || hasReply) stages.push(s("delivered"));
-        if (read) stages.push(s("read"));
-        if (hasReply) stages.push(s("replied"));
-        break;
-      }
-      default:
-        stages = [s("sent")];
-    }
-    return stages.join(" → ");
-  })();
+  // The three axes, straight off typed columns. This replaced a switch that reverse-engineered
+  // delivery from untyped channelData plus string sniffing, transcript length, and the outcome.
+  const entregaValue = g ? entregaLabel(t, g.entrega, g.deliveryReason, g.agentType) : "";
+  const caminoValue = g
+    ? caminoPath(t, g.agentType, g.camino, g.channelData as Record<string, unknown> | null)
+    : null;
+  const resultadoValue = g ? resultadoLabel(t, g.resultado) : null;
+  const promise = g?.paymentPromises?.[0] ?? null;
 
   return (
     <>
@@ -550,49 +513,11 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
               ) : generateInsight.isPending ? (
                 <p className="text-sm text-slate-500">{t("gestiones.detail.analysisGenerating")}</p>
               ) : null}
-              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
-                <span className="text-sm text-slate-500">{t("gestiones.detail.result")}</span>
-                <span className="text-sm font-medium text-slate-700">
-                  {t(`gestiones.outcome.${g.outcome}` as Parameters<typeof t>[0])}
-                </span>
-              </div>
             </div>
           </Section>
         )}
 
-        {/* WHATSAPP: payment promise */}
-        {isWhatsApp && g && g.paymentPromises.length > 0 && (
-          <Section
-            icon={Target}
-            iconClass="text-emerald-700"
-            title={t("gestiones.detail.paymentPromise")}
-          >
-            <div className="flex flex-col gap-2">
-              {g.paymentPromises.map((p) => (
-                <div
-                  key={p.id}
-                  className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3"
-                >
-                  <Target className="h-5 w-5 shrink-0 text-emerald-700" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-emerald-900">
-                      {t("gestiones.detail.paymentPromise")}
-                    </span>
-                    <span className="text-sm text-emerald-700">
-                      {p.amount != null ? `${money(p.amount)} · ` : ""}
-                      {new Date(p.dueDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <span className="ml-auto rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">
-                    {t(`paymentPromises.status.${p.status}` as Parameters<typeof t>[0])}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </Section>
-        )}
-
-        {/* EMAIL: AI insights — outcome + optional LLM summary */}
+        {/* EMAIL: AI insights */}
         {isEmail && g && (
           <Section
             icon={Sparkles}
@@ -605,12 +530,6 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
               ) : generateInsight.isPending ? (
                 <p className="text-sm text-slate-500">{t("gestiones.detail.analysisGenerating")}</p>
               ) : null}
-              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
-                <span className="text-sm text-slate-500">{t("gestiones.detail.result")}</span>
-                <span className="text-sm font-medium text-slate-700">
-                  {t(`gestiones.outcome.${g.outcome}` as Parameters<typeof t>[0])}
-                </span>
-              </div>
             </div>
           </Section>
         )}
@@ -645,38 +564,6 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                   : t("gestiones.detail.analysisPending")}
               </p>
             )}
-          </Section>
-        )}
-
-        {/* Voz IA + EMAIL: linked payment promise (captured for payment outcomes only) */}
-        {(isVoiceAi || isEmail) && g && g.paymentPromises.length > 0 && (
-          <Section
-            icon={Target}
-            iconClass="text-emerald-700"
-            title={t("gestiones.detail.paymentPromise")}
-          >
-            <div className="flex flex-col gap-2">
-              {g.paymentPromises.map((p) => (
-                <div
-                  key={p.id}
-                  className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3"
-                >
-                  <Target className="h-5 w-5 shrink-0 text-emerald-700" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-emerald-900">
-                      {t("gestiones.detail.paymentPromise")}
-                    </span>
-                    <span className="text-sm text-emerald-700">
-                      {p.amount != null ? `${money(p.amount)} · ` : ""}
-                      {new Date(p.dueDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <span className="ml-auto rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">
-                    {t(`paymentPromises.status.${p.status}` as Parameters<typeof t>[0])}
-                  </span>
-                </div>
-              ))}
-            </div>
           </Section>
         )}
 
@@ -733,14 +620,30 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
             title={t("gestiones.detail.analysis")}
           >
             <p className="text-sm leading-relaxed text-slate-600">{insight}</p>
-            <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
-              <span className="text-sm text-slate-500">{t("gestiones.detail.result")}</span>
-              <span className="text-sm font-medium text-slate-700">
-                {t(`gestiones.outcome.${g.outcome}` as Parameters<typeof t>[0])}
-              </span>
-            </div>
           </Section>
         )}
+
+        {/* Resultado — a standalone row, never nested in the AI section, so it is shown
+            whether or not an analysis exists. Absent entirely when nothing came of the
+            interaction, which is the common case. When it is a payment promise this row is
+            the promise: there is no second card repeating it. */}
+        <ResultadoRow
+          label={t("gestiones.detail.result")}
+          // A linked promise is shown even when `resultado` is null. Historical gestións on
+          // the one-way channels had their `resultado` cleared by the axes migration (those
+          // channels cannot carry one), but their `PaymentPromise` rows survive and are still
+          // on the operator worklist — keying the row purely off `resultado` would make those
+          // promises invisible here while the worklist kept chasing them.
+          value={resultadoValue ?? (promise ? t("gestiones.detail.paymentPromise") : null)}
+          promise={
+            promise
+              ? {
+                  amount: promise.amount != null ? money(promise.amount) : null,
+                  dueDate: new Date(promise.dueDate).toLocaleDateString()
+                }
+              : null
+          }
+        />
 
         {/* Metadata */}
         {g && (
@@ -753,7 +656,8 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                 label={t("gestiones.col.agent")}
                 value={t(`agents.type.${g.agentType}` as Parameters<typeof t>[0])}
               />
-              <MetaItem label={t("gestiones.detail.delivery")} value={deliveryValue} />
+              <MetaItem label={t("gestiones.detail.delivery")} value={entregaValue} />
+              {caminoValue && <MetaItem label={t("gestiones.detail.camino")} value={caminoValue} />}
               <MetaItem
                 label={t("gestiones.col.date")}
                 value={new Date(g.contactedAt).toLocaleString()}

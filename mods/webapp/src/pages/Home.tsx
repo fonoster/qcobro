@@ -1,6 +1,7 @@
 import { KeyRound } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
+import { entregaLabel, resultadoLabel } from "../lib/contactAxes.js";
 import { useI18n, type Language } from "../lib/i18n.js";
 import { useMoney } from "../lib/useWorkspaceCurrency.js";
 import { Card } from "../components/ui/card.js";
@@ -12,7 +13,9 @@ import { cn } from "@/lib/utils.js";
 type RecentGestion = {
   id: string;
   agentType: string;
-  outcome: string;
+  entrega: string;
+  deliveryReason: string | null;
+  resultado: string | null;
   contactedAt: string | Date;
   portfolioAccount: { fullName: string } | null;
 };
@@ -151,7 +154,8 @@ export function Home() {
                         {a.portfolioAccount?.fullName ?? "—"}
                       </p>
                       <p className="text-xs text-slate-500">
-                        {t(`gestiones.outcome.${a.outcome}` as Parameters<typeof t>[0])}
+                        {resultadoLabel(t, a.resultado) ??
+                          entregaLabel(t, a.entrega, a.deliveryReason, a.agentType)}
                       </p>
                     </div>
                     <span className="text-xs text-slate-400">

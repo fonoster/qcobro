@@ -104,10 +104,21 @@ export const fonosterConfigSchema = z
     prerecordedAppRef: z.string().min(1).optional(),
     /**
      * Externally reachable base URL of the apiserver for Fonoster callbacks (e.g. an
-     * ngrok URL). When set, syncing a Voz IA agent registers the autopilot events-hook
-     * at `${webhookBaseUrl}/api/voice/events` so conversation events return as gestiones.
+     * ngrok URL). Syncing a Voz IA agent registers the autopilot events-hook at
+     * `${webhookBaseUrl}/api/voice/events` so conversation events return as gestiones.
+     *
+     * **Required whenever a `fonoster` section is present.** The section itself stays
+     * optional — omitting it disables the voice channels entirely. What is not allowed is
+     * the in-between: dispatching calls with no callback registered, which strands every
+     * gestión at `entrega: DISPATCHED` forever with no way to learn what happened.
      */
-    webhookBaseUrl: z.string().url().optional(),
+    webhookBaseUrl: z.string().url({
+      message:
+        "fonoster.webhookBaseUrl is required. Voice dispatch without a callback URL strands " +
+        "every gestión at entrega=DISPATCHED with no way to learn the call result. Set it to " +
+        "the apiserver's externally reachable base URL, or remove the whole `fonoster` " +
+        "section to disable the voice channels."
+    }),
     /**
      * Campaigns-engine pacing: the maximum number of voice calls the engine will
      * originate per minute, deployment-wide (the caller-ID pool is shared by all
@@ -146,12 +157,23 @@ export const twilioConfigSchema = z
      */
     maxSmsPerMinute: z.number().int().nonnegative().default(60),
     /**
-     * Public base URL Twilio can reach. When set, outbound SMS registers a
-     * `statusCallback` at `${webhookBaseUrl}/api/sms/events` so delivery status
-     * returns as a gestión update (see the sms-events-hook capability). When absent,
-     * SMS remains fire-and-forget with no delivery-status update of any kind.
+     * Public base URL Twilio can reach. Outbound SMS registers a `statusCallback` at
+     * `${webhookBaseUrl}/api/sms/events` so delivery status returns as a gestión update
+     * (see the sms-events-hook capability).
+     *
+     * **Required whenever a `twilio` section is present.** The section itself stays
+     * optional — omitting it disables SMS entirely. Fire-and-forget SMS is no longer a
+     * supported configuration: without the callback every SMS gestión sits at
+     * `entrega: DISPATCHED` permanently, which is indistinguishable from a message still
+     * in flight and makes delivery rate uncomputable.
      */
-    webhookBaseUrl: z.string().url().optional()
+    webhookBaseUrl: z.string().url({
+      message:
+        "twilio.webhookBaseUrl is required. SMS dispatch without a status callback strands " +
+        "every gestión at entrega=DISPATCHED, which is indistinguishable from a message still " +
+        "in flight. Set it to the apiserver's externally reachable base URL, or remove the " +
+        "whole `twilio` section to disable SMS."
+    })
   })
   .optional();
 

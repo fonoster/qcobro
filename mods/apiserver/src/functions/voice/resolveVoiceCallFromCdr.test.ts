@@ -26,12 +26,13 @@ describe("resolveVoiceCallFromCdr", () => {
     assert.deepEqual(finalizeArgs, {
       providerRef: "call-abc",
       answered: true,
+      deliveryReason: undefined,
       answeredSeconds: 33,
       at: "2026-08-18T10:00:00.000Z"
     });
   });
 
-  it("non-normal-clearing CDR → finalizes not-delivered with zero duration, never a fabricated one", async () => {
+  it("non-normal-clearing CDR (busy) → finalizes FAILED with deliveryReason BUSY, zero duration, never a fabricated one", async () => {
     let finalizeArgs: unknown;
     await resolveVoiceCallFromCdr(
       {
@@ -49,9 +50,42 @@ describe("resolveVoiceCallFromCdr", () => {
     assert.deepEqual(finalizeArgs, {
       providerRef: "call-abc",
       answered: false,
+      deliveryReason: "BUSY",
       answeredSeconds: 0,
       at: "2026-08-18T10:00:00.000Z"
     });
+  });
+
+  it("non-normal-clearing CDR (no answer) → deliveryReason NO_ANSWER", async () => {
+    let finalizeArgs: unknown;
+    await resolveVoiceCallFromCdr(
+      {
+        tracker: { getCallDetail: async () => ({ status: "NO_ANSWER", durationSeconds: 0 }) },
+        finalize: async (input) => {
+          finalizeArgs = input;
+        }
+      },
+      "call-abc",
+      "2026-08-18T10:00:00.000Z"
+    );
+
+    assert.equal((finalizeArgs as { deliveryReason: string }).deliveryReason, "NO_ANSWER");
+  });
+
+  it("an unrecognized clearing cause falls back to PROVIDER_ERROR", async () => {
+    let finalizeArgs: unknown;
+    await resolveVoiceCallFromCdr(
+      {
+        tracker: { getCallDetail: async () => ({ status: "SOMETHING_WEIRD", durationSeconds: 0 }) },
+        finalize: async (input) => {
+          finalizeArgs = input;
+        }
+      },
+      "call-abc",
+      "2026-08-18T10:00:00.000Z"
+    );
+
+    assert.equal((finalizeArgs as { deliveryReason: string }).deliveryReason, "PROVIDER_ERROR");
   });
 
   it("polls while the call is still in progress (CDR not written yet), then finalizes once it ends", async () => {

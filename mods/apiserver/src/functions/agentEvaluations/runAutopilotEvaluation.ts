@@ -63,7 +63,8 @@ export async function* runAutopilotEvaluation(
       if (turn.expected) {
         passed = true;
         if (turn.expected.action && turn.expected.action !== action) passed = false;
-        if (turn.expected.outcome && turn.expected.outcome !== decision.outcome) passed = false;
+        if (turn.expected.resultado && turn.expected.resultado !== decision.resultado)
+          passed = false;
         if (turn.expected.text) {
           const body = decision.replyBody ?? "";
           const ok =
@@ -78,7 +79,13 @@ export async function* runAutopilotEvaluation(
       yield {
         type: "turn",
         scenarioRef: scenario.ref,
-        result: { turnIndex, input: turn.input, passed, action, outcome: decision.outcome ?? null }
+        result: {
+          turnIndex,
+          input: turn.input,
+          passed,
+          action,
+          resultado: decision.resultado ?? null
+        }
       };
     }
 

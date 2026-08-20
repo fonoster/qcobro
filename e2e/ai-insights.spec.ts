@@ -54,7 +54,7 @@ test.describe("ai-insights", () => {
         portfolioAccountId: accountId,
         agentType: "VOICE_AI",
         contactedAt: new Date().toISOString(),
-        outcome: "OTHER",
+        entrega: "DISPATCHED",
         notes: "Seed",
         channelData: {
           providerRef: `voz-${stamp}`,

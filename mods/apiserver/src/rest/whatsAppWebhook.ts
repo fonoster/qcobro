@@ -9,6 +9,7 @@ import {
   whatsAppWebhookSchema,
   type AiConfig,
   type PortfolioAccountRecord,
+  type Resultado,
   type WhatsAppClient
 } from "@qcobro/common";
 import type { ProviderEventRecorder } from "../engine/eventSink.js";
@@ -55,9 +56,9 @@ interface WebhookDb {
     findFirst(args: {
       where: { providerRef: string };
     }): Promise<{ id: string; portfolioAccountId: string } | null>;
-  };
-  portfolioAccount: {
-    update(args: { where: { id: string }; data: { intentStatus: string } }): Promise<unknown>;
+    // Typed against the enum rather than `string`: the previous `intentStatus: string` here is
+    // what let a write of a since-removed enum value pass the type checker and fail at runtime.
+    update(args: { where: { id: string }; data: { resultado: Resultado } }): Promise<unknown>;
   };
 }
 
@@ -255,9 +256,13 @@ async function processEvents(
             logger.warn(`opt-out: no gestión for providerRef=${status.id} — skipping`);
             continue;
           }
-          await db.portfolioAccount.update({
-            where: { id: log.portfolioAccountId },
-            data: { intentStatus: "OPT_OUT" }
+          // The account-level OPT_OUT flag no longer exists: suppression moved to the
+          // workspace Do Not Contact list, which is not built yet (issue #101). Recording the
+          // platform block on the gestión keeps the signal findable in the console until that
+          // lands; writing `intentStatus` here would throw, since the enum value is gone.
+          await db.accountContactLog.update({
+            where: { id: log.id },
+            data: { resultado: "OPT_OUT" }
           });
           logger.verbose(`opt-out: account=${log.portfolioAccountId} providerRef=${status.id}`);
         }

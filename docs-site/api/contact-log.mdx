@@ -28,14 +28,21 @@ curl -X POST "https://api.qcobro.com/api/contact-logs" \
     "portfolioAccountId": "a3bb189e-...",
     "agentType": "VOICE_AI",
     "contactedAt": "2026-06-28T15:30:00Z",
-    "outcome": "PAYMENT_PROMISE",
+    "entrega": "DELIVERED",
+    "camino": "ENGAGED",
+    "resultado": "PAYMENT_PROMISE",
     "notes": "El titular se compromete a pagar el viernes."
   }'
 ```
 
 ## Cuerpo de la petición
 
-Solo cuatro campos son obligatorios; el resto es opcional y enriquece la gestión.
+Solo tres campos son obligatorios; el resto es opcional y enriquece la gestión.
+
+Una gestión describe hasta tres cosas independientes: si el mensaje llegó (`entrega`), qué
+camino tomó la interacción (`camino`) y qué se obtuvo de ella (`resultado`). Son ejes
+separados: una entrega fallida puede aun así traer un resultado (alguien contesta y dice que
+no es la persona buscada), y una entrega correcta a menudo no trae ninguno.
 
 <ParamField body="portfolioAccountId" type="string" required>
   Id de la cuenta contactada. Debe pertenecer al workspace de las credenciales.
@@ -46,12 +53,31 @@ Solo cuatro campos son obligatorios; el resto es opcional y enriquece la gestió
 <ParamField body="contactedAt" type="string" required>
   Momento del contacto, como cadena de fecha-hora ISO.
 </ParamField>
-<ParamField body="outcome" type="string" required>
-  Resultado de la gestión. Uno de `DELIVERED`, `NOT_DELIVERED`, `NO_ANSWER`,
-  `PAYMENT_PROMISE`, `PARTIAL_PAYMENT_AGREED`, `NEW_TERMS`, `CALLBACK_REQUESTED`,
-  `DISPUTE_RAISED`, `INFORMATION_REQUEST`, `RESOLVED`, `PAID`, `WRONG_NUMBER`, `OPT_OUT`,
-  `REFUSED`, `OTHER`.
+<ParamField body="entrega" type="string" default="DISPATCHED">
+  Si el intento llegó al dispositivo o buzón de la cuenta. Uno de `DISPATCHED` (enviado, aun
+  sin confirmación), `DELIVERED` o `FAILED`. Si se omite, la gestión se registra como
+  `DISPATCHED`.
 </ParamField>
+<ParamField body="deliveryReason" type="string">
+  Por qué falló la entrega. Obligatorio cuando `entrega` es `FAILED`, y no se admite en
+  ningún otro caso. Uno de `NO_ANSWER`, `BUSY`, `UNREACHABLE`, `PROVIDER_ERROR`,
+  `CHANNEL_UNSUPPORTED`, `INVALID_DESTINATION`, `REJECTED`.
+</ParamField>
+<ParamField body="camino" type="string">
+  Qué camino tomó la interacción una vez entregada. Uno de `ENGAGED`, `ABANDONED`,
+  `VOICEMAIL`. Se omite cuando no hubo interacción observable.
+</ParamField>
+<ParamField body="resultado" type="string">
+  Qué se obtuvo de la interacción. Uno de `PAYMENT_PROMISE`, `NEW_TERMS`, `PAID`,
+  `CALLBACK_REQUESTED`, `DISPUTE_RAISED`, `INFORMATION_REQUEST`, `REFUSED`, `OPT_OUT`,
+  `WRONG_PARTY`, `RESOLVED`. Se omite cuando la gestión no produjo ninguno, que es lo
+  habitual.
+</ParamField>
+
+<Note>
+  `SMS` y `VOICE_PRERECORDED` no tienen canal de vuelta, así que solo admiten `entrega`.
+  Enviar `camino` o `resultado` en esos canales se rechaza con `400`.
+</Note>
 <ParamField body="campaignId" type="string">
   Campaña a la que pertenece la gestión, si proviene de una campaña.
 </ParamField>
@@ -98,7 +124,9 @@ En éxito, el endpoint responde `201 Created` con la gestión registrada.
 {
   "id": "e29b4f71-...",
   "portfolioAccountId": "a3bb189e-...",
-  "outcome": "PAYMENT_PROMISE",
+  "entrega": "DELIVERED",
+  "camino": "ENGAGED",
+  "resultado": "PAYMENT_PROMISE",
   "contactedAt": "2026-06-28T15:30:00Z"
 }
 ```
@@ -117,7 +145,7 @@ Una respuesta de validación tiene la misma forma estructurada que el resto de l
 {
   "code": "VALIDATION_ERROR",
   "message": "...",
-  "fieldErrors": [{ "field": "outcome", "message": "...", "code": "invalid_enum_value" }]
+  "fieldErrors": [{ "field": "resultado", "message": "...", "code": "invalid_enum_value" }]
 }
 ```
 

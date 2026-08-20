@@ -54,7 +54,8 @@ const PAYLOAD = {
   portfolioAccountId: "acc-1",
   agentType: "SMS",
   contactedAt: "2026-06-22T10:00:00.000Z",
-  outcome: "NO_ANSWER"
+  entrega: "FAILED",
+  deliveryReason: "NO_ANSWER"
 };
 
 describe("parseBasicWorkspace", () => {

@@ -4,22 +4,21 @@ import {
   type AccountContactLogRecord,
   type CampaignClient,
   type CampaignTriggerRecord,
-  type ContactOutcome,
+  type Resultado,
   type CreateContactLogInput
 } from "@qcobro/common";
 
-/** Hard outcomes that set a global, cross-campaign `intentStatus`. */
-function globalIntentFor(
-  outcome: ContactOutcome
-): "INTENT_MET" | "WRONG_NUMBER" | "OPT_OUT" | null {
-  switch (outcome) {
+/**
+ * Hard resultados that set a global, cross-campaign `intentStatus`. `OPT_OUT` and
+ * `WRONG_PARTY` are recorded on the gestión and set no account flag — the engine does not
+ * infer suppression from an identity/opt-out claim made during an interaction (that is an
+ * explicit, labelled decision on the workspace Do Not Contact list; see issue #101).
+ */
+function globalIntentFor(resultado: Resultado | null): "INTENT_MET" | null {
+  switch (resultado) {
     case "RESOLVED":
     case "PAID":
       return "INTENT_MET";
-    case "WRONG_NUMBER":
-      return "WRONG_NUMBER";
-    case "OPT_OUT":
-      return "OPT_OUT";
     default:
       return null;
   }
@@ -66,7 +65,10 @@ function logData(params: CreateContactLogInput, contactedAt: Date): Record<strin
     agentType: params.agentType,
     contactedAt,
     durationSeconds: params.durationSeconds ?? null,
-    outcome: params.outcome,
+    entrega: params.entrega,
+    deliveryReason: params.deliveryReason ?? null,
+    camino: params.camino ?? null,
+    resultado: params.resultado ?? null,
     notes: params.notes ?? null,
     debtAmountSnapshot: params.debtAmountSnapshot ?? null,
     aiSummary: params.aiSummary ?? null,
@@ -80,9 +82,9 @@ function logData(params: CreateContactLogInput, contactedAt: Date): Record<strin
   };
 }
 
-/** Outcomes that imply a payment commitment QCobro can adjudicate (→ a PaymentPromise). */
-function isPaymentOutcome(outcome: ContactOutcome): boolean {
-  return outcome === "PAYMENT_PROMISE" || outcome === "PARTIAL_PAYMENT_AGREED";
+/** Resultados that imply a payment commitment QCobro can adjudicate (→ a PaymentPromise). */
+function isPaymentOutcome(resultado: Resultado | null): boolean {
+  return resultado === "PAYMENT_PROMISE";
 }
 
 /**
@@ -96,13 +98,13 @@ async function applyOutcomeEffectsTx(
   tx: CampaignClient,
   log: AccountContactLogRecord,
   params: CreateContactLogInput,
-  effectiveOutcome: ContactOutcome
+  effectiveResultado: Resultado | null
 ): Promise<void> {
   const contactedAt = new Date(params.contactedAt);
   const meta = params.intentMetadata ?? {};
 
-  // Global hard-outcome suppression.
-  const intentStatus = globalIntentFor(effectiveOutcome);
+  // Global hard-resultado suppression.
+  const intentStatus = globalIntentFor(effectiveResultado);
   if (intentStatus) {
     await tx.portfolioAccount.update({
       where: { id: params.portfolioAccountId },
@@ -110,22 +112,14 @@ async function applyOutcomeEffectsTx(
     });
   }
 
-  // PaymentPromise for payment outcomes only — guarded so a re-delivered outcome doesn't
-  // duplicate (one promise per gestión). Non-payment outcomes create no tracked entity.
+  // PaymentPromise for payment resultados only — guarded so a re-delivered resultado doesn't
+  // duplicate (one promise per gestión). Non-payment resultados create no tracked entity.
   let promiseDueDate: Date | null = null;
-  const isPayment = isPaymentOutcome(effectiveOutcome);
+  const isPayment = isPaymentOutcome(effectiveResultado);
 
   if (isPayment) {
-    const amount =
-      effectiveOutcome === "PAYMENT_PROMISE"
-        ? typeof meta.promisedAmount === "number"
-          ? meta.promisedAmount
-          : null
-        : typeof meta.installmentAmount === "number"
-          ? meta.installmentAmount
-          : null;
-    const dateStr = effectiveOutcome === "PAYMENT_PROMISE" ? meta.promisedDate : meta.startDate;
-    promiseDueDate = parseValidDate(dateStr);
+    const amount = typeof meta.promisedAmount === "number" ? meta.promisedAmount : null;
+    promiseDueDate = parseValidDate(meta.promisedDate);
 
     const existing = await tx.paymentPromise.findFirst({
       where: { contactLogId: log.id }
@@ -143,7 +137,7 @@ async function applyOutcomeEffectsTx(
     }
   }
 
-  // Campaign-local suppression from the outcome (Lever B).
+  // Campaign-local suppression from the resultado (Lever B).
   if (params.campaignId) {
     const triggers = await tx.campaignTrigger.findMany({
       where: { campaignId: params.campaignId }
@@ -153,7 +147,7 @@ async function applyOutcomeEffectsTx(
     if (isPayment) {
       const suppressDays = triggerNumber(triggers, "PAYMENT_PROMISE", "suppressDays", 7);
       suppressUntil = promiseDueDate ?? addDays(contactedAt, suppressDays);
-    } else if (effectiveOutcome === "CALLBACK_REQUESTED") {
+    } else if (effectiveResultado === "CALLBACK_REQUESTED") {
       const requested = parseValidDate(meta.requestedDate);
       const suppressHours = triggerNumber(triggers, "CALLBACK_REQUESTED", "suppressHours", 24);
       suppressUntil = requested ?? addHours(contactedAt, suppressHours);
@@ -187,9 +181,11 @@ async function applyOutcomeEffectsTx(
  * effects — but does NOT count the attempt ({@link reserveAttempt} owns counters).
  *
  * Correlated by `providerRef`: when a row with that ref exists, it is enriched in place
- * (one gestión per attempt). A dispatch-time placeholder (`OTHER`) SHALL NOT downgrade a
- * real outcome already recorded by an earlier callback. When no `providerRef` is given,
- * a new gestión is always created.
+ * (one gestión per attempt). `entrega` only ever advances — once a prior callback moved it
+ * off `DISPATCHED` (to `DELIVERED` or `FAILED`), a later write SHALL NOT move it back to
+ * `DISPATCHED` or flip it between `DELIVERED`/`FAILED`; its `deliveryReason` travels with it.
+ * `camino`/`resultado` merge forward: a null incoming value never overwrites a non-null
+ * stored value. When no `providerRef` is given, a new gestión is always created.
  */
 export async function recordOutcomeTx(
   tx: CampaignClient,
@@ -201,16 +197,46 @@ export async function recordOutcomeTx(
     : null;
 
   let log: AccountContactLogRecord;
-  let effectiveOutcome: ContactOutcome = params.outcome;
+  let effectiveResultado: Resultado | null = params.resultado ?? null;
 
   if (existing) {
-    // Never downgrade: a placeholder OTHER must not overwrite a recorded real outcome.
-    effectiveOutcome =
-      params.outcome === "OTHER" && existing.outcome !== "OTHER"
-        ? existing.outcome
-        : params.outcome;
     const data = logData(params, contactedAt);
-    data.outcome = effectiveOutcome;
+
+    // entrega only ever advances: once it has left DISPATCHED it is never changed again.
+    if (existing.entrega !== "DISPATCHED") {
+      data.entrega = existing.entrega;
+      data.deliveryReason = existing.deliveryReason;
+    }
+
+    // Enrichment arrives piecemeal from several sources — the dispatch writes the template and
+    // notes, the channel webhook writes the duration, the AI pass writes the insights — and
+    // each one calls this with only the fields it knows. `logData` rebuilds every column from
+    // the input, so without merging forward, whichever source lands last would null everything
+    // the others recorded (e.g. a Voz IA outcome decision wiping the duration stored moments
+    // earlier by `ingestVoiceEvent`). A later signal may add a value or replace one, never
+    // erase one.
+    const MERGE_FORWARD = [
+      "campaignId",
+      "agentTemplateId",
+      "paymentPromiseId",
+      "durationSeconds",
+      "notes",
+      "debtAmountSnapshot",
+      "aiSummary",
+      "aiSentiment",
+      "aiDebtReason",
+      "aiResult",
+      "aiNextStep",
+      "intentMetadata",
+      "camino",
+      "resultado"
+    ] as const;
+    const prior = existing as unknown as Record<string, unknown>;
+    for (const field of MERGE_FORWARD) {
+      data[field] = data[field] ?? prior[field] ?? null;
+    }
+    effectiveResultado = data.resultado as Resultado | null;
+
     // Preserve the original correlation + merge channel data.
     data.providerRef = existing.providerRef;
     data.channelData = { ...(existing.channelData ?? {}), ...(params.channelData ?? {}) };
@@ -219,7 +245,7 @@ export async function recordOutcomeTx(
     log = await tx.accountContactLog.create({ data: logData(params, contactedAt) });
   }
 
-  await applyOutcomeEffectsTx(tx, log, params, effectiveOutcome);
+  await applyOutcomeEffectsTx(tx, log, params, effectiveResultado);
   return log;
 }
 

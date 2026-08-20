@@ -8,7 +8,10 @@ import type {
   DeleteCampaignInput
 } from "../schemas/campaigns.js";
 import type {
-  ContactOutcome,
+  Entrega,
+  DeliveryReason,
+  Camino,
+  Resultado,
   PaymentPromiseStatus,
   CreateContactLogInput,
   UpdatePaymentPromiseInput,
@@ -39,8 +42,6 @@ export interface CampaignTriggerRecord {
   type:
     | "MAX_ATTEMPTS_PER_DAY"
     | "DNC_CHECK"
-    | "WRONG_NUMBER"
-    | "OPT_OUT"
     | "PAYMENT_PROMISE"
     | "INTENT_MET"
     | "CALLBACK_REQUESTED";
@@ -63,7 +64,10 @@ export interface AccountContactLogRecord {
   agentType: AgentType;
   contactedAt: Date;
   durationSeconds: number | null;
-  outcome: ContactOutcome;
+  entrega: Entrega;
+  deliveryReason: DeliveryReason | null;
+  camino: Camino | null;
+  resultado: Resultado | null;
   notes: string | null;
   debtAmountSnapshot: number | null;
   aiSummary: string | null;
