@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.30.0](https://github.com/fonoster/qcobro/compare/v1.29.3...v1.30.0) (2026-08-20)
+
+### Features
+
+- **api:** split contact-log outcome into entrega, camino and resultado ([#104](https://github.com/fonoster/qcobro/issues/104)) ([f480826](https://github.com/fonoster/qcobro/commit/f480826acf6ffe7e8e6db2381c17f6af284f57ea)), closes [#101](https://github.com/fonoster/qcobro/issues/101) [#95](https://github.com/fonoster/qcobro/issues/95) [#96](https://github.com/fonoster/qcobro/issues/96) [#94](https://github.com/fonoster/qcobro/issues/94) [#95](https://github.com/fonoster/qcobro/issues/95) [#100](https://github.com/fonoster/qcobro/issues/100) [#101](https://github.com/fonoster/qcobro/issues/101) [#103](https://github.com/fonoster/qcobro/issues/103) [#98](https://github.com/fonoster/qcobro/issues/98) [#99](https://github.com/fonoster/qcobro/issues/99)
+
 ## [1.29.1](https://github.com/fonoster/qcobro/compare/v1.29.0...v1.29.1) (2026-08-19)
 
 ### Bug Fixes
