@@ -58,7 +58,7 @@ function agent(over: Partial<ResolvedAutopilotAgent> = {}): ResolvedAutopilotAge
 }
 
 describe("runAutopilotEvaluation", () => {
-  it("reports passed:true when the decision matches expected.action/outcome", async () => {
+  it("reports passed:true when the decision matches expected.action/resultado", async () => {
     const a = agent({
       scenarios: [
         {
@@ -71,14 +71,14 @@ describe("runAutopilotEvaluation", () => {
           turns: [
             {
               input: "Sí puedo pagar el viernes",
-              expected: { action: "reply", outcome: "PAYMENT_PROMISE" }
+              expected: { action: "reply", resultado: "PAYMENT_PROMISE" }
             }
           ]
         }
       ]
     });
     const autopilot = scriptedAutopilot([
-      { action: "reply", replyBody: "Gracias, confirmado.", outcome: "PAYMENT_PROMISE" }
+      { action: "reply", replyBody: "Gracias, confirmado.", resultado: "PAYMENT_PROMISE" }
     ]);
 
     const events = await collect(runAutopilotEvaluation(a, autopilot, 3));
@@ -87,7 +87,7 @@ describe("runAutopilotEvaluation", () => {
     assert.ok(turn && turn.type === "turn");
     assert.equal(turn.result.passed, true);
     assert.equal(turn.result.action, "reply");
-    assert.equal(turn.result.outcome, "PAYMENT_PROMISE");
+    assert.equal(turn.result.resultado, "PAYMENT_PROMISE");
 
     const summary = events.find((e) => e.type === "summary");
     assert.ok(summary && summary.type === "summary");
@@ -166,7 +166,7 @@ describe("runAutopilotEvaluation", () => {
   it("WHATSAPP reuses the exact same runner as EMAIL, unmodified", async () => {
     const a = agent({ type: "WHATSAPP" });
     const autopilot = scriptedAutopilot([
-      { action: "reply", replyBody: "Perfecto, gracias.", outcome: "PAYMENT_PROMISE" }
+      { action: "reply", replyBody: "Perfecto, gracias.", resultado: "PAYMENT_PROMISE" }
     ]);
 
     const events = await collect(runAutopilotEvaluation(a, autopilot, 3));
@@ -180,9 +180,9 @@ describe("runAutopilotEvaluation", () => {
     // and cap; there is no gestión/PaymentPromise client in scope at all, so a captured
     // outcome can only ever appear in the returned event, never persisted.
     const autopilot = scriptedAutopilot([
-      { action: "reply", replyBody: "Gracias.", outcome: "PAYMENT_PROMISE" }
+      { action: "reply", replyBody: "Gracias.", resultado: "PAYMENT_PROMISE" }
     ]);
     const events = await collect(runAutopilotEvaluation(agent(), autopilot, 3));
-    assert.ok(events.some((e) => e.type === "turn" && e.result.outcome === "PAYMENT_PROMISE"));
+    assert.ok(events.some((e) => e.type === "turn" && e.result.resultado === "PAYMENT_PROMISE"));
   });
 });

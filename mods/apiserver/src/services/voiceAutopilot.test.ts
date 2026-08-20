@@ -44,19 +44,19 @@ describe("createVoiceAutopilot — mock provider (no AI configured)", () => {
       ])
     });
     assert.equal(decision.action, "resolve");
-    assert.equal(decision.outcome, "PAYMENT_PROMISE");
+    assert.equal(decision.resultado, "PAYMENT_PROMISE");
   });
 
-  it("resolves with WRONG_NUMBER when the customer denies being the debtor", async () => {
+  it("resolves with WRONG_PARTY when the customer denies being the debtor", async () => {
     const decision = await autopilot.decide({
       ...BASE_REQ,
       thread: transcriptToThread([{ role: "customer", text: "No soy yo, número equivocado." }])
     });
     assert.equal(decision.action, "resolve");
-    assert.equal(decision.outcome, "WRONG_NUMBER");
+    assert.equal(decision.resultado, "WRONG_PARTY");
   });
 
-  it("escalates on a complaint/dispute", async () => {
+  it("escalates on a complaint/dispute, with no outcome (escalate writes nothing)", async () => {
     const decision = await autopilot.decide({
       ...BASE_REQ,
       thread: transcriptToThread([
@@ -64,7 +64,7 @@ describe("createVoiceAutopilot — mock provider (no AI configured)", () => {
       ])
     });
     assert.equal(decision.action, "escalate");
-    assert.equal(decision.outcome, "OTHER");
+    assert.equal(decision.resultado, undefined);
   });
 
   it("resolves with no outcome when nothing notable happened", async () => {
@@ -73,13 +73,13 @@ describe("createVoiceAutopilot — mock provider (no AI configured)", () => {
       thread: transcriptToThread([{ role: "customer", text: "¿Cuál es mi saldo?" }])
     });
     assert.equal(decision.action, "resolve");
-    assert.equal(decision.outcome, undefined);
+    assert.equal(decision.resultado, undefined);
   });
 
   it("does not throw on an empty transcript", async () => {
     const decision = await autopilot.decide({ ...BASE_REQ, thread: [] });
     assert.equal(decision.action, "resolve");
-    assert.equal(decision.outcome, undefined);
+    assert.equal(decision.resultado, undefined);
   });
 });
 
@@ -108,7 +108,7 @@ describe("createVoiceAutopilot — google provider", () => {
               parts: [
                 {
                   text:
-                    '```json\n{"action":"resolve","outcome":"PAYMENT_PROMISE",' +
+                    '```json\n{"action":"resolve","resultado":"PAYMENT_PROMISE",' +
                     '"objective":{"amount":500,"dueDate":"2026-08-01"}}\n```'
                 }
               ]
@@ -122,14 +122,14 @@ describe("createVoiceAutopilot — google provider", () => {
       ...BASE_REQ,
       thread: transcriptToThread([{ role: "customer", text: "Puedo pagar 500 el 1 de agosto." }])
     });
-    assert.equal(decision.outcome, "PAYMENT_PROMISE");
+    assert.equal(decision.resultado, "PAYMENT_PROMISE");
     assert.equal(decision.objective?.amount, 500);
   });
 
   it("parses an unfenced JSON response", async () => {
     globalThis.fetch = (async () =>
       jsonResponse(200, {
-        candidates: [{ content: { parts: [{ text: '{"action":"escalate","outcome":"OTHER"}' }] } }]
+        candidates: [{ content: { parts: [{ text: '{"action":"escalate"}' }] } }]
       })) as typeof fetch;
 
     const autopilot = createVoiceAutopilot(cfg);

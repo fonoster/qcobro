@@ -44,6 +44,7 @@ export function createSmsEventsHandler(prisma: SmsDeliveryStatusClient, deps: Sm
     const messageSid = typeof req.body?.MessageSid === "string" ? req.body.MessageSid : undefined;
     const messageStatus =
       typeof req.body?.MessageStatus === "string" ? req.body.MessageStatus : undefined;
+    const errorCode = typeof req.body?.ErrorCode === "string" ? req.body.ErrorCode : undefined;
 
     logger.verbose(`received MessageSid=${messageSid} MessageStatus=${messageStatus}`);
 
@@ -51,7 +52,8 @@ export function createSmsEventsHandler(prisma: SmsDeliveryStatusClient, deps: Sm
       const result = await record({
         providerRef: messageSid ?? "",
         status: messageStatus ?? "",
-        at: new Date().toISOString()
+        at: new Date().toISOString(),
+        errorCode
       });
 
       // Always 200 once the signature is valid — a callback that doesn't correlate to a

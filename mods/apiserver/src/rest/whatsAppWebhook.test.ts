@@ -15,21 +15,16 @@ interface SenderRow {
 interface LogRow {
   id: string;
   portfolioAccountId: string;
-}
-
-interface AccountRow {
-  intentStatus: string | null;
+  resultado?: string | null;
 }
 
 function makeDb(opts: {
   integrationVerifyToken?: string;
   senders?: Record<string, SenderRow>;
   logs?: Record<string, LogRow>;
-  accounts?: Record<string, AccountRow>;
 }) {
   const senders: Record<string, SenderRow> = opts.senders ?? {};
   const logs: Record<string, LogRow> = opts.logs ?? {};
-  const accounts: Record<string, AccountRow> = opts.accounts ?? {};
 
   return {
     whatsAppIntegration: {
@@ -53,19 +48,12 @@ function makeDb(opts: {
     },
     accountContactLog: {
       findFirst: async ({ where }: { where: { providerRef: string } }) =>
-        logs[where.providerRef] ?? null
-    },
-    portfolioAccount: {
-      update: async ({
-        where,
-        data
-      }: {
-        where: { id: string };
-        data: { intentStatus: string };
-      }) => {
-        if (!accounts[where.id]) throw new Error("account not found");
-        accounts[where.id]!.intentStatus = data.intentStatus;
-        return accounts[where.id];
+        logs[where.providerRef] ?? null,
+      update: async ({ where, data }: { where: { id: string }; data: { resultado: string } }) => {
+        const row = Object.values(logs).find((l) => l.id === where.id);
+        if (!row) throw new Error("gestión not found");
+        row.resultado = data.resultado;
+        return row;
       }
     }
   } as unknown as PrismaClient;
@@ -251,12 +239,11 @@ describe("whatsAppWebhook.events — signature", () => {
 });
 
 describe("whatsAppWebhook.events — opt-out processing", () => {
-  it("marks the portfolioAccount OPT_OUT on a failed delivery with error 131050", async () => {
-    const accounts: Record<string, AccountRow> = { "acct-1": { intentStatus: null } };
+  it("records resultado OPT_OUT on the gestión for a failed delivery with error 131050", async () => {
+    const logs = { "msg-id-1": { id: "log-1", portfolioAccountId: "acct-1", resultado: null } };
     const db = makeDb({
       senders: { "pn-1": { workspaceRef: "ws-1", qualityRating: null } },
-      logs: { "msg-id-1": { id: "log-1", portfolioAccountId: "acct-1" } },
-      accounts
+      logs
     });
     const { events } = createWhatsAppWebhookHandlers(db, {});
 
@@ -267,15 +254,12 @@ describe("whatsAppWebhook.events — opt-out processing", () => {
     await events(req(body), res);
     await drain();
 
-    assert.equal(accounts["acct-1"]!.intentStatus, "OPT_OUT");
+    assert.equal(logs["msg-id-1"].resultado, "OPT_OUT");
   });
 
   it("skips opt-out for failed statuses without error 131050", async () => {
-    const accounts: Record<string, AccountRow> = { "acct-1": { intentStatus: null } };
-    const db = makeDb({
-      logs: { "msg-id-1": { id: "log-1", portfolioAccountId: "acct-1" } },
-      accounts
-    });
+    const logs = { "msg-id-1": { id: "log-1", portfolioAccountId: "acct-1", resultado: null } };
+    const db = makeDb({ logs });
     const { events } = createWhatsAppWebhookHandlers(db, {});
 
     const body = messagesBody("pn-1", [
@@ -285,12 +269,12 @@ describe("whatsAppWebhook.events — opt-out processing", () => {
     await events(req(body), res);
     await drain();
 
-    assert.equal(accounts["acct-1"]!.intentStatus, null);
+    assert.equal(logs["msg-id-1"].resultado, null);
   });
 
   it("skips opt-out when no gestión row matches the providerRef", async () => {
-    const accounts: Record<string, AccountRow> = { "acct-1": { intentStatus: null } };
-    const db = makeDb({ accounts, logs: {} });
+    const logs: Record<string, LogRow> = {};
+    const db = makeDb({ logs });
     const { events } = createWhatsAppWebhookHandlers(db, {});
 
     const body = messagesBody("pn-1", [
@@ -300,15 +284,13 @@ describe("whatsAppWebhook.events — opt-out processing", () => {
     await events(req(body), res);
     await drain();
 
-    assert.equal(accounts["acct-1"]!.intentStatus, null);
+    // Nothing to correlate to, so nothing is written — and crucially no row is invented.
+    assert.deepEqual(logs, {});
   });
 
   it("does not trigger opt-out for delivered statuses", async () => {
-    const accounts: Record<string, AccountRow> = { "acct-1": { intentStatus: null } };
-    const db = makeDb({
-      logs: { "msg-id-1": { id: "log-1", portfolioAccountId: "acct-1" } },
-      accounts
-    });
+    const logs = { "msg-id-1": { id: "log-1", portfolioAccountId: "acct-1", resultado: null } };
+    const db = makeDb({ logs });
     const { events } = createWhatsAppWebhookHandlers(db, {});
 
     const body = messagesBody("pn-1", [{ id: "msg-id-1", status: "delivered" }]);
@@ -316,7 +298,7 @@ describe("whatsAppWebhook.events — opt-out processing", () => {
     await events(req(body), res);
     await drain();
 
-    assert.equal(accounts["acct-1"]!.intentStatus, null);
+    assert.equal(logs["msg-id-1"].resultado, null);
   });
 });
 

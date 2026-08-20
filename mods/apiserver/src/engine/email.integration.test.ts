@@ -142,7 +142,7 @@ describe("email channel (integration)", { skip: !RUN ? "no DATABASE_URL" : false
           ? {
               action: "reply",
               replyBody: "Gracias, registramos su compromiso.",
-              outcome: "PAYMENT_PROMISE",
+              resultado: "PAYMENT_PROMISE",
               objective: { amount: 500, dueDate: "2026-07-01" }
             }
           : { action: "reply", replyBody: "otra respuesta" };
@@ -172,7 +172,7 @@ describe("email channel (integration)", { skip: !RUN ? "no DATABASE_URL" : false
     assert.deepEqual(r1, { matched: true, id: log!.id, action: "reply" });
 
     const afterPromise = await prisma.accountContactLog.findUnique({ where: { id: log!.id } });
-    assert.equal(afterPromise?.outcome, "PAYMENT_PROMISE", "outcome captured, not downgraded");
+    assert.equal(afterPromise?.resultado, "PAYMENT_PROMISE", "resultado captured, not downgraded");
     const promises = await prisma.paymentPromise.findMany({ where: { contactLogId: log!.id } });
     assert.equal(promises.length, 1, "one PaymentPromise");
 

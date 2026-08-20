@@ -63,12 +63,15 @@ test.describe("gestiones — channels", () => {
     ];
     const seeds: {
       agentType: string;
-      outcome?: string;
+      entrega?: string;
+      camino?: string;
+      resultado?: string;
       extra?: Record<string, unknown>;
       channelData: Record<string, unknown>;
     }[] = [
       {
         agentType: "SMS",
+        entrega: "DELIVERED",
         extra: {
           aiSummary: "Recordatorio de pago enviado al cliente con enlace de pago en línea."
         },
@@ -76,12 +79,13 @@ test.describe("gestiones — channels", () => {
       },
       {
         agentType: "VOICE_PRERECORDED",
-        outcome: "DELIVERED",
+        entrega: "DELIVERED",
         extra: { durationSeconds: 38 },
         channelData: { to: "+525500000001", messageBody: script }
       },
       {
         agentType: "EMAIL",
+        entrega: "DELIVERED",
         channelData: {
           to: "maria@example.com",
           subject: "Recordatorio de pago",
@@ -90,7 +94,9 @@ test.describe("gestiones — channels", () => {
       },
       {
         agentType: "VOICE_AI",
-        outcome: "PAYMENT_PROMISE",
+        entrega: "DELIVERED",
+        camino: "ENGAGED",
+        resultado: "PAYMENT_PROMISE",
         extra: {
           intentMetadata: { promisedAmount: 4820, promisedDate: "2026-06-27T00:00:00.000Z" },
           aiSummary: "El cliente reconoce la deuda y se compromete a pagar el saldo el viernes.",
@@ -114,7 +120,9 @@ test.describe("gestiones — channels", () => {
           portfolioAccountId: accountId,
           agentType: s.agentType,
           contactedAt: new Date().toISOString(),
-          outcome: s.outcome ?? "OTHER",
+          entrega: s.entrega ?? "DISPATCHED",
+          ...(s.camino ? { camino: s.camino } : {}),
+          ...(s.resultado ? { resultado: s.resultado } : {}),
           notes: "Contacto manual",
           ...(s.extra ?? {}),
           channelData: s.channelData
@@ -126,7 +134,11 @@ test.describe("gestiones — channels", () => {
     // --- Gestiones list: refined columns + a row per channel -----------------
     await page.getByRole("link", { name: "Gestiones" }).click();
     await expect(page.getByRole("columnheader", { name: "Canal" })).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Resumen IA" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Entrega" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Resultado" })).toBeVisible();
+    // The AI-summary column is gone: aiSummary is null until an insight is generated, so it
+    // was empty on most rows while being the widest column in the table.
+    await expect(page.getByRole("columnheader", { name: "Resumen IA" })).toHaveCount(0);
 
     const openPanel = async (channelLabel: string) => {
       await page.locator("tr", { hasText: channelLabel }).first().click();
@@ -151,7 +163,11 @@ test.describe("gestiones — channels", () => {
     panel = await openPanel("Voz pregrabada");
     await expect(panel.getByText("Guion reproducible")).toBeVisible();
     await expect(panel.getByText(script)).toBeVisible();
-    await expect(panel.getByText("Enviado → Entregado")).toBeVisible();
+    // Voice renders DELIVERED as "Conectada": a call connects, it is not "delivered".
+    await expect(panel.getByText("Conectada").first()).toBeVisible();
+    // One-way channel: no interaction to describe, and nothing came of it.
+    await expect(panel.getByText("Camino", { exact: true })).toHaveCount(0);
+    await expect(panel.getByText("Resultado", { exact: true })).toHaveCount(0);
     await expect(panel.getByText(/no confirma que el mensaje se haya escuchado/i)).toBeVisible();
     await expect(panel.getByText(/reproducido al cliente/i)).toHaveCount(0);
     await expect(panel.getByText("Transcripción")).toHaveCount(0);

@@ -44,7 +44,9 @@ test.describe("portfolio account details", () => {
 
     // Basic fields are visible in the dialog (last match — the table row has the same
     // balance/phone as subtext); "Ver metadata" is present but collapsed.
-    await expect(page.getByText(/^4800/).last()).toBeVisible();
+    // Money now renders through the workspace formatter (currency symbol + grouping), e.g.
+    // "US$4,800" — anchoring on a bare "4800" prefix stopped matching when that landed.
+    await expect(page.getByText(/4,800/).last()).toBeVisible();
     await expect(page.getByText("+17853178070").last()).toBeVisible();
     const viewMore = page.getByRole("button", { name: "Ver metadata" });
     await expect(viewMore).toBeVisible();

@@ -1,5 +1,6 @@
 import {
   inboundEmailSchema,
+  resultadoSchema,
   withErrorHandlingAndValidation,
   type CreateContactLogInput,
   type EmailAutopilot,
@@ -7,8 +8,17 @@ import {
   type EmailClient,
   type EmailThread,
   type EmailThreadMessage,
-  type InboundEmailInput
+  type InboundEmailInput,
+  type Resultado
 } from "@qcobro/common";
+
+/** Maps the autopilot's raw decision string onto a valid `Resultado`, or null when absent
+ *  or unrecognized (e.g. a removed value like `OTHER`/`WRONG_NUMBER` the model hallucinates). */
+function toResultado(raw: string | null | undefined): Resultado | null {
+  if (!raw) return null;
+  const parsed = resultadoSchema.safeParse(raw);
+  return parsed.success ? parsed.data : null;
+}
 
 /** The gestión + agent config the autopilot needs, loaded by correlation token. */
 export interface EmailGestionView {
@@ -75,8 +85,11 @@ function isAutoReply(headers?: Record<string, string>): boolean {
  * reply to the email thread (in `channelData`, the email analog of the voice transcript),
  * then asks the autopilot what to do. Auto-replies are ignored without counting. When the
  * decision is `reply` and the per-attempt cap (min(agent, deployment default)) is not yet
- * reached, it generates + sends the reply and counts it. Outcomes/Objectives are captured
- * via {@link recordOutcomeTx} (never downgrade a real outcome; idempotent Objective).
+ * reached, it generates + sends the reply and counts it.
+ *
+ * An inbound reply is proof of delivery, so every call records through {@link recordOutcomeTx}
+ * (never downgrades `entrega` off DISPATCHED, idempotent Objective): `entrega: DELIVERED` and
+ * `camino: ENGAGED` are always recorded, and `resultado` is set when the decision implies one.
  */
 export function createIngestEmailReply(deps: IngestEmailReplyDeps) {
   const fn = async (inbound: InboundEmailInput): Promise<IngestEmailReplyResult> => {
@@ -146,39 +159,25 @@ export function createIngestEmailReply(deps: IngestEmailReplyDeps) {
 
     const channelData = { ...existing, emailThread: thread };
 
-    // When the reply implies an outcome, persist it (+ Objective/suppression) through
-    // recordOutcome, which also writes the merged channelData on the same gestión row.
-    if (decision.outcome) {
-      const validOutcomes = new Set([
-        "NO_ANSWER",
-        "PAYMENT_PROMISE",
-        "PARTIAL_PAYMENT_AGREED",
-        "CALLBACK_REQUESTED",
-        "RESOLVED",
-        "PAID",
-        "WRONG_NUMBER",
-        "OPT_OUT",
-        "REFUSED",
-        "OTHER"
-      ]);
-      const outcome = validOutcomes.has(decision.outcome)
-        ? (decision.outcome as CreateContactLogInput["outcome"])
-        : "OTHER";
-      const obj = decision.objective;
-      await deps.recordOutcome({
-        portfolioAccountId: g.portfolioAccountId,
-        campaignId: g.campaignId ?? undefined,
-        agentType: "EMAIL",
-        contactedAt: nowIso,
-        outcome,
-        providerRef: token,
-        debtAmountSnapshot: g.debtAmountSnapshot ?? undefined,
-        channelData,
-        intentMetadata: obj ? { promisedAmount: obj.amount, promisedDate: obj.dueDate } : undefined
-      });
-    } else {
-      await deps.client.updateChannelData(g.id, channelData);
-    }
+    // An inbound reply is proof of delivery: entrega advances to DELIVERED (recordOutcomeTx
+    // never regresses it if a prior callback already moved it further) and camino is
+    // ENGAGED. resultado is set only when the decision implies one; this also writes the
+    // merged channelData on the same gestión row.
+    const resultado = toResultado(decision.resultado);
+    const obj = decision.objective;
+    await deps.recordOutcome({
+      portfolioAccountId: g.portfolioAccountId,
+      campaignId: g.campaignId ?? undefined,
+      agentType: "EMAIL",
+      contactedAt: nowIso,
+      entrega: "DELIVERED",
+      camino: "ENGAGED",
+      resultado: resultado ?? undefined,
+      providerRef: token,
+      debtAmountSnapshot: g.debtAmountSnapshot ?? undefined,
+      channelData,
+      intentMetadata: obj ? { promisedAmount: obj.amount, promisedDate: obj.dueDate } : undefined
+    });
 
     return { matched: true, id: g.id, action };
   };

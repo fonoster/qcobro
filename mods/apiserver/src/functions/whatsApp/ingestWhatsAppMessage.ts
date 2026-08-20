@@ -1,15 +1,25 @@
 import { z } from "zod";
 import {
+  resultadoSchema,
   withErrorHandlingAndValidation,
   type CreateContactLogInput,
   type EmailAutopilot,
   type EmailAutopilotDecision,
+  type Resultado,
   type WhatsAppClient,
   type WhatsAppThread,
   type WhatsAppThreadMessage
 } from "@qcobro/common";
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+
+/** Maps the autopilot's raw decision string onto a valid `Resultado`, or null when absent
+ *  or unrecognized (e.g. a removed value like `OTHER`/`WRONG_NUMBER` the model hallucinates). */
+function toResultado(raw: string | null | undefined): Resultado | null {
+  if (!raw) return null;
+  const parsed = resultadoSchema.safeParse(raw);
+  return parsed.success ? parsed.data : null;
+}
 
 /** The gestión + agent config the autopilot needs, loaded from the DB. */
 export interface WhatsAppGestionView {
@@ -86,8 +96,10 @@ function isWindowOpen(lastCustomerMessageAt: string, now: Date): boolean {
  * Correlates by `phoneNumberId + customerPhone` (the most recent WHATSAPP gestión our
  * sender dispatched to that customer). Appends the inbound message to the WhatsApp thread
  * in `channelData.whatsAppThread`, runs the autopilot, and — if in window and under cap —
- * sends a free-form text reply via `WhatsAppClient.sendText`. Outcomes and Objectives are
- * captured via `recordOutcome` (never downgrades a real outcome; idempotent).
+ * sends a free-form text reply via `WhatsAppClient.sendText`. An inbound message is proof of
+ * delivery, so every call records through `recordOutcome` (never downgrades `entrega` off
+ * DISPATCHED; idempotent Objective): `entrega: DELIVERED` and `camino: ENGAGED` are always
+ * recorded, and `resultado` is set when the decision implies one.
  *
  * 24 h window: if the customer's last message is more than 24 h old, free-form text is
  * forbidden by Meta; the action is escalated rather than sent.
@@ -154,37 +166,32 @@ export function createIngestWhatsAppMessage(deps: IngestWhatsAppMessageDeps) {
 
     const channelData = { ...existing, whatsAppThread: thread };
 
-    if (decision.outcome) {
-      const validOutcomes = new Set([
-        "NO_ANSWER",
-        "PAYMENT_PROMISE",
-        "PARTIAL_PAYMENT_AGREED",
-        "CALLBACK_REQUESTED",
-        "RESOLVED",
-        "PAID",
-        "WRONG_NUMBER",
-        "OPT_OUT",
-        "REFUSED",
-        "OTHER"
-      ]);
-      const outcome = validOutcomes.has(decision.outcome)
-        ? (decision.outcome as CreateContactLogInput["outcome"])
-        : "OTHER";
-      const obj = decision.objective;
-      await deps.recordOutcome({
-        portfolioAccountId: g.portfolioAccountId,
-        campaignId: g.campaignId ?? undefined,
-        agentType: "WHATSAPP",
-        contactedAt: nowIso,
-        outcome,
-        providerRef: g.providerRef ?? undefined,
-        debtAmountSnapshot: g.debtAmountSnapshot ?? undefined,
-        channelData,
-        intentMetadata: obj ? { promisedAmount: obj.amount, promisedDate: obj.dueDate } : undefined
-      });
-    } else {
+    const resultado = toResultado(decision.resultado);
+    const obj = decision.objective;
+
+    // `recordOutcome` correlates only by `providerRef`. A gestión without one (legacy or
+    // manually created rows — the field is nullable) would therefore be *inserted* rather than
+    // enriched, and because the new row also has a null ref it would become the match for the
+    // next inbound message, duplicating a gestión per customer reply. Persist the thread
+    // directly instead; the axes stay as they are for those rare rows.
+    if (!g.providerRef) {
       await deps.client.updateChannelData(g.id, channelData);
+      return { matched: true, id: g.id, action, providerRef: undefined };
     }
+
+    await deps.recordOutcome({
+      portfolioAccountId: g.portfolioAccountId,
+      campaignId: g.campaignId ?? undefined,
+      agentType: "WHATSAPP",
+      contactedAt: nowIso,
+      entrega: "DELIVERED",
+      camino: "ENGAGED",
+      resultado: resultado ?? undefined,
+      providerRef: g.providerRef ?? undefined,
+      debtAmountSnapshot: g.debtAmountSnapshot ?? undefined,
+      channelData,
+      intentMetadata: obj ? { promisedAmount: obj.amount, promisedDate: obj.dueDate } : undefined
+    });
 
     return { matched: true, id: g.id, action, providerRef: g.providerRef ?? undefined };
   };

@@ -8,7 +8,14 @@ interface Captured {
   update?: { where: { id: string }; data: Record<string, unknown> };
 }
 
-function makeClient(record: { id: string; outcome: string; channelData: unknown } | null) {
+function makeClient(
+  record: {
+    id: string;
+    entrega: string;
+    deliveryReason: string | null;
+    channelData: unknown;
+  } | null
+) {
   const cap: Captured = {};
   const client = {
     accountContactLog: {
@@ -26,25 +33,38 @@ function makeClient(record: { id: string; outcome: string; channelData: unknown 
 }
 
 describe("recordVoiceAiCallStatus", () => {
-  it("terminal tracking failure → NO_ANSWER with zero duration", async () => {
-    const { client, cap } = makeClient({ id: "g-1", outcome: "OTHER", channelData: null });
+  it("terminal tracking failure → FAILED with deliveryReason and zero duration", async () => {
+    const { client, cap } = makeClient({
+      id: "g-1",
+      entrega: "DISPATCHED",
+      deliveryReason: null,
+      channelData: null
+    });
 
     const result = await createRecordVoiceAiCallStatus(client as never)({
       providerRef: "call-abc",
       answered: false,
       answeredSeconds: 0,
-      at: "2026-08-18T10:00:00.000Z"
+      at: "2026-08-18T10:00:00.000Z",
+      deliveryReason: "NO_ANSWER"
     });
 
-    assert.deepEqual(result, { matched: true, id: "g-1", outcome: "NO_ANSWER" });
-    assert.equal(cap.update?.data.outcome, "NO_ANSWER");
+    assert.deepEqual(result, {
+      matched: true,
+      id: "g-1",
+      entrega: "FAILED",
+      deliveryReason: "NO_ANSWER"
+    });
+    assert.equal(cap.update?.data.entrega, "FAILED");
+    assert.equal(cap.update?.data.deliveryReason, "NO_ANSWER");
     assert.equal(cap.update?.data.durationSeconds, 0);
   });
 
-  it("CDR recovery, answered → DELIVERED with the real duration", async () => {
+  it("CDR recovery, answered → DELIVERED with the real duration, no deliveryReason", async () => {
     const { client, cap } = makeClient({
       id: "g-1",
-      outcome: "OTHER",
+      entrega: "DISPATCHED",
+      deliveryReason: null,
       channelData: { appRef: "app-1" }
     });
 
@@ -55,24 +75,43 @@ describe("recordVoiceAiCallStatus", () => {
       at: "2026-08-18T10:00:00.000Z"
     });
 
-    assert.deepEqual(result, { matched: true, id: "g-1", outcome: "DELIVERED" });
+    assert.deepEqual(result, {
+      matched: true,
+      id: "g-1",
+      entrega: "DELIVERED",
+      deliveryReason: null
+    });
+    assert.equal(cap.update?.data.entrega, "DELIVERED");
+    assert.equal(cap.update?.data.deliveryReason, undefined);
     assert.equal(cap.update?.data.durationSeconds, 47);
     const cd = cap.update?.data.channelData as Record<string, unknown>;
     assert.equal(cd.appRef, "app-1"); // existing preserved
   });
 
-  it("idempotent: a finalized outcome (e.g. PAYMENT_PROMISE from the autopilot webhook) is never overwritten", async () => {
-    const { client, cap } = makeClient({ id: "g-1", outcome: "PAYMENT_PROMISE", channelData: {} });
+  it("idempotent: entrega never regresses — once DELIVERED (e.g. via the autopilot webhook), a later CDR completion preserves it", async () => {
+    const { client, cap } = makeClient({
+      id: "g-1",
+      entrega: "DELIVERED",
+      deliveryReason: null,
+      channelData: {}
+    });
 
     const result = await createRecordVoiceAiCallStatus(client as never)({
       providerRef: "call-abc",
       answered: false,
       answeredSeconds: 0,
-      at: "2026-08-18T10:05:00.000Z"
+      at: "2026-08-18T10:05:00.000Z",
+      deliveryReason: "NO_ANSWER"
     });
 
-    assert.deepEqual(result, { matched: true, id: "g-1", outcome: "PAYMENT_PROMISE" });
-    assert.equal(cap.update?.data.outcome, "PAYMENT_PROMISE");
+    assert.deepEqual(result, {
+      matched: true,
+      id: "g-1",
+      entrega: "DELIVERED",
+      deliveryReason: null
+    });
+    assert.equal(cap.update?.data.entrega, undefined);
+    assert.equal(cap.update?.data.deliveryReason, undefined);
   });
 
   it("returns matched:false and does not update when no gestión matches the call ref", async () => {
@@ -90,7 +129,12 @@ describe("recordVoiceAiCallStatus", () => {
   });
 
   it("rejects invalid input with a ValidationError and never touches the database", async () => {
-    const { client, cap } = makeClient({ id: "g-1", outcome: "OTHER", channelData: {} });
+    const { client, cap } = makeClient({
+      id: "g-1",
+      entrega: "DISPATCHED",
+      deliveryReason: null,
+      channelData: {}
+    });
 
     await assert.rejects(
       () =>

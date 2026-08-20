@@ -82,14 +82,14 @@ describe("contactLogEventsExtension", () => {
     const ext = contactLogEventsExtension(base);
     const result = await ext.query.accountContactLog.$allOperations({
       operation: "create",
-      args: { data: { outcome: "DELIVERED" } },
+      args: { data: { resultado: "DELIVERED" } },
       query: async (args) => ({
         id: "log-2",
         portfolioAccountId: "acc-1",
         ...(args as { data?: object }).data
       })
     });
-    assert.deepEqual(result, { id: "log-2", portfolioAccountId: "acc-1", outcome: "DELIVERED" });
+    assert.deepEqual(result, { id: "log-2", portfolioAccountId: "acc-1", resultado: "DELIVERED" });
   });
 
   it("paymentPromise write emits a signal for its linked gestión id", async () => {

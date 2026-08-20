@@ -46,19 +46,20 @@ function harness(g: VoiceDecisionGestionView | null, decision: EmailAutopilotDec
 }
 
 describe("decideVoiceOutcome", () => {
-  it("captures a payment promise via recordOutcome", async () => {
+  it("captures a payment promise via recordOutcome, with camino ENGAGED", async () => {
     const { deps, outcomes, decideReqs } = harness(gestion(), {
       action: "resolve",
-      outcome: "PAYMENT_PROMISE",
+      resultado: "PAYMENT_PROMISE",
       objective: { amount: 500, dueDate: "2026-08-01" }
     });
     const result = await createDecideVoiceOutcome(deps)("log-1");
 
-    assert.deepEqual(result, { decided: true, outcome: "PAYMENT_PROMISE" });
+    assert.deepEqual(result, { decided: true, resultado: "PAYMENT_PROMISE" });
     assert.equal(outcomes.length, 1);
     assert.equal(outcomes[0].agentType, "VOICE_AI");
     assert.equal(outcomes[0].providerRef, "call-ref-1");
-    assert.equal(outcomes[0].outcome, "PAYMENT_PROMISE");
+    assert.equal(outcomes[0].camino, "ENGAGED");
+    assert.equal(outcomes[0].resultado, "PAYMENT_PROMISE");
     assert.deepEqual(outcomes[0].intentMetadata, {
       promisedAmount: 500,
       promisedDate: "2026-08-01"
@@ -67,38 +68,43 @@ describe("decideVoiceOutcome", () => {
     assert.equal(decideReqs[0].referenceDate, "2026-07-28");
   });
 
-  it("records a non-payment outcome without an intentMetadata objective", async () => {
-    const { deps, outcomes } = harness(gestion(), { action: "resolve", outcome: "WRONG_NUMBER" });
+  it("records a non-payment resultado without an intentMetadata objective", async () => {
+    const { deps, outcomes } = harness(gestion(), { action: "resolve", resultado: "WRONG_PARTY" });
     const result = await createDecideVoiceOutcome(deps)("log-1");
 
-    assert.deepEqual(result, { decided: true, outcome: "WRONG_NUMBER" });
-    assert.equal(outcomes[0].outcome, "WRONG_NUMBER");
+    assert.deepEqual(result, { decided: true, resultado: "WRONG_PARTY" });
+    assert.equal(outcomes[0].camino, "ENGAGED");
+    assert.equal(outcomes[0].resultado, "WRONG_PARTY");
     assert.equal(outcomes[0].intentMetadata, undefined);
   });
 
-  it("defaults an unrecognized outcome string to OTHER", async () => {
+  it("collapses an unrecognized resultado string to null", async () => {
     const { deps, outcomes } = harness(gestion(), {
       action: "resolve",
-      outcome: "SOMETHING_THE_MODEL_MADE_UP"
+      resultado: "SOMETHING_THE_MODEL_MADE_UP"
     });
     const result = await createDecideVoiceOutcome(deps)("log-1");
 
-    assert.deepEqual(result, { decided: true, outcome: "OTHER" });
-    assert.equal(outcomes[0].outcome, "OTHER");
+    assert.deepEqual(result, { decided: true, resultado: null });
+    // camino ENGAGED is still recorded — the call was answered and conversational.
+    assert.equal(outcomes[0].camino, "ENGAGED");
+    assert.equal(outcomes[0].resultado, undefined);
   });
 
-  it("records nothing when the decision carries no outcome", async () => {
+  it("records camino ENGAGED even when the decision carries no resultado", async () => {
     const { deps, outcomes } = harness(gestion(), { action: "resolve" });
     const result = await createDecideVoiceOutcome(deps)("log-1");
 
-    assert.deepEqual(result, { decided: true, outcome: null });
-    assert.equal(outcomes.length, 0);
+    assert.deepEqual(result, { decided: true, resultado: null });
+    assert.equal(outcomes.length, 1);
+    assert.equal(outcomes[0].camino, "ENGAGED");
+    assert.equal(outcomes[0].resultado, undefined);
   });
 
   it("skips the decision when the gestión has no transcript", async () => {
     const { deps, outcomes, decideReqs } = harness(gestion({ channelData: {} }), {
       action: "resolve",
-      outcome: "PAYMENT_PROMISE"
+      resultado: "PAYMENT_PROMISE"
     });
     const result = await createDecideVoiceOutcome(deps)("log-1");
 

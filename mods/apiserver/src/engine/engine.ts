@@ -15,6 +15,7 @@ import {
   type CampaignTickReport,
   type Clock,
   type CreateContactLogInput,
+  type DeliveryReason,
   type DispatchErrorKind,
   type DispatchOutreachInput,
   type EmailClient,
@@ -234,6 +235,7 @@ export function createEngine(deps: EngineDeps) {
     record: (input: {
       providerRef: string;
       answered: boolean;
+      deliveryReason?: DeliveryReason;
       answeredSeconds: number;
       at: string;
     }) => Promise<unknown>
@@ -241,6 +243,7 @@ export function createEngine(deps: EngineDeps) {
     return async (input: {
       providerRef: string;
       answered: boolean;
+      deliveryReason?: DeliveryReason;
       answeredSeconds: number;
       at: string;
     }) => {
@@ -527,7 +530,7 @@ export function createEngine(deps: EngineDeps) {
         campaignId: c.id,
         agentType: channel,
         contactedAt: at,
-        outcome: "OTHER",
+        entrega: "DISPATCHED",
         debtAmountSnapshot: acc.outstandingBalance,
         providerRef: result.providerRef,
         channelData: { from: result.from, to: result.to, messageBody: result.renderedBody }
@@ -545,7 +548,7 @@ export function createEngine(deps: EngineDeps) {
     );
 
     // Fire-and-forget: must never add latency to the dispatch loop or fail this
-    // function. Started here — right after the dispatch-time OTHER placeholder is
+    // function. Started here — right after the dispatch-time DISPATCHED gestión is
     // written — rather than from any channel-specific handler (VoiceServer /
     // autopilot webhook), so coverage does not depend on the call ever reaching one.
     if (

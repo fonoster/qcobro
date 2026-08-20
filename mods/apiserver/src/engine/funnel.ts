@@ -33,7 +33,7 @@ export interface FunnelResult {
   decisions: AccountDecisionEntry[];
 }
 
-const GLOBAL_SUPPRESSED = new Set(["INTENT_MET", "WRONG_NUMBER", "OPT_OUT"]);
+const GLOBAL_SUPPRESSED = new Set(["INTENT_MET"]);
 
 /**
  * Pure eligibility funnel: classifies each candidate and returns the ordered eligible

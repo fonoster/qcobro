@@ -8,6 +8,7 @@ import { SlideOver } from "../components/ui/slide-over.js";
 import { GestionDetailContent } from "./GestionDetail.js";
 import { formatRelativeDate } from "../lib/relativeDate.js";
 import { useContactLogRealtime } from "../lib/useContactLogRealtime.js";
+import { ENTREGAS, RESULTADOS, entregaLabel, resultadoLabel } from "../lib/contactAxes.js";
 import { PhoneCall, Voicemail, MessageSquare, Mail, MessageCircle } from "lucide-react";
 
 const PAGE_SIZE = 50;
@@ -20,30 +21,15 @@ const CHANNEL_ICON: Record<string, typeof MessageSquare> = {
   WHATSAPP: MessageCircle
 };
 
-const OUTCOMES = [
-  "DELIVERED",
-  "NOT_DELIVERED",
-  "NO_ANSWER",
-  "PAYMENT_PROMISE",
-  "PARTIAL_PAYMENT_AGREED",
-  "NEW_TERMS",
-  "CALLBACK_REQUESTED",
-  "DISPUTE_RAISED",
-  "INFORMATION_REQUEST",
-  "RESOLVED",
-  "PAID",
-  "WRONG_NUMBER",
-  "OPT_OUT",
-  "REFUSED",
-  "OTHER"
-] as const;
-
 const AGENT_TYPES = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL"] as const;
 
 export function Gestiones() {
   const { t, language } = useI18n();
 
-  const [outcome, setOutcome] = useState("");
+  // Entrega and resultado filter independently. A single filter mixing "delivered" with
+  // "payment promise" is the conflation this model exists to undo.
+  const [entrega, setEntrega] = useState("");
+  const [resultado, setResultado] = useState("");
   const [agentType, setAgentType] = useState("");
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -52,7 +38,8 @@ export function Gestiones() {
   useContactLogRealtime();
 
   const { data } = trpc.campaigns.contactLog.list.useQuery({
-    outcome: (outcome || undefined) as (typeof OUTCOMES)[number] | undefined,
+    entrega: (entrega || undefined) as (typeof ENTREGAS)[number] | undefined,
+    resultado: (resultado || undefined) as (typeof RESULTADOS)[number] | undefined,
     agentType: (agentType || undefined) as (typeof AGENT_TYPES)[number] | undefined,
     limit: PAGE_SIZE,
     offset: (page - 1) * PAGE_SIZE
@@ -72,11 +59,19 @@ export function Gestiones() {
         searchable={false}
         filterElement={
           <div className="flex gap-2">
-            <FilterSelect value={outcome} onChange={(e) => setOutcome(e.target.value)}>
-              <option value="">{t("gestiones.filter.allOutcomes")}</option>
-              {OUTCOMES.map((o) => (
-                <option key={o} value={o}>
-                  {t(`gestiones.outcome.${o}` as Parameters<typeof t>[0])}
+            <FilterSelect value={entrega} onChange={(e) => setEntrega(e.target.value)}>
+              <option value="">{t("gestiones.filter.allEntregas")}</option>
+              {ENTREGAS.map((e) => (
+                <option key={e} value={e}>
+                  {t(`gestiones.entrega.${e}` as Parameters<typeof t>[0])}
+                </option>
+              ))}
+            </FilterSelect>
+            <FilterSelect value={resultado} onChange={(e) => setResultado(e.target.value)}>
+              <option value="">{t("gestiones.filter.allResultados")}</option>
+              {RESULTADOS.map((r) => (
+                <option key={r} value={r}>
+                  {t(`gestiones.resultado.${r}` as Parameters<typeof t>[0])}
                 </option>
               ))}
             </FilterSelect>
@@ -120,20 +115,26 @@ export function Gestiones() {
             }
           },
           {
-            key: "outcome",
-            header: t("gestiones.col.result"),
+            key: "entrega",
+            header: t("gestiones.col.entrega"),
             render: (r) => (
               <span className="text-slate-700">
-                {t(`gestiones.outcome.${r.outcome}` as Parameters<typeof t>[0])}
+                {entregaLabel(
+                  t,
+                  r.entrega as string,
+                  r.deliveryReason as string | null,
+                  r.agentType as string
+                )}
               </span>
             )
           },
           {
-            key: "aiSummary",
-            header: t("gestiones.col.summary"),
+            key: "resultado",
+            header: t("gestiones.col.result"),
+            // Null for most rows — the sparseness is what makes conversion legible at a glance.
             render: (r) => (
-              <span className="line-clamp-2 max-w-md text-sm text-slate-600">
-                {(r.aiSummary as string | null) || ""}
+              <span className="text-slate-700">
+                {resultadoLabel(t, r.resultado as string | null) ?? "—"}
               </span>
             )
           },

@@ -41,7 +41,7 @@ for await (const event of client.agentEvaluations.evaluate({
       turns: [
         {
           input: "Sí puedo pagar el viernes",
-          expected: { action: "reply", outcome: "PAYMENT_PROMISE" }
+          expected: { action: "reply", resultado: "PAYMENT_PROMISE" }
         }
       ]
     }
@@ -76,7 +76,7 @@ scenarios:
       - input: "Sí puedo pagar el viernes"
         expected:
           action: reply
-          outcome: PAYMENT_PROMISE
+          resultado: PAYMENT_PROMISE
 `;
 
 for await (const event of client.agentEvaluations.evaluate({ yaml })) {
@@ -102,7 +102,7 @@ Lo que puede llevar `expected` depende del canal:
   Para `EMAIL`/`WHATSAPP`: la acción que debería tomar el agente en ese turno (`reply`,
   `ignore`, `resolve` o `escalate`).
 </ParamField>
-<ParamField body="expected.outcome" type="string">
+<ParamField body="expected.resultado" type="string">
   Para `EMAIL`/`WHATSAPP`: el resultado que debería registrar el agente (por ejemplo
   `PAYMENT_PROMISE`), cuando el turno debería capturar uno.
 </ParamField>
@@ -124,7 +124,7 @@ escenario terminado, y por último un resumen del run completo.
 for await (const event of client.agentEvaluations.evaluate(input)) {
   switch (event.type) {
     case "turn":
-      // event.result: passed?, action?/outcome? (EMAIL/WHATSAPP), aiResponse? (VOICE_AI)
+      // event.result: passed?, action?/resultado? (EMAIL/WHATSAPP), aiResponse? (VOICE_AI)
       console.log(event.scenarioRef, event.result);
       break;
     case "scenarioSummary":

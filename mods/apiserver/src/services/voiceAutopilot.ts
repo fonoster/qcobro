@@ -35,15 +35,15 @@ function buildPrompt(req: EmailAutopilotRequest): string {
     "",
     "Eres el autopiloto de cobranza por voz (Voz IA). La llamada ya terminó — analiza la " +
       "transcripción completa y decide el resultado de la gestión.",
-    "Devuelve SOLO un objeto JSON con las claves: action, outcome, objective.",
+    "Devuelve SOLO un objeto JSON con las claves: action, resultado, objective.",
     "action ∈ ignore | resolve | escalate. La llamada ya terminó: NUNCA uses reply.",
-    "Si el cliente prometió pagar durante la llamada, usa outcome = PAYMENT_PROMISE y " +
+    "Si el cliente prometió pagar durante la llamada, usa resultado = PAYMENT_PROMISE y " +
       "objective { amount, dueDate }.",
     req.referenceDate ? `Hoy es ${req.referenceDate} (formato YYYY-MM-DD).` : "",
     "objective.dueDate DEBE ser una fecha absoluta en formato YYYY-MM-DD. Convierte expresiones " +
       'relativas ("mañana", "el viernes", "la próxima semana") a esa fecha usando la fecha de hoy. ' +
       "Si el cliente no indica una fecha concreta, omite dueDate.",
-    "Usa resolve si el asunto quedó resuelto o no aplica ningún outcome especial. Usa escalate " +
+    "Usa resolve si el asunto quedó resuelto o no aplica ningún resultado especial. Usa escalate " +
       "si se requiere intervención humana (reclamo, disputa, amenaza legal).",
     "Usa el Contexto para interpretar preguntas del cliente sobre su préstamo (saldo, cuota, " +
       "plazo, atraso, último pago). No inventes datos que no estén en el Contexto.",
@@ -74,13 +74,14 @@ function mockDecide(req: EmailAutopilotRequest): EmailAutopilotDecision {
     .join(" ")
     .toLowerCase();
   if (/(pag|abonar|transferir|deposit|el viernes|la semana|mañana)/.test(all)) {
-    return { action: "resolve", outcome: "PAYMENT_PROMISE" };
+    return { action: "resolve", resultado: "PAYMENT_PROMISE" };
   }
   if (/(no es|equivocad|no soy|número|baja|no escrib|no contact)/.test(all)) {
-    return { action: "resolve", outcome: "WRONG_NUMBER" };
+    return { action: "resolve", resultado: "WRONG_PARTY" };
   }
   if (/(reclamo|abogad|demanda|queja)/.test(all)) {
-    return { action: "escalate", outcome: "OTHER" };
+    // escalate writes nothing beyond suppressing the auto-reply — it carries no resultado.
+    return { action: "escalate" };
   }
   return { action: "resolve" };
 }

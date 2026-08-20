@@ -33,8 +33,8 @@ export interface EmailAutopilotDecision {
   action: EmailAutopilotAction;
   /** Present when `action === "reply"`. Gemini's JSON mode may send `null` instead of omitting. */
   replyBody?: string | null;
-  /** Outcome to record on the gestión, when the reply implies one. May come back `null`. */
-  outcome?: string | null;
+  /** Resultado to record on the gestión, when the reply implies one. May come back `null`. */
+  resultado?: string | null;
   /** Promise/objective details to capture, when applicable. */
   objective?: { amount?: number; dueDate?: string; note?: string } | null;
 }

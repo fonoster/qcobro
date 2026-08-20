@@ -1,5 +1,5 @@
 import { getLogger } from "@fonoster/logger";
-import type { VoiceCallStatusTracker } from "@qcobro/common";
+import type { DeliveryReason, VoiceCallStatusTracker } from "@qcobro/common";
 import { resolveVoiceCallFromCdr } from "./resolveVoiceCallFromCdr.js";
 
 const logger = getLogger({ service: "voice-call-status-tracking", filePath: import.meta.url });
@@ -12,6 +12,7 @@ export interface StartVoiceCallStatusTrackingInput {
   finalize: (input: {
     providerRef: string;
     answered: boolean;
+    deliveryReason?: DeliveryReason;
     answeredSeconds: number;
     at: string;
   }) => Promise<unknown>;
@@ -20,7 +21,7 @@ export interface StartVoiceCallStatusTrackingInput {
 /**
  * Starts call-status tracking for a just-dispatched voice call, fire-and-forget. Called
  * from **every** voice dispatch site — the campaigns engine tick and manual/ad-hoc
- * outreach alike — right after the dispatch-time `OTHER` placeholder gestión is written.
+ * outreach alike — right after the dispatch-time `DISPATCHED` gestión is written.
  *
  * Deliberately independent of any channel-specific completion path (the pre-recorded
  * VoiceServer's answer/say/hangup flow; the Voz IA autopilot webhook): those only fire for

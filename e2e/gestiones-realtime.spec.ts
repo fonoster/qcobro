@@ -65,7 +65,7 @@ test.describe("gestiones — realtime streaming", () => {
     await expect(page.getByRole("heading", { name: "Gestiones" })).toBeVisible();
     await expect(page.getByText("María E2E")).toHaveCount(0);
 
-    // --- Seed a VOICE_AI gestión with a PAYMENT_PROMISE outcome via the external
+    // --- Seed a VOICE_AI gestión with a PAYMENT_PROMISE resultado via the external
     // contact-log ingress — a channel the open page never touches, mirroring how the
     // campaigns engine or a webhook writes a gestión while an operator is watching. --------
     const res = await page.request.post(`${API}/api/contact-logs`, {
@@ -73,7 +73,9 @@ test.describe("gestiones — realtime streaming", () => {
         portfolioAccountId: accountId,
         agentType: "VOICE_AI",
         contactedAt: new Date().toISOString(),
-        outcome: "PAYMENT_PROMISE",
+        entrega: "DELIVERED",
+        camino: "ENGAGED",
+        resultado: "PAYMENT_PROMISE",
         intentMetadata: { promisedAmount: 4820, promisedDate: "2026-12-01T00:00:00.000Z" },
         channelData: { to: "+525500000099", providerRef: `call-${stamp}` }
       }
@@ -84,6 +86,8 @@ test.describe("gestiones — realtime streaming", () => {
     await expect(page.getByText("María E2E")).toBeVisible();
 
     // --- Open its detail panel; the linked payment promise starts PENDING ---------------
+    // The promise renders inside the Resultado row (there is no separate promise card any
+    // more), but its status stays a distinct element so realtime updates stay observable.
     await page.locator("tr", { hasText: "María E2E" }).first().click();
     const panel = page.getByRole("dialog");
     await expect(panel).toBeVisible();

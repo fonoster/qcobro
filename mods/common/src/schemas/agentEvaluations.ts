@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createAgentTemplateSchema } from "./agentTemplates.js";
-import { contactOutcomeSchema } from "./contactLog.js";
+import { resultadoSchema } from "./contactLog.js";
 
 /**
  * The account context an eval scenario runs against — author-facing fields only
@@ -40,21 +40,26 @@ export const evalExpectedToolSchema = z.object({
 
 /**
  * A single turn's optional expectation. `text`/`tools` are graded for `VOICE_AI` (relayed
- * from Fonoster); `action`/`outcome` are graded for `EMAIL`/`WHATSAPP` (the behavioral analog
+ * from Fonoster); `action`/`resultado` are graded for `EMAIL`/`WHATSAPP` (the behavioral analog
  * of an expected tool call — see design.md). A turn with no `expected` still runs and streams
  * a result, it just has nothing to grade — **except for VOICE_AI**: Fonoster's
  * `evaluateIntelligence` requires `expected.text` on every conversation turn (confirmed
  * against the live service, correcting an earlier assumption in design.md), so
  * `resolveEvalTarget` rejects a VOICE_AI scenario with any turn missing it before ever
- * calling Fonoster. This schema stays permissive (shared across all three channel types);
- * the VOICE_AI-specific requirement is enforced at resolution time, not here.
+ * calling Fonoster. The VOICE_AI-specific requirement is enforced at
+ * resolution time, not here, since this shape is shared across all three channel types.
  */
-export const evalExpectedSchema = z.object({
-  text: evalExpectedTextSchema.optional(),
-  tools: z.array(evalExpectedToolSchema).optional(),
-  action: z.enum(["reply", "ignore", "resolve", "escalate"]).optional(),
-  outcome: contactOutcomeSchema.optional()
-});
+export const evalExpectedSchema = z
+  .object({
+    text: evalExpectedTextSchema.optional(),
+    tools: z.array(evalExpectedToolSchema).optional(),
+    action: z.enum(["reply", "ignore", "resolve", "escalate"]).optional(),
+    resultado: resultadoSchema.optional()
+  })
+  // Strict so the `outcome` -> `resultado` rename fails loudly. A permissive object would
+  // strip an eval suite's legacy `outcome` key, leave the expectation unevaluated, and report
+  // every turn as passing - a silently green suite that checks nothing.
+  .strict();
 
 export const evalTurnSchema = z.object({
   input: z.string().min(1),
