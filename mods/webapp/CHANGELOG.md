@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.30.1](https://github.com/fonoster/qcobro/compare/v1.30.0...v1.30.1) (2026-08-20)
+
+### Bug Fixes
+
+- **webapp:** default max attempts per day to 1 on new campaigns ([#105](https://github.com/fonoster/qcobro/issues/105)) ([bcf36ed](https://github.com/fonoster/qcobro/commit/bcf36ede80076eea50916db5228bda6b5e6466b9))
+
 # [1.30.0](https://github.com/fonoster/qcobro/compare/v1.29.3...v1.30.0) (2026-08-20)
 
 ### Features
