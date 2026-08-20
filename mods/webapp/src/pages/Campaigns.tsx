@@ -368,7 +368,7 @@ function CreateCampaignModal({
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("18:00");
   const [maxPerAccount, setMaxPerAccount] = useState(5);
-  const [maxPerDay, setMaxPerDay] = useState(2);
+  const [maxPerDay, setMaxPerDay] = useState(1);
   const [error, setError] = useState<string | null>(null);
 
   const portfolios = trpc.portfolios.list.useQuery();
