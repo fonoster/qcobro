@@ -86,6 +86,8 @@ test.describe("gestiones — realtime streaming", () => {
     await expect(page.getByText("María E2E")).toBeVisible();
 
     // --- Open its detail panel; the linked payment promise starts PENDING ---------------
+    // The promise renders inside the Resultado row (there is no separate promise card any
+    // more), but its status stays a distinct element so realtime updates stay observable.
     await page.locator("tr", { hasText: "María E2E" }).first().click();
     const panel = page.getByRole("dialog");
     await expect(panel).toBeVisible();

@@ -16,7 +16,7 @@ export const PaymentPromise: StoryObj = {
       <ResultadoRow
         label="Resultado"
         value="Promesa de pago"
-        promise={{ amount: "RD$4,820", dueDate: "23/6/2026" }}
+        promise={{ amount: "RD$4,820", dueDate: "23/6/2026", status: "Pendiente" }}
       />
     </div>
   )
@@ -29,7 +29,7 @@ export const PaymentPromiseWithoutAmount: StoryObj = {
       <ResultadoRow
         label="Resultado"
         value="Promesa de pago"
-        promise={{ amount: null, dueDate: "23/6/2026" }}
+        promise={{ amount: null, dueDate: "23/6/2026", status: "Pendiente" }}
       />
     </div>
   )
@@ -62,7 +62,7 @@ export const AllVariants: StoryObj = {
       <ResultadoRow
         label="Resultado"
         value="Promesa de pago"
-        promise={{ amount: "RD$4,820", dueDate: "23/6/2026" }}
+        promise={{ amount: "RD$4,820", dueDate: "23/6/2026", status: "Pendiente" }}
       />
       <ResultadoRow label="Resultado" value="Disputa" />
       <ResultadoRow label="Resultado" value="Baja" />

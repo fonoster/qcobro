@@ -639,7 +639,8 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
             promise
               ? {
                   amount: promise.amount != null ? money(promise.amount) : null,
-                  dueDate: new Date(promise.dueDate).toLocaleDateString()
+                  dueDate: new Date(promise.dueDate).toLocaleDateString(),
+                  status: t(`paymentPromises.status.${promise.status}` as Parameters<typeof t>[0])
                 }
               : null
           }

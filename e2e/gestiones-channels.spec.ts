@@ -163,10 +163,11 @@ test.describe("gestiones — channels", () => {
     panel = await openPanel("Voz pregrabada");
     await expect(panel.getByText("Guion reproducible")).toBeVisible();
     await expect(panel.getByText(script)).toBeVisible();
-    await expect(panel.getByText("Entregado").first()).toBeVisible();
+    // Voice renders DELIVERED as "Conectada": a call connects, it is not "delivered".
+    await expect(panel.getByText("Conectada").first()).toBeVisible();
     // One-way channel: no interaction to describe, and nothing came of it.
-    await expect(panel.getByText("Camino")).toHaveCount(0);
-    await expect(panel.getByText("Resultado")).toHaveCount(0);
+    await expect(panel.getByText("Camino", { exact: true })).toHaveCount(0);
+    await expect(panel.getByText("Resultado", { exact: true })).toHaveCount(0);
     await expect(panel.getByText(/no confirma que el mensaje se haya escuchado/i)).toBeVisible();
     await expect(panel.getByText(/reproducido al cliente/i)).toHaveCount(0);
     await expect(panel.getByText("Transcripción")).toHaveCount(0);

@@ -107,42 +107,47 @@ test.describe("contact log — entrega / camino / resultado", () => {
     await expect(page.getByRole("columnheader", { name: "Entrega" })).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Resultado" })).toBeVisible();
 
+    // Assertions are scoped to table rows throughout: the resultado filter is a <select>
+    // whose <option> labels carry the same strings, so an unscoped getByText matches twice.
+    const rowWith = (text: string) => page.locator("tbody tr", { hasText: text });
+
     // A failure carries its reason inline, after a middot.
-    await expect(page.getByText("Fallido · Sin respuesta")).toBeVisible();
+    await expect(rowWith("Fallido · Sin respuesta")).toHaveCount(1);
     // A gestión with no outcome renders an em dash rather than an empty cell.
     await expect(page.getByText("—").first()).toBeVisible();
-    await expect(page.getByText("Persona equivocada")).toBeVisible();
+    await expect(rowWith("Persona equivocada")).toHaveCount(1);
 
     // --- Filters are independent -------------------------------------------
     const entregaFilter = page.getByRole("combobox").first();
     await entregaFilter.selectOption("FAILED");
-    await expect(page.getByText("Fallido · Sin respuesta")).toBeVisible();
-    await expect(page.getByText("Persona equivocada")).toHaveCount(0);
+    await expect(rowWith("Fallido · Sin respuesta")).toHaveCount(1);
+    await expect(rowWith("Persona equivocada")).toHaveCount(0);
     await entregaFilter.selectOption("");
 
     const resultadoFilter = page.getByRole("combobox").nth(1);
     await resultadoFilter.selectOption("WRONG_PARTY");
-    await expect(page.getByText("Persona equivocada")).toBeVisible();
-    await expect(page.getByText("Fallido · Sin respuesta")).toHaveCount(0);
+    await expect(rowWith("Persona equivocada")).toHaveCount(1);
+    await expect(rowWith("Fallido · Sin respuesta")).toHaveCount(0);
     await resultadoFilter.selectOption("");
 
     // --- Detail: a wrong-party call is a delivery success -------------------
-    await page.locator("tr", { hasText: "Persona equivocada" }).first().click();
+    await rowWith("Persona equivocada").first().click();
     const panel = page.getByRole("dialog");
     await expect(panel).toBeVisible();
-    await expect(panel.getByText("Entrega")).toBeVisible();
-    await expect(panel.getByText("Camino")).toBeVisible();
+    await expect(panel.getByText("Entrega", { exact: true })).toBeVisible();
+    await expect(panel.getByText("Camino", { exact: true })).toBeVisible();
     await expect(panel.getByText("Despachado → Conversación")).toBeVisible();
     await expect(panel.getByText("Persona equivocada")).toBeVisible();
     await page.getByRole("button", { name: "Volver a gestiones" }).click();
 
     // --- Detail: a one-way channel shows entrega only -----------------------
-    await page.locator("tr", { hasText: "SMS" }).first().click();
+    await rowWith("SMS").first().click();
     const smsPanel = page.getByRole("dialog");
     await expect(smsPanel).toBeVisible();
-    await expect(smsPanel.getByText("Entrega")).toBeVisible();
+    // Exact: "Entrega" is a prefix of the value "Entregado", so a substring match hits both.
+    await expect(smsPanel.getByText("Entrega", { exact: true })).toBeVisible();
     // No inbound path, so neither axis has anything to say.
-    await expect(smsPanel.getByText("Camino")).toHaveCount(0);
-    await expect(smsPanel.getByText("Resultado")).toHaveCount(0);
+    await expect(smsPanel.getByText("Camino", { exact: true })).toHaveCount(0);
+    await expect(smsPanel.getByText("Resultado", { exact: true })).toHaveCount(0);
   });
 });
