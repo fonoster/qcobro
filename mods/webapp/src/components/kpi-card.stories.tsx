@@ -36,25 +36,29 @@ export const WithNegativeTrend: StoryObj = {
   )
 };
 
+const PERIOD_OPTIONS = [
+  { value: "24h", label: "24 horas" },
+  { value: "7d", label: "7 días" },
+  { value: "14d", label: "14 días" },
+  { value: "28d", label: "28 días" }
+];
+
+const periodControl = (value: string) => ({
+  value,
+  ariaLabel: "Período de tasa de contacto",
+  onChange: () => {},
+  options: PERIOD_OPTIONS
+});
+
 /** The windowed contact-rate card: percentage plus an accounts-reached/sends subline, with
  *  the in-card period pill (calendar icon, current period, chevron). */
 export const ContactRateWithPeriod: StoryObj = {
   render: () => (
     <KpiCard
-      label="Tasa de contacto"
+      label="Contacto"
       value="92%"
       subtext="230 de 250 cuentas · 410 envíos"
-      period={{
-        value: "7d",
-        ariaLabel: "Período de tasa de contacto",
-        onChange: () => {},
-        options: [
-          { value: "24h", label: "24 h" },
-          { value: "7d", label: "7 días" },
-          { value: "14d", label: "14 días" },
-          { value: "28d", label: "28 días" }
-        ]
-      }}
+      period={periodControl("7d")}
     />
   )
 };
@@ -63,21 +67,36 @@ export const ContactRateWithPeriod: StoryObj = {
 export const ContactRateEmpty: StoryObj = {
   render: () => (
     <KpiCard
-      label="Tasa de contacto"
+      label="Contacto"
       value="—"
       subtext="Sin envíos en el período"
-      period={{
-        value: "24h",
-        ariaLabel: "Período de tasa de contacto",
-        onChange: () => {},
-        options: [
-          { value: "24h", label: "24 h" },
-          { value: "7d", label: "7 días" },
-          { value: "14d", label: "14 días" },
-          { value: "28d", label: "28 días" }
-        ]
-      }}
+      period={periodControl("24h")}
     />
+  )
+};
+
+/**
+ * The Panel de control row at its real proportions: five cards across the width a 1280px
+ * viewport leaves after the sidebar and page padding (~976px). This is the case that catches
+ * the label/pill fight — a single wide card hides it entirely — and it's where to check that
+ * every card's bottom note still shares one baseline despite the taller contact header.
+ */
+export const DashboardRowAtNarrowWidth: StoryObj = {
+  render: () => (
+    <div className="w-[976px]">
+      <div className="grid grid-cols-5 gap-4">
+        <KpiCard label="Recuperado" value="$287,430" subtext="acumulado" />
+        <KpiCard label="Promesas cumplidas" value="312" subtext="cumplidas" />
+        <KpiCard
+          label="Contacto"
+          value="92%"
+          subtext="230 de 250 cuentas · 410 envíos"
+          period={periodControl("7d")}
+        />
+        <KpiCard label="Saldo pendiente" value="$1,204,900" subtext="por cobrar" />
+        <KpiCard label="Cuentas en gestión" value="12,430" subtext="activas" />
+      </div>
+    </div>
   )
 };
 

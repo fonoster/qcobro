@@ -25,12 +25,14 @@ export const messages = {
     "home.kpi.pendingBalance": "Pending balance",
     "home.kpi.pendingBalanceMeta": "outstanding",
     "home.kpi.promisesKept": "Promises kept",
-    "home.kpi.contactRate": "Contact rate",
+    // Short on purpose: this card's label shares its row with the period control, so it has
+    // roughly half the width of the other four. The percentage makes "rate" self-evident.
+    "home.kpi.contactRate": "Contact",
     "home.kpi.accountsInManagement": "Accounts in management",
     "home.kpi.active": "active",
     "home.kpi.recoveredMeta": "to date",
     "home.kpi.promisesKeptMeta": "kept",
-    "home.contactRate.period.24h": "24h",
+    "home.contactRate.period.24h": "24 hours",
     "home.contactRate.period.7d": "7 days",
     "home.contactRate.period.14d": "14 days",
     "home.contactRate.period.28d": "28 days",
@@ -618,12 +620,14 @@ export const messages = {
     "home.kpi.pendingBalance": "Saldo pendiente",
     "home.kpi.pendingBalanceMeta": "por cobrar",
     "home.kpi.promisesKept": "Promesas cumplidas",
-    "home.kpi.contactRate": "Tasa de contacto",
+    // Corto a propósito: la etiqueta comparte fila con el control de período, así que dispone
+    // de la mitad del ancho que las otras cuatro. El porcentaje ya deja claro que es una tasa.
+    "home.kpi.contactRate": "Contacto",
     "home.kpi.accountsInManagement": "Cuentas en gestión",
     "home.kpi.active": "activas",
     "home.kpi.recoveredMeta": "acumulado",
     "home.kpi.promisesKeptMeta": "cumplidas",
-    "home.contactRate.period.24h": "24 h",
+    "home.contactRate.period.24h": "24 horas",
     "home.contactRate.period.7d": "7 días",
     "home.contactRate.period.14d": "14 días",
     "home.contactRate.period.28d": "28 días",

@@ -14,12 +14,19 @@ The Panel de control (home) SHALL source its activity and per-cartera widgets, a
   renders.
 - The "Cuentas en gestión" KPI SHALL show the total number of accounts under management,
   computed as the sum of the active carteras' account counts.
-- The "Tasa de contacto" KPI SHALL show the windowed, account-level contact rate as a
-  percentage, with a period control **inside that card**. The control SHALL offer 24h, 7, 14 and
-  28 days and SHALL default to 7 days, and changing it SHALL re-read the statistic for the new
+- The contact-rate KPI SHALL show the windowed, account-level contact rate as a percentage,
+  with a period control **inside that card**. The control SHALL offer 24 hours, 7, 14 and 28
+  days and SHALL default to 7 days, and changing it SHALL re-read the statistic for the new
   window. Beneath the percentage the card SHALL show the accounts reached, the accounts
   attempted, and the total sends in the window, so a small sample is legible as a small sample
   rather than as a collapse.
+
+  Periods SHALL be spelled out ("7 días"), both in the collapsed control and in the open menu.
+  Because that control shares its row with the card's label, and five cards share the page row,
+  the card's label SHALL be the short form ("Contacto" / "Contact") rather than a full "contact
+  rate" phrase — the percentage already establishes that it is a rate. Below roughly a 1280px
+  viewport the two still compete and the label truncates; widening the row is tracked
+  separately.
 
 The period control SHALL NOT be placed in the page header. Only this KPI responds to it; a
 header control would imply the whole panel does.
