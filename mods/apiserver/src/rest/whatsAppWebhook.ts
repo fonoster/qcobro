@@ -9,7 +9,6 @@ import {
   whatsAppWebhookSchema,
   type AiConfig,
   type PortfolioAccountRecord,
-  type Resultado,
   type WhatsAppClient
 } from "@qcobro/common";
 import type { ProviderEventRecorder } from "../engine/eventSink.js";
@@ -19,6 +18,10 @@ import {
   type WhatsAppInboundClient
 } from "../functions/whatsApp/ingestWhatsAppMessage.js";
 import { createRecordOutcome } from "../functions/campaigns/recordOutcome.js";
+import {
+  createPrismaWhatsAppDeliveryStatusClient,
+  createRecordWhatsAppDeliveryStatus
+} from "../functions/whatsApp/recordWhatsAppDeliveryStatus.js";
 import { createWhatsAppAutopilot } from "../services/whatsAppAutopilot.js";
 
 const logger = getLogger({ service: "whatsapp", filePath: import.meta.url });
@@ -52,14 +55,10 @@ interface WebhookDb {
       data: { qualityRating: string };
     }): Promise<unknown>;
   };
-  accountContactLog: {
-    findFirst(args: {
-      where: { providerRef: string };
-    }): Promise<{ id: string; portfolioAccountId: string } | null>;
-    // Typed against the enum rather than `string`: the previous `intentStatus: string` here is
-    // what let a write of a since-removed enum value pass the type checker and fail at runtime.
-    update(args: { where: { id: string }; data: { resultado: Resultado } }): Promise<unknown>;
-  };
+  // No `accountContactLog` surface: gestión writes moved out of this handler entirely and now
+  // go through `recordWhatsAppDeliveryStatus`, which carries its own narrowed client and its
+  // own Zod validation. Keeping a second, laxer path to the same table is what previously let
+  // a write of a since-removed enum value pass the type checker and fail at runtime.
 }
 
 /**
@@ -96,6 +95,14 @@ function isOptOut(status: StatusRecord): boolean {
     status.status === "failed" &&
     (status.errors ?? []).some((e) => e.code !== undefined && OPT_OUT_ERROR_CODES.has(e.code))
   );
+}
+
+/**
+ * The first numeric error code on a status. Meta sends an array, but a single status carries
+ * one failure reason in practice; the first code is the one the reason mapping branches on.
+ */
+function metaErrorCode(status: StatusRecord): number | undefined {
+  return (status.errors ?? []).find((e) => e.code !== undefined)?.code;
 }
 
 /**
@@ -199,8 +206,9 @@ export function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAp
 }
 
 /**
- * Process a parsed Meta webhook body: quality-rating updates, opt-out mapping, and
- * inbound customer message routing through the WhatsApp AI-reply autopilot.
+ * Process a parsed Meta webhook body: quality-rating updates, delivery statuses (including
+ * the opt-out block), and inbound customer message routing through the WhatsApp AI-reply
+ * autopilot.
  *
  * Runs after the 200 response is sent — Meta requires acknowledgement within 20 s.
  * Individual event errors are caught and logged; one bad event never blocks the rest.
@@ -209,6 +217,7 @@ async function processEvents(
   body: ReturnType<typeof whatsAppWebhookSchema.parse>,
   db: WebhookDb,
   ingest: ReturnType<typeof createIngestWhatsAppMessage>,
+  recordStatus: ReturnType<typeof createRecordWhatsAppDeliveryStatus>,
   recordEvent?: ProviderEventRecorder
 ) {
   for (const entry of body.entry ?? []) {
@@ -239,32 +248,51 @@ async function processEvents(
         const phoneNumberId = value.metadata?.phone_number_id;
         if (!phoneNumberId) continue;
 
-        // Opt-out signals: a failed delivery status with error code 131050.
+        // Delivery signals: `sent` / `delivered` / `read` / `failed`, plus the opt-out block
+        // that arrives as a `failed` status carrying error code 131050. Every one of these
+        // used to be discarded except the opt-out, which is why a delivered-but-unanswered
+        // WhatsApp message sat at `entrega: DISPATCHED` forever (#103).
         for (const status of value.statuses ?? []) {
-          recordEvent?.({
-            providerRef: status.id,
-            providerAt: status.timestamp
-              ? new Date(Number(status.timestamp) * 1000).toISOString()
-              : undefined,
-            summary: { status: status.status ?? "unknown", optOut: isOptOut(status) }
-          });
-          if (!isOptOut(status)) continue;
-          const log = await db.accountContactLog.findFirst({
-            where: { providerRef: status.id }
-          });
-          if (!log) {
-            logger.warn(`opt-out: no gestión for providerRef=${status.id} — skipping`);
+          const at = status.timestamp
+            ? new Date(Number(status.timestamp) * 1000).toISOString()
+            : new Date().toISOString();
+          // A status with no id or no value is unusable. Skipped rather than passed to the
+          // recorder, whose Zod schema would reject it — and a throw here would abandon the
+          // remaining statuses in this change alongside it.
+          if (!status.id || !status.status) {
+            logger.warn(`status: malformed entry (id=${status.id} status=${status.status})`);
             continue;
           }
-          // The account-level OPT_OUT flag no longer exists: suppression moved to the
-          // workspace Do Not Contact list, which is not built yet (issue #101). Recording the
-          // platform block on the gestión keeps the signal findable in the console until that
-          // lands; writing `intentStatus` here would throw, since the enum value is gone.
-          await db.accountContactLog.update({
-            where: { id: log.id },
-            data: { resultado: "OPT_OUT" }
+          const result = await recordStatus({
+            providerRef: status.id,
+            status: status.status,
+            at,
+            errorCode: metaErrorCode(status)
           });
-          logger.verbose(`opt-out: account=${log.portfolioAccountId} providerRef=${status.id}`);
+          recordEvent?.({
+            providerRef: status.id,
+            providerAt: status.timestamp ? at : undefined,
+            matched: result.matched,
+            summary: {
+              status: status.status,
+              optOut: result.matched ? result.optOut : isOptOut(status)
+            }
+          });
+          if (!result.matched) {
+            logger.warn(`status: no gestión for providerRef=${status.id} — skipping`);
+            continue;
+          }
+          logger.verbose(
+            `status=${status.status} account=${result.portfolioAccountId} ` +
+              `providerRef=${status.id} entrega=${result.entrega}`
+          );
+          if (result.optOut) {
+            // The account-level OPT_OUT flag no longer exists: suppression moved to the
+            // workspace Do Not Contact list, which is not built yet (issue #101). The
+            // `resultado: OPT_OUT` the recorder wrote keeps the signal findable in the
+            // console until that lands, but nothing enforces it yet.
+            logger.verbose(`opt-out: account=${result.portfolioAccountId} — NOT enforced (#101)`);
+          }
         }
 
         // Inbound customer messages — route through the AI-reply autopilot.
@@ -328,6 +356,9 @@ export function createWhatsAppWebhookHandlers(prisma: PrismaClient, cfg: WhatsAp
 
   const autopilot = createWhatsAppAutopilot(cfg.ai);
   const recordOutcome = createRecordOutcome(prisma as never);
+  const recordStatus = createRecordWhatsAppDeliveryStatus(
+    createPrismaWhatsAppDeliveryStatusClient(prisma)
+  );
   const inboundClient = createPrismaWhatsAppInboundClient(prisma);
   const ingest = createIngestWhatsAppMessage({
     client: inboundClient,
@@ -387,8 +418,8 @@ export function createWhatsAppWebhookHandlers(prisma: PrismaClient, cfg: WhatsAp
     }
 
     // Fire-and-forget after the ack; errors are caught inside processEvents.
-    processEvents(parsed.data, db, ingest, cfg.recordEvent ?? undefined).catch((err) =>
-      logger.error("processEvents threw:", err)
+    processEvents(parsed.data, db, ingest, recordStatus, cfg.recordEvent ?? undefined).catch(
+      (err) => logger.error("processEvents threw:", err)
     );
   }
 

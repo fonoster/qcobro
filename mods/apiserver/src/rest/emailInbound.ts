@@ -1,4 +1,3 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Request, Response } from "express";
 import type { PrismaClient } from "@prisma/client";
 import {
@@ -20,6 +19,7 @@ import {
 import { createRecordOutcome } from "../functions/campaigns/recordOutcome.js";
 import { createEmailAutopilot } from "../services/emailAutopilot.js";
 import { ResendEmailClient } from "../services/resendEmailClient.js";
+import { verifySvixSignature } from "./svixSignature.js";
 
 const logger = getLogger({ service: "email", filePath: import.meta.url });
 
@@ -174,35 +174,6 @@ export interface EmailInboundDeps {
   ai: AiConfig;
   /** Flight recorder; each inbound reply is recorded best-effort. */
   recordEvent?: ProviderEventRecorder | null;
-}
-
-/**
- * Verify a Svix-signed webhook (standard-webhooks spec used by Resend).
- * Secret format: `whsec_<base64>`. Signs `{svix-id}.{svix-timestamp}.{rawBody}` with
- * HMAC-SHA256 and compares against the `svix-signature` header (space-separated `v1,<b64>`
- * entries). Uses timing-safe comparison to prevent timing attacks.
- */
-function verifySvixSignature(req: Request, secret: string): boolean {
-  const msgId = req.headers["svix-id"];
-  const msgTs = req.headers["svix-timestamp"];
-  const sigHeader = req.headers["svix-signature"];
-  if (!msgId || !msgTs || !sigHeader) return false;
-
-  const stored = (req as { rawBody?: unknown }).rawBody;
-  const rawBody: string = typeof stored === "string" ? stored : JSON.stringify(req.body);
-
-  const keyBytes = Buffer.from(secret.replace(/^whsec_/, ""), "base64");
-  const toSign = `${msgId}.${msgTs}.${rawBody}`;
-  const expected = createHmac("sha256", keyBytes).update(toSign).digest("base64");
-
-  const expectedBuf = Buffer.from(expected);
-  const signatures = String(sigHeader).split(" ");
-  return signatures.some((sig) => {
-    const b64 = sig.startsWith("v1,") ? sig.slice(3) : sig;
-    const candidate = Buffer.from(b64);
-    if (candidate.length !== expectedBuf.length) return false;
-    return timingSafeEqual(candidate, expectedBuf);
-  });
 }
 
 /**

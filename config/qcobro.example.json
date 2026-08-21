@@ -61,6 +61,7 @@
     "fromName": "QCobro",
     "inboundDomain": "notices.yourdomain.com",
     "inboundSigningSecret": "CHANGE_ME",
+    "eventsSigningSecret": "CHANGE_ME",
     "maxEmailsPerMinute": 60,
     "maxRepliesDefault": 3
   },

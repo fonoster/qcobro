@@ -92,6 +92,16 @@ mistake — call it out in implementation.
    Voz IA classifies from the transcript; email runs an autopilot reply/resolve/escalate loop;
    WhatsApp inbound opt-out sets `IntentStatus = OPT_OUT` (global suppression). Re-delivered
    webhooks never create duplicate `PaymentPromise`s.
+6. **Email and WhatsApp delivery is now really observed** (`message-delivery-signals`, closing
+   #103). For a long time the `Sent → Delivered → Opened → Replied` lifecycle in the table above
+   was aspirational on both rows: the only code that moved either channel off `DISPATCHED` was
+   an inbound reply, so a delivered-but-unanswered message stayed `DISPATCHED` forever and the
+   workspace contact rate read near-0% for an email-only portfolio. Email now ingests Resend's
+   outbound events at `POST /api/email/events`; WhatsApp reads the `statuses` array its webhook
+   was already receiving and discarding. **Opens stay display-only on both channels**:
+   `channelData.openedAt` renders the `Leído` stage and enters no metric — an email open is a
+   tracking pixel that proxies inflate and blocked images suppress, and read-but-unengaged is
+   deliberately not modelled as a `camino` value.
 
 ---
 

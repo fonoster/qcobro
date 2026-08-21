@@ -110,7 +110,15 @@ const createContactLogFields = z.object({
    * When present, `recordOutcome` upserts the gestión keyed by it (one row per
    * attempt, enriched by the async callback) instead of inserting a duplicate.
    */
-  providerRef: z.string().min(1).optional()
+  providerRef: z.string().min(1).optional(),
+  /**
+   * The provider's own message id, used to correlate *outbound* delivery events. Distinct
+   * from `providerRef` and not a replacement for it: on EMAIL `providerRef` is the reply-to
+   * token, which is the only thing an inbound reply carries, while Resend's delivery/open
+   * events carry only the message id. Both keys are needed, so both are stored. Unset on the
+   * channels whose callbacks correlate on `providerRef` alone.
+   */
+  providerMessageId: z.string().min(1).optional()
 });
 
 /**

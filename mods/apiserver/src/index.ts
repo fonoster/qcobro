@@ -27,6 +27,7 @@ import {
   validateStripePrices
 } from "./services/stripeGateway.js";
 import { createEmailInboundHandler } from "./rest/emailInbound.js";
+import { createEmailEventsHandler } from "./rest/emailEvents.js";
 import { createWhatsAppWebhookHandlers } from "./rest/whatsAppWebhook.js";
 import { createEngineEventsHandler } from "./rest/engineEvents.js";
 import { resolveWhatsAppClient } from "./services/resolveWhatsAppClient.js";
@@ -121,6 +122,18 @@ app.post(
     resend: config.resend,
     ai: config.ai,
     recordEvent: providerEvents("email-inbound")
+  })
+);
+
+// Resend outbound email events (email-events-hook capability): delivery, bounce and open
+// receipts return as gestión updates, so EMAIL reaches `entrega: DELIVERED` without needing
+// the customer to reply. A *separate* Resend webhook endpoint from the inbound route above,
+// with its own signing secret — Resend issues one per endpoint.
+app.post(
+  "/api/email/events",
+  createEmailEventsHandler(prisma, {
+    resend: config.resend,
+    recordEvent: providerEvents("email-events")
   })
 );
 

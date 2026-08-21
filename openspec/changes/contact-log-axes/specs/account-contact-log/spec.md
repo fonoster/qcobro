@@ -72,7 +72,8 @@ Each `AccountContactLog` entry SHALL capture:
     where `scriptDurationSeconds?` is the nominal length of the synthesized pre-recorded clip,
     stored so a future report can compare it against the answered `durationSeconds`
   - SMS: `{ messageSid, deliveryStatus }`
-  - Email: `{ messageId, deliveryStatus, openedAt? }`
+  - Email: `{ deliveryStatus, openedAt? }` — the provider message id is **not** here; it is an
+    indexed correlation key and lives in `providerMessageId` (see System fields)
   - WhatsApp: `{ messageSid, deliveryStatus }`
 
   `channelData.deliveryStatus` remains the raw provider status string, kept for operator
@@ -82,6 +83,12 @@ Each `AccountContactLog` entry SHALL capture:
 **System fields**
 
 - `correctedEntryId?` — ID of a prior gestión this entry corrects (reserved)
+- `providerRef?` — the handle an **inbound** signal carries: the call ref (voice), the message
+  sid (SMS), the `wamid` (WhatsApp), or the per-attempt reply-to token (EMAIL). Unique; the
+  dispatch-time gestión is upserted on it so an async callback enriches one row per attempt
+- `providerMessageId?` — the handle an **outbound** delivery event carries. Distinct from
+  `providerRef` and needed alongside it only on EMAIL, where the reply-to token appears in no
+  Resend delivery/open event and the Resend message id appears in no customer reply. Unique
 - `createdAt`
 
 **Entrega enum:** `DISPATCHED` · `DELIVERED` · `FAILED`

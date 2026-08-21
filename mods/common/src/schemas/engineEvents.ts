@@ -163,7 +163,14 @@ const providerEventSchema = eventBase.extend({
   /** Owning workspace, resolved from the matched gestión; absent when unmatched. */
   workspaceRef: z.string().optional(),
   /** Which inbound surface received it. */
-  source: z.enum(["voice-events", "contact-logs", "meta-whatsapp", "email-inbound", "sms-events"]),
+  source: z.enum([
+    "voice-events",
+    "contact-logs",
+    "meta-whatsapp",
+    "email-inbound",
+    "email-events",
+    "sms-events"
+  ]),
   providerRef: z.string().optional(),
   /** Provider-side timestamp when the payload carries one (receipt time is `at`). */
   providerAt: z.string().optional(),

@@ -78,7 +78,8 @@ function logData(params: CreateContactLogInput, contactedAt: Date): Record<strin
     aiNextStep: params.aiNextStep ?? null,
     intentMetadata: params.intentMetadata ?? null,
     channelData: params.channelData ?? null,
-    providerRef: params.providerRef ?? null
+    providerRef: params.providerRef ?? null,
+    providerMessageId: params.providerMessageId ?? null
   };
 }
 
@@ -229,7 +230,12 @@ export async function recordOutcomeTx(
       "aiNextStep",
       "intentMetadata",
       "camino",
-      "resultado"
+      "resultado",
+      // A correlation key, but merged rather than pinned like `providerRef` below: the
+      // dispatch write sets it and every later enrichment call omits it, so pinning would be
+      // equivalent — while merging also covers a dispatch-time write that arrives second.
+      // Losing it would silently orphan every subsequent Resend delivery/open event.
+      "providerMessageId"
     ] as const;
     const prior = existing as unknown as Record<string, unknown>;
     for (const field of MERGE_FORWARD) {

@@ -182,6 +182,13 @@ export interface DispatchResult {
   channel: DispatchChannel;
   /** Provider call ref (voice), message sid (sms), or reply-to token (email). */
   providerRef: string;
+  /**
+   * The provider's own message id, for correlating *outbound* delivery events. EMAIL only:
+   * there `providerRef` is the reply-to token — the sole handle an inbound reply carries —
+   * while Resend's delivery/open events carry only this id, so both are needed. The other
+   * channels' callbacks correlate on `providerRef` alone and leave this unset.
+   */
+  providerMessageId?: string;
   /** The sending number used. */
   from: string;
   /** The destination number. */

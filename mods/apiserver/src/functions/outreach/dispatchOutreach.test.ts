@@ -130,6 +130,21 @@ describe("dispatchOutreach", () => {
     assert.equal(result.channel, "EMAIL");
     assert.ok(result.providerRef.length > 0);
     assert.equal(sent.replyTo, `reply+${result.providerRef}@inbound.mikro.do`);
+    // The provider's own id rides alongside it — outbound delivery/open events carry only
+    // that, never the reply-to token, so discarding it would orphan every one of them.
+    assert.equal(result.providerMessageId, "email-1");
+  });
+
+  it("leaves providerMessageId unset on channels whose callbacks use providerRef", async () => {
+    const { deps } = makeDeps();
+    const result = await createDispatchOutreach(deps)({
+      channel: "SMS",
+      to: "+50670000000",
+      context: {},
+      body: "Recordatorio de pago"
+    });
+
+    assert.equal(result.providerMessageId, undefined);
   });
 
   it("rejects an EMAIL with no subject and never calls the provider (validation)", async () => {
