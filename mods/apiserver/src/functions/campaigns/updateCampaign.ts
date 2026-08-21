@@ -9,7 +9,9 @@ import { businessError } from "../businessError.js";
 /**
  * Updates a campaign's mutable fields. `agentTemplateId` is immutable — the
  * `.strict()` schema rejects any attempt to change it. Enforces
- * `endDate > startDate` against the effective (new or existing) dates.
+ * `endDate > startDate` and `endTime > startTime` against the effective (new or
+ * existing) values, since a partial update can invert either pair without the
+ * schema ever seeing the unchanged side.
  */
 export function createUpdateCampaign(client: CampaignClient, workspaceRef: string) {
   const fn = async (params: UpdateCampaignInput) => {
@@ -21,6 +23,12 @@ export function createUpdateCampaign(client: CampaignClient, workspaceRef: strin
     const effEnd = params.endDate ? new Date(params.endDate) : existing.endDate;
     if (effEnd && effEnd <= effStart) {
       throw businessError("endDate", "endDate must be after startDate");
+    }
+
+    const effStartTime = params.startTime ?? existing.startTime;
+    const effEndTime = params.endTime ?? existing.endTime;
+    if (effEndTime <= effStartTime) {
+      throw businessError("endTime", "endTime must be after startTime");
     }
 
     const { id, startDate, endDate, ...rest } = params;

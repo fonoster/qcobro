@@ -19,7 +19,8 @@ export type WindowResult = { ok: true } | { ok: false; reason: CampaignSkipReaso
  * campaign's workspace timezone). In-window means: status ACTIVE,
  * `startDate ≤ today ≤ endDate` (endDate optional),
  * the local weekday is in `daysOfWeek`, and the local time is within
- * `startTime`..`endTime`. Windows do not span midnight (`startTime < endTime`).
+ * `startTime`..`endTime`. Windows do not span midnight (`startTime < endTime`, enforced
+ * at campaign create/update, not just assumed here).
  */
 export function isInWindow(c: WindowCampaign, now: Date, timeZone: string): WindowResult {
   if (c.status !== "ACTIVE") return { ok: false, reason: "not_active" };

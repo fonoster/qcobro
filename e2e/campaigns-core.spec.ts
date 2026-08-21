@@ -55,6 +55,14 @@ test.describe("campaigns core", () => {
     for (const day of ["Mar", "Mié", "Jue"]) {
       await page.getByRole("button", { name: day, exact: true }).click();
     }
+    // An inverted window (end before start) is rejected inline, not silently saved.
+    await page.getByLabel("Hora de inicio").fill("09:30");
+    await page.getByLabel("Hora de fin").fill("05:00");
+    await page.getByRole("button", { name: "Crear campaña" }).click();
+    await expect(
+      page.getByText("La hora de fin debe ser posterior a la hora de inicio.")
+    ).toBeVisible();
+    await page.getByLabel("Hora de fin").fill("18:00");
     await page.getByRole("button", { name: "Crear campaña" }).click();
 
     const campaignRow = page.locator("tr", { hasText: campaignName });

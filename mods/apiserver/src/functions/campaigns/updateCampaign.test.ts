@@ -13,6 +13,8 @@ function makeClient() {
           workspaceRef: "ws-1",
           startDate: new Date("2026-07-01"),
           endDate: new Date("2026-08-01"),
+          startTime: "09:00",
+          endTime: "18:00",
           status: "PAUSED"
         }) as never,
       update: async (args: { where: { id: string }; data: Record<string, unknown> }) => {
@@ -54,5 +56,19 @@ describe("updateCampaign", () => {
     const fn = createUpdateCampaign(client as never, "ws-1");
 
     await assert.rejects(() => fn({ id: "camp-1", endDate: "2026-06-01" }), ValidationError);
+  });
+
+  it("rejects an endTime before the (existing) startTime", async () => {
+    const { client } = makeClient();
+    const fn = createUpdateCampaign(client as never, "ws-1");
+
+    await assert.rejects(() => fn({ id: "camp-1", endTime: "05:00" }), ValidationError);
+  });
+
+  it("rejects a startTime after the (existing) endTime", async () => {
+    const { client } = makeClient();
+    const fn = createUpdateCampaign(client as never, "ws-1");
+
+    await assert.rejects(() => fn({ id: "camp-1", startTime: "20:00" }), ValidationError);
   });
 });

@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
 import { cn } from "@/lib/utils.js";
 import { Button } from "./button.js";
 
@@ -14,6 +14,12 @@ export interface DialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   onConfirm?: () => void;
+  /**
+   * Validation or submission error for the dialog as a whole. Rendered between the
+   * scrollable body and the actions — outside the scroll area on purpose, so a long
+   * form can never push the message out of view of the button that triggered it.
+   */
+  error?: string | null;
 }
 
 export function Dialog({
@@ -27,7 +33,8 @@ export function Dialog({
   icon,
   confirmLabel = "Continue",
   cancelLabel = "Cancel",
-  onConfirm
+  onConfirm,
+  error
 }: DialogProps) {
   if (!open) return null;
 
@@ -53,6 +60,15 @@ export function Dialog({
         {title && <h2 className="text-base font-semibold text-slate-900">{title}</h2>}
         {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
         <div className="-mx-6 min-h-0 flex-1 overflow-y-auto px-6">{children}</div>
+        {error && (
+          <div
+            role="alert"
+            className="mt-4 flex items-center gap-2 rounded-xl bg-red-50 p-3 text-left text-sm font-medium text-red-600"
+          >
+            <AlertTriangle className="h-5 w-5 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
         <div className={cn("mt-5 flex gap-3", align === "center" && "justify-center")}>
           <Button onClick={onConfirm}>{confirmLabel}</Button>
           <Button variant="outline" onClick={onClose}>

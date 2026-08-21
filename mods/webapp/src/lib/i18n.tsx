@@ -390,6 +390,9 @@ export const messages = {
     "campaigns.form.maxPerDay": "Max attempts per day",
     "campaigns.form.noPortfolios": "Select at least one portfolio.",
     "campaigns.form.noDays": "Select at least one day.",
+    "campaigns.form.noName": "Give the campaign a name.",
+    "campaigns.form.noStartDate": "Choose a start date for the campaign.",
+    "campaigns.form.invalidWindow": "The end time must be after the start time.",
     "campaigns.form.noAgents": "Create an agent template first.",
     "campaigns.delete.title": "Delete campaign",
     "campaigns.delete.description":
@@ -988,6 +991,9 @@ export const messages = {
     "campaigns.form.maxPerDay": "Máx. intentos por día",
     "campaigns.form.noPortfolios": "Selecciona al menos una cartera.",
     "campaigns.form.noDays": "Selecciona al menos un día.",
+    "campaigns.form.noName": "Ponle un nombre a la campaña.",
+    "campaigns.form.noStartDate": "Elige una fecha de inicio para la campaña.",
+    "campaigns.form.invalidWindow": "La hora de fin debe ser posterior a la hora de inicio.",
     "campaigns.form.noAgents": "Crea primero una plantilla de agente.",
     "campaigns.delete.title": "Eliminar campaña",
     "campaigns.delete.description":
