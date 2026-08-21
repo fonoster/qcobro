@@ -18,6 +18,8 @@ plus Pedro's follow-up notes (opt-out digit, UI config, enforced messages, resul
 `.claude/worktrees/feat+prerecorded-dtmf-menu`, based on `origin/main` fast-forwarded with
 the `docs/sync-archive-contact-log-axes` branch (PR #116, not yet merged at time of writing —
 this branch needed its `account-contact-log`/`web-console` main-spec changes as a base).
+**PR:** [#117](https://github.com/fonoster/qcobro/pull/117) (draft — not merge-ready, see
+stage 4 blockers).
 
 | #   | Stage           | Status      | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | :-- | :-------------- | :---------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
