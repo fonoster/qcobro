@@ -1,7 +1,7 @@
 # Ship checkpoint — contact-log-axes
 
 Started: 2026-08-19
-Current stage: 4 done (build + tests green, code review applied) — next: stage 5 (sync gate)
+Current stage: DONE — archived (2026-08-21)
 
 **Scope:** Split the overloaded `ContactOutcome` enum into three orthogonal axes on the
 account contact log — **`entrega`** (did it reach the device/inbox: `DISPATCHED` /
@@ -15,15 +15,15 @@ the delivery/engagement/conversion funnel computable for the first time.
 
 **Branch / worktree:** `feat/contact-log-axes` @ `.claude/worktrees/feat+contact-log-axes`, based on `origin/main` (92bee8b).
 
-| #   | Stage           | Status  | Notes                                                                                                                    |
-| :-- | :-------------- | :------ | :----------------------------------------------------------------------------------------------------------------------- |
-| 0   | Frame           | done    | Change authored from a long design discussion; no pre-existing OpenSpec change. Surfaces detected above.                 |
-| 1   | Design (Pencil) | done    | 5 detail blocks + Gestiones list edited. **Approved by user 2026-08-19.**                                                |
-| 2   | Spec reconcile  | done    | Deltas for `account-contact-log`, `web-console`, `prerecorded-audio`, `portfolios`. `openspec validate --strict` passes. |
-| 3   | Build           | done    | 59 files changed + 8 new. Migration rehearsed on a scratch Postgres; caught a one-way-channel back-fill defect.          |
-| 4   | Test            | done    | 362 apiserver + 179 common pass, 0 type errors, lint clean. Playwright spec added. `/code-review high` applied.          |
-| 5   | Sync            | pending | Gate.                                                                                                                    |
-| 6   | Archive         | pending | Gate.                                                                                                                    |
+| #   | Stage           | Status | Notes                                                                                                                                                                                                                                                                                       |
+| :-- | :-------------- | :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0   | Frame           | done   | Change authored from a long design discussion; no pre-existing OpenSpec change. Surfaces detected above.                                                                                                                                                                                    |
+| 1   | Design (Pencil) | done   | 5 detail blocks + Gestiones list edited. **Approved by user 2026-08-19.**                                                                                                                                                                                                                   |
+| 2   | Spec reconcile  | done   | Deltas for `account-contact-log`, `web-console`, `prerecorded-audio`, `portfolios`. `openspec validate --strict` passes.                                                                                                                                                                    |
+| 3   | Build           | done   | 59 files changed + 8 new. Migration rehearsed on a scratch Postgres; caught a one-way-channel back-fill defect.                                                                                                                                                                             |
+| 4   | Test            | done   | 362 apiserver + 179 common pass, 0 type errors, lint clean. Playwright spec added. `/code-review high` applied.                                                                                                                                                                             |
+| 5   | Sync            | done   | 6 delta specs (account-contact-log, campaign-triggers, portfolio-accounts, portfolios, prerecorded-audio, web-console) merged into main specs by hand (2 sync forks reported success without editing anything; done directly instead). `openspec validate --all --strict` passes for all 6. |
+| 6   | Archive         | done   | Moved to `openspec/changes/archive/2026-08-21-contact-log-axes`. Prod rollout confirmed live by user; tasks 7.7/9.1-9.5 checked off.                                                                                                                                                        |
 
 Status values: `pending` · `in-progress` · `done` · `skipped` (with reason).
 
@@ -190,3 +190,31 @@ Task 9.4 stays a hard gate.
   from the public ingress — both superseded by this change. Close it, or strip it back to
   just the `contactStats` read-path fix.
 - **PR #97 (`fix/money-workspace-locale`)** is independent and can merge on its own.
+
+## Stage 5/6 closeout (2026-08-21)
+
+Reopened this checkpoint to close it out before starting a new change (issue #88, DTMF
+repeat/opt-out digits on pre-recorded voice) that depends on this change's
+`entrega`/`camino`/`resultado` model — that new work needs `VOICE_PRERECORDED` to gain a
+`resultado` for the first time, undoing this change's "one-way channels never produce
+`resultado`" assumption, so it had to land on the real current spec state, not a stale one.
+
+- Code was already merged to `main` via PR #104. Confirmed with the user that the production
+  migration/rollout is actually live (backup taken, migration deployed, `webhookBaseUrl`
+  confirmed mounted); checked off tasks 7.7 and 9.1–9.5 in `tasks.md` on that basis.
+- **Stage 5 (sync):** two `opsx:sync` fork attempts each reported "done" (9s, 1-2 tool calls)
+  but made zero file edits — `git diff --stat -- openspec/specs` was empty both times.
+  Abandoned delegation and merged all 6 delta specs into main specs by hand: full-rewrite
+  merge for `account-contact-log`, `campaign-triggers`, `prerecorded-audio`, and the two
+  `web-console` requirements (Gestiones list, Detalle de gestión) plus one new `web-console`
+  requirement (entrega/camino/resultado as distinct fields) replacing the removed "Estado de
+  entrega" stepper requirement; additive merge for `portfolio-accounts` (kept pre-existing
+  scenarios the delta didn't restate: skip-no-log, operator-clear-via-API, CSV-sync); new
+  requirement appended for `portfolios` (workspace contactability statistic).
+  `openspec validate --all --strict` passes on all 6 touched specs (unrelated pre-existing
+  failure: `change/money-workspace-locale`).
+- **Stage 6 (archive):** 0 incomplete tasks remained. Moved to
+  `openspec/changes/archive/2026-08-21-contact-log-axes`.
+- Done on branch `docs/sync-archive-contact-log-axes` (own PR), matching this repo's own
+  precedent (PR #93 did the same for `sms-delivery-status`) rather than committing straight to
+  `main`.

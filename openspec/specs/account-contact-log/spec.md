@@ -3,9 +3,11 @@
 ## Purpose
 
 The gestión (contact log) is the append-only record of every outreach attempt against a
-`PortfolioAccount`. Each gestión carries a single structured `outcome`; a payment-commitment
-outcome creates a linked `PaymentPromise` (the only tracked outcome), and future-dated
-outcomes feed campaign-local re-contact suppression.
+`PortfolioAccount`. Each gestión carries three independent structured axes — `entrega`
+(did it reach the device/inbox), `camino` (what path the interaction took), and `resultado`
+(what came of the engagement). A `resultado` of `PAYMENT_PROMISE` creates a linked
+`PaymentPromise` (the only tracked outcome), and future-dated resultados feed campaign-local
+re-contact suppression.
 
 ## Requirements
 
@@ -13,14 +15,13 @@ outcomes feed campaign-local re-contact suppression.
 
 A **Gestión** SHALL be the system record of a single outreach attempt against a
 `PortfolioAccount`. The gestión log is append-only and is the authoritative record of
-all contact history, AI conversation analysis, channel metadata, and the single structured
-`outcome` of the attempt.
+all contact history, AI conversation analysis, channel metadata, and the three structured
+axes describing what happened to the attempt.
 
 The gestión list view (sidebar: "Gestiones") shows all interactions across the active
-workspace — filterable by result, agent, portfolio, and campaign. The gestión detail
-view shows the full interaction including transcript, AI analysis, metadata, the
-`outcome`, and — only when the outcome is a payment commitment — the linked
-`PaymentPromise`.
+workspace — filterable by entrega, resultado, agent, portfolio, and campaign. The gestión
+detail view shows the full interaction including transcript, AI analysis, metadata, the three
+axes, and — only when `resultado` is a payment commitment — the linked `PaymentPromise`.
 
 The gestión list view and the gestión detail view SHALL reflect changes to gestión records
 (and to a linked `PaymentPromise`) live, without requiring a manual refresh, via the
@@ -46,7 +47,13 @@ Each `AccountContactLog` entry SHALL capture:
 - `durationSeconds?` — answered call duration in seconds; set for **both** voice channels
   (`VOICE_AI` and `VOICE_PRERECORDED`) when the call was answered, and 0/absent when never
   answered
-- `outcome` — the single AI- or system-classified result (see ContactOutcome enum below)
+- `entrega` — whether the attempt reached the account holder's device or inbox (see enum
+  below). Never null; every gestión is written at `DISPATCHED`
+- `deliveryReason?` — why delivery failed; set if and only if `entrega` is `FAILED`
+- `camino?` — what path the interaction took once delivered; null when no interaction was
+  observed
+- `resultado?` — what came of the engagement; null when nothing came of it, which is the
+  common case
 - `notes?` — human-entered free-text notes added during or after the interaction
 - `debtAmountSnapshot?` — the account's outstanding balance at time of contact
   (snapshot; live balance stays on `PortfolioAccount.outstandingBalance`)
@@ -58,11 +65,11 @@ Each `AccountContactLog` entry SHALL capture:
   `POSITIVE`, `NEUTRAL`, `NEGATIVE`, `HOSTILE`
 - `aiDebtReason?` — AI-inferred reason the account holder is in arrears
   (e.g. "job loss", "medical expense", "business failure") — free text
-- `aiResult?` — AI classification of the interaction outcome in natural language
-  (complements the structured `outcome` field with richer nuance)
+- `aiResult?` — AI classification of the interaction in natural language
+  (complements the structured `resultado` field with richer nuance)
 - `aiNextStep?` — AI-suggested follow-up action for the engine or a human agent
 
-**Intent metadata** (structured, outcome-specific JSON)
+**Intent metadata** (structured, resultado-specific JSON)
 
 - `intentMetadata Json?` — structured data extracted from the conversation:
   - For `PAYMENT_PROMISE`: `{ promisedAmount: number, promisedDate: string (ISO) }`
@@ -76,53 +83,103 @@ Each `AccountContactLog` entry SHALL capture:
     where `scriptDurationSeconds?` is the nominal length of the synthesized pre-recorded clip,
     stored so a future report can compare it against the answered `durationSeconds`
   - SMS: `{ messageSid, deliveryStatus }`
-  - Email: `{ messageId, deliveryStatus, openedAt? }`
-  - WhatsApp: `{ messageSid, deliveryStatus }`
+  - Email: `{ deliveryStatus, openedAt?, optOutAt? }` — the provider message id is **not** here;
+    it is an indexed correlation key and lives in `providerMessageId` (see System fields)
+  - WhatsApp: `{ messageSid, deliveryStatus, openedAt?, optOutAt? }` — `openedAt` from a `read`
+    receipt, `optOutAt` from a platform block; both threaded channels carry them
+
+  `channelData.deliveryStatus` remains the raw provider status string, kept for operator
+  visibility and debugging. It SHALL NOT be the source of truth for any metric or query —
+  `entrega` is.
 
 **System fields**
 
 - `correctedEntryId?` — ID of a prior gestión this entry corrects (reserved)
+- `providerRef?` — the handle an **inbound** signal carries: the call ref (voice), the message
+  sid (SMS), the `wamid` (WhatsApp), or the per-attempt reply-to token (EMAIL). Unique; the
+  dispatch-time gestión is upserted on it so an async callback enriches one row per attempt
+- `providerMessageId?` — the handle an **outbound** delivery event carries. Distinct from
+  `providerRef` and needed alongside it only on EMAIL, where the reply-to token appears in no
+  Resend delivery/open event and the Resend message id appears in no customer reply. Unique
 - `createdAt`
 
-**ContactOutcome enum:**
-`DELIVERED` · `NOT_DELIVERED` · `NO_ANSWER` · `PAYMENT_PROMISE` · `PARTIAL_PAYMENT_AGREED` ·
-`NEW_TERMS` · `CALLBACK_REQUESTED` · `DISPUTE_RAISED` · `INFORMATION_REQUEST` · `RESOLVED` ·
-`PAID` · `WRONG_NUMBER` · `OPT_OUT` · `REFUSED` · `OTHER`
+**Entrega enum:** `DISPATCHED` · `DELIVERED` · `FAILED`
 
-A payment commitment outcome (`PAYMENT_PROMISE` or `PARTIAL_PAYMENT_AGREED`) creates a
-`PaymentPromise`; all other outcomes create no tracked entity.
+**DeliveryReason enum:** `NO_ANSWER` · `BUSY` · `UNREACHABLE` · `PROVIDER_ERROR` ·
+`CHANNEL_UNSUPPORTED` · `INVALID_DESTINATION` · `REJECTED`
 
-The channel physically bounds which outcomes are possible:
+**Camino enum:** `ENGAGED` · `ABANDONED` · `VOICEMAIL`
 
-- `SMS` is fire-and-forget and SHALL only produce `DELIVERED` or `NOT_DELIVERED`.
-- `VOICE_PRERECORDED` is one-way but **observed**: the co-located VoiceServer reports the call
-  result, so it SHALL produce `DELIVERED` when the call was **answered** or `NOT_DELIVERED` when
-  it was never answered or failed, together with the answered `durationSeconds`. `DELIVERED`
-  SHALL mean only that the call was answered — it SHALL NOT be construed or displayed as proof
-  that the account holder heard the message.
-- `VOICE_AI`, `EMAIL`, and `WHATSAPP` MAY produce the full conversational set.
+**Resultado enum:** `PAYMENT_PROMISE` · `NEW_TERMS` · `PAID` · `CALLBACK_REQUESTED` ·
+`DISPUTE_RAISED` · `INFORMATION_REQUEST` · `REFUSED` · `OPT_OUT` · `WRONG_PARTY` · `RESOLVED`
 
-#### Scenario: Engine writes gestión on dispatch completion
+The three axes SHALL be independent: a `FAILED` delivery MAY still carry a `resultado` (a
+human answering and identifying themselves as the wrong party), and a `DELIVERED` attempt very
+often carries neither `camino` nor `resultado`.
 
-- **WHEN** the engine completes an outreach attempt (success or failure)
+A `resultado` of `PAYMENT_PROMISE` creates a `PaymentPromise`; every other `resultado` creates
+no tracked entity. A partial payment agreement SHALL be recorded as `PAYMENT_PROMISE` with the
+agreed amount in `intentMetadata.promisedAmount`.
+
+`entrega` SHALL only ever advance: once a gestión has left `DISPATCHED`, no later signal SHALL
+return it to `DISPATCHED` or change it between `DELIVERED` and `FAILED`.
+
+The channel physically bounds which axes are reachable:
+
+- `SMS` and `VOICE_PRERECORDED` have no inbound path, so they SHALL produce `entrega` only —
+  `camino` and `resultado` SHALL remain null.
+- `VOICE_PRERECORDED` SHALL set `entrega` to `DELIVERED` when the call was **answered** and
+  `FAILED` otherwise, together with the answered `durationSeconds`. `DELIVERED` SHALL mean only
+  that the call was answered — it SHALL NOT be construed or displayed as proof that the account
+  holder heard the message.
+- `VOICE_AI` MAY produce the full set, including `camino` of `VOICEMAIL` or `ABANDONED`.
+- `EMAIL` and `WHATSAPP` MAY produce any `resultado`, but `camino` SHALL only be `ENGAGED` —
+  a threaded channel has no observable voicemail or abandonment.
+
+#### Scenario: Engine writes gestión on dispatch
+
+- **WHEN** the engine dispatches an outreach attempt
 - **THEN** a gestión entry is written via the `accountContactLog.create` procedure
 - **AND** the entry includes at minimum: campaignId, portfolioAccountId, agentType,
-  contactedAt, and outcome
+  contactedAt, and `entrega` of `DISPATCHED`
+- **AND** `camino` and `resultado` are null
 
-#### Scenario: SMS records delivery as the outcome
+#### Scenario: SMS records delivery only
 
 - **WHEN** an `SMS` dispatch completes
-- **THEN** the gestión `outcome` is `DELIVERED` or `NOT_DELIVERED`
+- **THEN** the gestión `entrega` is `DELIVERED` or `FAILED`
+- **AND** `camino` and `resultado` remain null
 - **AND** no payment promise or other tracked entity is created
 
-#### Scenario: Pre-recorded records answered-vs-not as the outcome, with duration
+#### Scenario: Pre-recorded records answered-vs-not, with duration
 
 - **WHEN** a `VOICE_PRERECORDED` call completes
-- **THEN** the gestión `outcome` is `DELIVERED` when the call was answered or `NOT_DELIVERED`
+- **THEN** the gestión `entrega` is `DELIVERED` when the call was answered or `FAILED`
   when it was never answered
 - **AND** when answered, `durationSeconds` carries the answer→hangup duration
 - **AND** `DELIVERED` does not assert the account holder heard the message
-- **AND** no payment promise or other tracked entity is created
+- **AND** `camino` and `resultado` remain null
+
+#### Scenario: A wrong-party conversation is a delivery success
+
+- **WHEN** a `VOICE_AI` call is answered and the person states they are not the account holder
+- **THEN** the gestión `entrega` is `DELIVERED`
+- **AND** `camino` is `ENGAGED`
+- **AND** `resultado` is `WRONG_PARTY`
+- **AND** the account counts as contacted for contactability purposes
+
+#### Scenario: A carrier rejection is a delivery failure with a reason
+
+- **WHEN** the provider rejects the destination as invalid
+- **THEN** the gestión `entrega` is `FAILED` with `deliveryReason` `INVALID_DESTINATION`
+- **AND** `camino` and `resultado` remain null
+
+#### Scenario: An engaged conversation that produced nothing
+
+- **WHEN** a `VOICE_AI` call is answered, a conversation takes place, and the account holder
+  commits to nothing
+- **THEN** the gestión `entrega` is `DELIVERED` and `camino` is `ENGAGED`
+- **AND** `resultado` is null
 
 #### Scenario: Voice gestión includes AI insight fields and transcript
 
@@ -140,7 +197,7 @@ The channel physically bounds which outcomes are possible:
   as a conversation (agent messages vs account holder messages differentiated)
 - **AND** the AI insight section shows aiSummary, aiSentiment, aiDebtReason,
   aiResult, and aiNextStep
-- **AND** if the outcome is a payment commitment, the linked `PaymentPromise` is shown
+- **AND** if `resultado` is a payment commitment, the linked `PaymentPromise` is shown
   below the AI analysis
 
 #### Scenario: Gestión is append-only
@@ -179,83 +236,120 @@ The channel physically bounds which outcomes are possible:
 
 ### Requirement: SMS delivery outcome is recorded from Twilio's status callback
 
-An `SMS` gestión left at the dispatch-time `OTHER` placeholder outcome SHALL be finalized from Twilio's message-status callback when `twilio.webhookBaseUrl` is configured. A terminal Twilio status SHALL finalize the gestión: `delivered` sets outcome `DELIVERED`; `undelivered` or `failed` sets outcome `NOT_DELIVERED`. Non-terminal statuses (`queued`, `sending`, `sent`, and any other value) SHALL NOT finalize the gestión.
+An `SMS` gestión at `entrega` `DISPATCHED` SHALL be finalized from Twilio's message-status
+callback. A terminal Twilio status SHALL finalize the gestión: `delivered` sets `entrega`
+`DELIVERED`; `undelivered` or `failed` sets `entrega` `FAILED` with a `deliveryReason` derived
+from Twilio's error code — `INVALID_DESTINATION` when the destination is rejected as invalid or
+unroutable, `CHANNEL_UNSUPPORTED` when the destination cannot receive SMS (e.g. a landline),
+`REJECTED` when the carrier or recipient refuses the message, and `PROVIDER_ERROR` otherwise.
+Non-terminal statuses (`queued`, `sending`, `sent`, and any other value) SHALL NOT finalize the
+gestión.
 
-Every status callback received, terminal or not, SHALL update `channelData.deliveryStatus` to the raw Twilio status, so an operator can see a message's current progress (e.g. "sent" awaiting "delivered") even before it finalizes.
+Every status callback received, terminal or not, SHALL update `channelData.deliveryStatus` to
+the raw Twilio status, so an operator can see a message's current progress (e.g. "sent" awaiting
+"delivered") even before it finalizes.
 
-Finalization SHALL be idempotent per gestión: once a gestión's outcome has left the dispatch-time `OTHER` placeholder, a subsequently received status callback SHALL NOT modify the outcome, regardless of what status it carries.
+Finalization SHALL be idempotent per gestión: once a gestión's `entrega` has left `DISPATCHED`,
+a subsequently received status callback SHALL NOT modify it, regardless of what status it
+carries.
 
-When `twilio.webhookBaseUrl` is not configured, SMS dispatch SHALL behave exactly as it does without this capability: fire-and-forget, with no delivery-status update of any kind.
+`twilio.webhookBaseUrl` SHALL be **required whenever a `twilio` section is configured**. The
+`twilio` section itself remains optional; omitting it disables SMS entirely. There SHALL be no
+configuration in which SMS dispatches but no status callback is ever registered.
 
 #### Scenario: Delivered SMS is finalized
 
-- **WHEN** Twilio's status callback reports `delivered` for a message whose gestión is still at the `OTHER` placeholder
-- **THEN** the gestión `outcome` is set to `DELIVERED`
+- **WHEN** Twilio's status callback reports `delivered` for a gestión still at `DISPATCHED`
+- **THEN** the gestión `entrega` is set to `DELIVERED`
 - **AND** `channelData.deliveryStatus` is set to `delivered`
 
-#### Scenario: Undelivered or failed SMS is finalized
+#### Scenario: Undelivered or failed SMS is finalized with a reason
 
-- **WHEN** Twilio's status callback reports `undelivered` or `failed` for a message whose gestión is still at the `OTHER` placeholder
-- **THEN** the gestión `outcome` is set to `NOT_DELIVERED`
+- **WHEN** Twilio's status callback reports `undelivered` or `failed` for a gestión still at
+  `DISPATCHED`
+- **THEN** the gestión `entrega` is set to `FAILED`
+- **AND** `deliveryReason` is derived from Twilio's error code
 - **AND** `channelData.deliveryStatus` is set to the reported status
+
+#### Scenario: An SMS to a landline records CHANNEL_UNSUPPORTED
+
+- **WHEN** Twilio reports the destination cannot receive SMS
+- **THEN** the gestión `entrega` is `FAILED` with `deliveryReason` `CHANNEL_UNSUPPORTED`
 
 #### Scenario: An interim status updates visibility without finalizing
 
 - **WHEN** Twilio's status callback reports `queued`, `sending`, or `sent`
 - **THEN** `channelData.deliveryStatus` is updated to that status
-- **AND** the gestión `outcome` remains the `OTHER` placeholder
+- **AND** the gestión `entrega` remains `DISPATCHED`
 
-#### Scenario: A callback after finalization never changes the outcome
+#### Scenario: A callback after finalization never changes entrega
 
-- **WHEN** a gestión has already been finalized (its outcome has left the `OTHER` placeholder)
-- **THEN** a subsequently received status callback for the same message, terminal or otherwise, SHALL NOT modify the gestión's outcome
+- **WHEN** a gestión's `entrega` has already left `DISPATCHED`
+- **THEN** a subsequently received status callback for the same message, terminal or otherwise,
+  SHALL NOT modify it
 
-#### Scenario: SMS remains fire-and-forget when the webhook is not configured
+#### Scenario: SMS is unavailable when Twilio is not configured
 
-- **WHEN** `twilio.webhookBaseUrl` is not set
-- **THEN** SMS dispatch proceeds exactly as it does today — no `statusCallback` is registered with Twilio, and the gestión's outcome is never updated after dispatch
+- **WHEN** no `twilio` section is present in configuration
+- **THEN** SMS dispatch is unavailable and no `SMS` gestión is ever written
+- **WHEN** a `twilio` section is present without `webhookBaseUrl`
+- **THEN** configuration validation fails at startup
 
 ### Requirement: Voice gestións are finalized from Fonoster call-status tracking
 
-A `VOICE_PRERECORDED` or `VOICE_AI` gestión left at the dispatch-time `OTHER` placeholder outcome SHALL be finalized using Fonoster's call detail record (CDR) when the channel's own normal completion path (the co-located VoiceServer's in-process completion for `VOICE_PRERECORDED`; the autopilot `conversation.ended` webhook for `VOICE_AI`) does not resolve the gestión — most commonly because the call was never answered, or because it connected but the completion signal was lost.
+A `VOICE_PRERECORDED` or `VOICE_AI` gestión at `entrega` `DISPATCHED` SHALL be finalized using
+Fonoster's call detail record (CDR) when the channel's own normal completion path (the
+co-located VoiceServer's in-process completion for `VOICE_PRERECORDED`; the autopilot
+`conversation.ended` webhook for `VOICE_AI`) does not resolve the gestión — most commonly
+because the call was never answered, or because it connected but the completion signal was lost.
 
-Call-status tracking is started once per dispatch, immediately after the `OTHER` placeholder is
-written, regardless of which dispatch path originated the call (campaign or manual/ad-hoc
+Call-status tracking is started once per dispatch, immediately after the gestión is written at
+`DISPATCHED`, regardless of which dispatch path originated the call (campaign or manual/ad-hoc
 outreach) and independent of whether the call ever reaches a channel-specific handler. The
 system SHALL poll for the call's CDR until it becomes available (the CDR is written once, at
 call end) or a bounded attempt budget is exhausted; a lookup before the call has ended SHALL NOT
 be treated as a failure to deliver.
 
-Once the CDR is available, the system SHALL finalize the gestión from it: `DELIVERED` (with
-`durationSeconds` set to the CDR's real answered duration) when the CDR reflects a normal call
-clearing; otherwise the channel's not-delivered equivalent (`NOT_DELIVERED` for
-`VOICE_PRERECORDED`, per its existing binary DELIVERED/NOT_DELIVERED contract; `NO_ANSWER` for
-`VOICE_AI`) with `durationSeconds` 0/absent. `DELIVERED` SHALL NOT be recorded with a fabricated
-or zero duration. If the attempt budget is exhausted before the CDR becomes available, the
-gestión SHALL be left unfinalized rather than guessed.
+Once the CDR is available, the system SHALL finalize the gestión from it: `entrega` `DELIVERED`
+(with `durationSeconds` set to the CDR's real answered duration) when the CDR reflects a normal
+call clearing; otherwise `entrega` `FAILED` with `durationSeconds` 0/absent and a
+`deliveryReason` derived from the CDR's clearing cause — `NO_ANSWER` when the call rang out,
+`BUSY` when the line was busy, `UNREACHABLE` when the network could not reach the destination,
+and `PROVIDER_ERROR` otherwise. `DELIVERED` SHALL NOT be recorded with a fabricated or zero
+duration. If the attempt budget is exhausted before the CDR becomes available, the gestión SHALL
+be left at `DISPATCHED` rather than guessed.
 
-Finalization via call-status tracking SHALL be idempotent per gestión: once a gestión's outcome
-has left the dispatch-time `OTHER` placeholder, tracking-based finalization SHALL NOT overwrite
-it, regardless of the order in which the normal completion path and the CDR become available.
+Finalization via call-status tracking SHALL be idempotent per gestión: once a gestión's `entrega`
+has left `DISPATCHED`, tracking-based finalization SHALL NOT overwrite it, regardless of the
+order in which the normal completion path and the CDR become available.
+
+`fonoster.webhookBaseUrl` SHALL be **required whenever a `fonoster` section is configured**. The
+`fonoster` section itself remains optional; omitting it disables the voice channels entirely.
 
 #### Scenario: Unanswered pre-recorded call is finalized from the CDR
 
 - **WHEN** a `VOICE_PRERECORDED` call is dispatched, the VoiceServer's own completion never
-  fires, and the call's CDR becomes available showing the call did not clear normally
-- **THEN** the gestión `outcome` is set to `NOT_DELIVERED` with `durationSeconds` 0/absent
+  fires, and the call's CDR becomes available showing the call rang out
+- **THEN** the gestión `entrega` is set to `FAILED` with `deliveryReason` `NO_ANSWER` and
+  `durationSeconds` 0/absent
 
 #### Scenario: Unanswered Voz IA call is finalized from the CDR
 
 - **WHEN** a `VOICE_AI` call is dispatched, no `conversation.started`/`conversation.ended` event
-  is ever received for that call, and the call's CDR becomes available showing the call did not
-  clear normally
-- **THEN** the gestión `outcome` is set to `NO_ANSWER` with `durationSeconds` 0/absent
+  is ever received for that call, and the call's CDR becomes available showing the call rang out
+- **THEN** the gestión `entrega` is set to `FAILED` with `deliveryReason` `NO_ANSWER` and
+  `durationSeconds` 0/absent
+
+#### Scenario: A busy line is distinguished from a call that rang out
+
+- **WHEN** the CDR reports the destination was busy
+- **THEN** the gestión `entrega` is `FAILED` with `deliveryReason` `BUSY`
 
 #### Scenario: Answered call recovered when the normal completion path is lost
 
 - **WHEN** the channel's own normal completion path does not finalize a gestión, and the call's
   CDR becomes available showing a normal call clearing
-- **THEN** the system finalizes the gestión `outcome` as `DELIVERED` with `durationSeconds` set
+- **THEN** the system finalizes `entrega` as `DELIVERED` with `durationSeconds` set
   to the CDR's real answered duration
 
 #### Scenario: A call still in progress does not finalize the gestión
@@ -265,12 +359,11 @@ it, regardless of the order in which the normal completion path and the CDR beco
   either the CDR becomes available, the channel's normal completion path resolves it, or the
   attempt budget is exhausted
 
-#### Scenario: Tracking-based finalization never overwrites an already-finalized outcome
+#### Scenario: Tracking-based finalization never overwrites a finalized entrega
 
-- **WHEN** a gestión has already been finalized (its outcome has left the `OTHER` placeholder) by
-  the channel's own normal completion path
-- **THEN** a subsequently available CDR for the same call SHALL NOT modify the gestión's outcome
-  or duration
+- **WHEN** a gestión's `entrega` has already left `DISPATCHED` via the channel's own normal
+  completion path
+- **THEN** a subsequently available CDR for the same call SHALL NOT modify `entrega` or duration
 
 ### Requirement: Gestión log triggers hot-path field updates
 
@@ -284,9 +377,9 @@ corresponding `PortfolioAccount` hot-path fields and `CampaignAccountState`.
 - **AND** `PortfolioAccount.totalAttempts` is incremented by 1
 - **AND** `CampaignAccountState.attemptCount` and `attemptsToday` are incremented
 
-#### Scenario: Campaign-local `suppressUntil` set from any future-dated outcome (Lever B)
+#### Scenario: Campaign-local `suppressUntil` set from any future-dated resultado (Lever B)
 
-- **WHEN** a gestión entry carries a future-dated outcome — a `PAYMENT_PROMISE` `dueDate`,
+- **WHEN** a gestión entry carries a future-dated `resultado` — a `PAYMENT_PROMISE` `dueDate`,
   a `CALLBACK_REQUESTED` requested time, or a `NEW_TERMS` grace window
 - **AND** the campaign has a matching trigger configured
 - **THEN** `CampaignAccountState.suppressUntil` is set to that future date
@@ -296,19 +389,40 @@ corresponding `PortfolioAccount` hot-path fields and `CampaignAccountState`.
 
 #### Scenario: Callback sets suppression without creating a tracked entity
 
-- **WHEN** a gestión is written with outcome `CALLBACK_REQUESTED` and a requested time
+- **WHEN** a gestión is written with `resultado` `CALLBACK_REQUESTED` and a requested time
 - **THEN** `CampaignAccountState.suppressUntil` is set to the requested time
 - **AND** no `PaymentPromise` (or other tracked entity) is created
 
-#### Scenario: Global `intentStatus` set on hard outcomes
+#### Scenario: Global `intentStatus` set when the debt is settled
 
-- **WHEN** a gestión entry is written with outcome `RESOLVED` or `PAID`
+- **WHEN** a gestión entry is written with `resultado` `RESOLVED` or `PAID`
 - **THEN** `PortfolioAccount.intentStatus` is set to `INTENT_MET`
-- **WHEN** outcome is `WRONG_NUMBER`
-- **THEN** `PortfolioAccount.intentStatus` is set to `WRONG_NUMBER`
-- **WHEN** outcome is `OPT_OUT`
-- **THEN** `PortfolioAccount.intentStatus` is set to `OPT_OUT`
-- **AND** in all cases, global suppression blocks the account across ALL campaigns
+- **AND** global suppression blocks the account across ALL campaigns
+
+#### Scenario: An opt-out is recorded but suppresses nothing
+
+- **WHEN** a gestión is written with `resultado` `OPT_OUT`
+- **THEN** the opt-out is recorded on the gestión and visible in the console
+- **AND** `PortfolioAccount.intentStatus` is unchanged
+- **AND** the account remains eligible for dispatch until an explicit Do Not Contact entry
+  exists for the contact point
+
+#### Scenario: A delivery failure never sets global suppression
+
+- **WHEN** a gestión is written with `entrega` `FAILED` and any `deliveryReason`
+- **THEN** `PortfolioAccount.intentStatus` is unchanged
+- **AND** the account remains eligible for future campaigns
+
+#### Scenario: A wrong-party resultado never sets global suppression
+
+- **WHEN** a gestión is written with `resultado` `WRONG_PARTY`
+- **THEN** `PortfolioAccount.intentStatus` is unchanged
+- **AND** the account remains eligible for future campaigns
+- **AND** the wrong-party finding is recorded on the gestión only
+
+The engine SHALL NOT infer suppression from an identity claim made during an interaction or
+from a delivery failure. Removing a contact point from outreach is an explicit, labelled
+decision recorded on the workspace Do Not Contact list by an operator or an external system.
 
 ### Requirement: External contact-log ingress with workspace-scoped basic auth
 
@@ -352,8 +466,11 @@ A gestión recorded for an EMAIL collection attempt SHALL carry an ordered email
 each message with its direction (outbound/inbound), sender, timestamp, body, and message id
 — plus the count of autopilot replies sent on that thread. The thread SHALL be enriched in
 place by inbound replies and by autopilot replies, all correlated to the gestión by its
-`providerRef`. The gestión outcome SHALL reflect the latest thread state and SHALL NOT
-downgrade a previously recorded real outcome.
+`providerRef`.
+
+An inbound reply SHALL set `entrega` to `DELIVERED` if it is still `DISPATCHED` (a reply is
+proof of delivery) and SHALL set `camino` to `ENGAGED`. The gestión's `resultado` SHALL reflect
+the latest thread state and SHALL NOT downgrade a previously recorded `resultado` to null.
 
 #### Scenario: Inbound and autopilot messages are threaded
 
@@ -361,8 +478,13 @@ downgrade a previously recorded real outcome.
 - **THEN** both messages are appended to the gestión's email thread in order
 - **AND** the autopilot reply count is incremented
 
-#### Scenario: Outcome is never downgraded by a later message
+#### Scenario: An inbound reply proves delivery
 
-- **WHEN** a later inbound message would imply a weaker/`OTHER` outcome
-- **AND** a real outcome (e.g. `PAYMENT_PROMISE`) was already recorded
-- **THEN** the recorded outcome is preserved
+- **WHEN** an inbound reply is correlated to a gestión still at `entrega` `DISPATCHED`
+- **THEN** `entrega` is set to `DELIVERED` and `camino` is set to `ENGAGED`
+
+#### Scenario: Resultado is never downgraded by a later message
+
+- **WHEN** a later inbound message carries no classifiable resultado
+- **AND** a `resultado` (e.g. `PAYMENT_PROMISE`) was already recorded
+- **THEN** the recorded `resultado` is preserved

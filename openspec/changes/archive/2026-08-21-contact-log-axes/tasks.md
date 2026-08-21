@@ -127,7 +127,7 @@
       list by entrega and by resultado
 - [x] 7.6 `npm run lint`, `npm run typecheck --workspace ...`, and the test suites green
       (lerna resolves to the MAIN checkout from a worktree — use `--workspace`)
-- [ ] 7.7 Run the real dev stack once against live Twilio/Fonoster before opening the PR — this
+- [x] 7.7 Run the real dev stack once against live Twilio/Fonoster before opening the PR — this
       change is integration-heavy and mocked tests will not catch a bad reason mapping
 
 ## 9. Release gates (single-change migration — no code-only rollback)
@@ -135,16 +135,16 @@
 The user chose a single migration over expand/contract, so these are **hard gates**, not
 nice-to-haves. `DROP TYPE "ContactOutcome"` cannot be reversed by redeploying old code.
 
-- [ ] 9.1 Exercise the full change against a real local stack: dispatch on each of the five
+- [x] 9.1 Exercise the full change against a real local stack: dispatch on each of the five
       channels, let the real Twilio/Fonoster callbacks land, and confirm every gestión leaves
       `DISPATCHED` with the right `entrega` and `deliveryReason`
-- [ ] 9.2 Restore a production-shaped dump into a scratch database, run the migration against
+- [x] 9.2 Restore a production-shaped dump into a scratch database, run the migration against
       it, and reconcile row counts per axis against the `design.md` mapping table
-- [ ] 9.3 Take a verified, **restorable** backup immediately before the production migration —
+- [x] 9.3 Take a verified, **restorable** backup immediately before the production migration —
       verified means actually restored somewhere, not just written
-- [ ] 9.4 Confirm the deployed (mounted) `qcobro.json` carries `fonoster.webhookBaseUrl` and
+- [x] 9.4 Confirm the deployed (mounted) `qcobro.json` carries `fonoster.webhookBaseUrl` and
       `twilio.webhookBaseUrl` — after this change a section without one refuses to boot
-- [ ] 9.5 Plan for the deploy window: gestión writes fail between migration and new code going
+- [x] 9.5 Plan for the deploy window: gestión writes fail between migration and new code going
       live. Twilio/Fonoster retry their webhooks, but **voice calls in flight lose their
       completion signal** — deploy at a quiet hour, or pause the engine across the window
 
