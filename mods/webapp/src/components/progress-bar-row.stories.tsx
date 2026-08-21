@@ -41,3 +41,17 @@ export const Multiple: StoryObj = {
 export const LowValue: StoryObj = {
   render: () => <ProgressBarRow label="Meta cumplida" value={8} className="w-96" />
 };
+
+/** Tasa de contacto is now a windowed rate (accounts reached / accounts attempted within the
+ *  selected period), not an all-time ratchet — the label carries the window so the number
+ *  doesn't read as a lifetime coverage figure. */
+export const ContactRateWindowed: StoryObj = {
+  render: () => <ProgressBarRow label="Tasa de contacto (7 días)" value={92} className="w-96" />
+};
+
+/** An empty window (no gestiones sent) renders a dash, never "0%". */
+export const ContactRateEmptyWindow: StoryObj = {
+  render: () => (
+    <ProgressBarRow label="Tasa de contacto (24 h)" value={0} displayValue="—" className="w-96" />
+  )
+};

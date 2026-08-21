@@ -36,6 +36,51 @@ export const WithNegativeTrend: StoryObj = {
   )
 };
 
+/** The windowed contact-rate card: percentage plus an accounts-reached/sends subline, with
+ *  the in-card period pill (calendar icon, current period, chevron). */
+export const ContactRateWithPeriod: StoryObj = {
+  render: () => (
+    <KpiCard
+      label="Tasa de contacto"
+      value="92%"
+      subtext="230 de 250 cuentas · 410 envíos"
+      period={{
+        value: "7d",
+        ariaLabel: "Período de tasa de contacto",
+        onChange: () => {},
+        options: [
+          { value: "24h", label: "24 h" },
+          { value: "7d", label: "7 días" },
+          { value: "14d", label: "14 días" },
+          { value: "28d", label: "28 días" }
+        ]
+      }}
+    />
+  )
+};
+
+/** No gestiones in the selected window: "—", never "0%". */
+export const ContactRateEmpty: StoryObj = {
+  render: () => (
+    <KpiCard
+      label="Tasa de contacto"
+      value="—"
+      subtext="Sin envíos en el período"
+      period={{
+        value: "24h",
+        ariaLabel: "Período de tasa de contacto",
+        onChange: () => {},
+        options: [
+          { value: "24h", label: "24 h" },
+          { value: "7d", label: "7 días" },
+          { value: "14d", label: "14 días" },
+          { value: "28d", label: "28 días" }
+        ]
+      }}
+    />
+  )
+};
+
 export const Row: StoryObj = {
   render: () => (
     <KpiRow

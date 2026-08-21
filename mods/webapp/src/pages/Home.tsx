@@ -1,13 +1,18 @@
+import { useState } from "react";
 import { KeyRound } from "lucide-react";
+import { contactStatsPeriodSchema, type ContactStatsPeriod } from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { entregaLabel, resultadoLabel } from "../lib/contactAxes.js";
-import { useI18n, type Language } from "../lib/i18n.js";
+import { useI18n, type Language, type MessageId } from "../lib/i18n.js";
 import { useMoney } from "../lib/useWorkspaceCurrency.js";
 import { Card } from "../components/ui/card.js";
+import { KpiCard } from "../components/kpi-card.js";
 import { CopyField } from "../components/CopyField.js";
 import { channelIcon } from "../lib/channelIcon.js";
 import { cn } from "@/lib/utils.js";
+
+const CONTACT_STATS_PERIODS = contactStatsPeriodSchema.options;
 
 /** Minimal shape of a recent gestión row used by the dashboard widget. */
 type RecentGestion = {
@@ -48,10 +53,12 @@ export function Home() {
   const wsName = active?.name ?? "tu espacio";
   const wsAccessKeyId = active?.accessKeyId ?? workspace;
 
+  const [contactRatePeriod, setContactRatePeriod] = useState<ContactStatsPeriod>("7d");
+
   const portfolios = trpc.portfolios.list.useQuery();
   const recent = trpc.campaigns.contactLog.list.useQuery({ limit: 5 });
   const promises = trpc.campaigns.paymentPromise.list.useQuery();
-  const contactStats = trpc.portfolios.contactStats.useQuery();
+  const contactStats = trpc.portfolios.contactStats.useQuery({ period: contactRatePeriod });
 
   const carteras = portfolios.data ?? [];
   const accountsInManagement = carteras.reduce((sum, p) => sum + p.accountCount, 0);
@@ -61,10 +68,23 @@ export function Home() {
     (p) => (p as { status: string }).status === "MET"
   ).length;
   const cs = contactStats.data;
-  const contactRate = cs && cs.total > 0 ? Math.round((cs.contacted / cs.total) * 100) : 0;
+  // A window with no gestiones at all renders "—", never 0%: a zero denominator rendering as
+  // 0% is the most common way a rate like this lies.
+  const contactRateEmpty = !cs || cs.totalSends === 0;
+  const contactRatePct = cs && cs.total > 0 ? Math.round((cs.contacted / cs.total) * 100) : 0;
+  const contactRateValue = contactRateEmpty
+    ? t("home.contactRate.emptyValue")
+    : `${contactRatePct}%`;
+  const contactRateSubtext = contactRateEmpty
+    ? t("home.contactRate.empty")
+    : t("home.contactRate.subline")
+        .replace("{contacted}", String(cs?.contacted ?? 0))
+        .replace("{total}", String(cs?.total ?? 0))
+        .replace("{sends}", String(cs?.totalSends ?? 0));
   const activity = (recent.data?.items ?? []) as RecentGestion[];
 
-  // All KPIs are sourced from live workspace data.
+  // All KPIs are sourced from live workspace data. Contact rate is rendered separately (it
+  // carries its own period control), but stays in the same visual position in the grid below.
   const kpis: { label: string; value: string; meta: string }[] = [
     {
       label: t("home.kpi.recovered"),
@@ -75,11 +95,6 @@ export function Home() {
       label: t("home.kpi.promisesKept"),
       value: promisesKept.toLocaleString(),
       meta: t("home.kpi.promisesKeptMeta")
-    },
-    {
-      label: t("home.kpi.contactRate"),
-      value: `${contactRate}%`,
-      meta: t("home.kpi.contactRateMeta")
     },
     {
       label: t("home.kpi.pendingBalance"),
@@ -115,7 +130,32 @@ export function Home() {
       </div>
 
       <div className="grid grid-cols-5 gap-4">
-        {kpis.map((k) => (
+        {kpis.slice(0, 2).map((k) => (
+          <Card
+            key={k.label}
+            className="flex flex-col gap-1 rounded-xl border-slate-200 p-5 shadow-none"
+          >
+            <span className="text-[13px] font-medium text-slate-500">{k.label}</span>
+            <span className="text-[28px] font-bold text-slate-900">{k.value}</span>
+            <span className="text-xs text-slate-400">{k.meta}</span>
+          </Card>
+        ))}
+        <KpiCard
+          className="gap-1 rounded-xl shadow-none"
+          label={t("home.kpi.contactRate")}
+          value={contactRateValue}
+          subtext={contactRateSubtext}
+          period={{
+            value: contactRatePeriod,
+            onChange: (value) => setContactRatePeriod(value as ContactStatsPeriod),
+            ariaLabel: t("home.contactRate.periodAriaLabel"),
+            options: CONTACT_STATS_PERIODS.map((p) => ({
+              value: p,
+              label: t(`home.contactRate.period.${p}` as MessageId)
+            }))
+          }}
+        />
+        {kpis.slice(2).map((k) => (
           <Card
             key={k.label}
             className="flex flex-col gap-1 rounded-xl border-slate-200 p-5 shadow-none"

@@ -47,3 +47,16 @@ export const syncAccountsInputSchema = z.object({
   rows: z.array(accountRowSchema).min(1)
 });
 export type SyncAccountsInput = z.infer<typeof syncAccountsInputSchema>;
+
+// Window a contact-rate query can be computed over. 7 days is the default: a whole number of
+// weeks (collections activity has a weekday shape, so a window that isn't a multiple of 7 mixes
+// weekday compositions as it slides) balancing responsiveness against week-over-week stability.
+// 28 rather than 30 for the same reason. 24h is noisy but is the one window that catches a
+// same-day provider outage.
+export const contactStatsPeriodSchema = z.enum(["24h", "7d", "14d", "28d"]);
+export type ContactStatsPeriod = z.infer<typeof contactStatsPeriodSchema>;
+
+export const contactStatsInputSchema = z.object({
+  period: contactStatsPeriodSchema.default("7d")
+});
+export type ContactStatsInput = z.infer<typeof contactStatsInputSchema>;
