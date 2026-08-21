@@ -3,7 +3,8 @@ import {
   createPortfolioSchema,
   updatePortfolioSchema,
   deletePortfolioSchema,
-  syncAccountsInputSchema
+  syncAccountsInputSchema,
+  contactStatsInputSchema
 } from "@qcobro/common";
 import { router, workspaceProcedure } from "../trpc.js";
 import { createCreatePortfolio } from "../../functions/portfolios/createPortfolio.js";
@@ -31,10 +32,15 @@ export const portfoliosRouter = router({
     })
   ),
 
-  // Workspace contact-rate inputs: accounts under management vs. those actually reached.
-  contactStats: workspaceProcedure.query(({ ctx }) =>
-    createContactStats(ctx.prisma)(ctx.workspace.accessKeyId)
-  ),
+  // Windowed contact rate for the selected period (defaults to 7 days): accounts attempted
+  // vs. accounts actually reached, plus total gestión volume for the same window. `input` is
+  // optional so an existing caller that omits it (e.g. `useQuery()` with no args) keeps working
+  // unchanged at the default period.
+  contactStats: workspaceProcedure
+    .input(contactStatsInputSchema.optional())
+    .query(({ input, ctx }) =>
+      createContactStats(ctx.prisma as never, ctx.workspace.accessKeyId)(input ?? {})
+    ),
 
   create: workspaceProcedure
     .input(createPortfolioSchema)
