@@ -92,16 +92,20 @@
 
 ## 7. Verification and deploy
 
-- [ ] 7.1 Run the real dev stack against live Resend: send one email, confirm the gestión moves
-      `DISPATCHED → DELIVERED`, open it and confirm `Leído` renders in the Camino progression
-- [ ] 7.2 Send to a known-bad address and confirm the bounce lands as `FAILED` with
-      `INVALID_DESTINATION` rather than the `PROVIDER_ERROR` fallback
+- [x] 7.1 Run the real dev stack against live Resend: send one email, confirm the gestión moves
+      `DISPATCHED → DELIVERED` — **verified**. The `Leído` half of this check did **not** pass:
+      the progression showed `Despachado → Respondió` with no read stage, because open tracking
+      (7.4) is not enabled yet and because `Entregado` is never a `Camino` stage at all. Filed
+      as a defect in #107 rather than held against this change
+- [x] 7.2 Send to a known-bad address and confirm the bounce lands as `FAILED` with
+      `INVALID_DESTINATION` rather than the `PROVIDER_ERROR` fallback — **verified**
 - [ ] 7.3 On the **existing** Resend webhook, add `email.sent`, `email.delivered`,
       `email.delivery_delayed`, `email.bounced`, `email.failed`, `email.complained` and
       `email.opened` to its subscribed events. No new endpoint, no new secret, no config change
-- [ ] 7.4 Enable open tracking on the Resend sending domain (opens only, not clicks)
-- [ ] 7.6 Confirm the deployed `qcobro.json` carries `resend.inboundSigningSecret` — the webhook
-      now rejects every request without it, where it previously skipped verification
+- [ ] 7.4 Enable open tracking on the Resend sending domain (opens only, not clicks) — the
+      configuration 7.1 found missing; tracked in #107
 - [ ] 7.5 Note in the release notes that workspace contact rate will step up on first deploy for
       email-heavy workspaces, and that historical gestiones stay `DISPATCHED` because neither
       provider can replay delivery data for past sends
+- [ ] 7.6 Confirm the deployed `qcobro.json` carries `resend.inboundSigningSecret` — the webhook
+      now rejects every request without it, where it previously skipped verification
