@@ -116,7 +116,7 @@ test.describe("campaigns core", () => {
     await page.getByLabel("Tipo de canal").selectOption({ label: "SMS" });
     await expect(page.getByLabel("Voz")).toHaveCount(0);
     await page.getByLabel("Cuerpo del mensaje").fill(body);
-    await page.getByLabel(/ID de remitente/).fill("MIKRO");
+    await page.getByLabel(/ID de remitente/).fill("DEMO");
     await page.getByRole("button", { name: "Crear agente" }).click();
 
     const row = page.locator("tr", { hasText: agentName });
@@ -127,7 +127,7 @@ test.describe("campaigns core", () => {
     await row.getByText(agentName).click();
     await expect(page).toHaveURL(/\/agent-templates\/[a-f0-9-]+$/);
     await expect(page.getByText(body)).toBeVisible();
-    await expect(page.getByText("MIKRO")).toBeVisible();
+    await expect(page.getByText("DEMO")).toBeVisible();
     await expect(page.getByText("Sincronizado")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Sincronizar" })).toHaveCount(0);
   });

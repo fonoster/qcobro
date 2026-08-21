@@ -9210,7 +9210,7 @@
                   "type": "text",
                   "id": "zoKNu",
                   "fill": "$--foreground",
-                  "content": "Mikro Créditos",
+                  "content": "Créditos Demo",
                   "fontFamily": "$--font-secondary",
                   "fontSize": 14,
                   "fontWeight": "500"
@@ -29531,7 +29531,7 @@
                                   "fill": "#0F172A",
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
-                                  "content": "Hola, le llamo de Mikro Créditos. Cómo se encuentra hoy?",
+                                  "content": "Hola, le llamo de Créditos Demo. Cómo se encuentra hoy?",
                                   "fontFamily": "Inter",
                                   "fontSize": 14,
                                   "fontWeight": "normal"
@@ -29573,7 +29573,7 @@
                                   "fill": "#0F172A",
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
-                                  "content": "## Rol\n\nEres un asistente virtual de cobranza para Mikro Créditos...",
+                                  "content": "## Rol\n\nEres un asistente virtual de cobranza para Créditos Demo...",
                                   "fontFamily": "Inter",
                                   "fontSize": 14,
                                   "fontWeight": "normal"
