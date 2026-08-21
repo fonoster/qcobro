@@ -49,3 +49,9 @@
       the code renders five into a four-column grid, leaving one orphaned on a second row
 - [ ] 5.3 Revisit whether the other flow metrics (recovered, promises kept) should share a window,
       at which point a page-level period control becomes the right pattern
+- [ ] 5.4 Make the KPI row responsive. `grid-cols-5` is hard-coded with no fallback, so with a
+      240px sidebar and 32px page padding each card is only ~182px at a 1280px viewport and
+      ~157px at 1152px. That cramps every card — money values nearly fill their box and labels
+      wrap to two lines — and it is why the contact-rate label truncates below ~1280 even after
+      shortening it to "Contacto". Widening the row is the real fix; abbreviating the copy only
+      moved the threshold. `DashboardRowAtNarrowWidth` in the KpiCard stories reproduces it

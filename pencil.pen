@@ -9444,6 +9444,7 @@
           "name": "Comp/KPI Card",
           "reusable": true,
           "width": "fill_container",
+          "height": 132,
           "fill": "$--card",
           "stroke": "$--border",
           "strokeWidth": 1,
@@ -9451,6 +9452,7 @@
           "layout": "vertical",
           "gap": 8,
           "padding": 20,
+          "justifyContent": "space_between",
           "children": [
             {
               "type": "text",
@@ -9512,16 +9514,6 @@
                   "y": 0,
                   "height": "fit_content",
                   "descendants": {
-                    "7Qc5Y": {
-                      "content": "Total cuentas",
-                      "x": 20,
-                      "y": 20
-                    },
-                    "G00Ls": {
-                      "content": "1,245",
-                      "x": 20,
-                      "y": 44
-                    },
                     "0UFOW": {
                       "content": "+8% vs mes anterior",
                       "x": 20,
@@ -9551,16 +9543,6 @@
                   "y": 0,
                   "height": "fit_content",
                   "descendants": {
-                    "7Qc5Y": {
-                      "content": "Monto recuperado",
-                      "x": 20,
-                      "y": 20
-                    },
-                    "G00Ls": {
-                      "content": "RD$4.3M",
-                      "x": 20,
-                      "y": 44
-                    },
                     "0UFOW": {
                       "content": "+12% vs mes anterior",
                       "x": 20,
@@ -9590,16 +9572,6 @@
                   "y": 0,
                   "height": "fit_content",
                   "descendants": {
-                    "7Qc5Y": {
-                      "content": "Tasa de éxito",
-                      "x": 20,
-                      "y": 20
-                    },
-                    "G00Ls": {
-                      "content": "54.3%",
-                      "x": 20,
-                      "y": 44
-                    },
                     "0UFOW": {
                       "content": "+5.2% vs mes anterior",
                       "x": 20,
@@ -12390,6 +12362,7 @@
           "name": "Comp/KPI Card Period",
           "reusable": true,
           "width": "fill_container",
+          "height": 132,
           "fill": "$--card",
           "stroke": "$--border",
           "strokeWidth": 1,
@@ -12397,6 +12370,7 @@
           "layout": "vertical",
           "gap": 8,
           "padding": 20,
+          "justifyContent": "space_between",
           "children": [
             {
               "type": "frame",
@@ -12404,6 +12378,7 @@
               "name": "labelRow",
               "width": "fill_container",
               "gap": 8,
+              "justifyContent": "space_between",
               "alignItems": "center",
               "children": [
                 {
@@ -12447,7 +12422,7 @@
                       "id": "WJCJX",
                       "name": "PeriodT",
                       "fill": "#0F172A",
-                      "content": "7 días",
+                      "content": "7d",
                       "fontFamily": "Inter",
                       "fontSize": 12,
                       "fontWeight": "500"
@@ -35393,11 +35368,14 @@
                           "id": "vS8MH",
                           "type": "ref",
                           "ref": "heFsV",
-                          "name": "Tasa de contacto",
+                          "name": "Contacto",
                           "width": "fill_container",
                           "descendants": {
                             "LoBmn": {
-                              "content": "Tasa de contacto"
+                              "content": "Contacto"
+                            },
+                            "WJCJX": {
+                              "content": "7 days"
                             },
                             "q5kPPp": {
                               "content": "92%"

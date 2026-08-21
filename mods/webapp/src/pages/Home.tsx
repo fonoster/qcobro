@@ -7,7 +7,7 @@ import { entregaLabel, resultadoLabel } from "../lib/contactAxes.js";
 import { useI18n, type Language, type MessageId } from "../lib/i18n.js";
 import { useMoney } from "../lib/useWorkspaceCurrency.js";
 import { Card } from "../components/ui/card.js";
-import { KpiCard } from "../components/kpi-card.js";
+import { KpiCard, type KpiCardPeriodControl } from "../components/kpi-card.js";
 import { CopyField } from "../components/CopyField.js";
 import { channelIcon } from "../lib/channelIcon.js";
 import { cn } from "@/lib/utils.js";
@@ -83,9 +83,10 @@ export function Home() {
         .replace("{sends}", String(cs?.totalSends ?? 0));
   const activity = (recent.data?.items ?? []) as RecentGestion[];
 
-  // All KPIs are sourced from live workspace data. Contact rate is rendered separately (it
-  // carries its own period control), but stays in the same visual position in the grid below.
-  const kpis: { label: string; value: string; meta: string }[] = [
+  // All KPIs are sourced from live workspace data, and all five render through the same
+  // `KpiCard` so their notes share a baseline. Contact rate is the only one carrying a period
+  // control, which it declares here rather than being spliced into the row separately.
+  const kpis: { label: string; value: string; meta: string; period?: KpiCardPeriodControl }[] = [
     {
       label: t("home.kpi.recovered"),
       value: money(Math.trunc(recoveredTotal)),
@@ -95,6 +96,20 @@ export function Home() {
       label: t("home.kpi.promisesKept"),
       value: promisesKept.toLocaleString(),
       meta: t("home.kpi.promisesKeptMeta")
+    },
+    {
+      label: t("home.kpi.contactRate"),
+      value: contactRateValue,
+      meta: contactRateSubtext,
+      period: {
+        value: contactRatePeriod,
+        onChange: (value) => setContactRatePeriod(value as ContactStatsPeriod),
+        ariaLabel: t("home.contactRate.periodAriaLabel"),
+        options: CONTACT_STATS_PERIODS.map((p) => ({
+          value: p,
+          label: t(`home.contactRate.period.${p}` as MessageId)
+        }))
+      }
     },
     {
       label: t("home.kpi.pendingBalance"),
@@ -130,40 +145,15 @@ export function Home() {
       </div>
 
       <div className="grid grid-cols-5 gap-4">
-        {kpis.slice(0, 2).map((k) => (
-          <Card
+        {kpis.map((k) => (
+          <KpiCard
             key={k.label}
-            className="flex flex-col gap-1 rounded-xl border-slate-200 p-5 shadow-none"
-          >
-            <span className="text-[13px] font-medium text-slate-500">{k.label}</span>
-            <span className="text-[28px] font-bold text-slate-900">{k.value}</span>
-            <span className="text-xs text-slate-400">{k.meta}</span>
-          </Card>
-        ))}
-        <KpiCard
-          className="gap-1 rounded-xl shadow-none"
-          label={t("home.kpi.contactRate")}
-          value={contactRateValue}
-          subtext={contactRateSubtext}
-          period={{
-            value: contactRatePeriod,
-            onChange: (value) => setContactRatePeriod(value as ContactStatsPeriod),
-            ariaLabel: t("home.contactRate.periodAriaLabel"),
-            options: CONTACT_STATS_PERIODS.map((p) => ({
-              value: p,
-              label: t(`home.contactRate.period.${p}` as MessageId)
-            }))
-          }}
-        />
-        {kpis.slice(2).map((k) => (
-          <Card
-            key={k.label}
-            className="flex flex-col gap-1 rounded-xl border-slate-200 p-5 shadow-none"
-          >
-            <span className="text-[13px] font-medium text-slate-500">{k.label}</span>
-            <span className="text-[28px] font-bold text-slate-900">{k.value}</span>
-            <span className="text-xs text-slate-400">{k.meta}</span>
-          </Card>
+            className="gap-1 rounded-xl shadow-none"
+            label={k.label}
+            value={k.value}
+            subtext={k.meta}
+            period={k.period}
+          />
         ))}
       </div>
 
