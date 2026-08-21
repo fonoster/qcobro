@@ -61,6 +61,13 @@ export const createCampaignSchema = z
   .refine((c) => !c.endDate || new Date(c.endDate) > new Date(c.startDate), {
     message: "endDate must be after startDate",
     path: ["endDate"]
+  })
+  // Lexicographic comparison is correct here: `timeOfDay` enforces zero-padded HH:MM
+  // 24h, so string order equals chronological order. Inverted windows are rejected
+  // outright (no midnight-wrap support) — see mods/apiserver/src/engine/window.ts.
+  .refine((c) => c.startTime < c.endTime, {
+    message: "endTime must be after startTime",
+    path: ["endTime"]
   });
 export type CreateCampaignInput = z.infer<typeof createCampaignSchema>;
 

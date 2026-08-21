@@ -118,6 +118,10 @@ non-empty set of weekdays on which the campaign runs). The engine SHALL only dis
 on days included in `daysOfWeek`, and within the daily window defined by `startTime` and
 `endTime`.
 
+`endTime` SHALL be strictly after `startTime`; the daily window does not span midnight. The
+system SHALL reject a campaign create or update whose effective `startTime`/`endTime` would
+invert the window.
+
 `startTime` and `endTime` are wall-clock times interpreted in the **workspace's** configured
 timezone (`WorkspaceSettings.timezone`, an IANA zone such as `America/Costa_Rica`). A fixed
 application default timezone is only used to seed a workspace that has no timezone set yet;
@@ -162,6 +166,13 @@ explicit list of days).
 
 - **WHEN** an operator submits a campaign form with an end date before the start date
 - **THEN** the system SHALL reject the request with a validation error
+
+#### Scenario: Inverted daily window is rejected
+
+- **WHEN** a campaign is created or updated with an effective `endTime` at or before its
+  effective `startTime`
+- **THEN** the system SHALL reject the request with a field-level validation error on `endTime`
+- **AND** the campaign SHALL NOT be saved in a state where it can never dispatch
 
 ### Requirement: Campaign attempt caps
 

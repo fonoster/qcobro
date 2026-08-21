@@ -244,8 +244,9 @@ function EditCampaignModal({
   }
 
   function handleSave() {
-    if (!name.trim()) return setError(t("campaigns.form.name"));
+    if (!name.trim()) return setError(t("campaigns.form.noName"));
     if (daysOfWeek.length === 0) return setError(t("campaigns.form.noDays"));
+    if (startTime >= endTime) return setError(t("campaigns.form.invalidWindow"));
     setError(null);
     update.mutate({
       id: campaign.id,
@@ -267,6 +268,7 @@ function EditCampaignModal({
       title={t("campaigns.form.editTitle")}
       confirmLabel={update.isPending ? "…" : t("campaigns.form.save")}
       onConfirm={handleSave}
+      error={error}
     >
       <div className="mt-4 flex flex-col gap-3">
         <InputGroup
@@ -343,8 +345,6 @@ function EditCampaignModal({
             onChange={(e) => setMaxPerDay(Number(e.target.value))}
           />
         </div>
-
-        {error && <p className="text-xs text-red-600">{error}</p>}
       </div>
     </Dialog>
   );
@@ -397,11 +397,12 @@ function CreateCampaignModal({
   }
 
   function handleCreate() {
-    if (!name.trim()) return setError(t("campaigns.form.name"));
+    if (!name.trim()) return setError(t("campaigns.form.noName"));
     if (portfolioIds.length === 0) return setError(t("campaigns.form.noPortfolios"));
     if (!agentTemplateId) return setError(t("campaigns.form.noAgents"));
-    if (!startDate) return setError(t("campaigns.form.startDate"));
+    if (!startDate) return setError(t("campaigns.form.noStartDate"));
     if (daysOfWeek.length === 0) return setError(t("campaigns.form.noDays"));
+    if (startTime >= endTime) return setError(t("campaigns.form.invalidWindow"));
     if (isWhatsApp && !whatsAppSenderNumberId) {
       return setError(t("campaigns.form.noWhatsAppSender"));
     }
@@ -428,6 +429,7 @@ function CreateCampaignModal({
       title={t("campaigns.new")}
       confirmLabel={create.isPending ? "…" : t("campaigns.form.create")}
       onConfirm={handleCreate}
+      error={error}
     >
       <div className="mt-4 flex flex-col gap-3">
         <InputGroup
@@ -560,8 +562,6 @@ function CreateCampaignModal({
             onChange={(e) => setMaxPerDay(Number(e.target.value))}
           />
         </div>
-
-        {error && <p className="text-xs text-red-600">{error}</p>}
       </div>
     </Dialog>
   );

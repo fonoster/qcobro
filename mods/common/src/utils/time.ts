@@ -71,7 +71,10 @@ export interface ScheduleWindow {
   endDate: Date | null;
   /** ISO weekdays (1 = Monday … 7 = Sunday). */
   daysOfWeek: number[];
-  /** Local wall-clock bounds, `HH:MM` 24h. Windows do not span midnight. */
+  /**
+   * Local wall-clock bounds, `HH:MM` 24h. Windows do not span midnight
+   * (`startTime < endTime` is enforced at campaign create/update, not just assumed here).
+   */
   startTime: string;
   endTime: string;
 }

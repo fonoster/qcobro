@@ -12422,7 +12422,7 @@
                       "id": "WJCJX",
                       "name": "PeriodT",
                       "fill": "#0F172A",
-                      "content": "7d",
+                      "content": "7 días",
                       "fontFamily": "Inter",
                       "fontSize": 12,
                       "fontWeight": "500"
@@ -35375,7 +35375,7 @@
                               "content": "Contacto"
                             },
                             "WJCJX": {
-                              "content": "7 days"
+                              "content": "7 días"
                             },
                             "q5kPPp": {
                               "content": "92%"
@@ -40397,6 +40397,97 @@
                     },
                     {
                       "type": "frame",
+                      "id": "HUDmL",
+                      "name": "Error Inline",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        4,
+                        24,
+                        0,
+                        24
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "qGwMq",
+                          "name": "Error Surface",
+                          "width": "fill_container",
+                          "fill": "$--color-error",
+                          "cornerRadius": 12,
+                          "gap": 8,
+                          "padding": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "F52QR",
+                              "name": "Error Icon",
+                              "clip": true,
+                              "width": 20,
+                              "height": 20,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "path",
+                                  "id": "EXbe3",
+                                  "x": 1.5517578125,
+                                  "y": 1.897247314453125,
+                                  "name": "Icon",
+                                  "geometry": "M8.73802 0.96274l-8.47 14.14c-0.17463 0.30242-0.26703 0.6453-0.26801 0.99452-0.00098 0.34922 0.0895 0.69261 0.26244 0.99601 0.17294 0.3034 0.4223 0.55622 0.72328 0.73333 0.30098 0.1771 0.64309 0.27231 0.99229 0.27614l16.94 0c0.3492-0.00384 0.69131-0.09905 0.99229-0.27614 0.30098-0.1771 0.55035-0.42993 0.72328-0.73333 0.17293-0.3034 0.26342-0.64678 0.26244-0.99601-0.00098-0.34922-0.09338-0.6921-0.26801-0.99452l-8.47-14.14c-0.17827-0.29389-0.42928-0.53688-0.72881-0.70551-0.29953-0.16864-0.63746-0.25723-0.98119-0.25723-0.34374 0-0.68167 0.08859-0.9812 0.25723-0.29953 0.16864-0.55053 0.41162-0.7288 0.70551z",
+                                  "width": 20.896038055419922,
+                                  "height": 18.102745056152344,
+                                  "stroke": "$--color-error-foreground",
+                                  "strokeWidth": 2,
+                                  "strokeLinejoin": "round",
+                                  "strokeLinecap": "round"
+                                },
+                                {
+                                  "type": "path",
+                                  "id": "wWNUX",
+                                  "x": 11.999755859375,
+                                  "y": 8,
+                                  "name": "Icon",
+                                  "geometry": "M0 0l0 4",
+                                  "width": 0,
+                                  "height": 4,
+                                  "stroke": "$--color-error-foreground",
+                                  "strokeWidth": 2,
+                                  "strokeLinejoin": "round",
+                                  "strokeLinecap": "round"
+                                },
+                                {
+                                  "type": "path",
+                                  "id": "z6alrS",
+                                  "x": 11.999755859375,
+                                  "y": 16,
+                                  "name": "Icon",
+                                  "geometry": "M0 0l0.01 0",
+                                  "width": 0.010000228881835938,
+                                  "height": 0,
+                                  "stroke": "$--color-error-foreground",
+                                  "strokeWidth": 2,
+                                  "strokeLinejoin": "round",
+                                  "strokeLinecap": "round"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "mO8U0",
+                              "name": "Error Message",
+                              "fill": "$--color-error-foreground",
+                              "content": "La hora de fin debe ser posterior a la hora de inicio.",
+                              "fontFamily": "$--font-secondary",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
                       "id": "kqdCI",
                       "name": "Actions",
                       "width": "fill_container",
@@ -40923,6 +41014,97 @@
                                   "fill": "$--foreground"
                                 }
                               }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "WOri8",
+                      "name": "Error Inline",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        4,
+                        24,
+                        0,
+                        24
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "rr58G",
+                          "name": "Error Surface",
+                          "width": "fill_container",
+                          "fill": "$--color-error",
+                          "cornerRadius": 12,
+                          "gap": 8,
+                          "padding": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "S6EX27",
+                              "name": "Error Icon",
+                              "clip": true,
+                              "width": 20,
+                              "height": 20,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "path",
+                                  "id": "guQzD",
+                                  "x": 1.5517578125,
+                                  "y": 1.897247314453125,
+                                  "name": "Icon",
+                                  "geometry": "M8.73802 0.96274l-8.47 14.14c-0.17463 0.30242-0.26703 0.6453-0.26801 0.99452-0.00098 0.34922 0.0895 0.69261 0.26244 0.99601 0.17294 0.3034 0.4223 0.55622 0.72328 0.73333 0.30098 0.1771 0.64309 0.27231 0.99229 0.27614l16.94 0c0.3492-0.00384 0.69131-0.09905 0.99229-0.27614 0.30098-0.1771 0.55035-0.42993 0.72328-0.73333 0.17293-0.3034 0.26342-0.64678 0.26244-0.99601-0.00098-0.34922-0.09338-0.6921-0.26801-0.99452l-8.47-14.14c-0.17827-0.29389-0.42928-0.53688-0.72881-0.70551-0.29953-0.16864-0.63746-0.25723-0.98119-0.25723-0.34374 0-0.68167 0.08859-0.9812 0.25723-0.29953 0.16864-0.55053 0.41162-0.7288 0.70551z",
+                                  "width": 20.896038055419922,
+                                  "height": 18.102745056152344,
+                                  "stroke": "$--color-error-foreground",
+                                  "strokeWidth": 2,
+                                  "strokeLinejoin": "round",
+                                  "strokeLinecap": "round"
+                                },
+                                {
+                                  "type": "path",
+                                  "id": "WNpIF",
+                                  "x": 11.999755859375,
+                                  "y": 8,
+                                  "name": "Icon",
+                                  "geometry": "M0 0l0 4",
+                                  "width": 0,
+                                  "height": 4,
+                                  "stroke": "$--color-error-foreground",
+                                  "strokeWidth": 2,
+                                  "strokeLinejoin": "round",
+                                  "strokeLinecap": "round"
+                                },
+                                {
+                                  "type": "path",
+                                  "id": "db1R3",
+                                  "x": 11.999755859375,
+                                  "y": 16,
+                                  "name": "Icon",
+                                  "geometry": "M0 0l0.01 0",
+                                  "width": 0.010000228881835938,
+                                  "height": 0,
+                                  "stroke": "$--color-error-foreground",
+                                  "strokeWidth": 2,
+                                  "strokeLinejoin": "round",
+                                  "strokeLinecap": "round"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "nefRJ",
+                              "name": "Error Message",
+                              "fill": "$--color-error-foreground",
+                              "content": "La hora de fin debe ser posterior a la hora de inicio.",
+                              "fontFamily": "$--font-secondary",
+                              "fontSize": 13,
+                              "fontWeight": "500"
                             }
                           ]
                         }
@@ -41466,6 +41648,97 @@
                                   "fill": "$--foreground"
                                 }
                               }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ORvTr",
+                      "name": "Error Inline",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        4,
+                        24,
+                        0,
+                        24
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "FVA6p",
+                          "name": "Error Surface",
+                          "width": "fill_container",
+                          "fill": "$--color-error",
+                          "cornerRadius": 12,
+                          "gap": 8,
+                          "padding": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "GfayH",
+                              "name": "Error Icon",
+                              "clip": true,
+                              "width": 20,
+                              "height": 20,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "path",
+                                  "id": "pUxbf",
+                                  "x": 1.5517578125,
+                                  "y": 1.897247314453125,
+                                  "name": "Icon",
+                                  "geometry": "M8.73802 0.96274l-8.47 14.14c-0.17463 0.30242-0.26703 0.6453-0.26801 0.99452-0.00098 0.34922 0.0895 0.69261 0.26244 0.99601 0.17294 0.3034 0.4223 0.55622 0.72328 0.73333 0.30098 0.1771 0.64309 0.27231 0.99229 0.27614l16.94 0c0.3492-0.00384 0.69131-0.09905 0.99229-0.27614 0.30098-0.1771 0.55035-0.42993 0.72328-0.73333 0.17293-0.3034 0.26342-0.64678 0.26244-0.99601-0.00098-0.34922-0.09338-0.6921-0.26801-0.99452l-8.47-14.14c-0.17827-0.29389-0.42928-0.53688-0.72881-0.70551-0.29953-0.16864-0.63746-0.25723-0.98119-0.25723-0.34374 0-0.68167 0.08859-0.9812 0.25723-0.29953 0.16864-0.55053 0.41162-0.7288 0.70551z",
+                                  "width": 20.896038055419922,
+                                  "height": 18.102745056152344,
+                                  "stroke": "$--color-error-foreground",
+                                  "strokeWidth": 2,
+                                  "strokeLinejoin": "round",
+                                  "strokeLinecap": "round"
+                                },
+                                {
+                                  "type": "path",
+                                  "id": "H04Fo",
+                                  "x": 11.999755859375,
+                                  "y": 8,
+                                  "name": "Icon",
+                                  "geometry": "M0 0l0 4",
+                                  "width": 0,
+                                  "height": 4,
+                                  "stroke": "$--color-error-foreground",
+                                  "strokeWidth": 2,
+                                  "strokeLinejoin": "round",
+                                  "strokeLinecap": "round"
+                                },
+                                {
+                                  "type": "path",
+                                  "id": "FejEO",
+                                  "x": 11.999755859375,
+                                  "y": 16,
+                                  "name": "Icon",
+                                  "geometry": "M0 0l0.01 0",
+                                  "width": 0.010000228881835938,
+                                  "height": 0,
+                                  "stroke": "$--color-error-foreground",
+                                  "strokeWidth": 2,
+                                  "strokeLinejoin": "round",
+                                  "strokeLinecap": "round"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "s2qWj",
+                              "name": "Error Message",
+                              "fill": "$--color-error-foreground",
+                              "content": "La hora de fin debe ser posterior a la hora de inicio.",
+                              "fontFamily": "$--font-secondary",
+                              "fontSize": 13,
+                              "fontWeight": "500"
                             }
                           ]
                         }

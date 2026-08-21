@@ -106,6 +106,16 @@ describe("createCampaign", () => {
     );
   });
 
+  it("rejects an endTime at or before the startTime", async () => {
+    const { client } = makeClient();
+    const fn = createCreateCampaign(client as never, "ws-1");
+
+    await assert.rejects(
+      () => fn({ ...VALID, startTime: "09:30", endTime: "05:00" }),
+      ValidationError
+    );
+  });
+
   it("WHATSAPP campaign stores the selected sender number id", async () => {
     const { client, stats } = makeClient({
       templateType: "WHATSAPP",
