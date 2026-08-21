@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.32.1](https://github.com/fonoster/qcobro/compare/v1.32.0...v1.32.1) (2026-08-21)
+
+### Bug Fixes
+
+- **webapp:** align KPI card notes and make the period control usable ([#111](https://github.com/fonoster/qcobro/issues/111)) ([0e4d61c](https://github.com/fonoster/qcobro/commit/0e4d61c6225e770802a58421d53b15efb7067baf))
+
 # [1.32.0](https://github.com/fonoster/qcobro/compare/v1.31.0...v1.32.0) (2026-08-21)
 
 ### Features
