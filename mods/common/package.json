@@ -1,6 +1,6 @@
 {
   "name": "@qcobro/common",
-  "version": "1.32.0",
+  "version": "1.32.3",
   "type": "module",
   "files": [
     "dist"

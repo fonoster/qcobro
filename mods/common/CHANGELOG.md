@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.32.3](https://github.com/fonoster/qcobro/compare/v1.32.2...v1.32.3) (2026-08-21)
+
+### Bug Fixes
+
+- **campaigns:** reject inverted contact windows instead of dispatching to nobody ([#113](https://github.com/fonoster/qcobro/issues/113)) ([c84decd](https://github.com/fonoster/qcobro/commit/c84decd73a91e67c2fdea803d8d0d042d6813695)), closes [#102](https://github.com/fonoster/qcobro/issues/102)
+
 # [1.32.0](https://github.com/fonoster/qcobro/compare/v1.31.0...v1.32.0) (2026-08-21)
 
 ### Features
