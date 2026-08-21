@@ -97,6 +97,32 @@ describe("recordOutcome", () => {
     assert.ok(cap.promiseCreated?.dueDate, "carries a due date");
   });
 
+  it("preserves providerMessageId when a later signal enriches the gestión", async () => {
+    const { client, cap } = makeClient({
+      existing: {
+        id: "log-1",
+        entrega: "DISPATCHED",
+        deliveryReason: null,
+        camino: null,
+        resultado: null,
+        providerRef: "token-1",
+        providerMessageId: "resend-1",
+        channelData: null
+      }
+    });
+    // An inbound reply enriches the row and knows nothing about the Resend message id.
+    // `logData` rebuilds every column, so without merging forward this write would null it
+    // and silently orphan every subsequent delivery/open event for that message.
+    await createRecordOutcome(client as never)({
+      ...BASE,
+      agentType: "EMAIL",
+      entrega: "DELIVERED",
+      camino: "ENGAGED",
+      providerRef: "token-1"
+    });
+    assert.equal(cap.updated?.data.providerMessageId, "resend-1");
+  });
+
   it("falls back to contactedAt when the promised date is vague (Invalid Date)", async () => {
     // The LLM autopilot extracts free text like "mañana" that `new Date()` can't parse.
     const { client, cap } = makeClient({ existing: null });

@@ -423,6 +423,11 @@ model AccountContactLog {
   // Unique so re-delivered webhooks upsert rather than insert (nulls allowed for
   // legacy/manual rows without a ref).
   providerRef        String?          @unique
+  // The provider's own message id, for correlating *outbound* delivery events. EMAIL cannot
+  // reuse `providerRef` for this: there it holds the reply-to token, which is the only handle
+  // an inbound reply carries, while Resend's delivery/open events carry only the message id.
+  // Unique so a redelivered provider event updates the same row rather than fanning out.
+  providerMessageId  String?          @unique
   createdAt          DateTime         @default(now())
   portfolioAccount   PortfolioAccount @relation(fields: [portfolioAccountId], references: [id], onDelete: Cascade)
   campaign           Campaign?        @relation(fields: [campaignId], references: [id], onDelete: SetNull)

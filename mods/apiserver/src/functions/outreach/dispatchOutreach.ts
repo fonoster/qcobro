@@ -77,21 +77,26 @@ export function createDispatchOutreach(deps: DispatchDeps) {
       const subject = renderTemplate(params.subject ?? "", params.context);
       const renderedBody = renderTemplate(params.body ?? "", params.context);
       const replyTo = `reply+${token}@${deps.emailFrom.inboundDomain}`;
+      // Resend's message id is the only correlation handle its outbound delivery/open events
+      // carry — the reply-to token appears in none of them — so it is kept alongside the
+      // token rather than discarded (email-events-hook).
+      let messageId: string | undefined;
       try {
-        await deps.emailClient.sendEmail({
+        ({ id: messageId } = await deps.emailClient.sendEmail({
           from,
           fromName: deps.emailFrom.name,
           to: params.to,
           subject,
           body: renderedBody,
           replyTo
-        });
+        }));
       } catch (err) {
         throw toDispatchError("Email", err);
       }
       return {
         channel: "EMAIL",
         providerRef: token,
+        providerMessageId: messageId,
         from,
         to: params.to,
         renderedBody,

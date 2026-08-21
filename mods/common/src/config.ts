@@ -181,10 +181,14 @@ export type TwilioConfig = z.infer<typeof twilioConfigSchema>;
 
 /**
  * Resend connection for the bidirectional EMAIL channel. Optional — when absent, EMAIL
- * dispatch is inert (the engine reports EMAIL campaigns as not-configured) and the inbound
- * webhook rejects everything. Outbound uses `apiKey` + `fromEmail`/`fromName`; inbound
- * replies arrive at `reply+<token>@<inboundDomain>` and are verified with
- * `inboundSigningSecret`. The per-attempt reply cap defaults to `maxRepliesDefault`.
+ * dispatch is inert (the engine reports EMAIL campaigns as not-configured) and the webhook
+ * rejects everything. Outbound uses `apiKey` + `fromEmail`/`fromName`; inbound replies arrive
+ * at `reply+<token>@<inboundDomain>`. The per-attempt reply cap defaults to `maxRepliesDefault`.
+ *
+ * One webhook endpoint carries both directions — customer replies (`email.received`) and our
+ * own sends' delivery/open/bounce events — so there is a single `inboundSigningSecret`. Resend
+ * issues a signing secret per endpoint, so a second endpoint would have meant a second secret
+ * here for no behavioural gain.
  */
 export const resendConfigSchema = z
   .object({
@@ -193,7 +197,10 @@ export const resendConfigSchema = z
     fromName: z.string().min(1).optional(),
     /** Domain the per-attempt reply-to token addresses are minted on (inbound). */
     inboundDomain: z.string().min(1),
-    /** Shared secret used to verify inbound webhook signatures. */
+    /**
+     * Shared secret used to verify webhook signatures, for both customer replies and delivery
+     * events. Optional in the schema, but the endpoint rejects every request without it.
+     */
     inboundSigningSecret: z.string().min(1).optional(),
     /**
      * Campaigns-engine pacing: the maximum number of emails the engine will send per

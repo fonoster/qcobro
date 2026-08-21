@@ -15,7 +15,23 @@ interface SenderRow {
 interface LogRow {
   id: string;
   portfolioAccountId: string;
+  entrega?: string;
+  deliveryReason?: string | null;
   resultado?: string | null;
+  channelData?: Record<string, unknown> | null;
+}
+
+/** A gestión as it looks right after dispatch, before any status has landed. */
+function dispatchedLog(overrides: Partial<LogRow> = {}): LogRow {
+  return {
+    id: "log-1",
+    portfolioAccountId: "acct-1",
+    entrega: "DISPATCHED",
+    deliveryReason: null,
+    resultado: null,
+    channelData: null,
+    ...overrides
+  };
 }
 
 function makeDb(opts: {
@@ -47,12 +63,18 @@ function makeDb(opts: {
       }
     },
     accountContactLog: {
-      findFirst: async ({ where }: { where: { providerRef: string } }) =>
-        logs[where.providerRef] ?? null,
-      update: async ({ where, data }: { where: { id: string }; data: { resultado: string } }) => {
+      findFirst: async ({ where }: { where: { providerRef: string; agentType?: string } }) => {
+        const row = logs[where.providerRef];
+        // The recorder scopes its lookup to the channel; an SMS row with a colliding ref
+        // must not be picked up here.
+        if (!row || (where.agentType && where.agentType !== "WHATSAPP")) return null;
+        return row;
+      },
+      update: async ({ where, data }: { where: { id: string }; data: Partial<LogRow> }) => {
         const row = Object.values(logs).find((l) => l.id === where.id);
         if (!row) throw new Error("gestión not found");
-        row.resultado = data.resultado;
+        // Mirror Prisma: only the keys actually present in `data` are written.
+        Object.assign(row, data);
         return row;
       }
     }
@@ -238,9 +260,96 @@ describe("whatsAppWebhook.events — signature", () => {
   });
 });
 
-describe("whatsAppWebhook.events — opt-out processing", () => {
-  it("records resultado OPT_OUT on the gestión for a failed delivery with error 131050", async () => {
-    const logs = { "msg-id-1": { id: "log-1", portfolioAccountId: "acct-1", resultado: null } };
+describe("whatsAppWebhook.events — delivery statuses", () => {
+  it("advances entrega to DELIVERED on a delivered status", async () => {
+    const logs = { "msg-id-1": dispatchedLog() };
+    const db = makeDb({ logs });
+    const { events } = createWhatsAppWebhookHandlers(db, {});
+
+    const { res } = makeRes();
+    await events(req(messagesBody("pn-1", [{ id: "msg-id-1", status: "delivered" }])), res);
+    await drain();
+
+    assert.equal(logs["msg-id-1"].entrega, "DELIVERED");
+    assert.equal(logs["msg-id-1"].deliveryReason, null);
+    // A delivery is not an engagement — the interaction axes stay untouched.
+    assert.equal(logs["msg-id-1"].resultado, null);
+  });
+
+  it("records a read receipt in channelData without moving an axis", async () => {
+    const logs = { "msg-id-1": dispatchedLog({ entrega: "DELIVERED" }) };
+    const db = makeDb({ logs });
+    const { events } = createWhatsAppWebhookHandlers(db, {});
+
+    const { res } = makeRes();
+    await events(
+      req(messagesBody("pn-1", [{ id: "msg-id-1", status: "read", timestamp: "1755648000" }])),
+      res
+    );
+    await drain();
+
+    assert.equal(logs["msg-id-1"].channelData?.openedAt, "2025-08-20T00:00:00.000Z");
+    assert.equal(logs["msg-id-1"].entrega, "DELIVERED");
+    assert.equal(logs["msg-id-1"].resultado, null);
+  });
+
+  it("keeps the first read timestamp when a second read arrives", async () => {
+    const logs = {
+      "msg-id-1": dispatchedLog({
+        entrega: "DELIVERED",
+        channelData: { openedAt: "2025-08-19T00:00:00.000Z" }
+      })
+    };
+    const db = makeDb({ logs });
+    const { events } = createWhatsAppWebhookHandlers(db, {});
+
+    const { res } = makeRes();
+    await events(
+      req(messagesBody("pn-1", [{ id: "msg-id-1", status: "read", timestamp: "1755648000" }])),
+      res
+    );
+    await drain();
+
+    assert.equal(logs["msg-id-1"].channelData?.openedAt, "2025-08-19T00:00:00.000Z");
+  });
+
+  it("maps a failed status to FAILED with an actionable reason", async () => {
+    const logs = { "msg-id-1": dispatchedLog() };
+    const db = makeDb({ logs });
+    const { events } = createWhatsAppWebhookHandlers(db, {});
+
+    const body = messagesBody("pn-1", [
+      { id: "msg-id-1", status: "failed", errors: [{ code: 131026, title: "Undeliverable" }] }
+    ]);
+    const { res } = makeRes();
+    await events(req(body), res);
+    await drain();
+
+    assert.equal(logs["msg-id-1"].entrega, "FAILED");
+    assert.equal(logs["msg-id-1"].deliveryReason, "INVALID_DESTINATION");
+    // Not an opt-out — only 131050 carries that meaning.
+    assert.equal(logs["msg-id-1"].resultado, null);
+  });
+
+  it("falls back to PROVIDER_ERROR for an unmapped error code", async () => {
+    const logs = { "msg-id-1": dispatchedLog() };
+    const db = makeDb({ logs });
+    const { events } = createWhatsAppWebhookHandlers(db, {});
+
+    const body = messagesBody("pn-1", [
+      { id: "msg-id-1", status: "failed", errors: [{ code: 999, title: "Other error" }] }
+    ]);
+    const { res } = makeRes();
+    await events(req(body), res);
+    await drain();
+
+    assert.equal(logs["msg-id-1"].entrega, "FAILED");
+    assert.equal(logs["msg-id-1"].deliveryReason, "PROVIDER_ERROR");
+    assert.equal(logs["msg-id-1"].resultado, null);
+  });
+
+  it("records error 131050 on both axes: FAILED/REJECTED and resultado OPT_OUT", async () => {
+    const logs = { "msg-id-1": dispatchedLog() };
     const db = makeDb({
       senders: { "pn-1": { workspaceRef: "ws-1", qualityRating: null } },
       logs
@@ -255,24 +364,57 @@ describe("whatsAppWebhook.events — opt-out processing", () => {
     await drain();
 
     assert.equal(logs["msg-id-1"].resultado, "OPT_OUT");
+    // A platform block is also a delivery failure — recording only the resultado would keep
+    // opt-outs invisible to the contactability KPI.
+    assert.equal(logs["msg-id-1"].entrega, "FAILED");
+    assert.equal(logs["msg-id-1"].deliveryReason, "REJECTED");
   });
 
-  it("skips opt-out for failed statuses without error 131050", async () => {
-    const logs = { "msg-id-1": { id: "log-1", portfolioAccountId: "acct-1", resultado: null } };
+  it("records a sent status as visibility only", async () => {
+    const logs = { "msg-id-1": dispatchedLog() };
+    const db = makeDb({ logs });
+    const { events } = createWhatsAppWebhookHandlers(db, {});
+
+    const { res } = makeRes();
+    await events(req(messagesBody("pn-1", [{ id: "msg-id-1", status: "sent" }])), res);
+    await drain();
+
+    assert.equal(logs["msg-id-1"].channelData?.deliveryStatus, "sent");
+    assert.equal(logs["msg-id-1"].entrega, "DISPATCHED");
+  });
+
+  it("never moves entrega back off a finalized value", async () => {
+    const logs = {
+      "msg-id-1": dispatchedLog({ entrega: "FAILED", deliveryReason: "INVALID_DESTINATION" })
+    };
+    const db = makeDb({ logs });
+    const { events } = createWhatsAppWebhookHandlers(db, {});
+
+    const { res } = makeRes();
+    await events(req(messagesBody("pn-1", [{ id: "msg-id-1", status: "delivered" }])), res);
+    await drain();
+
+    assert.equal(logs["msg-id-1"].entrega, "FAILED");
+    assert.equal(logs["msg-id-1"].deliveryReason, "INVALID_DESTINATION");
+  });
+
+  it("skips a malformed status without abandoning the ones after it", async () => {
+    const logs = { "msg-id-2": dispatchedLog({ id: "log-2" }) };
     const db = makeDb({ logs });
     const { events } = createWhatsAppWebhookHandlers(db, {});
 
     const body = messagesBody("pn-1", [
-      { id: "msg-id-1", status: "failed", errors: [{ code: 999, title: "Other error" }] }
+      { id: "msg-id-1", status: "" },
+      { id: "msg-id-2", status: "delivered" }
     ]);
     const { res } = makeRes();
     await events(req(body), res);
     await drain();
 
-    assert.equal(logs["msg-id-1"].resultado, null);
+    assert.equal(logs["msg-id-2"].entrega, "DELIVERED");
   });
 
-  it("skips opt-out when no gestión row matches the providerRef", async () => {
+  it("writes nothing when no gestión row matches the providerRef", async () => {
     const logs: Record<string, LogRow> = {};
     const db = makeDb({ logs });
     const { events } = createWhatsAppWebhookHandlers(db, {});
@@ -286,19 +428,6 @@ describe("whatsAppWebhook.events — opt-out processing", () => {
 
     // Nothing to correlate to, so nothing is written — and crucially no row is invented.
     assert.deepEqual(logs, {});
-  });
-
-  it("does not trigger opt-out for delivered statuses", async () => {
-    const logs = { "msg-id-1": { id: "log-1", portfolioAccountId: "acct-1", resultado: null } };
-    const db = makeDb({ logs });
-    const { events } = createWhatsAppWebhookHandlers(db, {});
-
-    const body = messagesBody("pn-1", [{ id: "msg-id-1", status: "delivered" }]);
-    const { res } = makeRes();
-    await events(req(body), res);
-    await drain();
-
-    assert.equal(logs["msg-id-1"].resultado, null);
   });
 });
 

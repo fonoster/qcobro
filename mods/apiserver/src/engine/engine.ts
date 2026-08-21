@@ -533,6 +533,8 @@ export function createEngine(deps: EngineDeps) {
         entrega: "DISPATCHED",
         debtAmountSnapshot: acc.outstandingBalance,
         providerRef: result.providerRef,
+        // EMAIL only — the key its outbound delivery/open events correlate on.
+        providerMessageId: result.providerMessageId,
         channelData: { from: result.from, to: result.to, messageBody: result.renderedBody }
       },
       metered

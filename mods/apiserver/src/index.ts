@@ -26,7 +26,7 @@ import {
   createStripeSdk,
   validateStripePrices
 } from "./services/stripeGateway.js";
-import { createEmailInboundHandler } from "./rest/emailInbound.js";
+import { createEmailWebhookHandler } from "./rest/emailWebhook.js";
 import { createWhatsAppWebhookHandlers } from "./rest/whatsAppWebhook.js";
 import { createEngineEventsHandler } from "./rest/engineEvents.js";
 import { resolveWhatsAppClient } from "./services/resolveWhatsAppClient.js";
@@ -113,11 +113,14 @@ if (config.twilio?.webhookBaseUrl) {
   );
 }
 
-// Resend inbound replies for the EMAIL autopilot — correlate to the gestión by reply-to
-// token and run the autopilot decision loop. Verifies the shared secret when configured.
+// The single Resend webhook, both directions. `email.received` is a customer reply: correlate
+// by reply-to token and run the autopilot decision loop. Every other event is about one of our
+// own sends: correlate by Resend message id and move the delivery axis, so EMAIL reaches
+// `entrega: DELIVERED` without needing the customer to reply (email-events-hook). Rejects any
+// request it cannot verify against the shared secret, including when none is configured.
 app.post(
   "/api/email/inbound",
-  createEmailInboundHandler(prisma, {
+  createEmailWebhookHandler(prisma, {
     resend: config.resend,
     ai: config.ai,
     recordEvent: providerEvents("email-inbound")

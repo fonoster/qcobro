@@ -287,6 +287,9 @@ export const outreachRouter = router({
       notes: "Contacto manual",
       debtAmountSnapshot: account.outstandingBalance,
       providerRef: result.providerRef,
+      // EMAIL only — the key its outbound delivery/open events correlate on. A manual send
+      // gets the same delivery signals as a campaign one.
+      providerMessageId: result.providerMessageId,
       channelData: {
         from: result.from,
         to: result.to,
