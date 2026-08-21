@@ -12383,6 +12383,110 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "heFsV",
+          "name": "Comp/KPI Card Period",
+          "reusable": true,
+          "width": "fill_container",
+          "fill": "$--card",
+          "stroke": "$--border",
+          "strokeWidth": 1,
+          "strokeAlignment": "inner",
+          "layout": "vertical",
+          "gap": 8,
+          "padding": 20,
+          "children": [
+            {
+              "type": "frame",
+              "id": "ZOAUC",
+              "name": "labelRow",
+              "width": "fill_container",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "LoBmn",
+                  "name": "label",
+                  "fill": "$--muted-foreground",
+                  "content": "KPI label",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "w82mlN",
+                  "name": "Period",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": "$--radius-pill",
+                  "stroke": "#E2E8F0",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "gap": 6,
+                  "padding": [
+                    4,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "C4lPw",
+                      "name": "Cal",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "calendar",
+                      "library": "lucide",
+                      "fill": "#64748B"
+                    },
+                    {
+                      "type": "text",
+                      "id": "WJCJX",
+                      "name": "PeriodT",
+                      "fill": "#0F172A",
+                      "content": "7 días",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "F59hTv",
+                      "name": "Chev",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "#64748B"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "q5kPPp",
+              "name": "value",
+              "fill": "$--foreground",
+              "content": "0",
+              "fontFamily": "Inter",
+              "fontSize": 28,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "PURpY",
+              "name": "meta",
+              "fill": "$--muted-foreground",
+              "content": "vs periodo anterior",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            }
+          ]
         }
       ]
     },
@@ -23383,7 +23487,7 @@
                       "type": "frame",
                       "id": "WooER",
                       "name": "bubble",
-                      "width": 520,
+                      "width": 516,
                       "fill": "#ECFDF5",
                       "cornerRadius": [
                         14,
@@ -23496,58 +23600,6 @@
                   "fontFamily": "Inter",
                   "fontSize": 13,
                   "fontWeight": "normal"
-                },
-                {
-                  "type": "frame",
-                  "id": "NM2OL",
-                  "name": "resRow",
-                  "width": "fill_container",
-                  "fill": "#F8FAFC",
-                  "cornerRadius": 8,
-                  "gap": 8,
-                  "padding": [
-                    10,
-                    12
-                  ],
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "cliBD",
-                      "name": "l",
-                      "fill": "#64748B",
-                      "content": "Resultado",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "frame",
-                      "id": "uWwUA",
-                      "name": "sp",
-                      "width": "fill_container",
-                      "height": 1
-                    },
-                    {
-                      "type": "frame",
-                      "id": "Fu0FN",
-                      "name": "pill",
-                      "fill": "#00000000",
-                      "cornerRadius": 999,
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "ATao2",
-                          "name": "t",
-                          "fill": "$--green-900",
-                          "content": "Entregado",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "500"
-                        }
-                      ]
-                    }
-                  ]
                 }
               ]
             },
@@ -23599,7 +23651,7 @@
                         {
                           "type": "frame",
                           "id": "w1g8C",
-                          "name": "Estado de entrega",
+                          "name": "Entrega",
                           "width": "fill_container",
                           "layout": "vertical",
                           "gap": 2,
@@ -23609,7 +23661,7 @@
                               "id": "lgDyy",
                               "name": "l",
                               "fill": "#94A3B8",
-                              "content": "Estado de entrega",
+                              "content": "Entrega",
                               "fontFamily": "Inter",
                               "fontSize": 12,
                               "fontWeight": "normal"
@@ -23621,7 +23673,7 @@
                               "fill": "#334155",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Enviado → Entregado",
+                              "content": "Entregado",
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "500"
@@ -24135,49 +24187,6 @@
                   "fontFamily": "Inter",
                   "fontSize": 13,
                   "fontWeight": "normal"
-                },
-                {
-                  "type": "frame",
-                  "id": "mFE7I",
-                  "name": "resRow",
-                  "width": "fill_container",
-                  "fill": "#F8FAFC",
-                  "cornerRadius": 8,
-                  "gap": 8,
-                  "padding": [
-                    10,
-                    12
-                  ],
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "iXfRR",
-                      "name": "l",
-                      "fill": "#64748B",
-                      "content": "Resultado",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "frame",
-                      "id": "UIbFl",
-                      "name": "sp",
-                      "width": "fill_container",
-                      "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "cvzZB",
-                      "name": "v",
-                      "fill": "$--green-900",
-                      "content": "Entregado",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "500"
-                    }
-                  ]
                 }
               ]
             },
@@ -24229,7 +24238,7 @@
                         {
                           "type": "frame",
                           "id": "G5OJWH",
-                          "name": "Estado de entrega",
+                          "name": "Entrega",
                           "width": "fill_container",
                           "layout": "vertical",
                           "gap": 2,
@@ -24239,7 +24248,7 @@
                               "id": "QtNZz",
                               "name": "l",
                               "fill": "#94A3B8",
-                              "content": "Estado de entrega",
+                              "content": "Entrega",
                               "fontFamily": "Inter",
                               "fontSize": 12,
                               "fontWeight": "normal"
@@ -24251,7 +24260,7 @@
                               "fill": "#334155",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Enviado → Entregado",
+                              "content": "Entregado",
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "500"
@@ -25518,7 +25527,7 @@
                         {
                           "type": "frame",
                           "id": "ebSxO",
-                          "name": "Estado de entrega",
+                          "name": "Entrega",
                           "width": "fill_container",
                           "layout": "vertical",
                           "gap": 2,
@@ -25528,7 +25537,7 @@
                               "id": "gS5o2",
                               "name": "l",
                               "fill": "#94A3B8",
-                              "content": "Estado de entrega",
+                              "content": "Entrega",
                               "fontFamily": "Inter",
                               "fontSize": 12,
                               "fontWeight": "normal"
@@ -25540,7 +25549,39 @@
                               "fill": "#334155",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Enviado → Contestado → Finalizada",
+                              "content": "Entregado",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "uzhs8",
+                          "name": "Camino",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "CM8rp",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Camino",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "cvhtS",
+                              "name": "v",
+                              "fill": "#334155",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Despachado → Conversación",
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "500"
@@ -26275,49 +26316,49 @@
                   "fontFamily": "Inter",
                   "fontSize": 13,
                   "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Nchc8",
+              "name": "resRow",
+              "width": "fill_container",
+              "fill": "#F8FAFC",
+              "cornerRadius": 8,
+              "gap": 8,
+              "padding": [
+                10,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "OgzLo",
+                  "name": "l",
+                  "fill": "#64748B",
+                  "content": "Resultado",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "frame",
-                  "id": "Nchc8",
-                  "name": "resRow",
+                  "id": "MPCAp",
+                  "name": "sp",
                   "width": "fill_container",
-                  "fill": "#F8FAFC",
-                  "cornerRadius": 8,
-                  "gap": 8,
-                  "padding": [
-                    10,
-                    12
-                  ],
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "OgzLo",
-                      "name": "l",
-                      "fill": "#64748B",
-                      "content": "Resultado",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "frame",
-                      "id": "MPCAp",
-                      "name": "sp",
-                      "width": "fill_container",
-                      "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "y60f9",
-                      "name": "v",
-                      "fill": "$--green-900",
-                      "content": "Promesa de pago",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "500"
-                    }
-                  ]
+                  "height": 1
+                },
+                {
+                  "type": "text",
+                  "id": "y60f9",
+                  "name": "v",
+                  "fill": "$--green-900",
+                  "content": "Promesa de pago",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
                 }
               ]
             },
@@ -26369,7 +26410,7 @@
                         {
                           "type": "frame",
                           "id": "kXIdg",
-                          "name": "Estado de entrega",
+                          "name": "Entrega",
                           "width": "fill_container",
                           "layout": "vertical",
                           "gap": 2,
@@ -26379,7 +26420,7 @@
                               "id": "TzjaE",
                               "name": "l",
                               "fill": "#94A3B8",
-                              "content": "Estado de entrega",
+                              "content": "Entrega",
                               "fontFamily": "Inter",
                               "fontSize": 12,
                               "fontWeight": "normal"
@@ -26391,7 +26432,39 @@
                               "fill": "#334155",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Enviado → Entregado → Leído",
+                              "content": "Entregado",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "fAJew",
+                          "name": "Camino",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "zcC0i",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Camino",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "cnVCr",
+                              "name": "v",
+                              "fill": "#334155",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Despachado → Leído → Respondió",
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "500"
@@ -31574,6 +31647,100 @@
                           "fill": "#94A3B8"
                         }
                       ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ux43c",
+                      "name": "Filter Entrega",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "stroke": "#E2E8F0",
+                      "strokeWidth": 1,
+                      "gap": 8,
+                      "padding": [
+                        10,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "yWfvj",
+                          "name": "i",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "sliders-horizontal",
+                          "library": "lucide",
+                          "fill": "#64748B"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ByF1O",
+                          "name": "t",
+                          "fill": "#334155",
+                          "content": "Todas las entregas",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "qA38I",
+                          "name": "c",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-down",
+                          "library": "lucide",
+                          "fill": "#94A3B8"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "EfJoa",
+                      "name": "Filter Resultado",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "stroke": "#E2E8F0",
+                      "strokeWidth": 1,
+                      "gap": 8,
+                      "padding": [
+                        10,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "G8Mr7v",
+                          "name": "i",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "sliders-horizontal",
+                          "library": "lucide",
+                          "fill": "#64748B"
+                        },
+                        {
+                          "type": "text",
+                          "id": "pBSMm",
+                          "name": "t",
+                          "fill": "#334155",
+                          "content": "Todos los resultados",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "CcnEk",
+                          "name": "c",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-down",
+                          "library": "lucide",
+                          "fill": "#94A3B8"
+                        }
+                      ]
                     }
                   ]
                 },
@@ -31647,7 +31814,7 @@
                         {
                           "type": "frame",
                           "id": "uJSzp",
-                          "name": "h-RESULTADO",
+                          "name": "h-ENTREGA",
                           "width": 180,
                           "children": [
                             {
@@ -31655,7 +31822,7 @@
                               "id": "OZdi5",
                               "name": "t",
                               "fill": "#94A3B8",
-                              "content": "RESULTADO",
+                              "content": "ENTREGA",
                               "fontFamily": "Inter",
                               "fontSize": 11,
                               "fontWeight": "600",
@@ -31666,7 +31833,7 @@
                         {
                           "type": "frame",
                           "id": "o9RHI",
-                          "name": "h-RESUMEN IA",
+                          "name": "h-RESULTADO",
                           "width": "fill_container",
                           "children": [
                             {
@@ -31674,7 +31841,7 @@
                               "id": "k6EMp",
                               "name": "t",
                               "fill": "#94A3B8",
-                              "content": "RESUMEN IA",
+                              "content": "RESULTADO",
                               "fontFamily": "Inter",
                               "fontSize": 11,
                               "fontWeight": "600",
@@ -31809,7 +31976,7 @@
                         {
                           "type": "frame",
                           "id": "poE20",
-                          "name": "c-res",
+                          "name": "c-entrega",
                           "width": 180,
                           "children": [
                             {
@@ -31824,7 +31991,7 @@
                                   "id": "tAwei",
                                   "name": "t",
                                   "fill": "#334155",
-                                  "content": "Promesa de pago",
+                                  "content": "Entregado",
                                   "fontFamily": "Inter",
                                   "fontSize": 13,
                                   "fontWeight": "500"
@@ -31836,7 +32003,7 @@
                         {
                           "type": "frame",
                           "id": "LaKRG",
-                          "name": "c-sum",
+                          "name": "c-res",
                           "width": "fill_container",
                           "layout": "vertical",
                           "padding": [
@@ -31853,7 +32020,7 @@
                               "fill": "#475569",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Cliente reconoce la deuda y se compromete a pagar el saldo completo el viernes.",
+                              "content": "Promesa de pago",
                               "lineHeight": 1.4,
                               "fontFamily": "Inter",
                               "fontSize": 13,
@@ -31988,7 +32155,7 @@
                         {
                           "type": "frame",
                           "id": "SAgaw",
-                          "name": "c-res",
+                          "name": "c-entrega",
                           "width": 180,
                           "children": [
                             {
@@ -32003,7 +32170,7 @@
                                   "id": "cMIdv",
                                   "name": "t",
                                   "fill": "#334155",
-                                  "content": "Enviado",
+                                  "content": "Entregado",
                                   "fontFamily": "Inter",
                                   "fontSize": 13,
                                   "fontWeight": "500"
@@ -32015,7 +32182,7 @@
                         {
                           "type": "frame",
                           "id": "G6J7Vs",
-                          "name": "c-sum",
+                          "name": "c-res",
                           "width": "fill_container",
                           "layout": "vertical",
                           "padding": [
@@ -32032,7 +32199,7 @@
                               "fill": "#475569",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Recordatorio de pago enviado al cliente con enlace de pago en línea.",
+                              "content": "—",
                               "lineHeight": 1.4,
                               "fontFamily": "Inter",
                               "fontSize": 13,
@@ -32167,7 +32334,7 @@
                         {
                           "type": "frame",
                           "id": "b0L8k",
-                          "name": "c-res",
+                          "name": "c-entrega",
                           "width": 180,
                           "children": [
                             {
@@ -32182,7 +32349,7 @@
                                   "id": "vJczz",
                                   "name": "t",
                                   "fill": "#334155",
-                                  "content": "Reproducido",
+                                  "content": "Entregado",
                                   "fontFamily": "Inter",
                                   "fontSize": 13,
                                   "fontWeight": "500"
@@ -32194,7 +32361,7 @@
                         {
                           "type": "frame",
                           "id": "GgH8R",
-                          "name": "c-sum",
+                          "name": "c-res",
                           "width": "fill_container",
                           "layout": "vertical",
                           "padding": [
@@ -32211,7 +32378,7 @@
                               "fill": "#475569",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Mensaje pre-grabado de recordatorio reproducido al cliente.",
+                              "content": "—",
                               "lineHeight": 1.4,
                               "fontFamily": "Inter",
                               "fontSize": 13,
@@ -32346,7 +32513,7 @@
                         {
                           "type": "frame",
                           "id": "u1m4J",
-                          "name": "c-res",
+                          "name": "c-entrega",
                           "width": 180,
                           "children": [
                             {
@@ -32361,7 +32528,7 @@
                                   "id": "oBKX8",
                                   "name": "t",
                                   "fill": "#334155",
-                                  "content": "No contesta",
+                                  "content": "Fallido · Sin respuesta",
                                   "fontFamily": "Inter",
                                   "fontSize": 13,
                                   "fontWeight": "500"
@@ -32373,7 +32540,7 @@
                         {
                           "type": "frame",
                           "id": "CSg6Y",
-                          "name": "c-sum",
+                          "name": "c-res",
                           "width": "fill_container",
                           "layout": "vertical",
                           "padding": [
@@ -32390,7 +32557,7 @@
                               "fill": "#475569",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Sin respuesta tras 3 intentos. Se recomienda programar un reintento mañana.",
+                              "content": "—",
                               "lineHeight": 1.4,
                               "fontFamily": "Inter",
                               "fontSize": 13,
@@ -32521,7 +32688,7 @@
                         {
                           "type": "frame",
                           "id": "hyZHN",
-                          "name": "c-res",
+                          "name": "c-entrega",
                           "width": 180,
                           "children": [
                             {
@@ -32536,7 +32703,7 @@
                                   "id": "ejELr",
                                   "name": "t",
                                   "fill": "#334155",
-                                  "content": "Pago realizado",
+                                  "content": "Entregado",
                                   "fontFamily": "Inter",
                                   "fontSize": 13,
                                   "fontWeight": "500"
@@ -32548,7 +32715,7 @@
                         {
                           "type": "frame",
                           "id": "HWfWW",
-                          "name": "c-sum",
+                          "name": "c-res",
                           "width": "fill_container",
                           "layout": "vertical",
                           "padding": [
@@ -32565,7 +32732,7 @@
                               "fill": "#475569",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Cliente confirma que el pago fue realizado en línea esta mañana.",
+                              "content": "Pago realizado",
                               "lineHeight": 1.4,
                               "fontFamily": "Inter",
                               "fontSize": 13,
@@ -35174,54 +35341,6 @@
                                   "fill": "#64748B"
                                 }
                               ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "sxX4O",
-                              "name": "Period",
-                              "fill": "#FFFFFF",
-                              "cornerRadius": "$--radius-pill",
-                              "stroke": "#E2E8F0",
-                              "strokeWidth": 1,
-                              "strokeAlignment": "inner",
-                              "gap": 8,
-                              "padding": [
-                                8,
-                                14
-                              ],
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "id": "f2RfQA",
-                                  "name": "Cal",
-                                  "width": 16,
-                                  "height": 16,
-                                  "icon": "calendar",
-                                  "library": "lucide",
-                                  "fill": "#64748B"
-                                },
-                                {
-                                  "type": "text",
-                                  "id": "BoH5X",
-                                  "name": "PeriodT",
-                                  "fill": "#0F172A",
-                                  "content": "Últimos 30 días",
-                                  "fontFamily": "Inter",
-                                  "fontSize": 13,
-                                  "fontWeight": "500"
-                                },
-                                {
-                                  "type": "icon",
-                                  "id": "JOw3b",
-                                  "name": "Chev",
-                                  "width": 16,
-                                  "height": 16,
-                                  "icon": "chevron-down",
-                                  "library": "lucide",
-                                  "fill": "#64748B"
-                                }
-                              ]
                             }
                           ]
                         }
@@ -35238,17 +35357,17 @@
                           "id": "j5oTCL",
                           "type": "ref",
                           "ref": "maMKO",
-                          "name": "Recuperado (est.)",
+                          "name": "Recuperado",
                           "width": "fill_container",
                           "descendants": {
                             "7Qc5Y": {
-                              "content": "Recuperado (est.)"
+                              "content": "Recuperado"
                             },
                             "G00Ls": {
                               "content": "$287,430"
                             },
                             "0UFOW": {
-                              "content": "+12% vs. mes anterior"
+                              "content": "acumulado"
                             }
                           }
                         },
@@ -35256,35 +35375,35 @@
                           "id": "VWVoP",
                           "type": "ref",
                           "ref": "maMKO",
-                          "name": "Objetivos alcanzados",
+                          "name": "Promesas cumplidas",
                           "width": "fill_container",
                           "descendants": {
                             "7Qc5Y": {
-                              "content": "Objetivos alcanzados"
+                              "content": "Promesas cumplidas"
                             },
                             "G00Ls": {
                               "content": "312"
                             },
                             "0UFOW": {
-                              "content": "registrados hoy"
+                              "content": "cumplidas"
                             }
                           }
                         },
                         {
-                          "id": "M3d9Y",
+                          "id": "vS8MH",
                           "type": "ref",
-                          "ref": "maMKO",
+                          "ref": "heFsV",
                           "name": "Tasa de contacto",
                           "width": "fill_container",
                           "descendants": {
-                            "7Qc5Y": {
+                            "LoBmn": {
                               "content": "Tasa de contacto"
                             },
-                            "G00Ls": {
-                              "content": "68%"
+                            "q5kPPp": {
+                              "content": "92%"
                             },
-                            "0UFOW": {
-                              "content": "+4 pts vs. semana"
+                            "PURpY": {
+                              "content": "230 de 250 cuentas · 410 envíos"
                             }
                           }
                         },
@@ -74634,7 +74753,7 @@
                         {
                           "type": "frame",
                           "id": "hI5LG",
-                          "name": "Estado de entrega",
+                          "name": "Entrega",
                           "width": "fill_container",
                           "layout": "vertical",
                           "gap": 2,
@@ -74644,7 +74763,7 @@
                               "id": "sd4au",
                               "name": "l",
                               "fill": "#94A3B8",
-                              "content": "Estado de entrega",
+                              "content": "Entrega",
                               "fontFamily": "Inter",
                               "fontSize": 12,
                               "fontWeight": "normal"
@@ -74656,7 +74775,39 @@
                               "fill": "#334155",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Enviado → Entregado → Leído → Respondido",
+                              "content": "Entregado",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "AfemY",
+                          "name": "Camino",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "refP6",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Camino",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "O9kt0",
+                              "name": "v",
+                              "fill": "#334155",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Despachado → Leído → Respondió",
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "500"
