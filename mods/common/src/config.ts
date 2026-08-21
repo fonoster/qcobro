@@ -181,15 +181,14 @@ export type TwilioConfig = z.infer<typeof twilioConfigSchema>;
 
 /**
  * Resend connection for the bidirectional EMAIL channel. Optional — when absent, EMAIL
- * dispatch is inert (the engine reports EMAIL campaigns as not-configured) and both webhooks
- * reject everything. Outbound uses `apiKey` + `fromEmail`/`fromName`; inbound replies arrive
+ * dispatch is inert (the engine reports EMAIL campaigns as not-configured) and the webhook
+ * rejects everything. Outbound uses `apiKey` + `fromEmail`/`fromName`; inbound replies arrive
  * at `reply+<token>@<inboundDomain>`. The per-attempt reply cap defaults to `maxRepliesDefault`.
  *
- * There are two webhook endpoints, and Resend issues a separate signing secret per endpoint,
- * so the two secrets are independent and neither substitutes for the other:
- *
- *   `/api/email/inbound`  customer replies        `inboundSigningSecret`
- *   `/api/email/events`   outbound delivery/open  `eventsSigningSecret`
+ * One webhook endpoint carries both directions — customer replies (`email.received`) and our
+ * own sends' delivery/open/bounce events — so there is a single `inboundSigningSecret`. Resend
+ * issues a signing secret per endpoint, so a second endpoint would have meant a second secret
+ * here for no behavioural gain.
  */
 export const resendConfigSchema = z
   .object({
@@ -198,10 +197,11 @@ export const resendConfigSchema = z
     fromName: z.string().min(1).optional(),
     /** Domain the per-attempt reply-to token addresses are minted on (inbound). */
     inboundDomain: z.string().min(1),
-    /** Shared secret used to verify inbound (customer reply) webhook signatures. */
+    /**
+     * Shared secret used to verify webhook signatures, for both customer replies and delivery
+     * events. Optional in the schema, but the endpoint rejects every request without it.
+     */
     inboundSigningSecret: z.string().min(1).optional(),
-    /** Shared secret used to verify outbound email-event webhook signatures. */
-    eventsSigningSecret: z.string().min(1).optional(),
     /**
      * Campaigns-engine pacing: the maximum number of emails the engine will send per
      * minute, deployment-wide. Reserve `0` to pause email dispatch.

@@ -73,24 +73,37 @@ betting webhook correlation on an uncertain payload field is how signals get sil
 The spec's Email `channelData` inventory is corrected to `{ deliveryStatus, openedAt? }` rather
 than storing the message id twice.
 
-### 2. A separate `/api/email/events` route, not an extension of `/api/email/inbound`
+### 2. One endpoint carrying both directions, not a second route
 
-`emailInbound.ts` already explicitly discards these events:
+`emailInbound.ts` already had the exact branch point, spending it on a discard:
 
 ```ts
 // Ignore non-reply events (e.g. delivery notifications for outbound emails).
 ```
 
-Extending it would leave a route named `inbound` handling outbound delivery, and the two paths
-have genuinely different shapes — inbound hydrates the body from the Received Emails API and
-runs the autopilot; outbound is a small pure status mapping. A separate route matches
-`/api/sms/events` and `/api/voice/events`, and Resend supports multiple endpoints with
-independent event subscriptions and independent signing secrets — hence
-`resend.eventsSigningSecret` alongside `inboundSigningSecret`. The `not_a_reply` guard on the
-inbound route stays as a safety net for a misconfigured dashboard.
+That early return becomes the delivery path, routed on the event name rather than the
+recipient so the existing reply detection is untouched and an absent `type` still falls through
+to it. The file is renamed `emailWebhook.ts`, matching `whatsAppWebhook.ts`, which already
+serves this same dual role for its provider.
 
-The Svix verification helper moves out of `emailInbound.ts` into `rest/svixSignature.ts`, used
-unchanged by both.
+_Alternative considered, and initially built:_ a separate `/api/email/events` route with its own
+`resend.eventsSigningSecret`, matching the `/api/sms/events` and `/api/voice/events` naming.
+Rejected on operational cost. Resend issues a signing secret per endpoint, so the split bought a
+second dashboard registration, a second config key, and a deploy step for every environment — in
+exchange for naming symmetry with two channels whose providers _force_ separate callbacks
+(Twilio registers a status callback per message; this is one webhook either way). Consolidating
+makes enabling this capability a matter of ticking more event checkboxes on a webhook that
+already exists, with no configuration change at all.
+
+The URL keeps saying `inbound` because that names the direction of the _webhook_ — everything
+Resend sends us is inbound — and because it is the URL already registered in production.
+
+The Svix verification helper moves out into `rest/svixSignature.ts`.
+
+**Fail closed.** The endpoint previously skipped verification entirely when
+`inboundSigningSecret` was unset. That was already wrong — the reply path writes `entrega`,
+`camino` and an autopilot `resultado` — and the delivery path widens it, so the missing secret
+now rejects with 401 and logs once at startup instead of trusting every caller.
 
 ### 3. `entrega` only ever advances — enforced in the function, not the caller
 

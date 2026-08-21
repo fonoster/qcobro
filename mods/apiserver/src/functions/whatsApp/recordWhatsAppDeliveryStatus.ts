@@ -76,9 +76,18 @@ const META_ERROR_CODE_REASON: Readonly<Record<number, DeliveryReason>> = {
 /** Meta's code for "the user opted out" — the one status that is also a suppression signal. */
 export const META_OPT_OUT_ERROR_CODE = 131050;
 
-function deliveryReasonForFailure(errorCode: number | undefined): DeliveryReason {
-  if (errorCode === undefined) return "PROVIDER_ERROR";
-  return META_ERROR_CODE_REASON[errorCode] ?? "PROVIDER_ERROR";
+/**
+ * The first code Meta sends that this codebase actually maps, falling back to `PROVIDER_ERROR`.
+ * Scanning rather than taking `codes[0]` matters because a multi-error status can lead with a
+ * generic code and carry the specific one behind it — taking the first would bucket a known,
+ * permanently-undeliverable destination as a vague provider error.
+ */
+function deliveryReasonForFailure(codes: readonly number[]): DeliveryReason {
+  for (const code of codes) {
+    const reason = META_ERROR_CODE_REASON[code];
+    if (reason) return reason;
+  }
+  return "PROVIDER_ERROR";
 }
 
 /**
@@ -95,12 +104,15 @@ function deliveryReasonForFailure(errorCode: number | undefined): DeliveryReason
  * signal, but read-but-unengaged stays unmodelled on both channels so the two render the same
  * `Camino` progression and neither enters a metric.
  *
- * Error code 131050 (the recipient opted out) additionally sets `resultado: OPT_OUT`. That is
- * a findable marker in the console, **not** enforced suppression: the account-level `OPT_OUT`
- * flag no longer exists, and the workspace Do Not Contact list that replaces it is not built
- * yet (#101). Under the three-axis model an opt-out is also a delivery failure, so it writes
- * both axes — the axes are independent by design, and recording only the `resultado` would
- * leave platform blocks invisible to the contactability KPI.
+ * A `failed` status carrying error code 131050 (the recipient opted out) always records
+ * `channelData.optOutAt`, and additionally sets `resultado: OPT_OUT` when the gestión has no
+ * resultado yet. `resultado` is single-valued, so a complaint arriving after the customer
+ * already produced a payment promise must not erase it — `optOutAt` is what keeps the block
+ * findable in that case. Neither is enforced suppression: the account-level `OPT_OUT` flag no
+ * longer exists, and the workspace Do Not Contact list that replaces it is not built yet
+ * (#101). Under the three-axis model an opt-out is also a delivery failure, so it writes the
+ * delivery axis too — the axes are independent by design, and recording only the `resultado`
+ * would leave platform blocks invisible to the contactability KPI.
  *
  * Idempotent per message id: `entrega` only ever advances. Once it has left the dispatch-time
  * `DISPATCHED` — by a prior status, or by a customer reply, which races these freely — a
@@ -130,9 +142,11 @@ export function createRecordWhatsAppDeliveryStatus(client: WhatsAppDeliveryStatu
     const alreadyOpened = typeof existing.openedAt === "string" ? existing.openedAt : null;
     if (input.status === "read" && !alreadyOpened) channelData.openedAt = input.at;
 
+    const codes = input.errorCodes ?? [];
+    const failed = FAILED_STATUSES.has(input.status);
     const terminal: Entrega | null = DELIVERED_STATUSES.has(input.status)
       ? "DELIVERED"
-      : FAILED_STATUSES.has(input.status)
+      : failed
         ? "FAILED"
         : null;
 
@@ -140,13 +154,19 @@ export function createRecordWhatsAppDeliveryStatus(client: WhatsAppDeliveryStatu
     const shouldFinalize = terminal !== null && match.entrega === "DISPATCHED";
     const entrega: Entrega | undefined = shouldFinalize ? terminal : undefined;
     const deliveryReason: DeliveryReason | undefined =
-      shouldFinalize && terminal === "FAILED"
-        ? deliveryReasonForFailure(input.errorCode)
-        : undefined;
+      shouldFinalize && terminal === "FAILED" ? deliveryReasonForFailure(codes) : undefined;
 
-    // The opt-out marker is independent of the delivery axis: it is recorded even when a
-    // prior status already finalized entrega, since the block is the signal that matters.
-    const optOut = input.errorCode === META_OPT_OUT_ERROR_CODE;
+    // An opt-out is a *failed* status carrying 131050 anywhere in its error list. Both halves
+    // matter: `.includes` rather than the first code, because Meta can lead with a generic
+    // error; and the `failed` check, because 131050 riding on a non-failed status would
+    // otherwise write a suppression marker for a message that was actually delivered.
+    const optOut = failed && codes.includes(META_OPT_OUT_ERROR_CODE);
+    // Recorded on every opt-out, even when `resultado` is left alone below — this is the
+    // durable trace of the block, and the axis write is best-effort on top of it.
+    if (optOut && typeof existing.optOutAt !== "string") channelData.optOutAt = input.at;
+    // `resultado` is single-valued, so an opt-out does not overwrite a richer outcome the
+    // conversation already produced (a payment promise, a dispute). `channelData.optOutAt`
+    // above is what guarantees the signal survives that case.
     const resultado: Resultado | undefined = optOut && !match.resultado ? "OPT_OUT" : undefined;
 
     await client.accountContactLog.update({

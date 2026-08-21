@@ -108,9 +108,10 @@ function deliveryReasonForFailure(input: EmailEventCallbackInput): DeliveryReaso
  * so the timestamp records when the message was first read rather than when a proxy last
  * re-fetched it.
  *
- * `email.complained` additionally sets `resultado: OPT_OUT`, mirroring what the WhatsApp
- * 131050 path already does — a findable marker in the console, not enforced suppression, which
- * belongs to the workspace Do Not Contact list (#101).
+ * `email.complained` always records `channelData.optOutAt` and additionally sets
+ * `resultado: OPT_OUT` when the gestión has no resultado yet, mirroring the WhatsApp 131050
+ * path. Both are findable markers in the console, not enforced suppression, which belongs to
+ * the workspace Do Not Contact list (#101).
  *
  * Idempotent per message id: `entrega` only ever advances. Once it has left the dispatch-time
  * `DISPATCHED` — by a prior event, or by a customer reply, which races these events freely —
@@ -150,10 +151,16 @@ export function createRecordEmailDeliveryStatus(client: EmailDeliveryStatusClien
     const deliveryReason: DeliveryReason | undefined =
       shouldFinalize && terminal === "FAILED" ? deliveryReasonForFailure(input) : undefined;
 
-    // The opt-out marker is independent of the delivery axis: it is recorded even when a
-    // prior event already finalized entrega, since the complaint is the signal that matters.
-    const resultado: Resultado | undefined =
-      input.type === "email.complained" && !match.resultado ? "OPT_OUT" : undefined;
+    const complained = input.type === "email.complained";
+    // Recorded on every complaint, even when `resultado` is left alone below — this is the
+    // durable trace of it, and the axis write is best-effort on top of it.
+    if (complained && typeof existing.optOutAt !== "string") channelData.optOutAt = input.at;
+    // `resultado` is single-valued, so a complaint does not overwrite a richer outcome the
+    // conversation already produced. The realistic ordering makes this matter: the customer
+    // replies (the autopilot writes PAYMENT_PROMISE or DISPUTE_RAISED), then marks the thread
+    // as spam days later. `channelData.optOutAt` above is what guarantees the complaint
+    // survives that case rather than vanishing.
+    const resultado: Resultado | undefined = complained && !match.resultado ? "OPT_OUT" : undefined;
 
     await client.accountContactLog.update({
       where: { id: match.id },

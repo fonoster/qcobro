@@ -72,9 +72,10 @@ Each `AccountContactLog` entry SHALL capture:
     where `scriptDurationSeconds?` is the nominal length of the synthesized pre-recorded clip,
     stored so a future report can compare it against the answered `durationSeconds`
   - SMS: `{ messageSid, deliveryStatus }`
-  - Email: `{ deliveryStatus, openedAt? }` — the provider message id is **not** here; it is an
-    indexed correlation key and lives in `providerMessageId` (see System fields)
-  - WhatsApp: `{ messageSid, deliveryStatus }`
+  - Email: `{ deliveryStatus, openedAt?, optOutAt? }` — the provider message id is **not** here;
+    it is an indexed correlation key and lives in `providerMessageId` (see System fields)
+  - WhatsApp: `{ messageSid, deliveryStatus, openedAt?, optOutAt? }` — `openedAt` from a `read`
+    receipt, `optOutAt` from a platform block; both threaded channels carry them
 
   `channelData.deliveryStatus` remains the raw provider status string, kept for operator
   visibility and debugging. It SHALL NOT be the source of truth for any metric or query —

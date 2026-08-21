@@ -1,24 +1,51 @@
 ## ADDED Requirements
 
-### Requirement: Outbound email events endpoint is authenticated
+### Requirement: One authenticated Resend webhook carries both directions
 
-The system SHALL expose `POST /api/email/events` for Resend's outbound email event webhook,
-separate from the inbound-reply endpoint. When `resend.eventsSigningSecret` is configured, the
-endpoint SHALL verify the Svix HMAC-SHA256 signature over
-`{svix-id}.{svix-timestamp}.{rawBody}` using a timing-safe comparison, and SHALL reject
-unverified requests with 401 without mutating any data. The endpoint SHALL be inert (503) when
-the `resend` block is absent.
+The system SHALL ingest Resend's outbound email events on the **same** endpoint that receives
+inbound customer replies, `POST /api/email/inbound`. It SHALL route on the event name:
+`email.received` SHALL take the inbound-reply path, and every other event SHALL take the
+delivery path. A payload carrying no event name SHALL fall through to the inbound-reply path,
+whose own recipient check declines it.
+
+There SHALL NOT be a second endpoint for outbound events. Resend issues a signing secret per
+endpoint, so a second endpoint would require a second secret, a second configuration key, and a
+second dashboard registration for a branch this small; one endpoint keeps the deployment
+surface unchanged when this capability is added.
+
+The endpoint SHALL verify the Svix HMAC-SHA256 signature over
+`{svix-id}.{svix-timestamp}.{rawBody}` against `resend.inboundSigningSecret` using a timing-safe
+comparison, and SHALL reject unverified requests with 401 without mutating any data. It SHALL be
+inert (503) when the `resend` block is absent.
+
+The endpoint SHALL fail closed: when no signing secret is configured it SHALL reject every
+request with 401 rather than accept unsigned ones, and SHALL log the missing configuration once
+at startup. Both of its paths mutate gestiones — the reply path writes `entrega`, `camino` and
+an autopilot `resultado`; the delivery path writes `entrega` and `deliveryReason` for any
+provider message id the caller supplies — so an unset secret SHALL NOT be read as permission to
+trust unauthenticated callers.
 
 #### Scenario: Unsigned request is rejected
 
-- **WHEN** `eventsSigningSecret` is configured and a request arrives with a missing or invalid
+- **WHEN** a signing secret is configured and a request arrives with a missing or invalid
   `svix-signature`
+- **THEN** the endpoint responds 401 and no gestión is modified
+
+#### Scenario: Missing signing secret rejects rather than trusts
+
+- **WHEN** `resend` is configured but `inboundSigningSecret` is absent and any event is posted
 - **THEN** the endpoint responds 401 and no gestión is modified
 
 #### Scenario: Endpoint is inert without Resend configuration
 
 - **WHEN** the `resend` block is absent and an event is posted
 - **THEN** the endpoint responds 503 and no gestión is modified
+
+#### Scenario: An inbound event is not treated as one of our own sends
+
+- **WHEN** a verified `email.received` event is posted
+- **THEN** it is routed to the inbound-reply path
+- **AND** it is not correlated against any gestión's `providerMessageId`
 
 ### Requirement: Email delivery events advance the gestión's entrega
 
@@ -93,16 +120,32 @@ display-only and SHALL feed no metric.
 
 ### Requirement: A spam complaint records an opt-out marker
 
-The system SHALL set `resultado` to `OPT_OUT` on an `email.complained` event, alongside the
-`entrega` of `DELIVERED` the complaint proves. This records the signal where an operator can
-find it; it SHALL NOT be treated as enforced suppression, which belongs to the workspace Do Not
+The system SHALL record `channelData.optOutAt` on every `email.complained` event, alongside the
+`entrega` of `DELIVERED` the complaint proves. It SHALL additionally set `resultado` to
+`OPT_OUT` when the gestión has no `resultado` yet.
+
+`resultado` is single-valued, so a complaint SHALL NOT overwrite a richer outcome the
+conversation already produced. This ordering is the common one, not an edge case: the customer
+replies — the autopilot records a payment promise or a dispute — and marks the thread as spam
+afterwards. `channelData.optOutAt` is what guarantees the complaint survives that case, and is
+therefore the field a Do Not Contact seed SHALL be built from rather than `resultado`.
+
+Neither marker SHALL be treated as enforced suppression, which belongs to the workspace Do Not
 Contact list.
 
 #### Scenario: Complaint marks the gestión
 
-- **WHEN** a verified `email.complained` event correlates to a gestión
+- **WHEN** a verified `email.complained` event correlates to a gestión with no `resultado`
 - **THEN** that gestión's `resultado` is set to `OPT_OUT`
+- **AND** `channelData.optOutAt` is set to the event timestamp
 - **AND** its `entrega` is `DELIVERED`
+
+#### Scenario: Complaint after a payment promise preserves the promise
+
+- **WHEN** a verified `email.complained` event correlates to a gestión whose `resultado` is
+  already `PAYMENT_PROMISE`
+- **THEN** the `resultado` remains `PAYMENT_PROMISE`
+- **AND** `channelData.optOutAt` is still set, so the complaint is not lost
 
 ### Requirement: Entrega only ever advances and correlation failures are acknowledged
 

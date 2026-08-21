@@ -98,11 +98,26 @@ function isOptOut(status: StatusRecord): boolean {
 }
 
 /**
- * The first numeric error code on a status. Meta sends an array, but a single status carries
- * one failure reason in practice; the first code is the one the reason mapping branches on.
+ * Every numeric error code on a status, order preserved. All of them, not just the first: a
+ * multi-error `failed` status can lead with a generic code and carry the meaningful one (such
+ * as 131050, the opt-out) behind it.
  */
-function metaErrorCode(status: StatusRecord): number | undefined {
-  return (status.errors ?? []).find((e) => e.code !== undefined)?.code;
+function metaErrorCodes(status: StatusRecord): number[] {
+  return (status.errors ?? [])
+    .map((e) => e.code)
+    .filter((code): code is number => typeof code === "number");
+}
+
+/**
+ * Meta sends a Unix-seconds string. Guarded because a non-numeric value makes `new Date(NaN)`
+ * throw a RangeError on `.toISOString()` — a malformed timestamp on one receipt must not cost
+ * us the rest of the payload.
+ */
+function statusTimestamp(timestamp: string | undefined): string {
+  const seconds = Number(timestamp);
+  if (!timestamp || !Number.isFinite(seconds)) return new Date().toISOString();
+  const date = new Date(seconds * 1000);
+  return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
 }
 
 /**
@@ -253,45 +268,51 @@ async function processEvents(
         // used to be discarded except the opt-out, which is why a delivered-but-unanswered
         // WhatsApp message sat at `entrega: DISPATCHED` forever (#103).
         for (const status of value.statuses ?? []) {
-          const at = status.timestamp
-            ? new Date(Number(status.timestamp) * 1000).toISOString()
-            : new Date().toISOString();
-          // A status with no id or no value is unusable. Skipped rather than passed to the
-          // recorder, whose Zod schema would reject it — and a throw here would abandon the
-          // remaining statuses in this change alongside it.
-          if (!status.id || !status.status) {
-            logger.warn(`status: malformed entry (id=${status.id} status=${status.status})`);
-            continue;
-          }
-          const result = await recordStatus({
-            providerRef: status.id,
-            status: status.status,
-            at,
-            errorCode: metaErrorCode(status)
-          });
-          recordEvent?.({
-            providerRef: status.id,
-            providerAt: status.timestamp ? at : undefined,
-            matched: result.matched,
-            summary: {
-              status: status.status,
-              optOut: result.matched ? result.optOut : isOptOut(status)
+          // Isolated per status. The enclosing try/catch is per *change*, and the 200 has
+          // already been sent, so an unhandled throw here would drop every later status AND
+          // every inbound message in this same payload with no redelivery from Meta — a
+          // customer's reply silently lost to a transient DB blip on an unrelated receipt.
+          // Cheap insurance now that every status touches the database, not just opt-outs.
+          try {
+            // A status with no id or no value is unusable, and the recorder's schema would
+            // reject it.
+            if (!status.id || !status.status) {
+              logger.warn(`status: malformed entry (id=${status.id} status=${status.status})`);
+              continue;
             }
-          });
-          if (!result.matched) {
-            logger.warn(`status: no gestión for providerRef=${status.id} — skipping`);
-            continue;
-          }
-          logger.verbose(
-            `status=${status.status} account=${result.portfolioAccountId} ` +
-              `providerRef=${status.id} entrega=${result.entrega}`
-          );
-          if (result.optOut) {
-            // The account-level OPT_OUT flag no longer exists: suppression moved to the
-            // workspace Do Not Contact list, which is not built yet (issue #101). The
-            // `resultado: OPT_OUT` the recorder wrote keeps the signal findable in the
-            // console until that lands, but nothing enforces it yet.
-            logger.verbose(`opt-out: account=${result.portfolioAccountId} — NOT enforced (#101)`);
+            const at = statusTimestamp(status.timestamp);
+            const result = await recordStatus({
+              providerRef: status.id,
+              status: status.status,
+              at,
+              errorCodes: metaErrorCodes(status)
+            });
+            recordEvent?.({
+              providerRef: status.id,
+              providerAt: at,
+              matched: result.matched,
+              summary: {
+                status: status.status,
+                optOut: result.matched ? result.optOut : isOptOut(status)
+              }
+            });
+            if (!result.matched) {
+              logger.warn(`status: no gestión for providerRef=${status.id} — skipping`);
+              continue;
+            }
+            logger.verbose(
+              `status=${status.status} account=${result.portfolioAccountId} ` +
+                `providerRef=${status.id} entrega=${result.entrega}`
+            );
+            if (result.optOut) {
+              // The account-level OPT_OUT flag no longer exists: suppression moved to the
+              // workspace Do Not Contact list, which is not built yet (issue #101). The
+              // recorder's `channelData.optOutAt` (and `resultado: OPT_OUT`, when the gestión
+              // had no richer outcome) keeps the signal findable until that lands.
+              logger.verbose(`opt-out: account=${result.portfolioAccountId} — NOT enforced (#101)`);
+            }
+          } catch (err) {
+            logger.error(`status ingestion failed providerRef=${status.id}:`, err);
           }
         }
 

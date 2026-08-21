@@ -15,9 +15,10 @@ them. The console is likewise pre-built and starved: `caminoPath()` renders a `L
 
 ## What Changes
 
-- **New `POST /api/email/events` endpoint** ingesting Resend outbound email events, verified
-  with Svix HMAC-SHA256 against a new `resend.eventsSigningSecret`. Mirrors the existing
-  `/api/sms/events` and `/api/voice/events` naming and response contract.
+- **The existing `POST /api/email/inbound` webhook now ingests Resend's outbound events too**,
+  routed on the event name: `email.received` keeps the reply path, everything else takes the
+  new delivery path. One endpoint, one signing secret, **no new configuration key** — enabling
+  this on a deployment means ticking more event boxes on the Resend webhook it already has.
   - `email.delivered` → `entrega: DELIVERED`
   - `email.bounced` → `entrega: FAILED` with `deliveryReason` derived from Resend's
     `bounce.type`/`bounce.subType`
@@ -55,7 +56,7 @@ No behavior changes for `SMS`, `VOICE_AI`, or `VOICE_PRERECORDED`.
   ingesting the full `statuses` array — delivery, read receipts, and failure reasons — with the
   existing 131050 opt-out behavior preserved.
 - `email-channel`: outbound dispatch SHALL persist the Resend message id on the gestión, and
-  the Resend configuration gains `eventsSigningSecret` for the new endpoint.
+  the Resend configuration keeps a single webhook signing secret rather than gaining a second.
 
 `account-contact-log` is deliberately **not** in this list. The `channelData` inventory it
 carries for Email is being rewritten by the in-flight `contact-log-axes` change, which is
@@ -67,9 +68,10 @@ conflict. This change updates that delta's inventory line directly instead (see 
 **Schema** — `AccountContactLog.providerMessageId String? @unique` (nullable; existing rows keep
 `null`). Additive, no backfill, no downtime.
 
-**Config** — `resend.eventsSigningSecret` (optional). A deployment that omits it accepts
-unverified event posts, same posture as `inboundSigningSecret` today; the deploy checklist calls
-out configuring it.
+**Config** — none. Delivery events ride the existing endpoint and its existing
+`inboundSigningSecret`. **BREAKING (hardening):** that secret now _must_ be set — the webhook
+previously skipped signature verification when it was absent, which left an endpoint that
+mutates gestiones open to anyone. It now rejects with 401 and logs the reason at startup.
 
 **Code**
 
@@ -78,15 +80,16 @@ out configuring it.
 - `mods/apiserver/prisma/schema.prisma` + migration
 - `mods/apiserver/src/functions/email/recordEmailDeliveryStatus.ts` (new, validated function)
 - `mods/apiserver/src/functions/whatsApp/recordWhatsAppDeliveryStatus.ts` (new, validated function)
-- `mods/apiserver/src/rest/emailEvents.ts` (new) + `svixSignature.ts` (extracted from
-  `emailInbound.ts`, which keeps using it)
+- `mods/apiserver/src/rest/emailWebhook.ts` (renamed from `emailInbound.ts`, now serving both
+  directions) + `svixSignature.ts` (extracted from it)
 - `mods/apiserver/src/rest/whatsAppWebhook.ts` — statuses loop delegates to the new function
 - `mods/apiserver/src/functions/outreach/dispatchOutreach.ts` — capture and return the Resend id
 - `mods/apiserver/src/engine/engine.ts` — pass it through to `recordDispatch`
 - `mods/apiserver/src/index.ts` — register the route
 
-**External setup** — a second Resend webhook endpoint pointed at `/api/email/events` subscribed
-to the outbound `email.*` events, and (for opens) Resend's open tracking enabled on the domain.
+**External setup** — subscribe the **existing** Resend webhook to the outbound `email.*` events
+in addition to `email.received`, and (for opens) enable Resend's open tracking on the domain.
+No new endpoint and no new secret.
 
 **Not affected** — billing. Message meters bill `perMessage` at send time; every signal in this
 change is reporting-only and never re-bills.

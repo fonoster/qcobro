@@ -192,6 +192,7 @@ describe("recordEmailDeliveryStatus — complaints", () => {
 
     assert.equal(row!.entrega, "DELIVERED");
     assert.equal(row!.resultado, "OPT_OUT");
+    assert.equal(row!.channelData?.optOutAt, AT);
   });
 
   it("does not overwrite a resultado the conversation already produced", async () => {
@@ -201,6 +202,9 @@ describe("recordEmailDeliveryStatus — complaints", () => {
     await record(event("email.complained"));
 
     assert.equal(row!.resultado, "PAYMENT_PROMISE");
+    // The realistic ordering — reply first, complain later — must not silently discard the
+    // complaint just because the richer outcome is preserved.
+    assert.equal(row!.channelData?.optOutAt, AT);
   });
 });
 

@@ -52,8 +52,8 @@ function makeClient(row: Row | null) {
 
 const AT = "2026-08-20T12:00:00.000Z";
 
-function status(value: string, errorCode?: number) {
-  return { providerRef: "wamid-1", status: value, at: AT, errorCode };
+function status(value: string, ...errorCodes: number[]) {
+  return { providerRef: "wamid-1", status: value, at: AT, errorCodes };
 }
 
 describe("recordWhatsAppDeliveryStatus — delivery axis", () => {
@@ -167,6 +167,34 @@ describe("recordWhatsAppDeliveryStatus — opt-out", () => {
     await record(status("failed", 131050));
 
     assert.equal(row!.resultado, "PAYMENT_PROMISE");
+    // ...but the block is still recorded, so it is not lost to the preserved resultado.
+    assert.equal(row!.channelData?.optOutAt, AT);
+  });
+
+  it("detects 131050 behind a leading generic error code", async () => {
+    const { client, row } = makeClient(dispatched());
+    const record = createRecordWhatsAppDeliveryStatus(client);
+
+    const result = await record(status("failed", 131000, 131050));
+
+    assert.equal(result.matched && result.optOut, true);
+    // Reading only the first code would have bucketed this as a vague PROVIDER_ERROR and
+    // missed the opt-out entirely.
+    assert.equal(row!.deliveryReason, "REJECTED");
+    assert.equal(row!.resultado, "OPT_OUT");
+  });
+
+  it("ignores 131050 riding on a status that did not fail", async () => {
+    const { client, row } = makeClient(dispatched());
+    const record = createRecordWhatsAppDeliveryStatus(client);
+
+    const result = await record(status("delivered", 131050));
+
+    // The message reached the recipient, so this is not a suppression signal.
+    assert.equal(result.matched && result.optOut, false);
+    assert.equal(row!.resultado, null);
+    assert.equal(row!.channelData?.optOutAt, undefined);
+    assert.equal(row!.entrega, "DELIVERED");
   });
 });
 

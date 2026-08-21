@@ -105,12 +105,16 @@ export type WhatsAppWebhookBody = z.infer<typeof whatsAppWebhookSchema>;
  * `status` is the raw Meta value (`sent`/`delivered`/`read`/`failed`), kept as an open
  * string rather than a closed enum for the same reason as the SMS and email callbacks: an
  * unrecognized value should update visibility (`channelData.deliveryStatus`) rather than
- * fail validation. `errorCode` is Meta's numeric code, present only on `failed`.
+ * fail validation.
+ *
+ * `errorCodes` is the full list Meta sends, not just the first: a single `failed` status can
+ * carry several, and the one that matters (131050, the opt-out) is not always first. Present
+ * only on `failed`.
  */
 export const whatsAppStatusCallbackSchema = z.object({
   providerRef: z.string().min(1),
   status: z.string().min(1),
   at: z.string().min(1),
-  errorCode: z.number().int().optional()
+  errorCodes: z.array(z.number().int()).optional()
 });
 export type WhatsAppStatusCallbackInput = z.infer<typeof whatsAppStatusCallbackSchema>;

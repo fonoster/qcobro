@@ -6,7 +6,7 @@ import { createEngine } from "./engine.js";
 import { createPrismaEngineClient } from "./prismaEngineClient.js";
 import { EmulatedEmailClient } from "./emulators.js";
 import { createIngestEmailReply } from "../functions/email/ingestEmailReply.js";
-import { createPrismaEmailInboundClient } from "../rest/emailInbound.js";
+import { createPrismaEmailInboundClient } from "../rest/emailWebhook.js";
 import { createRecordOutcome } from "../functions/campaigns/recordOutcome.js";
 
 // Needs a real Postgres (the dev stack). Skipped unless DATABASE_URL is set.

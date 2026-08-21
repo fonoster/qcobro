@@ -5,6 +5,7 @@ import {
   parseLocale,
   ValidationError,
   type AiConfig,
+  type EmailEventCallbackInput,
   type PortfolioAccountRecord,
   type ResendConfig
 } from "@qcobro/common";
@@ -17,6 +18,10 @@ import {
   type EmailInboundClient
 } from "../functions/email/ingestEmailReply.js";
 import { createRecordOutcome } from "../functions/campaigns/recordOutcome.js";
+import {
+  createPrismaEmailDeliveryStatusClient,
+  createRecordEmailDeliveryStatus
+} from "../functions/email/recordEmailDeliveryStatus.js";
 import { createEmailAutopilot } from "../services/emailAutopilot.js";
 import { ResendEmailClient } from "../services/resendEmailClient.js";
 import { verifySvixSignature } from "./svixSignature.js";
@@ -109,6 +114,45 @@ export function stripQuotedReply(text: string): string {
   return stripped || text.trim();
 }
 
+/** Resend's event name for an inbound customer reply; everything else is about our own send. */
+const INBOUND_EVENT = "email.received";
+
+/**
+ * Map Resend's outbound event envelope onto the normalized delivery-status input, defensively —
+ * the payload is provider-shaped and versioned, so every field is probed rather than assumed.
+ *
+ * `data.email_id` is the send-time message id and the only correlation handle an outbound event
+ * carries. The timestamp prefers the event-specific one (`data.open.timestamp` on an open) over
+ * the envelope's `created_at`, so `openedAt` records the read rather than the webhook delivery.
+ */
+export function normalizeEmailEvent(body: unknown): EmailEventCallbackInput | null {
+  const root = (body ?? {}) as Record<string, unknown>;
+  const data = (root.data ?? {}) as Record<string, unknown>;
+
+  const type = typeof root.type === "string" ? root.type : undefined;
+  const rawId = data.email_id ?? data.emailId ?? data.id ?? root.email_id;
+  const providerMessageId = typeof rawId === "string" ? rawId : undefined;
+  if (!type || !providerMessageId) return null;
+
+  const open = (data.open ?? {}) as Record<string, unknown>;
+  const at =
+    (typeof open.timestamp === "string" ? open.timestamp : undefined) ??
+    (typeof root.created_at === "string" ? root.created_at : undefined) ??
+    (typeof data.created_at === "string" ? data.created_at : undefined) ??
+    new Date().toISOString();
+
+  const bounce = (data.bounce ?? {}) as Record<string, unknown>;
+  return {
+    providerMessageId,
+    type,
+    at,
+    bounceType: typeof bounce.type === "string" ? bounce.type : undefined,
+    bounceSubType:
+      (typeof bounce.subType === "string" ? bounce.subType : undefined) ??
+      (typeof bounce.sub_type === "string" ? bounce.sub_type : undefined)
+  };
+}
+
 /** Pull the received-email id out of the webhook payload (Resend `email.received`). */
 function extractReceivedEmailId(body: unknown): string | null {
   const root = (body ?? {}) as Record<string, unknown>;
@@ -169,32 +213,97 @@ function normalize(body: unknown): {
   };
 }
 
-export interface EmailInboundDeps {
+/**
+ * Ingest one Resend outbound event: correlate by message id, advance the delivery axis, and
+ * record the flight-recorder entry. Always answers 200 once here — a redelivery of an event
+ * that matched nothing cannot resolve differently, so acknowledging it stops Resend retrying
+ * (same contract as `/api/sms/events`).
+ */
+async function handleDeliveryEvent(
+  body: unknown,
+  record: ReturnType<typeof createRecordEmailDeliveryStatus>,
+  recordEvent: ProviderEventRecorder | null | undefined,
+  res: Response
+): Promise<void> {
+  const event = normalizeEmailEvent(body);
+  if (!event) {
+    // Acknowledged, not rejected: an unparseable payload is a Resend-shape change or an event
+    // kind with no email id, and neither resolves differently on redelivery.
+    logger.warn("event carried no type or email_id — ignoring");
+    res.status(200).json({ ignored: true, reason: "unrecognized_payload" });
+    return;
+  }
+
+  logger.verbose(`event type=${event.type} emailId=${event.providerMessageId}`);
+  const result = await record(event);
+  res.status(200).json({ result: "success" });
+
+  if (!result.matched) {
+    logger.warn(`no gestión matched emailId=${event.providerMessageId} — event dropped`);
+  }
+
+  recordEvent?.({
+    // Attribution runs through the matched gestión's providerRef; the Resend message id is
+    // not a key the recorder can resolve a workspace from.
+    providerRef: result.matched ? (result.providerRef ?? undefined) : undefined,
+    providerAt: event.at,
+    matched: result.matched,
+    summary: { status: event.type }
+  });
+}
+
+export interface EmailWebhookDeps {
   resend: ResendConfig;
   ai: AiConfig;
-  /** Flight recorder; each inbound reply is recorded best-effort. */
+  /** Flight recorder; each event is recorded best-effort. */
   recordEvent?: ProviderEventRecorder | null;
 }
 
 /**
- * Builds the `POST /api/email/inbound` handler for Resend inbound replies. Verifies the
- * Svix HMAC-SHA256 signature (when `inboundSigningSecret` is configured), correlates the
- * reply to its gestión by the reply-to token, and runs the EMAIL autopilot. Inert (503)
- * when Resend is unconfigured.
+ * Builds the `POST /api/email/inbound` handler — the single Resend webhook, carrying both
+ * directions. Verifies the Svix HMAC-SHA256 signature against `inboundSigningSecret`, then
+ * routes on the event name:
+ *
+ *   `email.received`   a customer reply: correlate by reply-to token, run the EMAIL autopilot
+ *   everything else    one of our own sends: correlate by message id, move the delivery axis
+ *
+ * One endpoint rather than two because Resend issues a signing secret per endpoint, and a
+ * second endpoint would have bought a second secret, a second dashboard entry and a second
+ * config key for a branch this small. The URL keeps saying `inbound` because that is the
+ * direction of the *webhook* — the same sense in which `whatsAppWebhook` serves both inbound
+ * messages and outbound delivery statuses — and because it is the URL already registered in
+ * production. Inert (503) when Resend is unconfigured.
  */
-export function createEmailInboundHandler(prisma: PrismaClient, deps: EmailInboundDeps) {
+export function createEmailWebhookHandler(prisma: PrismaClient, deps: EmailWebhookDeps) {
   const resend = deps.resend;
+  const record = createRecordEmailDeliveryStatus(createPrismaEmailDeliveryStatusClient(prisma));
+
+  // Surfaced once at boot rather than per request, so the reason is not something an operator
+  // has to infer from a wall of 401s in the Resend dashboard.
+  if (resend && !resend.inboundSigningSecret) {
+    logger.warn(
+      "resend.inboundSigningSecret is not set — /api/email/inbound will reject every request. " +
+        "Add the signing secret from the Resend endpoint to enable reply and delivery ingestion."
+    );
+  }
 
   return async (req: Request, res: Response): Promise<void> => {
     if (!resend) {
       res.status(503).json({ error: "Email channel is not configured" });
       return;
     }
-    if (resend.inboundSigningSecret) {
-      if (!verifySvixSignature(req, resend.inboundSigningSecret)) {
-        res.status(401).json({ error: "Invalid webhook signature" });
-        return;
-      }
+    // Fails closed. This endpoint mutates gestiones on both branches — the reply path writes
+    // `entrega`, `camino` and an autopilot `resultado`; the delivery path writes `entrega` and
+    // `deliveryReason` for any message id the caller supplies — so an unset secret must mean
+    // "reject", not "trust anyone". Previously an absent secret skipped verification entirely.
+    if (!resend.inboundSigningSecret) {
+      res.status(401).json({ error: "Email webhook signing secret is not configured" });
+      return;
+    }
+    if (!verifySvixSignature(req, resend.inboundSigningSecret)) {
+      logger.warn("rejected request with invalid or missing svix-signature");
+      res.status(401).json({ error: "Invalid webhook signature" });
+      return;
     }
 
     const emailClient = new ResendEmailClient(resend);
@@ -213,10 +322,24 @@ export function createEmailInboundHandler(prisma: PrismaClient, deps: EmailInbou
     });
 
     try {
+      // Outbound delivery/open/bounce events take the short path: correlate by the Resend
+      // message id and move the delivery axis. Branching on the event name rather than the
+      // recipient keeps the reply detection below exactly as it was — an unknown or absent
+      // `type` still falls through to it.
+      const eventType =
+        typeof (req.body as { type?: unknown })?.type === "string"
+          ? (req.body as { type: string }).type
+          : undefined;
+      if (eventType && eventType !== INBOUND_EVENT) {
+        await handleDeliveryEvent(req.body, record, deps.recordEvent, res);
+        return;
+      }
+
       const normalized = normalize(req.body);
 
-      // Ignore non-reply events (e.g. delivery notifications for outbound emails).
       // A real inbound reply will have our reply+<token>@<inboundDomain> in the `to` list.
+      // Anything else reaching here has no `type` to route on and no reply-to token to
+      // correlate by, so there is nothing to do with it.
       const isReply = normalized.to.some((t) => t.includes(`@${resend.inboundDomain}`));
       if (!isReply) {
         res.status(200).json({ ignored: true, reason: "not_a_reply" });

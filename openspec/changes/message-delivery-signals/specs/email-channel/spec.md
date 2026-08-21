@@ -32,13 +32,13 @@ still record the gestión, with `providerMessageId` left null.
 ### Requirement: Resend configuration
 
 The system SHALL read a `resend` block from `qcobro.json` providing the API key, sending
-domain/from address, the inbound reply domain, the inbound webhook signing secret, the outbound
-event webhook signing secret, per-minute send pacing, and a default reply cap. EMAIL dispatch,
-inbound reply ingestion, and outbound event ingestion SHALL be inert when the block is absent
-(the engine reports EMAIL as not configured rather than erroring).
+domain/from address, the inbound reply domain, the webhook signing secret, per-minute send
+pacing, and a default reply cap. EMAIL dispatch, inbound reply ingestion, and outbound event
+ingestion SHALL be inert when the block is absent (the engine reports EMAIL as not configured
+rather than erroring).
 
-The two signing secrets SHALL be independent: Resend issues one per webhook endpoint, and the
-inbound-reply endpoint and the outbound-events endpoint are separate endpoints.
+There SHALL be a single webhook signing secret. Both directions arrive on one endpoint, so
+adding delivery-event ingestion SHALL require no new configuration key.
 
 #### Scenario: Email is inert without configuration
 
@@ -49,3 +49,9 @@ inbound-reply endpoint and the outbound-events endpoint are separate endpoints.
 
 - **WHEN** the `resend` block is absent and an outbound email event is posted
 - **THEN** the endpoint responds 503 and no gestión is modified
+
+#### Scenario: Enabling delivery signals needs no configuration change
+
+- **WHEN** a deployment already configured for inbound replies upgrades to a build that ingests
+  delivery events
+- **THEN** no new key is required in its `resend` block for those events to be accepted

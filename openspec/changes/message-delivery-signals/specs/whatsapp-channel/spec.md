@@ -13,20 +13,28 @@ its message id (`status.id`) against the gestión `providerRef`, and map it onto
 
 - `delivered` → `entrega` of `DELIVERED`
 - `read` → `channelData.openedAt`, set once on the first read receipt
-- `failed` → `entrega` of `FAILED`, with `deliveryReason` derived from Meta's error code:
+- `failed` → `entrega` of `FAILED`, with `deliveryReason` derived from Meta's error codes:
   `131026` (undeliverable) SHALL be `INVALID_DESTINATION`; `131047` (outside the re-engagement
   window), `131048` and `131049` (spam and per-user quality limits), and `131050` (user opted
-  out) SHALL be `REJECTED`; any other or absent code SHALL be `PROVIDER_ERROR`
+  out) SHALL be `REJECTED`; any other or absent code SHALL be `PROVIDER_ERROR`. A status MAY
+  carry several error codes; the system SHALL scan all of them for a mapped value rather than
+  reading only the first, because Meta can lead with a generic code
 - `sent` → `channelData.deliveryStatus` visibility only, moving no axis
 
 A `read` receipt SHALL NOT set `camino` or `resultado`, and SHALL NOT by itself advance
 `entrega`. Every status SHALL record its raw value in `channelData.deliveryStatus`, terminal or
 not.
 
-When a status indicates a customer block or opt-out (a `failed` status carrying error code
-`131050`), the system SHALL additionally set the gestión's `resultado` to `OPT_OUT`, recording
-the signal where an operator can find it. This SHALL NOT be treated as enforced suppression,
-which belongs to the workspace Do Not Contact list.
+When a status indicates a customer block or opt-out — a status that is both `failed` and
+carries error code `131050` among its error codes — the system SHALL record
+`channelData.optOutAt`, and SHALL additionally set the gestión's `resultado` to `OPT_OUT` when
+it has no `resultado` yet. Both conditions are required: `131050` on a non-`failed` status
+SHALL NOT be treated as an opt-out, since the message in fact reached the recipient.
+
+`resultado` is single-valued, so an opt-out SHALL NOT overwrite a richer outcome the
+conversation already produced; `channelData.optOutAt` is what guarantees the block survives
+that case, and is therefore the field a Do Not Contact seed SHALL be built from. Neither marker
+SHALL be treated as enforced suppression, which belongs to the workspace Do Not Contact list.
 
 Once a gestión has left `DISPATCHED`, no later status SHALL return it to `DISPATCHED` or change
 it between `DELIVERED` and `FAILED`, so that redelivered webhooks, out-of-order statuses, and a
@@ -56,6 +64,20 @@ customer reply that already advanced the gestión are all safe.
   at `DISPATCHED`
 - **THEN** that gestión's `entrega` becomes `FAILED` with `deliveryReason` of `REJECTED`
 - **AND** its `resultado` is set to `OPT_OUT`
+- **AND** `channelData.optOutAt` is set to the status timestamp
+
+#### Scenario: Opt-out behind a leading generic error code is still detected
+
+- **WHEN** a verified `failed` status carries error codes `[131000, 131050]`
+- **THEN** the gestión is treated as an opt-out
+- **AND** `deliveryReason` is `REJECTED`, not the `PROVIDER_ERROR` the first code would give
+
+#### Scenario: Opt-out does not overwrite an outcome the conversation produced
+
+- **WHEN** a verified `failed` status carrying `131050` correlates to a gestión whose
+  `resultado` is already `PAYMENT_PROMISE`
+- **THEN** the `resultado` remains `PAYMENT_PROMISE`
+- **AND** `channelData.optOutAt` is still set, so the block is not lost
 
 #### Scenario: Redelivered status does not overwrite a finalized gestión
 

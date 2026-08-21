@@ -66,18 +66,28 @@ test.describe("message delivery — entrega and the Leído stage", () => {
       expect(res.ok(), JSON.stringify(await res.json())).toBeTruthy();
     };
 
+    // The list is ordered `contactedAt: desc`, so the seeds carry explicit, spaced timestamps
+    // rather than three `new Date()` calls a few milliseconds apart. Row order is asserted
+    // below and must not depend on how fast the seeding requests happen to run.
+    const at = (hoursAgo: number) => new Date(Date.now() - hoursAgo * 60 * 60 * 1000).toISOString();
+
     // The end state of a full email round trip: Resend confirmed delivery, the open pixel
-    // fired, and the customer replied. Each stage came from a different signal.
+    // fired, and the customer replied with a commitment. Each stage came from a different
+    // signal. The resultado is what makes this row identifiable in the list — the table
+    // renders debtor, channel, entrega, resultado and date, and no subject.
     await seed({
       agentType: "EMAIL",
+      contactedAt: at(3),
       entrega: "DELIVERED",
       camino: "ENGAGED",
+      resultado: "PAYMENT_PROMISE",
+      intentMetadata: { promisedAmount: 500, promisedDate: at(-72) },
       channelData: {
         to: "maria@example.com",
         subject: "Recordatorio de pago",
         messageBody: "Estimada María, su saldo está pendiente.",
         deliveryStatus: "email.opened",
-        openedAt: new Date().toISOString()
+        openedAt: at(2.5)
       }
     });
 
@@ -85,6 +95,7 @@ test.describe("message delivery — entrega and the Leído stage", () => {
     // as delivered and must NOT claim a read.
     await seed({
       agentType: "EMAIL",
+      contactedAt: at(2),
       entrega: "DELIVERED",
       channelData: {
         to: "maria@example.com",
@@ -97,6 +108,7 @@ test.describe("message delivery — entrega and the Leído stage", () => {
     // A hard bounce: a delivery failure that says why, so the address can be acted on.
     await seed({
       agentType: "EMAIL",
+      contactedAt: at(1),
       entrega: "FAILED",
       deliveryReason: "INVALID_DESTINATION",
       channelData: { to: "typo@exmaple.com", deliveryStatus: "email.bounced" }
@@ -116,8 +128,17 @@ test.describe("message delivery — entrega and the Leído stage", () => {
     await expect(rowWith("Entregado")).toHaveCount(2);
     await entregaFilter.selectOption("");
 
+    // The list renders debtor, channel, entrega, resultado and date — no subject — so the two
+    // delivered emails are told apart by their resultado, the only column that differs.
+    const answered = rowWith("Promesa de pago");
+    const unopened = page
+      .locator("tbody tr", { hasText: "Entregado" })
+      .filter({ hasNotText: "Promesa de pago" });
+    await expect(answered).toHaveCount(1);
+    await expect(unopened).toHaveCount(1);
+
     // --- Detail: the read receipt earns its own stage -----------------------
-    await rowWith("Entregado").first().click();
+    await answered.click();
     const panel = page.getByRole("dialog");
     await expect(panel).toBeVisible();
     await expect(panel.getByText("Camino", { exact: true })).toBeVisible();
@@ -127,7 +148,7 @@ test.describe("message delivery — entrega and the Leído stage", () => {
     await panel.getByRole("button", { name: "Volver a gestiones" }).click();
 
     // --- Delivered-but-unopened claims delivery and nothing more ------------
-    await rowWith("Segundo aviso").click();
+    await unopened.click();
     const second = page.getByRole("dialog");
     await expect(second).toBeVisible();
     await expect(second.getByText("Entregado")).toBeVisible();

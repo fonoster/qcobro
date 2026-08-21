@@ -97,8 +97,10 @@ mistake — call it out in implementation.
    was aspirational on both rows: the only code that moved either channel off `DISPATCHED` was
    an inbound reply, so a delivered-but-unanswered message stayed `DISPATCHED` forever and the
    workspace contact rate read near-0% for an email-only portfolio. Email now ingests Resend's
-   outbound events at `POST /api/email/events`; WhatsApp reads the `statuses` array its webhook
-   was already receiving and discarding. **Opens stay display-only on both channels**:
+   outbound events on the same `POST /api/email/inbound` webhook that already took replies,
+   routed on the event name; WhatsApp reads the `statuses` array its webhook was already
+   receiving and discarding. Neither needed a new endpoint or a new signing secret.
+   **Opens stay display-only on both channels**:
    `channelData.openedAt` renders the `Leído` stage and enters no metric — an email open is a
    tracking pixel that proxies inflate and blocked images suppress, and read-but-unengaged is
    deliberately not modelled as a `camino` value.
