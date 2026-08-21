@@ -56,7 +56,7 @@ test.describe("campaigns core", () => {
       await page.getByRole("button", { name: day, exact: true }).click();
     }
     // An inverted window (end before start) is rejected inline, not silently saved.
-    await page.getByLabel("Hora de inicio").fill("09:30");
+    // Only the end time moves — the start keeps its 09:00 default, which 11.5 asserts on.
     await page.getByLabel("Hora de fin").fill("05:00");
     await page.getByRole("button", { name: "Crear campaña" }).click();
     await expect(
