@@ -30,7 +30,7 @@ describe("email channel (integration)", { skip: !RUN ? "no DATABASE_URL" : false
           create: {
             subject: "Saldo {{firstName}}",
             messageBody: "Hola {{firstName}}, regularice su saldo.",
-            fromName: "Mikro",
+            fromName: "Créditos Demo",
             fromEmail: emailFrom.email,
             systemPrompt: "Eres un agente de cobranza por correo.",
             maxReplies: 2

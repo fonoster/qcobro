@@ -54,7 +54,7 @@ function harness(g: EmailGestionView | null, decision: EmailAutopilotDecision) {
         return { id: "sent-1" };
       }
     },
-    emailFrom: { email: "cobranza@mikro.do", inboundDomain: "inbound.mikro.do" },
+    emailFrom: { email: "cobranza@demo.do", inboundDomain: "inbound.demo.do" },
     maxRepliesDefault: 3,
     now: NOW
   };
@@ -63,7 +63,7 @@ function harness(g: EmailGestionView | null, decision: EmailAutopilotDecision) {
 
 const inbound = (over: Record<string, unknown> = {}) => ({
   from: "cliente@example.com",
-  to: [`reply+${TOKEN}@inbound.mikro.do`],
+  to: [`reply+${TOKEN}@inbound.demo.do`],
   subject: "Re: Su saldo",
   text: "Puedo pagar el viernes.",
   messageId: "<msg-1@example.com>",

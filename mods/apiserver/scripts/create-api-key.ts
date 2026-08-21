@@ -13,7 +13,7 @@ import { config } from "../src/config.js";
 
 const EMAIL = process.env.SEED_EMAIL ?? "demo@qcobro.com";
 const PASSWORD = process.env.SEED_PASSWORD ?? "password123";
-const WORKSPACE_NAME = process.env.SEED_WORKSPACE ?? "Mikro Créditos";
+const WORKSPACE_NAME = process.env.SEED_WORKSPACE ?? "Créditos Demo";
 
 async function main(): Promise<void> {
   const identity = createIdentityClient(config.identity.endpoint);

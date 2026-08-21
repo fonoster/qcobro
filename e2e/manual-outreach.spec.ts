@@ -38,7 +38,7 @@ test.describe("manual outreach", () => {
     await page.getByLabel("Nombre del agente").fill(agentName);
     await page.getByLabel("Tipo de canal").selectOption({ label: "SMS" });
     await page.getByLabel("Cuerpo del mensaje").fill(body);
-    await page.getByLabel(/ID de remitente/).fill("MIKRO");
+    await page.getByLabel(/ID de remitente/).fill("DEMO");
     await page.getByRole("button", { name: "Crear agente" }).click();
     await expect(page.getByText(agentName)).toBeVisible();
 

@@ -1,9 +1,9 @@
 /**
- * Demo seed: provisions a complete "Mikro Créditos" workspace for live demos.
+ * Demo seed: provisions a complete "Créditos Demo" workspace for live demos.
  *
  * Creates (idempotently — safe to re-run):
  *   - user        Demo User <demo@qcobro.com>
- *   - workspace   "Mikro Créditos"
+ *   - workspace   "Créditos Demo"
  *   - portfolio   "Prueba de concepto"  (+ the inlined demo accounts below)
  *   - agents      Juan (Voz IA), Recordatorio SMS (SMS), Sofia (Voz pregrabada)
  *   - campaigns   Cobro Compulsivo, Recuperación Q2 2026, Pre-mora Q2 2026
@@ -48,12 +48,12 @@ const FORCE_PHONE = process.env.SEED_DEMO_PHONE;
 const phoneFor = (suffix: number) => FORCE_PHONE ?? `+1809555${String(suffix).padStart(4, "0")}`;
 
 const USER = { name: "Demo User", email: "demo@qcobro.com", password: "password123" };
-const WORKSPACE_NAME = "Mikro Créditos";
-const PORTFOLIO = { name: "Prueba de concepto", clientId: "MIKRO" };
+const WORKSPACE_NAME = "Créditos Demo";
+const PORTFOLIO = { name: "Prueba de concepto", clientId: "DEMO" };
 const JUAN_FIRST_MESSAGE = "";
 
 /**
- * Demo portfolio accounts (the example Mikro Créditos client list, inlined). `phone`
+ * Demo portfolio accounts (the example Créditos Demo client list, inlined). `phone`
  * is omitted on purpose — `main` assigns a distinct fictional number per account (or
  * SEED_DEMO_PHONE for every account when set, for live demos).
  */
@@ -226,10 +226,10 @@ const ACCOUNTS: Omit<AccountRowInput, "phone">[] = [
 const SOFIA_VOICE = "86V9x9hrQds83qf7zaGn";
 
 const SMS_BODY =
-  "Hola {{firstName}}, tiene un saldo pendiente de {{outstandingBalance}} {{currency}} con Mikro Créditos. Llámenos al 829-354-7577 para ponerse al día.";
+  "Hola {{firstName}}, tiene un saldo pendiente de {{outstandingBalance}} {{currency}} con Créditos Demo. Llámenos al 829-354-7577 para ponerse al día.";
 
 const SOFIA_SCRIPT =
-  "Este es un mensaje para {{firstName}}. Su cuenta con Mikro Créditos tiene un saldo pendiente de {{outstandingBalance}} pesos. Por favor, pase por nuestras oficinas cuanto antes para regularizar su pago. Gracias.";
+  "Este es un mensaje para {{firstName}}. Su cuenta con Créditos Demo tiene un saldo pendiente de {{outstandingBalance}} pesos. Por favor, pase por nuestras oficinas cuanto antes para regularizar su pago. Gracias.";
 
 // --- Helpers ----------------------------------------------------------------
 
@@ -287,7 +287,7 @@ const VOZ_SCENARIOS = [
       aiNextStep: "Enviar enlace de pago por SMS"
     },
     transcript: [
-      { ai: "Buenas tardes, le llamo de Mikro Créditos respecto a su cuenta. ¿Tiene un momento?" },
+      { ai: "Buenas tardes, le llamo de Créditos Demo respecto a su cuenta. ¿Tiene un momento?" },
       { human: "Sí, dígame." },
       { ai: "Su cuenta registra un saldo pendiente. ¿Le gustaría regularizarlo?" },
       { human: "El viernes recibo mi pago y podría cubrirlo." },
@@ -308,7 +308,7 @@ const VOZ_SCENARIOS = [
       aiNextStep: "Reintentar mañana en horario laboral"
     },
     transcript: [
-      { ai: "Buenas tardes, le llamamos de Mikro Créditos. Por favor devuelva la llamada." }
+      { ai: "Buenas tardes, le llamamos de Créditos Demo. Por favor devuelva la llamada." }
     ],
     durationSeconds: 18
   },

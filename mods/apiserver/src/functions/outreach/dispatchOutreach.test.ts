@@ -29,7 +29,11 @@ function makeDeps(overrides: Partial<DispatchDeps> = {}) {
         return { id: "email-1" };
       }
     },
-    emailFrom: { email: "cobranza@mikro.do", name: "Mikro", inboundDomain: "inbound.mikro.do" },
+    emailFrom: {
+      email: "cobranza@demo.do",
+      name: "Créditos Demo",
+      inboundDomain: "inbound.demo.do"
+    },
     whatsAppClient: {
       sendTemplate: async (input: WhatsAppSendTemplateInput) => {
         calls.whatsapp.push(input);
@@ -129,7 +133,7 @@ describe("dispatchOutreach", () => {
     // providerRef IS the reply-to token, and the reply-to address carries it.
     assert.equal(result.channel, "EMAIL");
     assert.ok(result.providerRef.length > 0);
-    assert.equal(sent.replyTo, `reply+${result.providerRef}@inbound.mikro.do`);
+    assert.equal(sent.replyTo, `reply+${result.providerRef}@inbound.demo.do`);
     // The provider's own id rides alongside it — outbound delivery/open events carry only
     // that, never the reply-to token, so discarding it would orphan every one of them.
     assert.equal(result.providerMessageId, "email-1");
