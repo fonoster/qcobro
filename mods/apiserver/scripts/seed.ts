@@ -260,11 +260,23 @@ function renderTemplate(tpl: string, acc: SeedAccount): string {
     .replace(/{{\s*currency\s*}}/g, "DOP");
 }
 
-/** Voz IA conversation scenarios (mirrors scripts/seed-voz-gestiones.ts). */
+/**
+ * Voz IA conversation scenarios (mirrors scripts/seed-voz-gestiones.ts).
+ *
+ * `axes` carries the three independent fields a gestión records — `entrega` (did it reach the
+ * device), `camino` (what path the interaction took) and `resultado` (what came of it). These
+ * replaced the single flat `outcome` enum; passing the old field here silently produced
+ * delivery-less demo data, because the create schema strips unknown keys rather than rejecting
+ * them, so the seed reported success while writing rows that were all `DISPATCHED`.
+ */
 const VOZ_SCENARIOS = [
   {
     hoursAgo: 2,
-    outcome: "PAYMENT_PROMISE" as const,
+    axes: {
+      entrega: "DELIVERED" as const,
+      camino: "ENGAGED" as const,
+      resultado: "PAYMENT_PROMISE" as const
+    },
     intentMetadata: { promisedAmount: 4820, promisedDate: daysFromNow(4) },
     ai: {
       aiSummary:
@@ -285,7 +297,9 @@ const VOZ_SCENARIOS = [
   },
   {
     hoursAgo: 26,
-    outcome: "NO_ANSWER" as const,
+    // Rang out. A delivery failure with a stated, retryable reason — and no interaction to
+    // describe, so `camino` and `resultado` stay null.
+    axes: { entrega: "FAILED" as const, deliveryReason: "NO_ANSWER" as const },
     ai: {
       aiSummary:
         "No hubo respuesta del cliente; la llamada entró a buzón. Se recomienda reintentar.",
@@ -300,7 +314,11 @@ const VOZ_SCENARIOS = [
   },
   {
     hoursAgo: 72,
-    outcome: "PAID" as const,
+    axes: {
+      entrega: "DELIVERED" as const,
+      camino: "ENGAGED" as const,
+      resultado: "PAID" as const
+    },
     ai: {
       aiSummary: "El cliente confirma que ya realizó el pago en línea esta mañana. Caso resuelto.",
       aiSentiment: "POSITIVE",
@@ -346,12 +364,17 @@ async function seedGestiones(
       campaignId: campaigns.voiceAi,
       agentType: "VOICE_AI",
       contactedAt: hoursAgo(s.hoursAgo),
-      outcome: s.outcome,
+      ...s.axes,
       notes: "Seed Voz IA",
       debtAmountSnapshot: vozAccount.outstandingBalance,
       ...(s.intentMetadata ? { intentMetadata: s.intentMetadata } : {}),
       ...s.ai,
-      channelData: { providerRef: callRef, from: "+18297340812", to }
+      // Top-level, not inside channelData: `ingestVoiceEvent` correlates on the indexed
+      // `providerRef` column and explicitly does not read `channelData.providerRef`. Nesting it
+      // meant the conversation.ended calls below matched nothing, so every seeded Voz IA
+      // gestión silently ended up with no transcript and no recording.
+      providerRef: callRef,
+      channelData: { from: "+18297340812", to }
     });
     await ingestVoiceEvent({
       eventType: "conversation.ended",
@@ -362,7 +385,10 @@ async function seedGestiones(
       recordingUrl: SAMPLE_RECORDING,
       durationSeconds: s.durationSeconds
     });
-    log(`Voz IA · ${s.outcome} (${vozAccount.fullName})`);
+    log(
+      `Voz IA · ${s.axes.entrega}${"resultado" in s.axes ? ` · ${s.axes.resultado}` : ""} ` +
+        `(${vozAccount.fullName})`
+    );
   }
 
   // SMS — one-way reminder on the second account.
@@ -372,7 +398,9 @@ async function seedGestiones(
     campaignId: campaigns.sms,
     agentType: "SMS",
     contactedAt: hoursAgo(5),
-    outcome: "OTHER",
+    // SMS has no inbound path, so `entrega` is the only axis it can carry — `camino` and
+    // `resultado` are rejected outright on a one-way channel.
+    entrega: "DELIVERED",
     notes: "Seed SMS",
     debtAmountSnapshot: smsAccount.outstandingBalance,
     aiSummary:
@@ -383,27 +411,29 @@ async function seedGestiones(
       to: smsAccount.phone ?? phoneFor(100)
     }
   });
-  log(`SMS · OTHER (${smsAccount.fullName})`);
+  log(`SMS · DELIVERED (${smsAccount.fullName})`);
 
-  // Voz pregrabada — one-way played message on the third account.
+  // Voz pregrabada — one-way call on the third account, unanswered.
   const preAccount = accounts[2] ?? accounts[0];
   await contactLog({
     portfolioAccountId: preAccount.id,
     campaignId: campaigns.prerecorded,
     agentType: "VOICE_PRERECORDED",
     contactedAt: hoursAgo(48),
-    durationSeconds: 22,
-    outcome: "NO_ANSWER",
+    // Unanswered, so no answered duration to report: the spec forbids recording `DELIVERED`
+    // with a fabricated or zero duration, and a failure needs a reason to be actionable.
+    entrega: "FAILED",
+    deliveryReason: "NO_ANSWER",
     notes: "Seed Voz pregrabada",
     debtAmountSnapshot: preAccount.outstandingBalance,
     aiSummary:
-      "Mensaje pregrabado reproducido en el buzón del cliente. Canal de una vía; sin respuesta capturada.",
+      "La llamada no fue contestada; el mensaje pregrabado no llegó a reproducirse. Canal de una vía.",
     channelData: {
       messageBody: renderTemplate(SOFIA_SCRIPT, preAccount),
       to: preAccount.phone ?? phoneFor(100)
     }
   });
-  log(`Voz pregrabada · NO_ANSWER (${preAccount.fullName})`);
+  log(`Voz pregrabada · FAILED · NO_ANSWER (${preAccount.fullName})`);
 }
 
 // --- Seed -------------------------------------------------------------------
