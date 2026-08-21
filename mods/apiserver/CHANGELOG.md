@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.31.0](https://github.com/fonoster/qcobro/compare/v1.30.1...v1.31.0) (2026-08-21)
+
+### Features
+
+- **api:** ingest email and WhatsApp delivery signals so entrega leaves DISPATCHED ([#106](https://github.com/fonoster/qcobro/issues/106)) ([3a3dafc](https://github.com/fonoster/qcobro/commit/3a3dafca41128522162e04e71436e21d469739d1)), closes [#101](https://github.com/fonoster/qcobro/issues/101) [#103](https://github.com/fonoster/qcobro/issues/103) [#101](https://github.com/fonoster/qcobro/issues/101)
+
 # [1.30.0](https://github.com/fonoster/qcobro/compare/v1.29.3...v1.30.0) (2026-08-20)
 
 ### Features
