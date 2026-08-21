@@ -165,6 +165,14 @@ export function createDispatchOutreach(deps: DispatchDeps) {
     if (params.channel === "VOICE_PRERECORDED") {
       renderedBody = renderTemplate(params.script ?? "", params.context);
       metadata = { message: renderedBody };
+      // Optional DTMF menu: fixed IVR prompts, not rendered against `context` (unlike the
+      // script itself). Only included when configured, so the VoiceServer's "no menu
+      // configured" path needs no empty-string special-casing.
+      if (params.repeatDigit) metadata.repeatDigit = params.repeatDigit;
+      if (params.repeatMessage) metadata.repeatMessage = params.repeatMessage;
+      if (params.maxRepeats != null) metadata.maxRepeats = String(params.maxRepeats);
+      if (params.optOutDigit) metadata.optOutDigit = params.optOutDigit;
+      if (params.optOutMessage) metadata.optOutMessage = params.optOutMessage;
     } else {
       renderedBody = renderTemplate(params.firstMessage ?? "", params.context);
       metadata = { firstMessage: renderedBody };

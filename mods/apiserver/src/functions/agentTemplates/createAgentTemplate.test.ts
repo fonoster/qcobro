@@ -177,6 +177,84 @@ describe("createAgentTemplate", () => {
     assert.equal(updates.voiceAi, undefined);
   });
 
+  it("creates a VOICE_PRERECORDED template with no DTMF menu (the default)", async () => {
+    const { client, created } = makeClient();
+    const fn = createCreateAgentTemplate(client as never, "ws-1");
+
+    await fn({
+      name: "Aviso de pago",
+      type: "VOICE_PRERECORDED",
+      voice: "voice-x",
+      script: "Su saldo pendiente es...",
+      language: "es"
+    });
+
+    assert.ok(created.voiceAi, "child VoicePrerecordedConfig row created");
+    assert.equal(created.voiceAi?.repeatDigit, null);
+    assert.equal(created.voiceAi?.optOutDigit, null);
+  });
+
+  it("creates a VOICE_PRERECORDED template with a full DTMF menu", async () => {
+    const { client, created } = makeClient();
+    const fn = createCreateAgentTemplate(client as never, "ws-1");
+
+    await fn({
+      name: "Aviso de pago",
+      type: "VOICE_PRERECORDED",
+      voice: "voice-x",
+      script: "Su saldo pendiente es...",
+      language: "es",
+      repeatDigit: "1",
+      repeatMessage: "Presione 1 para repetir.",
+      maxRepeats: 2,
+      optOutDigit: "9",
+      optOutMessage: "Presione 9 para no recibir más llamadas."
+    });
+
+    assert.equal(created.voiceAi?.repeatDigit, "1");
+    assert.equal(created.voiceAi?.maxRepeats, 2);
+    assert.equal(created.voiceAi?.optOutDigit, "9");
+  });
+
+  it("rejects a DTMF digit with no message", async () => {
+    const { client } = makeClient();
+    const fn = createCreateAgentTemplate(client as never, "ws-1");
+
+    await assert.rejects(
+      () =>
+        fn({
+          name: "Aviso de pago",
+          type: "VOICE_PRERECORDED",
+          voice: "voice-x",
+          script: "Su saldo pendiente es...",
+          language: "es",
+          repeatDigit: "1"
+        }),
+      ValidationError
+    );
+  });
+
+  it("rejects matching repeat and opt-out digits", async () => {
+    const { client } = makeClient();
+    const fn = createCreateAgentTemplate(client as never, "ws-1");
+
+    await assert.rejects(
+      () =>
+        fn({
+          name: "Aviso de pago",
+          type: "VOICE_PRERECORDED",
+          voice: "voice-x",
+          script: "Su saldo pendiente es...",
+          language: "es",
+          repeatDigit: "1",
+          repeatMessage: "Presione 1 para repetir.",
+          optOutDigit: "1",
+          optOutMessage: "Presione 1 para darse de baja."
+        }),
+      ValidationError
+    );
+  });
+
   it("does not sync non-voice types", async () => {
     const { client } = makeClient();
     const voice = makeVoiceClient();

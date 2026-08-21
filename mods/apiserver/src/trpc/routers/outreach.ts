@@ -32,7 +32,15 @@ type TemplateWithConfigs = {
     systemPrompt: string;
     firstMessage: string | null;
   } | null;
-  voicePrerecordedConfig: { fonosterAppRef: string | null; script: string } | null;
+  voicePrerecordedConfig: {
+    fonosterAppRef: string | null;
+    script: string;
+    repeatDigit: string | null;
+    repeatMessage: string | null;
+    maxRepeats: number | null;
+    optOutDigit: string | null;
+    optOutMessage: string | null;
+  } | null;
   smsConfig: { messageBody: string } | null;
   emailConfig: { subject: string; messageBody: string; systemPrompt: string } | null;
   whatsAppConfig: { templateName: string; messageBody: string } | null;
@@ -75,7 +83,12 @@ function buildDispatchRequest(
         to,
         context,
         appRef: prerecordedAppRef ?? undefined,
-        script: template.voicePrerecordedConfig.script
+        script: template.voicePrerecordedConfig.script,
+        repeatDigit: template.voicePrerecordedConfig.repeatDigit ?? undefined,
+        repeatMessage: template.voicePrerecordedConfig.repeatMessage ?? undefined,
+        maxRepeats: template.voicePrerecordedConfig.maxRepeats ?? undefined,
+        optOutDigit: template.voicePrerecordedConfig.optOutDigit ?? undefined,
+        optOutMessage: template.voicePrerecordedConfig.optOutMessage ?? undefined
       };
     case "EMAIL":
       if (!template.emailConfig)

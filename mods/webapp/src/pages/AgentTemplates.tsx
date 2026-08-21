@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
-import { useI18n } from "../lib/i18n.js";
+import { useI18n, type MessageId } from "../lib/i18n.js";
 import { PageHeader } from "../components/page-header.js";
 import { DataTable } from "../components/ui/data-table.js";
 import { Dialog } from "../components/ui/dialog.js";
@@ -223,6 +223,35 @@ export function AgentTemplates() {
 const CREATABLE_TYPES: AgentType[] = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL", "WHATSAPP"];
 const LANGUAGES = ["es", "en"] as const;
 
+type DtmfFieldErrors = Partial<
+  Record<"repeatDigit" | "repeatMessage" | "optOutDigit" | "optOutMessage", string>
+>;
+
+/**
+ * Client-side mirror of `voicePrerecordedDtmfSchema`'s cross-field rules (a message is
+ * required exactly when its digit is set; the two digits must differ) — surfaced inline so
+ * an operator sees the problem before submitting, not just via the server's rejection.
+ */
+function validateVoicePrerecordedDtmf(
+  fields: Record<string, string>,
+  t: (id: MessageId) => string
+): DtmfFieldErrors {
+  const repeatDigit = fields.repeatDigit?.trim();
+  const repeatMessage = fields.repeatMessage?.trim();
+  const optOutDigit = fields.optOutDigit?.trim();
+  const optOutMessage = fields.optOutMessage?.trim();
+  const errors: DtmfFieldErrors = {};
+
+  if (repeatDigit && !repeatMessage) errors.repeatMessage = t("agents.form.dtmfMessageRequired");
+  if (repeatMessage && !repeatDigit) errors.repeatDigit = t("agents.form.dtmfDigitRequired");
+  if (optOutDigit && !optOutMessage) errors.optOutMessage = t("agents.form.dtmfMessageRequired");
+  if (optOutMessage && !optOutDigit) errors.optOutDigit = t("agents.form.dtmfDigitRequired");
+  if (repeatDigit && optOutDigit && repeatDigit === optOutDigit) {
+    errors.optOutDigit = t("agents.form.dtmfDigitsMustDiffer");
+  }
+  return errors;
+}
+
 function CreateAgentTemplateModal({
   onClose,
   onSuccess
@@ -235,6 +264,7 @@ function CreateAgentTemplateModal({
   const [type, setType] = useState<AgentType>("VOICE_AI");
   const [fields, setFields] = useState<Record<string, string>>({ language: "es" });
   const [error, setError] = useState<string | null>(null);
+  const createDtmfErrors = validateVoicePrerecordedDtmf(fields, t);
   const templateNameDebounced = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [debouncedTemplateName, setDebouncedTemplateName] = useState("");
 
@@ -281,6 +311,10 @@ function CreateAgentTemplateModal({
       setError(t("agents.form.name"));
       return;
     }
+    if (type === "VOICE_PRERECORDED" && Object.keys(createDtmfErrors).length > 0) {
+      setError(Object.values(createDtmfErrors)[0] ?? null);
+      return;
+    }
     setError(null);
     const base = { name: name.trim() };
     let payload: Record<string, unknown>;
@@ -301,7 +335,12 @@ function CreateAgentTemplateModal({
           type,
           voice: fields.voice ?? "",
           script: fields.script ?? "",
-          language: fields.language ?? "es"
+          language: fields.language ?? "es",
+          ...(fields.repeatDigit ? { repeatDigit: fields.repeatDigit } : {}),
+          ...(fields.repeatMessage ? { repeatMessage: fields.repeatMessage } : {}),
+          ...(fields.maxRepeats ? { maxRepeats: Number(fields.maxRepeats) } : {}),
+          ...(fields.optOutDigit ? { optOutDigit: fields.optOutDigit } : {}),
+          ...(fields.optOutMessage ? { optOutMessage: fields.optOutMessage } : {})
         };
         break;
       case "SMS":
@@ -416,12 +455,58 @@ function CreateAgentTemplateModal({
         )}
 
         {type === "VOICE_PRERECORDED" && (
-          <TextareaGroup
-            label={t("agents.form.script")}
-            id="a-script"
-            value={fields.script ?? ""}
-            onChange={(e) => set("script", e.target.value)}
-          />
+          <>
+            <TextareaGroup
+              label={t("agents.form.script")}
+              id="a-script"
+              value={fields.script ?? ""}
+              onChange={(e) => set("script", e.target.value)}
+            />
+            <div className="flex flex-col gap-1 pt-2">
+              <p className="text-sm font-semibold text-slate-900">
+                {t("agents.form.dtmfSectionTitle")}
+              </p>
+              <p className="text-xs text-slate-500">{t("agents.form.dtmfSectionDescription")}</p>
+            </div>
+            <InputGroup
+              label={t("agents.form.repeatDigit")}
+              id="a-repeat-digit"
+              maxLength={1}
+              value={fields.repeatDigit ?? ""}
+              onChange={(e) => set("repeatDigit", e.target.value)}
+              error={createDtmfErrors.repeatDigit}
+            />
+            <TextareaGroup
+              label={t("agents.form.repeatMessage")}
+              id="a-repeat-message"
+              value={fields.repeatMessage ?? ""}
+              onChange={(e) => set("repeatMessage", e.target.value)}
+              error={createDtmfErrors.repeatMessage}
+            />
+            <InputGroup
+              label={t("agents.form.maxRepeats")}
+              id="a-max-repeats"
+              type="number"
+              min={1}
+              value={fields.maxRepeats ?? ""}
+              onChange={(e) => set("maxRepeats", e.target.value)}
+            />
+            <InputGroup
+              label={t("agents.form.optOutDigit")}
+              id="a-optout-digit"
+              maxLength={1}
+              value={fields.optOutDigit ?? ""}
+              onChange={(e) => set("optOutDigit", e.target.value)}
+              error={createDtmfErrors.optOutDigit}
+            />
+            <TextareaGroup
+              label={t("agents.form.optOutMessage")}
+              id="a-optout-message"
+              value={fields.optOutMessage ?? ""}
+              onChange={(e) => set("optOutMessage", e.target.value)}
+              error={createDtmfErrors.optOutMessage}
+            />
+          </>
         )}
 
         {type === "SMS" && (
@@ -570,6 +655,7 @@ function EditAgentTemplateModal({
   const [fields, setFields] = useState<Record<string, string>>({});
   const [seeded, setSeeded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const editDtmfErrors = validateVoicePrerecordedDtmf(fields, t);
   const templateNameDebounced = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [debouncedTemplateName, setDebouncedTemplateName] = useState("");
 
@@ -631,6 +717,10 @@ function EditAgentTemplateModal({
       setError(t("agents.form.name"));
       return;
     }
+    if (template.type === "VOICE_PRERECORDED" && Object.keys(editDtmfErrors).length > 0) {
+      setError(Object.values(editDtmfErrors)[0] ?? null);
+      return;
+    }
     setError(null);
     let config: Record<string, unknown> = {};
     switch (template.type) {
@@ -643,7 +733,16 @@ function EditAgentTemplateModal({
         };
         break;
       case "VOICE_PRERECORDED":
-        config = { voice: fields.voice, script: fields.script, language: fields.language };
+        config = {
+          voice: fields.voice,
+          script: fields.script,
+          language: fields.language,
+          ...(fields.repeatDigit ? { repeatDigit: fields.repeatDigit } : {}),
+          ...(fields.repeatMessage ? { repeatMessage: fields.repeatMessage } : {}),
+          ...(fields.maxRepeats ? { maxRepeats: Number(fields.maxRepeats) } : {}),
+          ...(fields.optOutDigit ? { optOutDigit: fields.optOutDigit } : {}),
+          ...(fields.optOutMessage ? { optOutMessage: fields.optOutMessage } : {})
+        };
         break;
       case "SMS":
         config = {
@@ -749,12 +848,60 @@ function EditAgentTemplateModal({
             )}
 
             {template.type === "VOICE_PRERECORDED" && (
-              <TextareaGroup
-                label={t("agents.form.script")}
-                id="e-script"
-                value={fields.script ?? ""}
-                onChange={(e) => set("script", e.target.value)}
-              />
+              <>
+                <TextareaGroup
+                  label={t("agents.form.script")}
+                  id="e-script"
+                  value={fields.script ?? ""}
+                  onChange={(e) => set("script", e.target.value)}
+                />
+                <div className="flex flex-col gap-1 pt-2">
+                  <p className="text-sm font-semibold text-slate-900">
+                    {t("agents.form.dtmfSectionTitle")}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {t("agents.form.dtmfSectionDescription")}
+                  </p>
+                </div>
+                <InputGroup
+                  label={t("agents.form.repeatDigit")}
+                  id="e-repeat-digit"
+                  maxLength={1}
+                  value={fields.repeatDigit ?? ""}
+                  onChange={(e) => set("repeatDigit", e.target.value)}
+                  error={editDtmfErrors.repeatDigit}
+                />
+                <TextareaGroup
+                  label={t("agents.form.repeatMessage")}
+                  id="e-repeat-message"
+                  value={fields.repeatMessage ?? ""}
+                  onChange={(e) => set("repeatMessage", e.target.value)}
+                  error={editDtmfErrors.repeatMessage}
+                />
+                <InputGroup
+                  label={t("agents.form.maxRepeats")}
+                  id="e-max-repeats"
+                  type="number"
+                  min={1}
+                  value={fields.maxRepeats ?? ""}
+                  onChange={(e) => set("maxRepeats", e.target.value)}
+                />
+                <InputGroup
+                  label={t("agents.form.optOutDigit")}
+                  id="e-optout-digit"
+                  maxLength={1}
+                  value={fields.optOutDigit ?? ""}
+                  onChange={(e) => set("optOutDigit", e.target.value)}
+                  error={editDtmfErrors.optOutDigit}
+                />
+                <TextareaGroup
+                  label={t("agents.form.optOutMessage")}
+                  id="e-optout-message"
+                  value={fields.optOutMessage ?? ""}
+                  onChange={(e) => set("optOutMessage", e.target.value)}
+                  error={editDtmfErrors.optOutMessage}
+                />
+              </>
             )}
 
             {template.type === "SMS" && (

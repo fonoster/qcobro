@@ -231,6 +231,13 @@ model VoicePrerecordedConfig {
   voice           String
   script          String
   language        String
+  // Optional DTMF menu, offered after the script plays. Unset means no menu at all
+  // (the pre-existing behavior). See account-contact-log/prerecorded-audio specs.
+  repeatDigit     String?
+  repeatMessage   String?
+  maxRepeats      Int?
+  optOutDigit     String?
+  optOutMessage   String?
   template        AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@map("voice_prerecorded_configs")

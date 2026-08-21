@@ -32,6 +32,11 @@ export interface VoicePrerecordedConfigRecord {
   voice: string;
   script: string;
   language: string;
+  repeatDigit: string | null;
+  repeatMessage: string | null;
+  maxRepeats: number | null;
+  optOutDigit: string | null;
+  optOutMessage: string | null;
 }
 
 export interface SmsConfigRecord {

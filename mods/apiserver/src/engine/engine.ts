@@ -76,7 +76,15 @@ export interface EngineTemplate {
     systemPrompt: string;
     firstMessage: string | null;
   } | null;
-  voicePrerecordedConfig: { fonosterAppRef: string | null; script: string } | null;
+  voicePrerecordedConfig: {
+    fonosterAppRef: string | null;
+    script: string;
+    repeatDigit: string | null;
+    repeatMessage: string | null;
+    maxRepeats: number | null;
+    optOutDigit: string | null;
+    optOutMessage: string | null;
+  } | null;
   smsConfig: { messageBody: string } | null;
   emailConfig: {
     subject: string;
@@ -384,7 +392,12 @@ export function createEngine(deps: EngineDeps) {
       to: acc.phone!,
       context,
       appRef: appRef ?? undefined,
-      script: t.voicePrerecordedConfig?.script
+      script: t.voicePrerecordedConfig?.script,
+      repeatDigit: t.voicePrerecordedConfig?.repeatDigit ?? undefined,
+      repeatMessage: t.voicePrerecordedConfig?.repeatMessage ?? undefined,
+      maxRepeats: t.voicePrerecordedConfig?.maxRepeats ?? undefined,
+      optOutDigit: t.voicePrerecordedConfig?.optOutDigit ?? undefined,
+      optOutMessage: t.voicePrerecordedConfig?.optOutMessage ?? undefined
     };
   }
 

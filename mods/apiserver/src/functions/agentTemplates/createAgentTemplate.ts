@@ -51,7 +51,12 @@ export function createCreateAgentTemplate(
               fonosterAppName: params.fonosterAppName ?? params.name,
               voice: params.voice,
               script: params.script,
-              language: params.language
+              language: params.language,
+              repeatDigit: params.repeatDigit ?? null,
+              repeatMessage: params.repeatMessage ?? null,
+              maxRepeats: params.maxRepeats ?? null,
+              optOutDigit: params.optOutDigit ?? null,
+              optOutMessage: params.optOutMessage ?? null
             }
           });
           break;

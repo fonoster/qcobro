@@ -33,6 +33,14 @@ export const dispatchOutreachSchema = z
     firstMessage: z.string().optional(),
     /** Voz pregrabada: the whole spoken script template (locuted via TTS). */
     script: z.string().optional(),
+    /** Voz pregrabada: optional DTMF menu — see `voicePrerecordedDtmfSchema` in
+     * `agentTemplates.ts` for the field-level shape. Not templated against `context`: these
+     * are fixed IVR prompts, not per-account personalized copy. */
+    repeatDigit: z.string().optional(),
+    repeatMessage: z.string().optional(),
+    maxRepeats: z.number().int().positive().optional(),
+    optOutDigit: z.string().optional(),
+    optOutMessage: z.string().optional(),
     /** SMS / EMAIL / WHATSAPP: message body template. For WHATSAPP this is the fetched
      * template body whose `{{vars}}` are extracted and sent as named parameters. */
     body: z.string().optional(),

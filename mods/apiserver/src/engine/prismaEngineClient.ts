@@ -52,7 +52,12 @@ export function createPrismaEngineClient(prisma: PrismaClient): EngineClient {
               voicePrerecordedConfig: c.agentTemplate.voicePrerecordedConfig
                 ? {
                     fonosterAppRef: c.agentTemplate.voicePrerecordedConfig.fonosterAppRef,
-                    script: c.agentTemplate.voicePrerecordedConfig.script
+                    script: c.agentTemplate.voicePrerecordedConfig.script,
+                    repeatDigit: c.agentTemplate.voicePrerecordedConfig.repeatDigit,
+                    repeatMessage: c.agentTemplate.voicePrerecordedConfig.repeatMessage,
+                    maxRepeats: c.agentTemplate.voicePrerecordedConfig.maxRepeats,
+                    optOutDigit: c.agentTemplate.voicePrerecordedConfig.optOutDigit,
+                    optOutMessage: c.agentTemplate.voicePrerecordedConfig.optOutMessage
                   }
                 : null,
               smsConfig: c.agentTemplate.smsConfig
