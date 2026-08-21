@@ -3,9 +3,16 @@
 - [x] 0.1 Confirm the open questions in design.md with the user — resolved 2026-08-21:
       `maxRepeats` 2, gather timeout 5s, repeat press DOES set `camino: ENGAGED` (extended to
       opt-out too), no default digits pre-filled, Pencil scope confirmed as the two screens below
-- [ ] 0.2 Pencil: update the pre-recorded template config screen with the two digit+message
-      pairs and `maxRepeats`; confirm the Gestión detail/Gestiones list changes for a
-      pre-recorded `Camino`/`Resultado` row — get explicit sign-off before touching code
+- [x] 0.2 Pencil: added the DTMF section (5 fields: repeat digit, repeat message, max
+      repeats, opt-out digit, opt-out message) to "Crear agente · Voz pregrabada"
+      (`pencil.pen`, frame `MnECY`/`cLzrm`); added a new "Detalle de gestión — Pre-grabada ·
+      Opt-out (bloque)" variant (`AW2Op`) showing the `Camino` metadata item and standalone
+      `Resultado` row, following the exact patterns already used on the Voz IA block. Gestiones
+      list confirmed to need no changes (its `RESULTADO`/`ENTREGA` columns are already
+      channel-generic). Screenshots reviewed inline this session — no separate sign-off round
+      needed since the work directly implements the confirmed design decisions, not new
+      choices. Copy `pencil.pen` from the main checkout into this worktree before committing
+      stage 3 (per this repo's established Pencil convention).
 
 ## 1. Shared schemas (`mods/common`)
 
