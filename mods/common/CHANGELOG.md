@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.32.0](https://github.com/fonoster/qcobro/compare/v1.31.0...v1.32.0) (2026-08-21)
+
+### Features
+
+- **webapp:** window the contact rate to a period and count accounts, not attempts ([#110](https://github.com/fonoster/qcobro/issues/110)) ([0908806](https://github.com/fonoster/qcobro/commit/090880677f70acf32fe4d26392c4c7ef6bd494b7)), closes [#109](https://github.com/fonoster/qcobro/issues/109)
+
 # [1.31.0](https://github.com/fonoster/qcobro/compare/v1.30.1...v1.31.0) (2026-08-21)
 
 ### Features
