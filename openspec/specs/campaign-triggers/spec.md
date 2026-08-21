@@ -16,10 +16,21 @@ Supported static trigger types:
 
 - `MAX_ATTEMPTS_PER_DAY`: config `{ limit: number }` — suppress if the account has
   already been contacted `limit` times today
-- `DNC_CHECK`: config `{}` — suppress if the account's phone is on the workspace DNC
-  list (DNC list management is a future capability; this trigger type is reserved)
-- `WRONG_NUMBER`: suppress if the account has a `WRONG_NUMBER` intent status
-- `OPT_OUT`: suppress if the account has an `OPT_OUT` intent status
+- `DNC_CHECK`: config `{}` — suppress if the account's contact point is on the workspace
+  Do Not Contact list (DNC list management is a future capability; this trigger type is
+  reserved)
+
+The `WRONG_NUMBER` and `OPT_OUT` trigger types SHALL NOT exist. The engine SHALL NOT suppress
+outreach because of a delivery failure, because someone claimed during an interaction not to
+be the account holder, or because a conversation was classified as a request to stop. None of
+those is reliable enough to act on unattended: a delivery failure may be transient, and an
+identity or opt-out claim is unverifiable and may come from someone who is not the account
+holder. Every one of them is still recorded on the gestión and visible to operators.
+
+Removing a contact point from outreach is an explicit, labelled decision recorded on the Do
+Not Contact list and reached through `DNC_CHECK`. Until that list exists, `DNC_CHECK` matches
+nothing and **no request to stop contact is enforced automatically** — operators must act on
+the recorded `OPT_OUT` resultado themselves. This is a known, accepted gap; see issue #101.
 
 #### Scenario: Account suppressed by max daily attempts
 
@@ -27,53 +38,48 @@ Supported static trigger types:
 - **AND** the account has already been contacted `limit` times today under this campaign
 - **THEN** the engine skips that account for the remainder of the day
 
-#### Scenario: Account suppressed by wrong-number flag
+#### Scenario: A wrong-party finding does not suppress
 
-- **WHEN** an account's `intentStatus` is `WRONG_NUMBER`
-- **THEN** the engine SHALL never dispatch to that account under any campaign until an
-  operator explicitly clears the flag
+- **WHEN** an account has a gestión whose `resultado` is `WRONG_PARTY`
+- **THEN** the engine SHALL continue to consider that account eligible for dispatch
+- **AND** suppression SHALL require an explicit Do Not Contact entry
+
+#### Scenario: A delivery failure does not suppress
+
+- **WHEN** an account's attempts have recorded `entrega` `FAILED` with any `deliveryReason`
+- **THEN** the engine SHALL continue to consider that account eligible for dispatch
 
 ### Requirement: AI contact triggers (intent-based suppression)
 
 A Campaign SHALL support AI-derived suppression rules. These are applied when a
-contact log entry is written with an AI-detected outcome.
+contact log entry is written with an AI-detected resultado.
 
 Supported AI trigger types:
 
 - `PAYMENT_PROMISE`: config `{ suppressDays: number }` — when an account contact log
-  records a `PAYMENT_PROMISE` outcome, set the **campaign-local**
+  records a `PAYMENT_PROMISE` resultado, set the **campaign-local**
   `CampaignAccountState.suppressUntil` to the promise date (falling back to
   `contactedAt + suppressDays`). Default `suppressDays` is 7. This suppresses the
   account for this campaign only; other campaigns remain eligible.
-- `INTENT_MET`: when a contact log records a `RESOLVED` or `PAID` outcome, set
+- `INTENT_MET`: when a contact log records a `RESOLVED` or `PAID` resultado, set
   `intentStatus = INTENT_MET` on the account (global), suppressing all future
   dispatches across every campaign unless an operator explicitly clears it.
 - `CALLBACK_REQUESTED`: config `{ suppressHours: number }` — when a contact log records
-  a `CALLBACK_REQUESTED` outcome with a specific date/time extracted by the AI, set the
+  a `CALLBACK_REQUESTED` resultado with a specific date/time extracted by the AI, set the
   **campaign-local** `CampaignAccountState.suppressUntil` to that date/time. Falls back
   to `now + suppressHours` if no specific time was captured.
 
-#### Scenario: Payment promise suppresses account until promise date
+#### Scenario: Payment promise suppresses this campaign only
 
-- **WHEN** a contact log entry is written for account A with outcome `PAYMENT_PROMISE`
-- **AND** the campaign has a `PAYMENT_PROMISE` trigger configured
-- **THEN** the API server updates the campaign-local `CampaignAccountState.suppressUntil`
-  to the promise date (falling back to `contactedAt + suppressDays`)
-- **AND** the engine will not dispatch to account A under this campaign until after
-  `suppressUntil`
-- **AND** account A remains eligible for dispatch under other campaigns
+- **WHEN** a gestión records `resultado` `PAYMENT_PROMISE` with a promised date
+- **THEN** `CampaignAccountState.suppressUntil` is set for that campaign
+- **AND** other campaigns remain eligible to contact the account
 
-#### Scenario: Resolved intent permanently suppresses account
+#### Scenario: Intent met suppresses globally
 
-- **WHEN** a contact log entry is written with outcome `RESOLVED` or `PAID`
-- **THEN** `PortfolioAccount.intentStatus` is set to `INTENT_MET`
-- **AND** the account is excluded from all future campaign dispatches until an operator
-  clears `intentStatus`
-
-#### Scenario: Operator can override AI suppression
-
-- **WHEN** an operator explicitly clears `suppressUntil` or `intentStatus` on an account
-- **THEN** the account becomes eligible for dispatch again on the next engine cycle
+- **WHEN** a gestión records `resultado` `RESOLVED` or `PAID`
+- **THEN** `intentStatus` is set to `INTENT_MET` and the account is suppressed across all
+  campaigns
 
 ### Requirement: Triggers are campaign-scoped
 
