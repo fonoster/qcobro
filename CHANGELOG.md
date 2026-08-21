@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.32.2](https://github.com/fonoster/qcobro/compare/v1.32.1...v1.32.2) (2026-08-21)
+
+### Bug Fixes
+
+- **apiserver:** repair the demo seed's gestiones, which were silently empty ([#112](https://github.com/fonoster/qcobro/issues/112)) ([aac0bc0](https://github.com/fonoster/qcobro/commit/aac0bc09c31a3ad42a12c351a18b3b1c1f42c545))
+
 ## [1.32.1](https://github.com/fonoster/qcobro/compare/v1.32.0...v1.32.1) (2026-08-21)
 
 ### Bug Fixes
