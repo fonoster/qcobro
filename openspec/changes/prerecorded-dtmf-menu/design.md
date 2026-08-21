@@ -75,26 +75,33 @@ the cap, a further repeat press hangs up the same as an unrecognized digit. The 
 by contrast, ends the call immediately (no further gather) — once someone asks to stop, the
 call does not linger for more prompts.
 
-**4. What gets recorded — `resultado` only for opt-out, not for repeat.**
+**4. What gets recorded — `camino: ENGAGED` for any DTMF press, `resultado` only for opt-out.**
+(Confirmed at the design gate 2026-08-21 — reverses this decision's original draft, which had
+proposed leaving `camino` untouched by a repeat press.)
 
-- **Opt-out pressed:** `resultado: OPT_OUT`. This is the only new `resultado` value pre-recorded
-  can ever produce, and it reuses the existing enum value and existing "recorded, visible, no
-  auto-suppression" semantics — no new console concept, no new campaign-trigger behavior.
-- **Repeat pressed (one or more times, up to the cap):** does **not** set a `resultado` and
-  does **not** set `camino`. Rationale: `camino`'s values (`ENGAGED`/`ABANDONED`/`VOICEMAIL`)
-  describe a conversation's path, which doesn't have an obvious mapping for a single replay
-  keypress on a one-way script; inventing a meaning for it now is more likely to need revisiting
-  than to be right the first time. The repeat count is still visible to operators as
-  `channelData.repeatCount`, satisfying the "worth recording as an engagement signal" instinct
-  from the issue without overloading a structured axis. **Flagged as an open question below** —
-  reversible later without a schema change if the call turns out wrong (`camino: ENGAGED` could
-  be added for a repeat press without touching the enum).
+- **Any configured digit pressed** (repeat or opt-out): `camino` is set to `ENGAGED`. Pressing
+  _either_ digit is proof the caller was listening and interacted with the menu — a stronger
+  signal than delivery alone — so both cases earn the same `camino` value. (The user's decision
+  was specifically about the repeat press; opt-out setting `camino: ENGAGED` too is this
+  session's inference for consistency — pressing opt-out is at least as strong an engagement
+  signal as pressing repeat, and having only one of the two digits set `camino` would be an
+  arbitrary asymmetry. Flag if that inference is wrong.) `ABANDONED`/`VOICEMAIL` remain
+  unreachable on this channel — nothing here can detect either.
+- **Opt-out pressed:** additionally sets `resultado: OPT_OUT`. This is the only new `resultado`
+  value pre-recorded can ever produce, and it reuses the existing enum value and existing
+  "recorded, visible, no auto-suppression" semantics — no new console concept, no new
+  campaign-trigger behavior.
+- **Repeat pressed (one or more times, up to the cap):** sets `camino: ENGAGED` (once, not
+  re-set per repeat) but no `resultado`. The repeat count is additionally visible to operators
+  as `channelData.repeatCount`.
+- **No press / unrecognized digit / timeout:** `camino` and `resultado` both remain null,
+  identical to today.
 - **`channelCanEngage()` becomes press-conditional, not channel-fixed, for this one channel:**
   the schema-level rejection in `createContactLogSchema` currently blocks _any_ write that sets
-  `camino`/`resultado` for `VOICE_PRERECORDED`. It changes to allow `resultado: OPT_OUT`
-  specifically (still rejecting `camino` on this channel, and still rejecting any other
-  `resultado` value) — not a blanket "this channel can now engage," to keep the invariant as
-  tight as before for everything except the one new case.
+  `camino`/`resultado` for `VOICE_PRERECORDED`. It changes to allow `camino: ENGAGED` and
+  `resultado: OPT_OUT` specifically (still rejecting `ABANDONED`/`VOICEMAIL` and every
+  `resultado` value other than `OPT_OUT` on this channel) — not a blanket "this channel can now
+  engage," to keep the invariant as tight as before for everything except these two new cases.
 
 **5. Prompt sequencing lives entirely in the operator's script/messages, not the platform.**
 
@@ -127,18 +134,20 @@ with a `Resultado` value present. `Camino` stays hidden for this channel (per de
   test asserting every other `resultado`/`camino` combination is still rejected for this
   channel.
 
-## Open Questions
+## Design gate — resolved 2026-08-21
 
-1. **Default digits.** The issue's example script uses "presione 1" for repeat. Reasonable
-   defaults to pre-fill the config form (operator can still change them): repeat `1`,
-   opt-out `9`? Or leave both blank with no suggested default?
-2. **`maxRepeats` default.** 2 or 3? (Design leans 2 above — confirm.)
-3. **Gather timeout.** Long enough to react after the message ends, short enough not to inflate
-   every menu-enabled call. Proposing 5 seconds — confirm or adjust.
-4. **Does a repeat press ever get a `camino`?** Design leans "no, not in v1" (decision 4) —
-   confirm, since this is the one place Pedro's original note ("allow entering the message for
-   repeating... the message must be enforced") could be read as wanting the repeat press
-   tracked as more than a raw replay.
-5. **Pencil scope.** Confirm the two screens in scope: the pre-recorded template config form
-   (add the two digit+message pairs + `maxRepeats`) and the Gestión detail/Gestiones list
-   (stop hiding `Resultado` for pre-recorded when set). Any other screen expected to change?
+All open questions from the initial draft were confirmed by the user:
+
+1. **Default digits:** leave both blank — no suggested default; the operator must deliberately
+   choose both digits before the menu does anything.
+2. **`maxRepeats` default:** 2.
+3. **Gather timeout:** 5 seconds.
+4. **Does a repeat press get a `camino`?** Yes — `camino: ENGAGED` (see decision 4, revised
+   from the original draft). Extended to the opt-out press too, as this session's inference for
+   consistency — flagged in decision 4 for the user to correct if that reach was wrong.
+5. **Pencil scope:** confirmed as exactly the two screens proposed — the pre-recorded template
+   config form (digit+message pairs + `maxRepeats`) and the Gestión detail/Gestiones list (now
+   also showing `Camino` for pre-recorded, in addition to `Resultado`, when set). No other
+   screen is in scope.
+
+No questions remain open. Proceeding to Pencil (stage 1 of `/ps:ship`).

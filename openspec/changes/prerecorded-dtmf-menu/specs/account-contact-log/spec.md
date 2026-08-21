@@ -122,11 +122,13 @@ The channel physically bounds which axes are reachable:
 - `VOICE_PRERECORDED` has no inbound path **except** its optional DTMF menu (see
   `prerecorded-audio`): with no menu configured, or when the caller presses nothing/an
   unrecognized digit, it SHALL produce `entrega` only. When the menu is configured and the
-  caller presses the opt-out digit, it SHALL additionally set `resultado` to `OPT_OUT` —
-  `camino` SHALL remain null on this channel regardless. `VOICE_PRERECORDED` SHALL set
-  `entrega` to `DELIVERED` when the call was **answered** and `FAILED` otherwise, together
-  with the answered `durationSeconds`. `DELIVERED` SHALL mean only that the call was answered
-  — it SHALL NOT be construed or displayed as proof that the account holder heard the message.
+  caller presses any configured digit, it SHALL additionally set `camino` to `ENGAGED`; when
+  that digit is specifically the opt-out digit, it SHALL also set `resultado` to `OPT_OUT`.
+  `camino` on this channel is reachable only as `ENGAGED` — `ABANDONED`/`VOICEMAIL` are not
+  observable from a DTMF press. `VOICE_PRERECORDED` SHALL set `entrega` to `DELIVERED` when
+  the call was **answered** and `FAILED` otherwise, together with the answered
+  `durationSeconds`. `DELIVERED` SHALL mean only that the call was answered — it SHALL NOT be
+  construed or displayed as proof that the account holder heard the message.
 - `VOICE_AI` MAY produce the full set, including `camino` of `VOICEMAIL` or `ABANDONED`.
 - `EMAIL` and `WHATSAPP` MAY produce any `resultado`, but `camino` SHALL only be `ENGAGED` —
   a threaded channel has no observable voicemail or abandonment.
@@ -155,13 +157,21 @@ The channel physically bounds which axes are reachable:
 - **AND** `DELIVERED` does not assert the account holder heard the message
 - **AND** `camino` and `resultado` remain null
 
+#### Scenario: Pre-recorded records engagement via a repeat press
+
+- **WHEN** a `VOICE_PRERECORDED` call's template has a repeat digit configured and the caller
+  presses it (within the repeat cap)
+- **THEN** the gestión `entrega` is `DELIVERED`
+- **AND** `camino` is `ENGAGED`
+- **AND** `resultado` remains null
+
 #### Scenario: Pre-recorded records an opt-out via its DTMF menu
 
 - **WHEN** a `VOICE_PRERECORDED` call's template has an opt-out digit configured and the
   caller presses it
 - **THEN** the gestión `entrega` is `DELIVERED`
+- **AND** `camino` is `ENGAGED`
 - **AND** `resultado` is `OPT_OUT`
-- **AND** `camino` remains null
 
 #### Scenario: A wrong-party conversation is a delivery success
 

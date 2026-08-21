@@ -1,7 +1,7 @@
 # Ship checkpoint — prerecorded-dtmf-menu
 
 Started: 2026-08-21
-Current stage: 0 — Frame (artifacts scaffolded, awaiting design gate)
+Current stage: 1 — Design (Pencil) in progress; open questions resolved, Pencil work not yet done
 
 **Scope:** Add an optional, per-template DTMF menu to pre-recorded voice calls
 (`VOICE_PRERECORDED`): a "repeat" digit that replays the script (capped) and an "opt-out"
@@ -19,46 +19,43 @@ plus Pedro's follow-up notes (opt-out digit, UI config, enforced messages, resul
 the `docs/sync-archive-contact-log-axes` branch (PR #116, not yet merged at time of writing —
 this branch needed its `account-contact-log`/`web-console` main-spec changes as a base).
 
-| #   | Stage           | Status  | Notes                                                                                                                                                                                                                       |
-| :-- | :-------------- | :------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0   | Frame           | done    | Change scaffolded via `/opsx:propose`: proposal, design (with 5 explicit open questions), 4 delta specs (agent-templates, prerecorded-audio, account-contact-log, web-console), tasks. `openspec validate --strict` passes. |
-| 1   | Design (Pencil) | pending | Human gate. Open questions in design.md need answers before Pencil work starts (task 0.1 in tasks.md).                                                                                                                      |
-| 2   | Spec reconcile  | pending |                                                                                                                                                                                                                             |
-| 3   | Build           | pending |                                                                                                                                                                                                                             |
-| 4   | Test            | pending |                                                                                                                                                                                                                             |
-| 5   | Sync            | pending |                                                                                                                                                                                                                             |
-| 6   | Archive         | pending |                                                                                                                                                                                                                             |
+| #   | Stage           | Status      | Notes                                                                                                                                                                                                                                                           |
+| :-- | :-------------- | :---------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0   | Frame           | done        | Change scaffolded via `/opsx:propose`: proposal, design (with 5 explicit open questions), 4 delta specs (agent-templates, prerecorded-audio, account-contact-log, web-console), tasks. `openspec validate --strict` passes.                                     |
+| 1   | Design (Pencil) | in-progress | Open questions resolved by the user 2026-08-21 (maxRepeats 2, timeout 5s, repeat press sets `camino: ENGAGED` — extended to opt-out too, no default digits, scope = 2 screens). Specs/design/tasks updated to match. Pencil screens themselves not yet touched. |
+| 2   | Spec reconcile  | pending     |                                                                                                                                                                                                                                                                 |
+| 3   | Build           | pending     |                                                                                                                                                                                                                                                                 |
+| 4   | Test            | pending     |                                                                                                                                                                                                                                                                 |
+| 5   | Sync            | pending     |                                                                                                                                                                                                                                                                 |
+| 6   | Archive         | pending     |                                                                                                                                                                                                                                                                 |
 
 Status values: `pending` · `in-progress` · `done` · `skipped` (with reason).
 
-## Open questions (must resolve before/at Design gate)
+## Open questions
 
-See design.md § Open Questions for full context:
-
-1. Default digits to pre-fill in the config form (repeat `1`, opt-out `9`? or blank)
-2. `maxRepeats` default — 2 (design leans this) or 3
-3. Gather timeout — proposing 5s
-4. Does a repeat press ever set `camino`? Design leans no (v1: repeat is silent on the axes,
-   only `channelData.repeatCount` records it)
-5. Pencil scope confirmation — pre-recorded template config form + Gestión detail/Gestiones
-   list only, or other screens too?
+None remain. All 5 resolved 2026-08-21 (see design.md § Design gate — resolved 2026-08-21).
 
 ## Decision log
 
 Newest first. One line per meaningful decision or stage transition.
 
+- 2026-08-21 — Design gate: user confirmed `maxRepeats` 2, gather timeout 5s, no default digits
+  pre-filled, and Pencil scope = exactly the template config form + Gestión detail/Gestiones
+  list. User also confirmed a repeat press DOES set `camino: ENGAGED` (reversing the initial
+  draft's lean). This session then extended `camino: ENGAGED` to the opt-out press too, as an
+  inference for consistency (opt-out is at least as strong an engagement signal as repeat) —
+  called out explicitly in design.md decision 4 in case that reach was wrong. Updated design.md,
+  all 3 affected delta specs (prerecorded-audio, account-contact-log, web-console — including a
+  new MODIFIED delta for web-console's "Gestión detail shows entrega, camino, and resultado"
+  requirement, whose "Camino is absent on one-way channels" scenario needed narrowing to SMS
+  only), and tasks.md. `openspec validate --strict` still passes. Next: Pencil (task 0.2).
 - 2026-08-21 — Frame done. Scaffolded via `/opsx:propose` after closing out the prerequisite
   `contact-log-axes` sync/archive (its `entrega`/`camino`/`resultado` model is the foundation
   this change narrows). Worktree fast-forward-merged the not-yet-merged
-  `docs/sync-archive-contact-log-axes` branch so specs/design here reference the _current_
+  `docs/sync-archive-contact-log-axes` branch so specs/design here reference the current
   main spec, not a stale pre-sync one. Design intentionally left 5 questions open rather than
   guessing defaults silently — flagged for the human gate per `/ps:ship` rules (design stage
   must not advance on the agent's own judgment).
-- 2026-08-21 — Scope decision: `resultado: OPT_OUT` only for the opt-out digit; a repeat press
-  sets neither `camino` nor `resultado` in v1 (only `channelData.repeatCount`), to avoid
-  inventing a `camino` meaning for a one-way IVR keypress that doesn't map cleanly onto the
-  ENGAGED/ABANDONED/VOICEMAIL enum built for conversational channels. Reversible later without
-  a schema change. Flagged as open question 4 for confirmation, not treated as locked.
 - 2026-08-21 — Scope decision: no new campaign-trigger/suppression behavior from the in-call
   opt-out — stays consistent with the existing "OPT_OUT is recorded, not auto-enforced" stance
   (`campaign-triggers` spec, issue #101 gap). Not re-litigated here.

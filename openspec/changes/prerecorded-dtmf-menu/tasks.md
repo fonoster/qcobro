@@ -1,11 +1,11 @@
 ## 0. Design gate
 
-- [ ] 0.1 Confirm the open questions in design.md with the user (default digits, `maxRepeats`
-      default, gather timeout, whether a repeat press ever gets a `camino`, Pencil scope) before
-      starting build
+- [x] 0.1 Confirm the open questions in design.md with the user — resolved 2026-08-21:
+      `maxRepeats` 2, gather timeout 5s, repeat press DOES set `camino: ENGAGED` (extended to
+      opt-out too), no default digits pre-filled, Pencil scope confirmed as the two screens below
 - [ ] 0.2 Pencil: update the pre-recorded template config screen with the two digit+message
       pairs and `maxRepeats`; confirm the Gestión detail/Gestiones list changes for a
-      pre-recorded `Resultado` row — get explicit sign-off before touching code
+      pre-recorded `Camino`/`Resultado` row — get explicit sign-off before touching code
 
 ## 1. Shared schemas (`mods/common`)
 
@@ -13,11 +13,11 @@
       to the `VoicePrerecordedConfig` schema, plus the cross-field validation (message required
       iff its digit is set; digits differ when both set; digit is a single `0`-`9` character)
 - [ ] 1.2 Loosen `createContactLogSchema`'s `channelCanEngage` rejection so `VOICE_PRERECORDED`
-      may set `resultado: OPT_OUT` specifically, while every other `resultado` value and any
-      `camino` value stay rejected for this channel — add a validation-failure test per still-
-      rejected combination
+      may set `camino: ENGAGED` and/or `resultado: OPT_OUT` specifically, while
+      `ABANDONED`/`VOICEMAIL` and every other `resultado` value stay rejected for this channel
+      — add a validation-failure test per still-rejected combination
 - [ ] 1.3 Extend `prerecordedCompletionSchema` (or the local extension in
-      `recordPrerecordedOutcome`) with an optional `resultado` input and an optional
+      `recordPrerecordedOutcome`) with optional `camino` and `resultado` inputs and an optional
       `repeatCount` for `channelData`
 
 ## 2. Database
@@ -42,21 +42,24 @@
 - [ ] 4.3 When at least one digit is configured: after the script, play the configured
       message(s), then `gather` one DTMF digit with a bounded timeout
 - [ ] 4.4 Branch on the gathered digit: repeat (loop back to play + gather, bounded by
-      `maxRepeats`, incrementing `channelData.repeatCount`), opt-out (hang up, mark completion
-      with `resultado: OPT_OUT`), anything else/timeout (hang up, no resultado)
+      `maxRepeats`, incrementing `channelData.repeatCount`, marking `camino: ENGAGED`),
+      opt-out (hang up, mark completion with `camino: ENGAGED` and `resultado: OPT_OUT`),
+      anything else/timeout (hang up, no `camino`/`resultado`)
 - [ ] 4.5 Unit/integration test the branch logic against a faked `VoiceRequest`/`VoiceResponse`
       for: no menu, repeat within cap, repeat at cap, opt-out, unrecognized digit, timeout
 
 ## 5. Completion recording (`mods/apiserver/src/functions/voice/recordPrerecordedOutcome.ts`)
 
-- [ ] 5.1 Accept and persist the optional `resultado` from the completion input, alongside the
-      existing `entrega`/`duration` logic, respecting the "only ever advance" idempotency rule
-      (a `resultado` already recorded is preserved on a duplicate completion)
+- [ ] 5.1 Accept and persist the optional `camino`/`resultado` from the completion input,
+      alongside the existing `entrega`/`duration` logic, respecting the "only ever advance"
+      idempotency rule (a `camino`/`resultado` already recorded is preserved on a duplicate
+      completion)
 - [ ] 5.2 Persist `channelData.repeatCount` when present
 - [ ] 5.3 Update the function's docstring — it currently states `camino`/`resultado` are never
-      set here for this channel; that is no longer true for the opt-out case
-- [ ] 5.4 Unit tests: opt-out sets `resultado`; no-menu call leaves it null; duplicate
-      completion doesn't clear or duplicate a recorded `resultado`
+      set here for this channel; that is no longer true for a repeat or opt-out press
+- [ ] 5.4 Unit tests: repeat press sets `camino: ENGAGED` only; opt-out sets both `camino` and
+      `resultado`; no-menu call leaves both null; duplicate completion doesn't clear or
+      duplicate a recorded `camino`/`resultado`
 
 ## 6. Webapp — agent template config (`mods/webapp`)
 
@@ -69,13 +72,14 @@
 
 ## 7. Webapp — Gestión detail & Gestiones list (`mods/webapp`)
 
-- [ ] 7.1 Stop hiding the `Resultado` row for `VOICE_PRERECORDED` in the gestión detail panel
-      when `resultado` is non-null; keep it hidden when null (no behavior change for the
+- [ ] 7.1 Stop hiding the `Camino` and `Resultado` rows for `VOICE_PRERECORDED` in the gestión
+      detail panel when non-null; keep both hidden when null (no behavior change for the
       common case)
 - [ ] 7.2 Confirm the Gestiones list's existing generic `RESULTADO` column already renders the
       pre-recorded opt-out value correctly with no per-channel special-casing needed
-- [ ] 7.3 Storybook stories: pre-recorded detail with `resultado` null (existing look,
-      regression check) and with `resultado` `OPT_OUT` (new)
+- [ ] 7.3 Storybook stories: pre-recorded detail with `camino`/`resultado` null (existing look,
+      regression check), with `camino` `ENGAGED` only (repeat press), and with both set
+      (opt-out)
 - [ ] 7.4 i18n strings for any new labels (EN/ES at minimum, matching the console's existing
       language set)
 
