@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.33.0](https://github.com/fonoster/qcobro/compare/v1.32.4...v1.33.0) (2026-08-22)
+
+### Features
+
+- **voice:** add optional DTMF repeat/opt-out menu to voz pregrabada ([#117](https://github.com/fonoster/qcobro/issues/117)) ([4e8896a](https://github.com/fonoster/qcobro/commit/4e8896a3b9891cfedb21f512eecd9acc6dcd5543)), closes [#88](https://github.com/fonoster/qcobro/issues/88) [#88](https://github.com/fonoster/qcobro/issues/88)
+
 ## [1.32.3](https://github.com/fonoster/qcobro/compare/v1.32.2...v1.32.3) (2026-08-21)
 
 ### Bug Fixes
