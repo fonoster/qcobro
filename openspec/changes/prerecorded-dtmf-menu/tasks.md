@@ -36,9 +36,25 @@
       columns to `voice_prerecorded_configs`. Hand-authored SQL (no live DB in this worktree to
       run `prisma migrate dev` against — see 9.3), following the exact style of the prior
       `20260820120000_contact_log_provider_message_id` migration.
-- [ ] 2.2 Run the migration against a scratch database and confirm existing rows default to
-      "no menu configured" (all five columns null) with no behavior change — **not done**, no
-      live Postgres available in this session; needs a real run before merge (see 9.3).
+- [x] 2.2 Ran against a real fresh Postgres (local dev stack via `compose.dev.yaml`): all 20
+      pre-existing migrations plus this one applied cleanly; confirmed the seeded pre-recorded
+      template's 5 new columns land null. This run also surfaced and fixed two real bugs a
+      mocked test could never catch — see 20260821195315 and 20260822010000 below.
+- [x] 2.1b Follow-up migration `20260821195315_contact_log_axes_drop_seed_table`: dropped
+      `dnc_seed_from_intent_status`, a scratch table `contact_log_axes` left behind with no
+      `schema.prisma` model. On a genuinely fresh database this makes `prisma migrate dev`
+      detect drift and prompt interactively for a new migration name — which hangs forever in
+      a non-interactive shell. Unrelated to DTMF, but blocked getting a scratch DB running at
+      all, so fixed here.
+- [x] 2.1c Follow-up migration `20260822010000_prerecorded_dtmf_check_constraint`: the real
+      bug. `contact_log_axes` added a DB-level CHECK constraint
+      (`account_contact_logs_one_way_channel_check`) mirroring the OLD `channelCanEngage`
+      rule, blocking ANY `camino`/`resultado` on `VOICE_PRERECORDED` unconditionally. Task
+      1.2's Zod-layer carve-out was never mirrored here, so a write the application accepted
+      still failed at the database with a check-constraint violation — invisible to every unit
+      test since they all mock Prisma. Found via a raw repro script against the live DB,
+      confirmed fixed the same way, plus confirmed the still-disallowed values (e.g.
+      `camino: ABANDONED`, or anything on `SMS`) are still rejected by the constraint.
 
 ## 3. Agent template validated functions (`mods/apiserver`)
 
@@ -90,9 +106,17 @@
 - [x] 6.1 Added the DTMF section (heading + 5 fields) to both `CreateAgentTemplateModal` and
       `EditAgentTemplateModal` in `AgentTemplates.tsx`, matching the signed-off Pencil design.
       The edit modal's existing generic config-seeding loop (`for (const [k,v] of
-    Object.entries(cfg))`) picked up the new fields with no code change.
+  Object.entries(cfg))`) picked up the new fields with no code change.
 - [x] 6.2 `validateVoicePrerecordedDtmf()` (shared by both modals) mirrors 1.1's rules
-      client-side; wired as live inline `error` props (not just a submit-time gate).
+      client-side; wired as live inline `error` props (not just a submit-time gate). Fixed a
+      duplicate-message bug caught by the new e2e test: the blocking-error path was also
+      pushing the same text into the dialog's generic bottom banner, rendering it twice.
+- [x] 6.2b Fixed a pre-existing bug found while writing the e2e test: both `<Dialog>` calls in
+      this file relied on the shared `Dialog` component's hardcoded English default
+      (`cancelLabel = "Cancel"`), so the Cancel button read "Cancel" regardless of the
+      console's locale. Passed `cancelLabel={t("common.cancel")}` (the key already existed).
+      8 other `<Dialog>` call sites elsewhere in `mods/webapp` have the same gap — left alone,
+      out of scope for a DTMF-menu change; worth its own pass.
 - [~] 6.3 Storybook stories: **skipped, not silently** — `AgentTemplates.tsx` is a data-fetching
   page component (uses `trpc` hooks directly) with no existing story and no established
   mocking pattern in this repo for page-level trpc components; this repo's Storybook usage
@@ -115,8 +139,8 @@
   silently.
 - [x] 7.4 i18n: no new _labels_ were needed — `gestiones.detail.camino`/`gestiones.detail.result`
       and the `gestiones.camino.ENGAGED`/`gestiones.resultado.OPT_OUT` value strings already
-      exist (used by VOICE_AI/EMAIL/WHATSAPP); this change only makes `VOICE_PRERECORDED`
-      eligible to reach them. New labels were added for the _template config form_ (6.1): 12
+      exist (used by VOICE*AI/EMAIL/WHATSAPP); this change only makes `VOICE_PRERECORDED`
+      eligible to reach them. New labels were added for the \_template config form* (6.1): 12
       keys × 2 locales in `i18n.tsx`.
 
 ## 8. Docs
@@ -134,16 +158,25 @@
       `tsconfig.app.json`), and full test suites all green: mods/common 196/196 total
       (18 new), mods/apiserver 450/450 total (20 new: 2 rewritten + 3 new in
       `recordPrerecordedOutcome.test.ts`, 4 new in `createAgentTemplate.test.ts`, 5 new in
-      `updateAgentTemplate.test.ts`, 11 new in `voiceServer.test.ts`). mods/webapp has no
-      unit-test runner in this repo (Storybook/Playwright only, per 6.3/7.3's finding) —
-      typecheck + lint were the applicable gates and both pass. One pre-existing unrelated
-      failure noted and left alone: `.storybook/main.ts`'s `tsConfigPath` vs `tsconfigPath`
-      typo, outside `tsconfig.app.json`'s scope.
-- [ ] 9.2 Playwright golden path — **not written**. This session prioritized backend +
-      webapp-unit-equivalent coverage given the effort budget; a golden-path e2e (configure a
-      template with both digits, drive a call to opt-out, confirm the gestión detail shows
-      `Resultado`) still needs writing before merge.
-- [ ] 9.3 Run the real dev stack once against live Fonoster — **not done**, not possible from
-      this session (no live Fonoster/Postgres access). This is a hard gate before merge per
-      this repo's own convention for DTMF/call-timing-sensitive changes: mocked tests won't
-      catch real gather timing/behavior, and 2.2's migration also needs a real run.
+      `updateAgentTemplate.test.ts`, 11 new in `voiceServer.test.ts`), and (once the local dev
+      stack was up) 24/24 e2e specs including the new one (9.2). mods/webapp has no unit-test
+      runner in this repo (Storybook/Playwright only, per 6.3/7.3's finding) — typecheck + lint
+      were the applicable gates and both pass. One pre-existing unrelated failure noted and
+      left alone: `.storybook/main.ts`'s `tsConfigPath` vs `tsconfigPath` typo, outside
+      `tsconfig.app.json`'s scope.
+- [x] 9.2 `e2e/prerecorded-dtmf-menu.spec.ts`: configure both digits through the console,
+      confirm inline validation rejects a half-configured digit, confirm the config round-trips
+      through Editar, seed a baseline + an opt-out gestión via the contact-log REST endpoint,
+      confirm the list/detail render `Camino`/`Resultado` only for the opt-out row, confirm the
+      API still rejects every other value for this channel. Ran against the real local dev
+      stack (real Postgres via `compose.dev.yaml`, real apiserver, real webapp, real browser via
+      Playwright) — green, along with the full existing e2e suite (24/24) and both unit suites.
+      This run is what surfaced the two migration bugs recorded under section 2.
+- [~] 9.3 Live Fonoster call — **still not done**, and still can't be done from here: this
+  session has real Fonoster credentials in a local `qcobro.json` but placing an actual
+  pre-recorded call is an external, billed side effect this session won't trigger without
+  being asked. Real gather timing/behavior against Fonoster itself remains unverified —
+  the DTMF branch logic itself IS covered (11 `voiceServer.test.ts` cases against a faked
+  verb surface), just not against the live provider. Recommend a manual smoke test before
+  merge: dispatch one real pre-recorded call to a real phone with both digits configured,
+  press each digit, confirm the resulting gestión.
