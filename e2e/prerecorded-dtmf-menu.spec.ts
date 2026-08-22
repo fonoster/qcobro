@@ -82,6 +82,21 @@ test.describe("pre-recorded DTMF menu", () => {
     await expect(page.getByLabel("Máximo de repeticiones")).toHaveValue("2");
     await page.getByRole("button", { name: "Cancelar", exact: true }).click();
 
+    // --- Clearing the opt-out digit/message actually disables it (not silently ignored) ---
+    await templateRow.getByRole("button", { name: "Acciones" }).click();
+    await page.getByRole("button", { name: "Editar" }).click();
+    await page.getByLabel("Dígito para darse de baja").fill("");
+    await page.getByLabel("Mensaje de baja").fill("");
+    await page.getByRole("button", { name: "Guardar cambios" }).click();
+    await expect(page.getByRole("button", { name: "Guardar cambios" })).toHaveCount(0);
+    await templateRow.getByRole("button", { name: "Acciones" }).click();
+    await page.getByRole("button", { name: "Editar" }).click();
+    await expect(page.getByLabel("Dígito para darse de baja")).toHaveValue("");
+    await expect(page.getByLabel("Mensaje de baja")).toHaveValue("");
+    // The repeat digit was never touched, so it should still be there.
+    await expect(page.getByLabel("Dígito para repetir")).toHaveValue("1");
+    await page.getByRole("button", { name: "Cancelar", exact: true }).click();
+
     // --- Resolve the account id, seed two pre-recorded gestiones -------------
     const auth = await page.evaluate(() => ({
       token: localStorage.getItem("accessToken"),

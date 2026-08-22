@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { voicePrerecordedDtmfSchema } from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
 import { useI18n, type MessageId } from "../lib/i18n.js";
 import { PageHeader } from "../components/page-header.js";
@@ -204,6 +205,11 @@ export function AgentTemplates() {
           onSuccess={() => {
             setEditing(null);
             utils.agentTemplates.list.invalidate();
+            // Without this, reopening Editar right after a save can show the pre-save
+            // values: `get` is keyed by this template's id and nothing else invalidates it,
+            // so the cached response from the last time this modal was open wins the race
+            // against a fresh fetch until it separately goes stale on its own.
+            utils.agentTemplates.get.invalidate({ id: editing.id });
           }}
         />
       )}
@@ -228,26 +234,46 @@ type DtmfFieldErrors = Partial<
 >;
 
 /**
- * Client-side mirror of `voicePrerecordedDtmfSchema`'s cross-field rules (a message is
- * required exactly when its digit is set; the two digits must differ) — surfaced inline so
- * an operator sees the problem before submitting, not just via the server's rejection.
+ * Client-side validation for the DTMF menu, inline so an operator sees the problem before
+ * submitting rather than only via the server's rejection. Delegates the actual rules (message
+ * required exactly when its digit is set, the two digits must differ, a digit is a single
+ * `0`-`9` character) to `voicePrerecordedDtmfSchema` — the same schema the server validates
+ * against — so this can only ever drift out of sync with the server on message wording, never
+ * on which inputs are accepted.
  */
 function validateVoicePrerecordedDtmf(
   fields: Record<string, string>,
   t: (id: MessageId) => string
 ): DtmfFieldErrors {
-  const repeatDigit = fields.repeatDigit?.trim();
-  const repeatMessage = fields.repeatMessage?.trim();
-  const optOutDigit = fields.optOutDigit?.trim();
-  const optOutMessage = fields.optOutMessage?.trim();
-  const errors: DtmfFieldErrors = {};
+  const result = voicePrerecordedDtmfSchema.safeParse({
+    repeatDigit: fields.repeatDigit || undefined,
+    repeatMessage: fields.repeatMessage || undefined,
+    maxRepeats: fields.maxRepeats ? Number(fields.maxRepeats) : undefined,
+    optOutDigit: fields.optOutDigit || undefined,
+    optOutMessage: fields.optOutMessage || undefined
+  });
+  if (result.success) return {};
 
-  if (repeatDigit && !repeatMessage) errors.repeatMessage = t("agents.form.dtmfMessageRequired");
-  if (repeatMessage && !repeatDigit) errors.repeatDigit = t("agents.form.dtmfDigitRequired");
-  if (optOutDigit && !optOutMessage) errors.optOutMessage = t("agents.form.dtmfMessageRequired");
-  if (optOutMessage && !optOutDigit) errors.optOutDigit = t("agents.form.dtmfDigitRequired");
-  if (repeatDigit && optOutDigit && repeatDigit === optOutDigit) {
-    errors.optOutDigit = t("agents.form.dtmfDigitsMustDiffer");
+  const errors: DtmfFieldErrors = {};
+  for (const issue of result.error.issues) {
+    const field = issue.path[0];
+    if (
+      field !== "repeatDigit" &&
+      field !== "repeatMessage" &&
+      field !== "optOutDigit" &&
+      field !== "optOutMessage"
+    ) {
+      continue;
+    }
+    if (issue.message.includes("must differ")) {
+      errors[field] = t("agents.form.dtmfDigitsMustDiffer");
+    } else if (issue.message.includes("single digit")) {
+      errors[field] = t("agents.form.dtmfDigitFormat");
+    } else if (field === "repeatMessage" || field === "optOutMessage") {
+      errors[field] = t("agents.form.dtmfMessageRequired");
+    } else {
+      errors[field] = t("agents.form.dtmfDigitRequired");
+    }
   }
   return errors;
 }
@@ -739,11 +765,15 @@ function EditAgentTemplateModal({
           voice: fields.voice,
           script: fields.script,
           language: fields.language,
-          ...(fields.repeatDigit ? { repeatDigit: fields.repeatDigit } : {}),
-          ...(fields.repeatMessage ? { repeatMessage: fields.repeatMessage } : {}),
-          ...(fields.maxRepeats ? { maxRepeats: Number(fields.maxRepeats) } : {}),
-          ...(fields.optOutDigit ? { optOutDigit: fields.optOutDigit } : {}),
-          ...(fields.optOutMessage ? { optOutMessage: fields.optOutMessage } : {})
+          // Sent explicitly (including null) rather than omitted-when-falsy: `fields` is
+          // always fully seeded from the current config on load, so this is the one place
+          // an operator can actually clear a previously-set digit/message and disable the
+          // menu — omitting empty values here would silently keep the old ones in the DB.
+          repeatDigit: fields.repeatDigit || null,
+          repeatMessage: fields.repeatMessage || null,
+          maxRepeats: fields.maxRepeats ? Number(fields.maxRepeats) : null,
+          optOutDigit: fields.optOutDigit || null,
+          optOutMessage: fields.optOutMessage || null
         };
         break;
       case "SMS":

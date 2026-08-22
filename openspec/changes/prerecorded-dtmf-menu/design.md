@@ -112,12 +112,14 @@ consistent with the issue's explicit multilingual rationale.
 
 **6. Console changes are additive, not new components.**
 
-`Resultado` already renders "only when non-null" everywhere else (per the just-synced
-`account-contact-log`/`web-console` model). The fix is removing `VOICE_PRERECORDED`'s blanket
-exception from the "no `Camino` field and no `Resultado` row" scenario in `web-console`'s
-Channel-aware Detalle de gestión and from the Gestiones list — no new UI pattern, no Pencil
-component work beyond confirming the pre-recorded detail block and list row degrade correctly
-with a `Resultado` value present. `Camino` stays hidden for this channel (per decision 4).
+`Camino` and `Resultado` already render "only when non-null" everywhere else (per the
+just-synced `account-contact-log`/`web-console` model). The fix is removing
+`VOICE_PRERECORDED`'s blanket exception from the "no `Camino` field and no `Resultado` row"
+scenario in `web-console`'s Channel-aware Detalle de gestión and from the Gestiones list — no
+new UI pattern, no Pencil component work beyond confirming the pre-recorded detail block and
+list row degrade correctly with a `Camino`/`Resultado` value present. (Decision 4, as
+originally drafted here, had `Camino` staying hidden for this channel; the design gate below
+reversed that — a repeat press sets it too, so this decision's scope grew to match.)
 
 ## Risks / Trade-offs
 
