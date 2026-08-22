@@ -312,7 +312,8 @@ function CreateAgentTemplateModal({
       return;
     }
     if (type === "VOICE_PRERECORDED" && Object.keys(createDtmfErrors).length > 0) {
-      setError(Object.values(createDtmfErrors)[0] ?? null);
+      // Each error already renders inline next to its field (see `error={createDtmfErrors...}`
+      // below) — no need to repeat it in the generic banner too.
       return;
     }
     setError(null);
@@ -383,6 +384,7 @@ function CreateAgentTemplateModal({
       onClose={onClose}
       title={t("agents.new")}
       confirmLabel={create.isPending ? "…" : t("agents.form.create")}
+      cancelLabel={t("common.cancel")}
       onConfirm={handleCreate}
     >
       <div className="mt-4 flex flex-col gap-3">
@@ -718,7 +720,7 @@ function EditAgentTemplateModal({
       return;
     }
     if (template.type === "VOICE_PRERECORDED" && Object.keys(editDtmfErrors).length > 0) {
-      setError(Object.values(editDtmfErrors)[0] ?? null);
+      // Each error already renders inline next to its field — no need to repeat it below.
       return;
     }
     setError(null);
@@ -779,6 +781,7 @@ function EditAgentTemplateModal({
       onClose={onClose}
       title={`${t("agents.actions.edit")}: ${template.name}`}
       confirmLabel={update.isPending ? "…" : t("agents.form.save")}
+      cancelLabel={t("common.cancel")}
       onConfirm={handleSave}
     >
       <div className="mt-4 flex flex-col gap-3">
