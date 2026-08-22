@@ -87,9 +87,26 @@ their respective child tables:
 - `voice String` — voice identifier used for TTS generation
 - `script String` — the full script text to be converted to speech
 - `language String` — language code for TTS synthesis
+- `repeatDigit String?` — single DTMF digit (`0`-`9`) that replays the script; unset means no
+  repeat option is offered
+- `repeatMessage String?` — spoken prompt played (once, after the script) inviting the caller
+  to press `repeatDigit`; required exactly when `repeatDigit` is set
+- `maxRepeats Int?` — how many times the script may be replayed in one call; only meaningful
+  when `repeatDigit` is set; defaults to 2 when omitted
+- `optOutDigit String?` — single DTMF digit that records an opt-out and ends the call; unset
+  means no opt-out option is offered
+- `optOutMessage String?` — spoken prompt inviting the caller to press `optOutDigit`; required
+  exactly when `optOutDigit` is set
+- `optOutConfirmationMessage String?` — spoken prompt played once `optOutDigit` is detected,
+  before hangup, closing the interaction out for the caller instead of ending the call with no
+  acknowledgment; required exactly when `optOutDigit` is set
 
 `VOICE_PRERECORDED` SHALL NOT carry a `firstMessage` field — the `script` is the
 complete spoken content.
+
+A template with neither `repeatDigit` nor `optOutDigit` set offers no DTMF menu at all —
+this is the default, and it is behaviorally identical to a template saved before this
+capability existed.
 
 #### Scenario: Voice template syncs to Fonoster on save
 
@@ -110,6 +127,31 @@ complete spoken content.
 - **THEN** the template is saved locally with `fonosterAppRef` remaining null
 - **AND** the UI shows an "Error de sincronización" warning
 - **AND** the operator can retry the sync manually
+
+#### Scenario: A DTMF digit requires its message
+
+- **WHEN** an operator saves a `VOICE_PRERECORDED` template with `repeatDigit` set and
+  `repeatMessage` empty (or vice versa)
+- **THEN** the save is rejected with a structured validation error naming the missing field
+- **AND** the same rule applies independently to `optOutDigit`/`optOutMessage`
+
+#### Scenario: The opt-out digit also requires its confirmation message
+
+- **WHEN** an operator saves a `VOICE_PRERECORDED` template with `optOutDigit` and
+  `optOutMessage` set but `optOutConfirmationMessage` empty
+- **THEN** the save is rejected with a structured validation error naming the missing field
+- **AND** setting `optOutConfirmationMessage` with `optOutDigit` empty is rejected the same way
+
+#### Scenario: Repeat and opt-out digits must differ
+
+- **WHEN** an operator saves a `VOICE_PRERECORDED` template with `repeatDigit` and
+  `optOutDigit` both set to the same digit
+- **THEN** the save is rejected with a structured validation error
+
+#### Scenario: A template with no digits configured is unchanged from before this capability
+
+- **WHEN** an operator saves a `VOICE_PRERECORDED` template leaving both digit fields empty
+- **THEN** the template saves with no DTMF menu, identical to a pre-existing template
 
 ### Requirement: Voice catalog is sourced from deployment config
 

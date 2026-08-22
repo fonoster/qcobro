@@ -79,9 +79,11 @@ Each `AccountContactLog` entry SHALL capture:
 **Channel-specific metadata**
 
 - `channelData Json?` — raw channel data, shape depends on `agentType`:
-  - Voice (VOICE_AI, VOICE_PRERECORDED): `{ callSid, recordingUrl?, transcriptUrl?, transcriptText?, scriptDurationSeconds? }`
+  - Voice (VOICE_AI, VOICE_PRERECORDED): `{ callSid, recordingUrl?, transcriptUrl?, transcriptText?, scriptDurationSeconds?, repeatCount? }`
     where `scriptDurationSeconds?` is the nominal length of the synthesized pre-recorded clip,
-    stored so a future report can compare it against the answered `durationSeconds`
+    stored so a future report can compare it against the answered `durationSeconds`, and
+    `repeatCount?` (VOICE_PRERECORDED only) is how many times the caller replayed the script
+    via the DTMF menu
   - SMS: `{ messageSid, deliveryStatus }`
   - Email: `{ deliveryStatus, openedAt?, optOutAt? }` — the provider message id is **not** here;
     it is an indexed correlation key and lives in `providerMessageId` (see System fields)
@@ -126,12 +128,18 @@ return it to `DISPATCHED` or change it between `DELIVERED` and `FAILED`.
 
 The channel physically bounds which axes are reachable:
 
-- `SMS` and `VOICE_PRERECORDED` have no inbound path, so they SHALL produce `entrega` only —
-  `camino` and `resultado` SHALL remain null.
-- `VOICE_PRERECORDED` SHALL set `entrega` to `DELIVERED` when the call was **answered** and
-  `FAILED` otherwise, together with the answered `durationSeconds`. `DELIVERED` SHALL mean only
-  that the call was answered — it SHALL NOT be construed or displayed as proof that the account
-  holder heard the message.
+- `SMS` has no inbound path at all, so it SHALL produce `entrega` only — `camino` and
+  `resultado` SHALL remain null.
+- `VOICE_PRERECORDED` has no inbound path **except** its optional DTMF menu (see
+  `prerecorded-audio`): with no menu configured, or when the caller presses nothing/an
+  unrecognized digit, it SHALL produce `entrega` only. When the menu is configured and the
+  caller presses any configured digit, it SHALL additionally set `camino` to `ENGAGED`; when
+  that digit is specifically the opt-out digit, it SHALL also set `resultado` to `OPT_OUT`.
+  `camino` on this channel is reachable only as `ENGAGED` — `ABANDONED`/`VOICEMAIL` are not
+  observable from a DTMF press. `VOICE_PRERECORDED` SHALL set `entrega` to `DELIVERED` when
+  the call was **answered** and `FAILED` otherwise, together with the answered
+  `durationSeconds`. `DELIVERED` SHALL mean only that the call was answered — it SHALL NOT be
+  construed or displayed as proof that the account holder heard the message.
 - `VOICE_AI` MAY produce the full set, including `camino` of `VOICEMAIL` or `ABANDONED`.
 - `EMAIL` and `WHATSAPP` MAY produce any `resultado`, but `camino` SHALL only be `ENGAGED` —
   a threaded channel has no observable voicemail or abandonment.
@@ -151,14 +159,30 @@ The channel physically bounds which axes are reachable:
 - **AND** `camino` and `resultado` remain null
 - **AND** no payment promise or other tracked entity is created
 
-#### Scenario: Pre-recorded records answered-vs-not, with duration
+#### Scenario: Pre-recorded records answered-vs-not, with duration, when no menu is configured
 
-- **WHEN** a `VOICE_PRERECORDED` call completes
+- **WHEN** a `VOICE_PRERECORDED` call completes and the template has no DTMF menu configured
 - **THEN** the gestión `entrega` is `DELIVERED` when the call was answered or `FAILED`
   when it was never answered
 - **AND** when answered, `durationSeconds` carries the answer→hangup duration
 - **AND** `DELIVERED` does not assert the account holder heard the message
 - **AND** `camino` and `resultado` remain null
+
+#### Scenario: Pre-recorded records engagement via a repeat press
+
+- **WHEN** a `VOICE_PRERECORDED` call's template has a repeat digit configured and the caller
+  presses it (within the repeat cap)
+- **THEN** the gestión `entrega` is `DELIVERED`
+- **AND** `camino` is `ENGAGED`
+- **AND** `resultado` remains null
+
+#### Scenario: Pre-recorded records an opt-out via its DTMF menu
+
+- **WHEN** a `VOICE_PRERECORDED` call's template has an opt-out digit configured and the
+  caller presses it
+- **THEN** the gestión `entrega` is `DELIVERED`
+- **AND** `camino` is `ENGAGED`
+- **AND** `resultado` is `OPT_OUT`
 
 #### Scenario: A wrong-party conversation is a delivery success
 
