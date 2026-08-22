@@ -41,6 +41,21 @@ None remain. All 5 resolved 2026-08-21 (see design.md § Design gate — resolve
 
 Newest first. One line per meaningful decision or stage transition.
 
+- 2026-08-22 — User asked for `/code-review medium --fix` on the branch. 3 findings, all
+  fixed: (1) real bug — Editar for VOICE_PRERECORDED only sent a DTMF field to the update
+  patch when truthy, so clearing a previously-set digit/message and saving silently kept the
+  old value; there was no way to disable a configured menu from the console. Now sends every
+  field explicitly, including null. (2) Fixing that exposed a second real bug via the
+  extended e2e test: the edit modal never invalidated `agentTemplates.get` after a save, so
+  reopening Editar could show stale pre-save values. Invalidated it alongside `list`.
+  (3) The webapp hand-rolled the same DTMF cross-field rules already in
+  `voicePrerecordedDtmfSchema` (`@qcobro/common`) — now delegates to the shared schema and
+  maps its Zod issues to the existing localized messages, which also picked up digit-format
+  validation the hand-rolled version never had. Also fixed a stale design.md sentence
+  (decision 6 still said Camino stays hidden for this channel). Extended
+  `e2e/prerecorded-dtmf-menu.spec.ts` to cover the clear-field case. Full sweep green again:
+  196/196 common, 450/450 apiserver, 24/24 e2e, lint+typecheck clean.
+
 - 2026-08-22 — User asked to actually run the stack locally to see the UI. Brought up
   `compose.dev.yaml` (Postgres + Identity + Mailpit) in this worktree, copied local-dev-only
   `config/qcobro.json` and `config/identity/identity.json`+keys from the main checkout (all
