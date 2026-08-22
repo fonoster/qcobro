@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.34.0](https://github.com/fonoster/qcobro/compare/v1.33.0...v1.34.0) (2026-08-22)
+
+### Features
+
+- **voice:** add an opt-out confirmation message to the dtmf menu ([#119](https://github.com/fonoster/qcobro/issues/119)) ([3377ae4](https://github.com/fonoster/qcobro/commit/3377ae468ba95aa6bc6b4f64b8f0578dd50a9f21)), closes [#117](https://github.com/fonoster/qcobro/issues/117)
+
 # [1.33.0](https://github.com/fonoster/qcobro/compare/v1.32.4...v1.33.0) (2026-08-22)
 
 ### Features
