@@ -56,7 +56,8 @@ export function createCreateAgentTemplate(
               repeatMessage: params.repeatMessage ?? null,
               maxRepeats: params.maxRepeats ?? null,
               optOutDigit: params.optOutDigit ?? null,
-              optOutMessage: params.optOutMessage ?? null
+              optOutMessage: params.optOutMessage ?? null,
+              optOutConfirmationMessage: params.optOutConfirmationMessage ?? null
             }
           });
           break;

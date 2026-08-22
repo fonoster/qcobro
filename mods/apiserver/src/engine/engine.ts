@@ -84,6 +84,7 @@ export interface EngineTemplate {
     maxRepeats: number | null;
     optOutDigit: string | null;
     optOutMessage: string | null;
+    optOutConfirmationMessage: string | null;
   } | null;
   smsConfig: { messageBody: string } | null;
   emailConfig: {
@@ -397,7 +398,8 @@ export function createEngine(deps: EngineDeps) {
       repeatMessage: t.voicePrerecordedConfig?.repeatMessage ?? undefined,
       maxRepeats: t.voicePrerecordedConfig?.maxRepeats ?? undefined,
       optOutDigit: t.voicePrerecordedConfig?.optOutDigit ?? undefined,
-      optOutMessage: t.voicePrerecordedConfig?.optOutMessage ?? undefined
+      optOutMessage: t.voicePrerecordedConfig?.optOutMessage ?? undefined,
+      optOutConfirmationMessage: t.voicePrerecordedConfig?.optOutConfirmationMessage ?? undefined
     };
   }
 

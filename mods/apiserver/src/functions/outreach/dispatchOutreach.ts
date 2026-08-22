@@ -173,6 +173,9 @@ export function createDispatchOutreach(deps: DispatchDeps) {
       if (params.maxRepeats != null) metadata.maxRepeats = String(params.maxRepeats);
       if (params.optOutDigit) metadata.optOutDigit = params.optOutDigit;
       if (params.optOutMessage) metadata.optOutMessage = params.optOutMessage;
+      if (params.optOutConfirmationMessage) {
+        metadata.optOutConfirmationMessage = params.optOutConfirmationMessage;
+      }
     } else {
       renderedBody = renderTemplate(params.firstMessage ?? "", params.context);
       metadata = { firstMessage: renderedBody };

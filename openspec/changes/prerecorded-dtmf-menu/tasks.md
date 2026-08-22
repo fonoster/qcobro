@@ -106,7 +106,7 @@
 - [x] 6.1 Added the DTMF section (heading + 5 fields) to both `CreateAgentTemplateModal` and
       `EditAgentTemplateModal` in `AgentTemplates.tsx`, matching the signed-off Pencil design.
       The edit modal's existing generic config-seeding loop (`for (const [k,v] of
-  Object.entries(cfg))`) picked up the new fields with no code change.
+Object.entries(cfg))`) picked up the new fields with no code change.
 - [x] 6.2 `validateVoicePrerecordedDtmf()` (shared by both modals) mirrors 1.1's rules
       client-side; wired as live inline `error` props (not just a submit-time gate). Fixed a
       duplicate-message bug caught by the new e2e test: the blocking-error path was also
@@ -180,3 +180,43 @@
   verb surface), just not against the live provider. Recommend a manual smoke test before
   merge: dispatch one real pre-recorded call to a real phone with both digits configured,
   press each digit, confirm the resulting gestión.
+
+## 10. Opt-out confirmation message (post-verification addition, 2026-08-22)
+
+Live-stack testing feedback from the user (see design.md § Post-verification revision):
+after opting out, the caller heard nothing before the call ended. Fixed by adding a sixth
+DTMF field, `optOutConfirmationMessage`, played once the opt-out digit is detected, before
+hangup. A separate barge-in request (press at any time during script playback) was
+investigated and then explicitly withdrawn by the user in favor of the existing
+after-message gather — no code changes for that; see design.md for the investigation notes
+in case it resurfaces.
+
+- [x] 10.1 Pencil: added "Mensaje de confirmación de baja" as a sixth field on the DTMF
+      section of "Crear agente · Voz pregrabada" (`pencil.pen`, node `oVSuA`, appended after
+      "Mensaje de baja"). No Gestión-detail Pencil changes needed — this is call-flow
+      behavior, not a new gestión data field.
+- [x] 10.2 `mods/common`: added `optOutConfirmationMessage` to `voicePrerecordedDtmfFields`
+      and `checkVoicePrerecordedDtmfFields` (required exactly when `optOutDigit` is set, same
+      terms as `optOutMessage`); to `dispatchOutreachSchema`; to `VoicePrerecordedConfigRecord`.
+      4 new tests in `agentTemplates.test.ts`.
+- [x] 10.3 `mods/apiserver`: added the column to `schema.prisma` + a new migration
+      (`20260822020000_prerecorded_optout_confirmation`, applied directly to the running dev
+      DB rather than via `prisma migrate dev`, whose drift-checker was blocked by the earlier
+      migration-folder rename in section 2 — see the ship checkpoint); wired through
+      `createAgentTemplate.ts`, `updateAgentTemplate.ts` (`DTMF_FIELDS` list), the three
+      dispatch call sites (`dispatchOutreach.ts`, `outreach.ts`, `engine.ts`,
+      `prismaEngineClient.ts`), and `voiceServer.ts` (plays the message right after the
+      opt-out digit is detected, before hangup — only when configured; a template with no
+      confirmation message behaves exactly as before this addition). 2 new tests in
+      `createAgentTemplate.test.ts`, 2 new in `updateAgentTemplate.test.ts`, 3 new in
+      `voiceServer.test.ts`.
+- [x] 10.4 `mods/webapp`: added the field to both create and edit forms (`AgentTemplates.tsx`),
+      wired through the shared-schema-backed client validation from the code-review fix
+      (task list above), and 2 new i18n keys (EN/ES).
+- [x] 10.5 Extended `e2e/prerecorded-dtmf-menu.spec.ts`: the create flow now also exercises
+      the confirmation-message-required rejection and fills/persists it; the clear-fields
+      regression case now also clears (and re-verifies) the confirmation message.
+- [x] 10.6 Updated the delta specs (`agent-templates`, `prerecorded-audio`) and the docs-site
+      guide. `openspec validate --strict` passes.
+- [x] 10.7 Full sweep green: mods/common 198/198, mods/apiserver 456/456, e2e 24/24, lint +
+      typecheck clean across all three packages.

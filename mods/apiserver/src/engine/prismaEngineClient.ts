@@ -57,7 +57,9 @@ export function createPrismaEngineClient(prisma: PrismaClient): EngineClient {
                     repeatMessage: c.agentTemplate.voicePrerecordedConfig.repeatMessage,
                     maxRepeats: c.agentTemplate.voicePrerecordedConfig.maxRepeats,
                     optOutDigit: c.agentTemplate.voicePrerecordedConfig.optOutDigit,
-                    optOutMessage: c.agentTemplate.voicePrerecordedConfig.optOutMessage
+                    optOutMessage: c.agentTemplate.voicePrerecordedConfig.optOutMessage,
+                    optOutConfirmationMessage:
+                      c.agentTemplate.voicePrerecordedConfig.optOutConfirmationMessage
                   }
                 : null,
               smsConfig: c.agentTemplate.smsConfig

@@ -38,6 +38,15 @@ describe("readDtmfMenu", () => {
     assert.equal(menu?.repeatDigit, undefined);
     assert.equal(menu?.optOutDigit, "9");
   });
+
+  it("reads the opt-out confirmation message", () => {
+    const menu = readDtmfMenu({
+      optOutDigit: "9",
+      optOutMessage: "Presione 9.",
+      optOutConfirmationMessage: "Hemos registrado su solicitud."
+    });
+    assert.equal(menu?.optOutConfirmationMessage, "Hemos registrado su solicitud.");
+  });
 });
 
 describe("handlePrerecordedCall", () => {
@@ -121,6 +130,36 @@ describe("handlePrerecordedCall", () => {
 
     assert.deepEqual(calls, ["answer", "say:Script", "gather", "hangup"]);
     assert.deepEqual(result, { camino: "ENGAGED", resultado: "OPT_OUT", repeatCount: 0 });
+  });
+
+  it("opt-out plays the confirmation message before hanging up, when configured", async () => {
+    const { verbs, calls } = makeVerbs(["9"]);
+    const menu = {
+      repeatDigit: "1",
+      optOutDigit: "9",
+      optOutConfirmationMessage: "Hemos registrado su solicitud.",
+      maxRepeats: 2
+    };
+
+    const result = await handlePrerecordedCall("Script", menu, verbs);
+
+    assert.deepEqual(calls, [
+      "answer",
+      "say:Script",
+      "gather",
+      "say:Hemos registrado su solicitud.",
+      "hangup"
+    ]);
+    assert.deepEqual(result, { camino: "ENGAGED", resultado: "OPT_OUT", repeatCount: 0 });
+  });
+
+  it("opt-out with no confirmation message configured hangs up straight away (unchanged)", async () => {
+    const { verbs, calls } = makeVerbs(["9"]);
+    const menu = { repeatDigit: "1", optOutDigit: "9", maxRepeats: 2 };
+
+    await handlePrerecordedCall("Script", menu, verbs);
+
+    assert.deepEqual(calls, ["answer", "say:Script", "gather", "hangup"]);
   });
 
   it("plays the configured menu messages once, before the first gather", async () => {

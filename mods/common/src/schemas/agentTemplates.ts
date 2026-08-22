@@ -27,7 +27,11 @@ const voicePrerecordedDtmfFields = {
   /** How many times the script may be replayed in one call; only meaningful with `repeatDigit`. */
   maxRepeats: z.number().int().positive().optional(),
   optOutDigit: digitSchema.optional(),
-  optOutMessage: z.string().min(1).optional()
+  /** Invitation prompt, played before the gather (e.g. "Presione 9 para darse de baja"). */
+  optOutMessage: z.string().min(1).optional(),
+  /** Close-out prompt, played once the opt-out digit is detected and before hangup (e.g.
+   * "Hemos registrado su solicitud"). Without it the call just ends with no acknowledgment. */
+  optOutConfirmationMessage: z.string().min(1).optional()
 };
 
 /**
@@ -42,6 +46,7 @@ function checkVoicePrerecordedDtmfFields(
     repeatMessage?: string;
     optOutDigit?: string;
     optOutMessage?: string;
+    optOutConfirmationMessage?: string;
   },
   ctx: z.RefinementCtx
 ): void {
@@ -71,6 +76,23 @@ function checkVoicePrerecordedDtmfFields(
       code: "custom",
       path: ["optOutDigit"],
       message: "optOutDigit is required when optOutMessage is set"
+    });
+  }
+  // The confirmation is what closes the call out for the caller — "we've stopped calling
+  // you" — not merely a nice-to-have, so it's required on the same terms as the invitation:
+  // whenever optOutDigit is configured, both of its messages must be authored.
+  if (value.optOutDigit && !value.optOutConfirmationMessage) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["optOutConfirmationMessage"],
+      message: "optOutConfirmationMessage is required when optOutDigit is set"
+    });
+  }
+  if (value.optOutConfirmationMessage && !value.optOutDigit) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["optOutDigit"],
+      message: "optOutDigit is required when optOutConfirmationMessage is set"
     });
   }
   if (value.repeatDigit && value.optOutDigit && value.repeatDigit === value.optOutDigit) {

@@ -70,6 +70,18 @@ test.describe("pre-recorded DTMF menu", () => {
     await page.getByLabel("Máximo de repeticiones").fill("2");
     await page.getByLabel("Dígito para darse de baja").fill("9");
     await page.getByLabel("Mensaje de baja").fill("Presione 9 si no desea recibir más llamadas.");
+
+    // The opt-out digit + message alone are not enough — the confirmation message played
+    // after the digit is detected is required too, so the caller isn't left with silence.
+    await page.getByRole("button", { name: "Crear agente" }).click();
+    await expect(
+      page.getByText("Se requiere un mensaje cuando este dígito está definido.")
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Crear agente" })).toBeVisible();
+
+    await page
+      .getByLabel("Mensaje de confirmación de baja")
+      .fill("Hemos registrado su solicitud. No recibirá más llamadas de este número.");
     await page.getByRole("button", { name: "Crear agente" }).click();
     await expect(page.getByText(agentName)).toBeVisible();
 
@@ -80,19 +92,24 @@ test.describe("pre-recorded DTMF menu", () => {
     await expect(page.getByLabel("Dígito para repetir")).toHaveValue("1");
     await expect(page.getByLabel("Dígito para darse de baja")).toHaveValue("9");
     await expect(page.getByLabel("Máximo de repeticiones")).toHaveValue("2");
+    await expect(page.getByLabel("Mensaje de confirmación de baja")).toHaveValue(
+      "Hemos registrado su solicitud. No recibirá más llamadas de este número."
+    );
     await page.getByRole("button", { name: "Cancelar", exact: true }).click();
 
-    // --- Clearing the opt-out digit/message actually disables it (not silently ignored) ---
+    // --- Clearing the opt-out digit/messages actually disables it (not silently ignored) --
     await templateRow.getByRole("button", { name: "Acciones" }).click();
     await page.getByRole("button", { name: "Editar" }).click();
     await page.getByLabel("Dígito para darse de baja").fill("");
     await page.getByLabel("Mensaje de baja").fill("");
+    await page.getByLabel("Mensaje de confirmación de baja").fill("");
     await page.getByRole("button", { name: "Guardar cambios" }).click();
     await expect(page.getByRole("button", { name: "Guardar cambios" })).toHaveCount(0);
     await templateRow.getByRole("button", { name: "Acciones" }).click();
     await page.getByRole("button", { name: "Editar" }).click();
     await expect(page.getByLabel("Dígito para darse de baja")).toHaveValue("");
     await expect(page.getByLabel("Mensaje de baja")).toHaveValue("");
+    await expect(page.getByLabel("Mensaje de confirmación de baja")).toHaveValue("");
     // The repeat digit was never touched, so it should still be there.
     await expect(page.getByLabel("Dígito para repetir")).toHaveValue("1");
     await page.getByRole("button", { name: "Cancelar", exact: true }).click();
