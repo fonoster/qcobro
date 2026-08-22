@@ -58,14 +58,31 @@ export type Resultado = z.infer<typeof resultadoSchema>;
 
 /**
  * Channels with an inbound path, and therefore the only ones that can observe a `camino` or
- * produce a `resultado`. `SMS` and `VOICE_PRERECORDED` have no inbound ingestion at all, so
- * both axes are not merely usually-null there — they are unreachable.
+ * produce a `resultado`. `SMS` has no inbound ingestion at all, so both axes are not merely
+ * usually-null there — they are unreachable. `VOICE_PRERECORDED` is the one exception: it has
+ * no inbound path of its own, but its optional DTMF menu (see `prerecorded-audio`) can produce
+ * exactly `camino: ENGAGED` and/or `resultado: OPT_OUT` — nothing else. See
+ * {@link isAllowedOnPrerecorded} for that narrow carve-out.
  */
 export const CHANNEL_CAN_ENGAGE = ["VOICE_AI", "EMAIL", "WHATSAPP"] as const;
 
 /** Whether a channel can observe an interaction beyond delivery. */
 export function channelCanEngage(agentType: string): boolean {
   return (CHANNEL_CAN_ENGAGE as readonly string[]).includes(agentType);
+}
+
+const PRERECORDED_ALLOWED_CAMINO: ReadonlySet<Camino> = new Set(["ENGAGED"]);
+const PRERECORDED_ALLOWED_RESULTADO: ReadonlySet<Resultado> = new Set(["OPT_OUT"]);
+
+/**
+ * `VOICE_PRERECORDED`'s one carve-out from {@link channelCanEngage}: a DTMF press can set
+ * `camino: ENGAGED` and/or `resultado: OPT_OUT`, and nothing else — `ABANDONED`/`VOICEMAIL`
+ * and every other `resultado` value stay unreachable, exactly as for any other one-way channel.
+ */
+function isAllowedOnPrerecorded(field: "camino" | "resultado", value: Camino | Resultado): boolean {
+  return field === "camino"
+    ? PRERECORDED_ALLOWED_CAMINO.has(value as Camino)
+    : PRERECORDED_ALLOWED_RESULTADO.has(value as Resultado);
 }
 
 export const aiSentimentSchema = z.enum(["POSITIVE", "NEUTRAL", "NEGATIVE", "HOSTILE"]);
@@ -149,13 +166,18 @@ export const createContactLogSchema = createContactLogFields.superRefine((value,
   }
   if (!channelCanEngage(value.agentType)) {
     for (const field of ["camino", "resultado"] as const) {
-      if (value[field]) {
-        ctx.addIssue({
-          code: "custom",
-          path: [field],
-          message: `${value.agentType} has no inbound path, so ${field} cannot be set`
-        });
+      const fieldValue = value[field];
+      if (!fieldValue) continue;
+      if (value.agentType === "VOICE_PRERECORDED" && isAllowedOnPrerecorded(field, fieldValue)) {
+        continue;
       }
+      ctx.addIssue({
+        code: "custom",
+        path: [field],
+        message: `${value.agentType} has no inbound path, so ${field} cannot be set${
+          value.agentType === "VOICE_PRERECORDED" ? ` to ${fieldValue}` : ""
+        }`
+      });
     }
   }
 });

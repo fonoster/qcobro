@@ -1,6 +1,12 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { ValidationError, type DeliveryReason, type Entrega } from "@qcobro/common";
+import {
+  ValidationError,
+  type Camino,
+  type DeliveryReason,
+  type Entrega,
+  type Resultado
+} from "@qcobro/common";
 import { createRecordPrerecordedOutcome } from "./recordPrerecordedOutcome.js";
 
 interface Captured {
@@ -13,6 +19,8 @@ function makeClient(
     id: string;
     entrega: Entrega;
     deliveryReason?: DeliveryReason | null;
+    camino?: Camino | null;
+    resultado?: Resultado | null;
     channelData: unknown;
   } | null
 ) {
@@ -21,7 +29,7 @@ function makeClient(
     accountContactLog: {
       findFirst: async () => {
         cap.findFirstCalled = true;
-        return record ? { deliveryReason: null, ...record } : null;
+        return record ? { deliveryReason: null, camino: null, resultado: null, ...record } : null;
       },
       update: async (args: { where: { id: string }; data: Record<string, unknown> }) => {
         cap.update = args;
@@ -54,7 +62,9 @@ describe("recordPrerecordedOutcome", () => {
       matched: true,
       id: "g-1",
       entrega: "DELIVERED",
-      deliveryReason: null
+      deliveryReason: null,
+      camino: null,
+      resultado: null
     });
     assert.equal(cap.update?.data.entrega, "DELIVERED");
     assert.equal(cap.update?.data.durationSeconds, 22);
@@ -79,21 +89,55 @@ describe("recordPrerecordedOutcome", () => {
       matched: true,
       id: "g-1",
       entrega: "FAILED",
-      deliveryReason: "NO_ANSWER"
+      deliveryReason: "NO_ANSWER",
+      camino: null,
+      resultado: null
     });
     assert.equal(cap.update?.data.entrega, "FAILED");
     assert.equal(cap.update?.data.deliveryReason, "NO_ANSWER");
     assert.equal(cap.update?.data.durationSeconds, 0);
   });
 
-  /** VOICE_PRERECORDED has no inbound path, so neither axis is ever written here. */
-  it("never writes camino or resultado", async () => {
+  /** No DTMF menu configured (the common case): neither axis is ever written. */
+  it("never writes camino or resultado when the completion carries neither", async () => {
     const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
 
     await createRecordPrerecordedOutcome(client as never)(ANSWERED);
 
     assert.equal(cap.update?.data.camino, undefined);
     assert.equal(cap.update?.data.resultado, undefined);
+  });
+
+  it("a repeat press sets camino ENGAGED only, and stores repeatCount", async () => {
+    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+
+    const result = await createRecordPrerecordedOutcome(client as never)({
+      ...ANSWERED,
+      camino: "ENGAGED",
+      repeatCount: 2
+    });
+
+    assert.equal(result.matched && result.camino, "ENGAGED");
+    assert.equal(result.matched && result.resultado, null);
+    assert.equal(cap.update?.data.camino, "ENGAGED");
+    assert.equal(cap.update?.data.resultado, undefined);
+    const cd = cap.update?.data.channelData as Record<string, unknown>;
+    assert.equal(cd.repeatCount, 2);
+  });
+
+  it("an opt-out press sets camino ENGAGED and resultado OPT_OUT", async () => {
+    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+
+    const result = await createRecordPrerecordedOutcome(client as never)({
+      ...ANSWERED,
+      camino: "ENGAGED",
+      resultado: "OPT_OUT"
+    });
+
+    assert.equal(result.matched && result.camino, "ENGAGED");
+    assert.equal(result.matched && result.resultado, "OPT_OUT");
+    assert.equal(cap.update?.data.camino, "ENGAGED");
+    assert.equal(cap.update?.data.resultado, "OPT_OUT");
   });
 
   it("idempotent: entrega only advances, a finalized value is never downgraded", async () => {
@@ -110,6 +154,27 @@ describe("recordPrerecordedOutcome", () => {
     assert.equal(result.matched && result.entrega, "DELIVERED");
     assert.equal(cap.update?.data.entrega, undefined, "entrega not rewritten");
     assert.equal(cap.update?.data.deliveryReason, undefined, "no reason on a delivered call");
+  });
+
+  it("idempotent: a duplicate completion does not overwrite a recorded camino/resultado", async () => {
+    const { client, cap } = makeClient({
+      id: "g-1",
+      entrega: "DELIVERED",
+      camino: "ENGAGED",
+      resultado: "OPT_OUT",
+      channelData: {}
+    });
+
+    const result = await createRecordPrerecordedOutcome(client as never)({
+      ...ANSWERED,
+      camino: "ENGAGED",
+      resultado: "OPT_OUT"
+    });
+
+    assert.equal(result.matched && result.camino, "ENGAGED");
+    assert.equal(result.matched && result.resultado, "OPT_OUT");
+    assert.equal(cap.update?.data.camino, undefined, "camino not rewritten");
+    assert.equal(cap.update?.data.resultado, undefined, "resultado not rewritten");
   });
 
   it("returns matched:false and does not update when no gestión matches the callRef", async () => {

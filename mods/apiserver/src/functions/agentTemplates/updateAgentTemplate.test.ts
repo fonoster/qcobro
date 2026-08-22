@@ -3,9 +3,13 @@ import assert from "node:assert/strict";
 import { createUpdateAgentTemplate } from "./updateAgentTemplate.js";
 import { ValidationError } from "@qcobro/common";
 
-function makeClient(type = "SMS") {
+function makeClient(
+  type = "SMS",
+  existingPrerecordedConfig: Record<string, unknown> | null = null
+) {
   let baseUpdate: Record<string, unknown> | null = null;
   let smsUpdate: Record<string, unknown> | null = null;
+  let prerecordedUpdate: Record<string, unknown> | null = null;
 
   const client = {
     agentTemplate: {
@@ -17,7 +21,21 @@ function makeClient(type = "SMS") {
     },
     voiceAiConfig: { update: async () => ({}) as never, create: async () => ({}) as never },
     voicePrerecordedConfig: {
-      update: async () => ({}) as never,
+      findUnique: async () =>
+        (existingPrerecordedConfig
+          ? {
+              repeatDigit: null,
+              repeatMessage: null,
+              maxRepeats: null,
+              optOutDigit: null,
+              optOutMessage: null,
+              ...existingPrerecordedConfig
+            }
+          : null) as never,
+      update: async (args: { where: unknown; data: Record<string, unknown> }) => {
+        prerecordedUpdate = args.data;
+        return {} as never;
+      },
       create: async () => ({}) as never
     },
     smsConfig: {
@@ -31,7 +49,7 @@ function makeClient(type = "SMS") {
     whatsAppConfig: { update: async () => ({}) as never, create: async () => ({}) as never }
   };
 
-  return { client, stats: () => ({ baseUpdate, smsUpdate }) };
+  return { client, stats: () => ({ baseUpdate, smsUpdate, prerecordedUpdate }) };
 }
 
 describe("updateAgentTemplate", () => {
@@ -76,5 +94,78 @@ describe("updateAgentTemplate", () => {
     await fn({ id: "tmpl-1", archived: false });
 
     assert.equal(stats().baseUpdate?.archivedAt, null);
+  });
+
+  describe("VOICE_PRERECORDED DTMF config patch", () => {
+    it("adding a full menu from scratch succeeds", async () => {
+      const { client, stats } = makeClient("VOICE_PRERECORDED", {});
+      const fn = createUpdateAgentTemplate(client as never, "ws-1");
+
+      await fn({
+        id: "tmpl-1",
+        config: {
+          repeatDigit: "1",
+          repeatMessage: "Presione 1 para repetir.",
+          optOutDigit: "9",
+          optOutMessage: "Presione 9 para darse de baja."
+        }
+      });
+
+      assert.equal(stats().prerecordedUpdate?.repeatDigit, "1");
+    });
+
+    it("patching only the message when its digit is already persisted succeeds", async () => {
+      const { client, stats } = makeClient("VOICE_PRERECORDED", {
+        repeatDigit: "1",
+        repeatMessage: "Old message."
+      });
+      const fn = createUpdateAgentTemplate(client as never, "ws-1");
+
+      await fn({ id: "tmpl-1", config: { repeatMessage: "New message." } });
+
+      assert.equal(stats().prerecordedUpdate?.repeatMessage, "New message.");
+    });
+
+    it("rejects setting a message with no persisted or patched digit", async () => {
+      const { client } = makeClient("VOICE_PRERECORDED", {});
+      const fn = createUpdateAgentTemplate(client as never, "ws-1");
+
+      await assert.rejects(
+        () => fn({ id: "tmpl-1", config: { repeatMessage: "Presione 1 para repetir." } }),
+        ValidationError
+      );
+    });
+
+    it("rejects clearing a digit while its persisted message remains implied", async () => {
+      // Existing row has repeatDigit "1" + repeatMessage set; patch tries to change
+      // optOutDigit to collide with the (untouched, still-persisted) repeatDigit.
+      const { client } = makeClient("VOICE_PRERECORDED", {
+        repeatDigit: "1",
+        repeatMessage: "Presione 1 para repetir."
+      });
+      const fn = createUpdateAgentTemplate(client as never, "ws-1");
+
+      await assert.rejects(
+        () =>
+          fn({
+            id: "tmpl-1",
+            config: { optOutDigit: "1", optOutMessage: "Presione 1 para darse de baja." }
+          }),
+        ValidationError
+      );
+    });
+
+    it("a patch touching no DTMF field skips DTMF validation entirely", async () => {
+      // Existing row is already in an invalid-looking shape (shouldn't happen in practice,
+      // but proves the merge check only runs when the patch actually touches a DTMF field).
+      const { client, stats } = makeClient("VOICE_PRERECORDED", {
+        fonosterAppName: "old-name"
+      } as never);
+      const fn = createUpdateAgentTemplate(client as never, "ws-1");
+
+      await fn({ id: "tmpl-1", config: { voice: "voice-y" } });
+
+      assert.equal(stats().prerecordedUpdate?.voice, "voice-y");
+    });
   });
 });

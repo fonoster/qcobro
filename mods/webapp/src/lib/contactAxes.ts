@@ -63,8 +63,11 @@ function caminoWord(t: Translate, camino: string, agentType: string): string {
 
 /**
  * The interaction as an arrow-joined progression of the stages actually reached, always
- * starting from dispatch. Returns null on channels with no inbound path, where there is no
- * interaction to describe.
+ * starting from dispatch. Returns null on `SMS`, which has no inbound path at all. Also
+ * returns null whenever there is nothing to describe — which, for every channel except
+ * `VOICE_PRERECORDED`, is implied by `channelCanEngage`; `VOICE_PRERECORDED` gets its own
+ * check just below because its DTMF menu can produce a real `camino: ENGAGED` even though
+ * `channelCanEngage` (a channel-fixed check) says it can't — see `account-contact-log`.
  *
  * `Leído` is a display-only stage taken from `channelData.openedAt`; read-but-unengaged is
  * deliberately not modelled as a `camino` value, so it appears here and in no metric.
@@ -75,7 +78,8 @@ export function caminoPath(
   camino: string | null | undefined,
   channelData?: Record<string, unknown> | null
 ): string | null {
-  if (!channelCanEngage(agentType)) return null;
+  if (agentType === "SMS") return null;
+  if (!channelCanEngage(agentType) && agentType !== "VOICE_PRERECORDED") return null;
   if (!camino && !channelData?.openedAt) return null;
 
   const stages = [t(key("gestiones.entrega.DISPATCHED"))];

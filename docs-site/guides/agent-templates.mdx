@@ -44,7 +44,10 @@ Los campos cambian según el tipo de canal elegido:
   comportarse el agente) y, opcionalmente, un **Primer mensaje**. Si no defines el primer
   mensaje, el agente espera a que el cliente inicie. Puedes limitar las respuestas del
   autopiloto por caso.
-- **Voz pregrabada**: define el **Guion** que se reproduce y la **Voz**.
+- **Voz pregrabada**: define el **Guion** que se reproduce y la **Voz**. Opcionalmente, activa
+  un **menú DTMF** para que quien recibe la llamada pueda presionar un dígito al terminar el
+  guion: uno para repetir el mensaje y otro para pedir que no lo vuelvan a llamar. Ver
+  [Menú DTMF en voz pregrabada](#menú-dtmf-en-voz-pregrabada) más abajo.
 - **SMS**: escribe el **Cuerpo del mensaje** y, opcionalmente, un **ID de remitente**.
 - **WhatsApp**: indica el **ID de plantilla de Meta**; QCobro trae el texto ya aprobado y lo
   muestra de solo lectura como vista previa (no lo redactas en QCobro). Agrega un **Prompt del
@@ -62,6 +65,26 @@ Los campos cambian según el tipo de canal elegido:
   QCobro es multilingüe: el **Idioma** del agente determina en qué idioma se comunica con la
   cuenta. Crea un agente por idioma cuando lo necesites.
 </Note>
+
+## Menú DTMF en voz pregrabada
+
+Al terminar el guion, un agente de **voz pregrabada** puede ofrecer hasta dos opciones que la
+persona activa marcando un dígito de su teléfono:
+
+- **Repetir**: vuelve a reproducir el guion. Puedes limitar cuántas veces se puede repetir por
+  llamada con **Máximo de repeticiones**.
+- **Darse de baja**: termina la llamada de inmediato y deja constancia de la solicitud en la
+  gestión, visible para el equipo.
+
+Cada opción es independiente y ambas empiezan desactivadas: si no defines un dígito, esa
+opción no se ofrece. Al activar un dígito debes escribir también el mensaje que se reproduce
+para invitar a presionarlo (por ejemplo, "Para escuchar este mensaje de nuevo, presione 1"), y
+los dos dígitos, si defines ambos, deben ser distintos entre sí.
+
+<Tip>
+  El mensaje de cada opción es tuyo: escríbelo en el idioma y tono del agente. QCobro no agrega
+  ni traduce ese texto por su cuenta.
+</Tip>
 
 ## Variables disponibles
 

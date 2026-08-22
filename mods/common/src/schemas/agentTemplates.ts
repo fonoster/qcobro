@@ -13,61 +13,143 @@ const baseFields = {
   name: z.string().min(1).max(120)
 };
 
+const digitSchema = z.string().regex(/^[0-9]$/, "must be a single digit 0-9");
+
+/**
+ * Fields for the optional DTMF menu offered after a pre-recorded script plays: a "repeat"
+ * digit that replays it and an "opt-out" digit that ends the call and records `resultado:
+ * OPT_OUT` (see the `prerecorded-audio` and `account-contact-log` specs). Both pairs are
+ * independently optional; neither set means no menu is offered at all.
+ */
+const voicePrerecordedDtmfFields = {
+  repeatDigit: digitSchema.optional(),
+  repeatMessage: z.string().min(1).optional(),
+  /** How many times the script may be replayed in one call; only meaningful with `repeatDigit`. */
+  maxRepeats: z.number().int().positive().optional(),
+  optOutDigit: digitSchema.optional(),
+  optOutMessage: z.string().min(1).optional()
+};
+
+/**
+ * A message is required exactly when its digit is set, and the two digits (when both set)
+ * must differ. Shared by the create schema (full config, checked via superRefine on the
+ * union) and by the update path (which merges a partial `config` patch onto the persisted
+ * row before re-checking, since `updateAgentTemplateSchema.config` is an unvalidated bag).
+ */
+function checkVoicePrerecordedDtmfFields(
+  value: {
+    repeatDigit?: string;
+    repeatMessage?: string;
+    optOutDigit?: string;
+    optOutMessage?: string;
+  },
+  ctx: z.RefinementCtx
+): void {
+  if (value.repeatDigit && !value.repeatMessage) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["repeatMessage"],
+      message: "repeatMessage is required when repeatDigit is set"
+    });
+  }
+  if (value.repeatMessage && !value.repeatDigit) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["repeatDigit"],
+      message: "repeatDigit is required when repeatMessage is set"
+    });
+  }
+  if (value.optOutDigit && !value.optOutMessage) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["optOutMessage"],
+      message: "optOutMessage is required when optOutDigit is set"
+    });
+  }
+  if (value.optOutMessage && !value.optOutDigit) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["optOutDigit"],
+      message: "optOutDigit is required when optOutMessage is set"
+    });
+  }
+  if (value.repeatDigit && value.optOutDigit && value.repeatDigit === value.optOutDigit) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["optOutDigit"],
+      message: "optOutDigit must differ from repeatDigit"
+    });
+  }
+}
+
+/** Standalone reusable schema for the update path (see {@link checkVoicePrerecordedDtmfFields}). */
+export const voicePrerecordedDtmfSchema = z
+  .object(voicePrerecordedDtmfFields)
+  .superRefine(checkVoicePrerecordedDtmfFields);
+export type VoicePrerecordedDtmfConfig = z.infer<typeof voicePrerecordedDtmfSchema>;
+
 /**
  * Creating an agent template is a discriminated union on `type`: each channel
  * carries its own config fields, never mixed across types. `fonosterAppName` is
  * optional on voice types — the create function defaults it to the template name.
  */
-export const createAgentTemplateSchema = z.discriminatedUnion("type", [
-  z.object({
-    ...baseFields,
-    type: z.literal("VOICE_AI"),
-    voice: z.string().min(1),
-    systemPrompt: z.string().min(1),
-    // Optional: a VOICE_AI agent may rely on its system prompt with no scripted opening line.
-    firstMessage: z.string().optional(),
-    language: z.string().min(1),
-    fonosterAppName: z.string().min(1).optional()
-  }),
-  z.object({
-    ...baseFields,
-    type: z.literal("VOICE_PRERECORDED"),
-    voice: z.string().min(1),
-    script: z.string().min(1),
-    language: z.string().min(1),
-    fonosterAppName: z.string().min(1).optional()
-  }),
-  z.object({
-    ...baseFields,
-    type: z.literal("SMS"),
-    messageBody: z.string().min(1),
-    senderId: z.string().min(1).optional()
-  }),
-  z.object({
-    ...baseFields,
-    type: z.literal("EMAIL"),
-    subject: z.string().min(1),
-    messageBody: z.string().min(1),
-    /** Autopilot decision brain: governs reply/ignore/resolve/escalate on each inbound reply. */
-    systemPrompt: z.string().min(1),
-    /** Per-agent cap on autopilot replies per collection attempt; falls back to the
-     * `resend.maxRepliesDefault` deployment default when omitted. */
-    maxReplies: z.number().int().nonnegative().optional()
-  }),
-  z.object({
-    ...baseFields,
-    type: z.literal("WHATSAPP"),
-    /** Meta template name the operator enters; QCobro resolves + previews the template from
-     * the WABA by this name, and it's the same name used to send. */
-    templateName: z.string().min(1),
-    /** Fetched template body (read-only preview); its `{{vars}}` are sent as named parameters. */
-    messageBody: z.string().min(1),
-    /** Smart-agent decision brain for replies after the customer responds (mirrors EMAIL). */
-    systemPrompt: z.string().min(1),
-    /** Per-agent cap on automated replies per gestión; falls back to the deployment default when omitted. */
-    maxReplies: z.number().int().nonnegative().optional()
-  })
-]);
+export const createAgentTemplateSchema = z
+  .discriminatedUnion("type", [
+    z.object({
+      ...baseFields,
+      type: z.literal("VOICE_AI"),
+      voice: z.string().min(1),
+      systemPrompt: z.string().min(1),
+      // Optional: a VOICE_AI agent may rely on its system prompt with no scripted opening line.
+      firstMessage: z.string().optional(),
+      language: z.string().min(1),
+      fonosterAppName: z.string().min(1).optional()
+    }),
+    z.object({
+      ...baseFields,
+      type: z.literal("VOICE_PRERECORDED"),
+      voice: z.string().min(1),
+      script: z.string().min(1),
+      language: z.string().min(1),
+      fonosterAppName: z.string().min(1).optional(),
+      ...voicePrerecordedDtmfFields
+    }),
+    z.object({
+      ...baseFields,
+      type: z.literal("SMS"),
+      messageBody: z.string().min(1),
+      senderId: z.string().min(1).optional()
+    }),
+    z.object({
+      ...baseFields,
+      type: z.literal("EMAIL"),
+      subject: z.string().min(1),
+      messageBody: z.string().min(1),
+      /** Autopilot decision brain: governs reply/ignore/resolve/escalate on each inbound reply. */
+      systemPrompt: z.string().min(1),
+      /** Per-agent cap on autopilot replies per collection attempt; falls back to the
+       * `resend.maxRepliesDefault` deployment default when omitted. */
+      maxReplies: z.number().int().nonnegative().optional()
+    }),
+    z.object({
+      ...baseFields,
+      type: z.literal("WHATSAPP"),
+      /** Meta template name the operator enters; QCobro resolves + previews the template from
+       * the WABA by this name, and it's the same name used to send. */
+      templateName: z.string().min(1),
+      /** Fetched template body (read-only preview); its `{{vars}}` are sent as named parameters. */
+      messageBody: z.string().min(1),
+      /** Smart-agent decision brain for replies after the customer responds (mirrors EMAIL). */
+      systemPrompt: z.string().min(1),
+      /** Per-agent cap on automated replies per gestión; falls back to the deployment default when omitted. */
+      maxReplies: z.number().int().nonnegative().optional()
+    })
+  ])
+  .superRefine((value, ctx) => {
+    if (value.type === "VOICE_PRERECORDED") {
+      checkVoicePrerecordedDtmfFields(value, ctx);
+    }
+  });
 export type CreateAgentTemplateInput = z.infer<typeof createAgentTemplateSchema>;
 
 /**
