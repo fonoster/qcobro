@@ -208,12 +208,33 @@ describe("createAgentTemplate", () => {
       repeatMessage: "Presione 1 para repetir.",
       maxRepeats: 2,
       optOutDigit: "9",
-      optOutMessage: "Presione 9 para no recibir más llamadas."
+      optOutMessage: "Presione 9 para no recibir más llamadas.",
+      optOutConfirmationMessage: "Hemos registrado su solicitud."
     });
 
     assert.equal(created.voiceAi?.repeatDigit, "1");
     assert.equal(created.voiceAi?.maxRepeats, 2);
     assert.equal(created.voiceAi?.optOutDigit, "9");
+    assert.equal(created.voiceAi?.optOutConfirmationMessage, "Hemos registrado su solicitud.");
+  });
+
+  it("rejects an opt-out digit + message with no confirmation message", async () => {
+    const { client } = makeClient();
+    const fn = createCreateAgentTemplate(client as never, "ws-1");
+
+    await assert.rejects(
+      () =>
+        fn({
+          name: "Aviso de pago",
+          type: "VOICE_PRERECORDED",
+          voice: "voice-x",
+          script: "Su saldo pendiente es...",
+          language: "es",
+          optOutDigit: "9",
+          optOutMessage: "Presione 9 para no recibir más llamadas."
+        }),
+      ValidationError
+    );
   });
 
   it("rejects a DTMF digit with no message", async () => {
@@ -249,7 +270,8 @@ describe("createAgentTemplate", () => {
           repeatDigit: "1",
           repeatMessage: "Presione 1 para repetir.",
           optOutDigit: "1",
-          optOutMessage: "Presione 1 para darse de baja."
+          optOutMessage: "Presione 1 para darse de baja.",
+          optOutConfirmationMessage: "Hemos registrado su solicitud."
         }),
       ValidationError
     );

@@ -32,6 +32,9 @@ their respective child tables:
   means no opt-out option is offered
 - `optOutMessage String?` — spoken prompt inviting the caller to press `optOutDigit`; required
   exactly when `optOutDigit` is set
+- `optOutConfirmationMessage String?` — spoken prompt played once `optOutDigit` is detected,
+  before hangup, closing the interaction out for the caller instead of ending the call with no
+  acknowledgment; required exactly when `optOutDigit` is set
 
 `VOICE_PRERECORDED` SHALL NOT carry a `firstMessage` field — the `script` is the
 complete spoken content.
@@ -66,6 +69,13 @@ capability existed.
   `repeatMessage` empty (or vice versa)
 - **THEN** the save is rejected with a structured validation error naming the missing field
 - **AND** the same rule applies independently to `optOutDigit`/`optOutMessage`
+
+#### Scenario: The opt-out digit also requires its confirmation message
+
+- **WHEN** an operator saves a `VOICE_PRERECORDED` template with `optOutDigit` and
+  `optOutMessage` set but `optOutConfirmationMessage` empty
+- **THEN** the save is rejected with a structured validation error naming the missing field
+- **AND** setting `optOutConfirmationMessage` with `optOutDigit` empty is rejected the same way
 
 #### Scenario: Repeat and opt-out digits must differ
 

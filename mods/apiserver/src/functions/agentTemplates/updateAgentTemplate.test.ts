@@ -29,6 +29,7 @@ function makeClient(
               maxRepeats: null,
               optOutDigit: null,
               optOutMessage: null,
+              optOutConfirmationMessage: null,
               ...existingPrerecordedConfig
             }
           : null) as never,
@@ -107,11 +108,47 @@ describe("updateAgentTemplate", () => {
           repeatDigit: "1",
           repeatMessage: "Presione 1 para repetir.",
           optOutDigit: "9",
-          optOutMessage: "Presione 9 para darse de baja."
+          optOutMessage: "Presione 9 para darse de baja.",
+          optOutConfirmationMessage: "Hemos registrado su solicitud."
         }
       });
 
       assert.equal(stats().prerecordedUpdate?.repeatDigit, "1");
+    });
+
+    it("rejects an opt-out digit + message with no confirmation message", async () => {
+      const { client } = makeClient("VOICE_PRERECORDED", {});
+      const fn = createUpdateAgentTemplate(client as never, "ws-1");
+
+      await assert.rejects(
+        () =>
+          fn({
+            id: "tmpl-1",
+            config: {
+              optOutDigit: "9",
+              optOutMessage: "Presione 9 para darse de baja."
+            }
+          }),
+        ValidationError
+      );
+    });
+
+    it("adding just the confirmation message when digit + message are already persisted succeeds", async () => {
+      const { client, stats } = makeClient("VOICE_PRERECORDED", {
+        optOutDigit: "9",
+        optOutMessage: "Presione 9 para darse de baja."
+      });
+      const fn = createUpdateAgentTemplate(client as never, "ws-1");
+
+      await fn({
+        id: "tmpl-1",
+        config: { optOutConfirmationMessage: "Hemos registrado su solicitud." }
+      });
+
+      assert.equal(
+        stats().prerecordedUpdate?.optOutConfirmationMessage,
+        "Hemos registrado su solicitud."
+      );
     });
 
     it("patching only the message when its digit is already persisted succeeds", async () => {

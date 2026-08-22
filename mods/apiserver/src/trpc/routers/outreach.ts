@@ -40,6 +40,7 @@ type TemplateWithConfigs = {
     maxRepeats: number | null;
     optOutDigit: string | null;
     optOutMessage: string | null;
+    optOutConfirmationMessage: string | null;
   } | null;
   smsConfig: { messageBody: string } | null;
   emailConfig: { subject: string; messageBody: string; systemPrompt: string } | null;
@@ -88,7 +89,9 @@ function buildDispatchRequest(
         repeatMessage: template.voicePrerecordedConfig.repeatMessage ?? undefined,
         maxRepeats: template.voicePrerecordedConfig.maxRepeats ?? undefined,
         optOutDigit: template.voicePrerecordedConfig.optOutDigit ?? undefined,
-        optOutMessage: template.voicePrerecordedConfig.optOutMessage ?? undefined
+        optOutMessage: template.voicePrerecordedConfig.optOutMessage ?? undefined,
+        optOutConfirmationMessage:
+          template.voicePrerecordedConfig.optOutConfirmationMessage ?? undefined
       };
     case "EMAIL":
       if (!template.emailConfig)

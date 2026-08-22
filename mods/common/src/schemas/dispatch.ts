@@ -41,6 +41,7 @@ export const dispatchOutreachSchema = z
     maxRepeats: z.number().int().positive().optional(),
     optOutDigit: z.string().optional(),
     optOutMessage: z.string().optional(),
+    optOutConfirmationMessage: z.string().optional(),
     /** SMS / EMAIL / WHATSAPP: message body template. For WHATSAPP this is the fetched
      * template body whose `{{vars}}` are extracted and sent as named parameters. */
     body: z.string().optional(),

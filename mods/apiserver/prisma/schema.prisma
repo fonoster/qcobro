@@ -238,6 +238,9 @@ model VoicePrerecordedConfig {
   maxRepeats      Int?
   optOutDigit     String?
   optOutMessage   String?
+  // Played once the opt-out digit is detected, before hangup — closes the call out for the
+  // caller ("we've stopped calling you") rather than just ending it silently.
+  optOutConfirmationMessage String?
   template        AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@map("voice_prerecorded_configs")

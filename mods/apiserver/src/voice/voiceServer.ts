@@ -47,6 +47,9 @@ export interface DtmfMenu {
   maxRepeats: number;
   optOutDigit?: string;
   optOutMessage?: string;
+  /** Played once the opt-out digit is detected, before hangup — closes the interaction out
+   * for the caller instead of just ending the call with no acknowledgment. */
+  optOutConfirmationMessage?: string;
 }
 
 export function readDtmfMenu(metadata: Record<string, string> | undefined): DtmfMenu | null {
@@ -60,7 +63,8 @@ export function readDtmfMenu(metadata: Record<string, string> | undefined): Dtmf
     repeatMessage: metadata?.repeatMessage || undefined,
     maxRepeats: Number.isFinite(parsedMaxRepeats) ? parsedMaxRepeats : DEFAULT_MAX_REPEATS,
     optOutDigit,
-    optOutMessage: metadata?.optOutMessage || undefined
+    optOutMessage: metadata?.optOutMessage || undefined,
+    optOutConfirmationMessage: metadata?.optOutConfirmationMessage || undefined
   };
 }
 
@@ -81,9 +85,9 @@ export interface PrerecordedCallVerbs {
  * template configured a DTMF menu (`repeatDigit`/`optOutDigit` present in metadata; see
  * `agent-templates`) — play whichever menu message(s) are set and gather a single DTMF
  * digit. Pressing the repeat digit (while under the per-call cap) replays the script and
- * gathers again; pressing the opt-out digit ends the call immediately. Any other digit, or
- * a timed-out gather, hangs up — identical to a template with no menu configured at all.
- * See `prerecorded-audio`.
+ * gathers again; pressing the opt-out digit plays the opt-out confirmation message (if
+ * configured) and ends the call. Any other digit, or a timed-out gather, hangs up —
+ * identical to a template with no menu configured at all. See `prerecorded-audio`.
  *
  * Returns the fields `onCompleted` needs beyond `answeredSeconds`/`providerRef`/`at`, which
  * the caller (the VoiceServer's real Fonoster callback, or a test) attaches itself — kept
@@ -118,6 +122,7 @@ export async function handlePrerecordedCall(
       if (menu.optOutDigit && digits === menu.optOutDigit) {
         camino = "ENGAGED";
         resultado = "OPT_OUT";
+        if (menu.optOutConfirmationMessage) await res.say(menu.optOutConfirmationMessage);
         break;
       }
       if (menu.repeatDigit && digits === menu.repeatDigit) {

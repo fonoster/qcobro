@@ -15,7 +15,8 @@ const DTMF_FIELDS = [
   "repeatMessage",
   "maxRepeats",
   "optOutDigit",
-  "optOutMessage"
+  "optOutMessage",
+  "optOutConfirmationMessage"
 ] as const;
 
 /**
@@ -31,6 +32,7 @@ function assertValidPrerecordedDtmfPatch(
     maxRepeats: number | null;
     optOutDigit: string | null;
     optOutMessage: string | null;
+    optOutConfirmationMessage: string | null;
   },
   patch: Record<string, unknown>
 ): void {

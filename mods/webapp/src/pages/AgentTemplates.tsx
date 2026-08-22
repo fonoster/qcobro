@@ -230,7 +230,10 @@ const CREATABLE_TYPES: AgentType[] = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "E
 const LANGUAGES = ["es", "en"] as const;
 
 type DtmfFieldErrors = Partial<
-  Record<"repeatDigit" | "repeatMessage" | "optOutDigit" | "optOutMessage", string>
+  Record<
+    "repeatDigit" | "repeatMessage" | "optOutDigit" | "optOutMessage" | "optOutConfirmationMessage",
+    string
+  >
 >;
 
 /**
@@ -250,7 +253,8 @@ function validateVoicePrerecordedDtmf(
     repeatMessage: fields.repeatMessage || undefined,
     maxRepeats: fields.maxRepeats ? Number(fields.maxRepeats) : undefined,
     optOutDigit: fields.optOutDigit || undefined,
-    optOutMessage: fields.optOutMessage || undefined
+    optOutMessage: fields.optOutMessage || undefined,
+    optOutConfirmationMessage: fields.optOutConfirmationMessage || undefined
   });
   if (result.success) return {};
 
@@ -261,7 +265,8 @@ function validateVoicePrerecordedDtmf(
       field !== "repeatDigit" &&
       field !== "repeatMessage" &&
       field !== "optOutDigit" &&
-      field !== "optOutMessage"
+      field !== "optOutMessage" &&
+      field !== "optOutConfirmationMessage"
     ) {
       continue;
     }
@@ -269,7 +274,11 @@ function validateVoicePrerecordedDtmf(
       errors[field] = t("agents.form.dtmfDigitsMustDiffer");
     } else if (issue.message.includes("single digit")) {
       errors[field] = t("agents.form.dtmfDigitFormat");
-    } else if (field === "repeatMessage" || field === "optOutMessage") {
+    } else if (
+      field === "repeatMessage" ||
+      field === "optOutMessage" ||
+      field === "optOutConfirmationMessage"
+    ) {
       errors[field] = t("agents.form.dtmfMessageRequired");
     } else {
       errors[field] = t("agents.form.dtmfDigitRequired");
@@ -367,7 +376,10 @@ function CreateAgentTemplateModal({
           ...(fields.repeatMessage ? { repeatMessage: fields.repeatMessage } : {}),
           ...(fields.maxRepeats ? { maxRepeats: Number(fields.maxRepeats) } : {}),
           ...(fields.optOutDigit ? { optOutDigit: fields.optOutDigit } : {}),
-          ...(fields.optOutMessage ? { optOutMessage: fields.optOutMessage } : {})
+          ...(fields.optOutMessage ? { optOutMessage: fields.optOutMessage } : {}),
+          ...(fields.optOutConfirmationMessage
+            ? { optOutConfirmationMessage: fields.optOutConfirmationMessage }
+            : {})
         };
         break;
       case "SMS":
@@ -533,6 +545,13 @@ function CreateAgentTemplateModal({
               value={fields.optOutMessage ?? ""}
               onChange={(e) => set("optOutMessage", e.target.value)}
               error={createDtmfErrors.optOutMessage}
+            />
+            <TextareaGroup
+              label={t("agents.form.optOutConfirmationMessage")}
+              id="a-optout-confirmation"
+              value={fields.optOutConfirmationMessage ?? ""}
+              onChange={(e) => set("optOutConfirmationMessage", e.target.value)}
+              error={createDtmfErrors.optOutConfirmationMessage}
             />
           </>
         )}
@@ -773,7 +792,8 @@ function EditAgentTemplateModal({
           repeatMessage: fields.repeatMessage || null,
           maxRepeats: fields.maxRepeats ? Number(fields.maxRepeats) : null,
           optOutDigit: fields.optOutDigit || null,
-          optOutMessage: fields.optOutMessage || null
+          optOutMessage: fields.optOutMessage || null,
+          optOutConfirmationMessage: fields.optOutConfirmationMessage || null
         };
         break;
       case "SMS":
@@ -933,6 +953,13 @@ function EditAgentTemplateModal({
                   value={fields.optOutMessage ?? ""}
                   onChange={(e) => set("optOutMessage", e.target.value)}
                   error={editDtmfErrors.optOutMessage}
+                />
+                <TextareaGroup
+                  label={t("agents.form.optOutConfirmationMessage")}
+                  id="e-optout-confirmation"
+                  value={fields.optOutConfirmationMessage ?? ""}
+                  onChange={(e) => set("optOutConfirmationMessage", e.target.value)}
+                  error={editDtmfErrors.optOutConfirmationMessage}
                 />
               </>
             )}

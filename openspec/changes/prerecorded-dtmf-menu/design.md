@@ -153,3 +153,32 @@ All open questions from the initial draft were confirmed by the user:
    screen is in scope.
 
 No questions remain open. Proceeding to Pencil (stage 1 of `/ps:ship`).
+
+## Post-verification revision — 2026-08-22
+
+Local live-stack testing (see the ship checkpoint) surfaced two live-call UX gaps the user
+found by actually working through the flow, resolved as follows:
+
+1. **"I have to wait for the whole message before I can press anything."** Raised as a
+   barge-in request (let the caller press a digit at any point during script/menu playback,
+   not only after). Investigated feasibility against the real `@fonoster/voice` SDK — `say()`
+   returns a stoppable playback and `stopSay()` can interrupt one in flight, so barge-in _with
+   audio interruption_ is technically buildable. The user then clarified the actual ask: the
+   press should be **captured** at any time, but the **audio must keep playing
+   uninterrupted** — i.e. not `stopSay()`-based barge-in. That reframing pointed at
+   `sgather` (`@fonoster/common`'s `StreamGatherSource`/`StreamGatherPayload`, streaming
+   per-digit payloads via a callback rather than one bounded `gather()` call) as a cleaner fit,
+   since it sidesteps having to guess a combined "script duration + grace window" timeout for a
+   single `gather()` call. **Decision: dropped entirely, not deferred.** The user reconsidered
+   mid-investigation and confirmed the existing after-message gather is sufficient — "we can
+   give them the option at the end to reply, and that should be enough." No `sgather` work was
+   started; noted here only so a future reader doesn't rediscover the same investigation from
+   scratch if barge-in comes up again.
+2. **"I opted out but never got a confirmation — I expected something like 'we've removed you
+   from the list.'"** Real gap, fixed: added `optOutConfirmationMessage`, a sixth DTMF field
+   on `VoicePrerecordedConfig`, played once the opt-out digit is detected and before hangup.
+   Required whenever `optOutDigit` is set, on the same terms as `optOutMessage` — the
+   established "if you turn on a digit, you author its full experience" rule extends
+   naturally to the digit's outcome, not just its invitation. `repeatDigit` gets no equivalent
+   confirmation — replaying the script _is_ its own confirmation, and the user's complaint was
+   specifically about the terminal, no-further-feedback opt-out action.

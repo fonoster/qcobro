@@ -13,7 +13,8 @@ describe("voicePrerecordedDtmfSchema", () => {
       repeatMessage: "Presione 1 para repetir.",
       maxRepeats: 2,
       optOutDigit: "9",
-      optOutMessage: "Presione 9 para darse de baja."
+      optOutMessage: "Presione 9 para darse de baja.",
+      optOutConfirmationMessage: "Hemos registrado su solicitud."
     });
     assert.equal(result.success, true);
   });
@@ -38,6 +39,21 @@ describe("voicePrerecordedDtmfSchema", () => {
 
   it("rejects an opt-out digit with no message", () => {
     const result = voicePrerecordedDtmfSchema.safeParse({ optOutDigit: "9" });
+    assert.equal(result.success, false);
+  });
+
+  it("rejects an opt-out digit + message with no confirmation message", () => {
+    const result = voicePrerecordedDtmfSchema.safeParse({
+      optOutDigit: "9",
+      optOutMessage: "Presione 9 para darse de baja."
+    });
+    assert.equal(result.success, false);
+  });
+
+  it("rejects a confirmation message with no opt-out digit", () => {
+    const result = voicePrerecordedDtmfSchema.safeParse({
+      optOutConfirmationMessage: "Hemos registrado su solicitud."
+    });
     assert.equal(result.success, false);
   });
 

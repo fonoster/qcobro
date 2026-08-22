@@ -65,9 +65,10 @@ Digit handling:
   afterward.
 - Pressing `repeatDigit` at or beyond `maxRepeats` hangs up, identically to an unrecognized
   digit.
-- Pressing `optOutDigit` ends the call immediately (no further gather), marks the call as
-  having engaged, and marks the completion so the gestión records `resultado: OPT_OUT` (see
-  "Pre-recorded call completion is recorded in-process").
+- Pressing `optOutDigit` plays `optOutConfirmationMessage` (when configured — required
+  whenever `optOutDigit` is set, see `agent-templates`), then ends the call (no further
+  gather), marks the call as having engaged, and marks the completion so the gestión records
+  `resultado: OPT_OUT` (see "Pre-recorded call completion is recorded in-process").
 - **Any** configured-digit press (repeat or opt-out) marks the completion so the gestión
   records `camino: ENGAGED` — pressing a digit at all is treated as engagement, regardless of
   which digit or how many times.
@@ -99,8 +100,10 @@ and `optOutMessage` are the complete, operator-authored spoken text for each opt
 
 #### Scenario: Caller opts out
 
-- **WHEN** a template has `optOutDigit` `9` and the caller presses `9`
-- **THEN** the call ends immediately with no further gather
+- **WHEN** a template has `optOutDigit` `9`, `optOutConfirmationMessage` set, and the caller
+  presses `9`
+- **THEN** the confirmation message plays
+- **AND** the call ends immediately afterward with no further gather
 - **AND** the correlated gestión's `camino` is set to `ENGAGED` and `resultado` is set to
   `OPT_OUT`
 
