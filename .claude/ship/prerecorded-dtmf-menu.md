@@ -1,7 +1,7 @@
 # Ship checkpoint — prerecorded-dtmf-menu
 
 Started: 2026-08-21
-Current stage: 4 — Test (done, except a live-Fonoster manual smoke test recommended before merge — see tasks.md 9.3)
+Current stage: 4 — Test (done, except a live-Fonoster manual smoke test recommended before merge — see tasks.md 9.3). Base feature (#117) merged 2026-08-22; the opt-out-confirmation-message addition below is a follow-up PR (#119) on a fresh branch, since it was cherry-picked after #117 squash-merged out from under its original branch. Sync/archive (stages 5-6) are deliberately still pending until #119 also lands.
 
 **Scope:** Add an optional, per-template DTMF menu to pre-recorded voice calls
 (`VOICE_PRERECORDED`): a "repeat" digit that replays the script (capped) and an "opt-out"
@@ -14,12 +14,16 @@ plus Pedro's follow-up notes (opt-out digit, UI config, enforced messages, resul
 **Detected surfaces:** OpenSpec: yes · Pencil: yes (`pencil.pen`) · Storybook: yes
 (`mods/webapp/.storybook`) · E2E: yes (Playwright, root `playwright.config.ts`)
 
-**Branch / worktree:** `worktree-feat+prerecorded-dtmf-menu` @
+**Branch / worktree (base feature, merged):** `worktree-feat+prerecorded-dtmf-menu` @
 `.claude/worktrees/feat+prerecorded-dtmf-menu`, based on `origin/main` fast-forwarded with
-the `docs/sync-archive-contact-log-axes` branch (PR #116, not yet merged at time of writing —
-this branch needed its `account-contact-log`/`web-console` main-spec changes as a base).
-**PR:** [#117](https://github.com/fonoster/qcobro/pull/117) (draft — not merge-ready, see
-stage 4 blockers).
+the `docs/sync-archive-contact-log-axes` branch (PR #116). **PR:**
+[#117](https://github.com/fonoster/qcobro/pull/117) — merged 2026-08-22 (squash).
+
+**Branch / worktree (opt-out confirmation message, follow-up):**
+`worktree-fix+prerecorded-optout-confirmation` @
+`.claude/worktrees/fix+prerecorded-optout-confirmation`, branched fresh off `origin/main`
+(post-#117). **PR:** [#119](https://github.com/fonoster/qcobro/pull/119) (draft — pending
+the same live-Fonoster smoke-test recommendation as #117).
 
 | #   | Stage           | Status  | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | :-- | :-------------- | :------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -41,7 +45,21 @@ None remain. All 5 resolved 2026-08-21 (see design.md § Design gate — resolve
 
 Newest first. One line per meaningful decision or stage transition.
 
-- 2026-08-22 — User asked for `/code-review medium --fix` on the branch. 3 findings, all
+- 2026-08-22 — **PR split.** #117 was squash-merged to `main` while the opt-out-confirmation-
+  message commit (below) was still in flight on that branch, so it never made it into the
+  squash and the branch was left orphaned relative to `main`. Cherry-picked that one commit
+  cleanly onto a fresh `worktree-fix+prerecorded-optout-confirmation` branch off current
+  `main` and opened it as a separate PR, [#119](https://github.com/fonoster/qcobro/pull/119).
+  Re-verified in the fresh worktree (own `npm install`, own `mods/common` `tsc -b` build since
+  `lerna run build` from a worktree resolves to the main checkout per the "Worktree Tooling
+  Gotchas" pattern, own copy of the gitignored `config/qcobro.json`): 198/198 common, 456/456
+  apiserver, lint+typecheck clean. e2e not re-run in this worktree — the exact same commit
+  content was already verified green against a real dev stack before #117 merged out from
+  under it; standing up the stack again here would only re-prove identical code. Old worktree
+  (`feat+prerecorded-dtmf-menu`) still has its PR-#117-era branch; cleanup (branch delete)
+  still needed but deferred to avoid touching it mid-cherry-pick.
+
+- 2026-08-22 — Live-call UX pass (user actually dispatched and answered a pre-recorded call
   fixed: (1) real bug — Editar for VOICE_PRERECORDED only sent a DTMF field to the update
   patch when truthy, so clearing a previously-set digit/message and saving silently kept the
   old value; there was no way to disable a configured menu from the console. Now sends every
