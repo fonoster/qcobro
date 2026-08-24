@@ -33,4 +33,12 @@ describe("withConnectionTimeouts", () => {
     assert.equal(url.searchParams.get("sslmode"), "require");
     assert.equal(url.searchParams.get("connect_timeout"), "10");
   });
+
+  it("fails open (returns the URL unchanged) rather than throwing on a shape the WHATWG URL parser rejects", () => {
+    // The Cloud SQL Unix-socket form: a valid Prisma Postgres connection string, but an
+    // empty host that `new URL()` cannot parse.
+    const unixSocketUrl = "postgresql://user:pass@/dbname?host=/cloudsql/proj:region:instance";
+    assert.doesNotThrow(() => withConnectionTimeouts(unixSocketUrl));
+    assert.equal(withConnectionTimeouts(unixSocketUrl), unixSocketUrl);
+  });
 });

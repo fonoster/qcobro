@@ -1,6 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import type { EngineEventSink, TickReport } from "@qcobro/common";
 import { getLogger } from "@fonoster/logger";
+import { TimeoutError, withTimeout } from "../utils/withTimeout.js";
 
 const logger = getLogger({ service: "engine", filePath: import.meta.url });
 
@@ -22,21 +23,22 @@ function defaultLog(report: TickReport): void {
   );
 }
 
-/** Thrown by the watchdog race in place of whatever the hung operation would have thrown. */
-class TickWatchdogError extends Error {
-  constructor(maxTickMs: number) {
-    super(`tick did not complete within ${maxTickMs}ms`);
-    this.name = "TickWatchdogError";
-  }
-}
-
 /**
  * Drives the engine tick on a timer. Single-flight (a new tick is skipped while one is
  * running) and guarded by a Postgres advisory lock so only one instance dispatches.
- * Shutdown stops scheduling and waits for the in-flight tick to settle — a reserved-but-
- * undispatched attempt is at-most-once-safe (it is counted, never re-dialed). A watchdog
- * bounds how long a single tick may run (see `maxTickMs` below) so a hung tick cannot
- * permanently block every future one.
+ * Shutdown stops scheduling and waits for every real tick to actually settle — a reserved-
+ * but-undispatched attempt is at-most-once-safe (it is counted, never re-dialed) — including
+ * one the watchdog below has already given up waiting on, so a watchdog trip can never cause
+ * a mid-dispatch tick to be killed by a subsequent process shutdown.
+ *
+ * A watchdog bounds how long a single tick may run (see `maxTickMs` below): past that bound,
+ * the in-process single-flight gate releases so the *next scheduled* tick can attempt again,
+ * without waiting for the hung one. This is safe because the gate is only a scheduling
+ * convenience — the Postgres advisory lock, not this in-process state, is what actually
+ * prevents two ticks from dispatching at once; a new attempt made while the old one is still
+ * technically pending just observes the lock is held and cleanly no-ops. The hung operation
+ * itself is never cancelled (not possible for an in-flight promise) and is still tracked to
+ * completion for `stop()`'s sake, whenever it does settle.
  */
 export function createEngineRunner(opts: {
   prisma: PrismaClient;
@@ -60,7 +62,13 @@ export function createEngineRunner(opts: {
 }): EngineRunner {
   const maxTickMs = opts.maxTickMs ?? 180_000;
   let timer: NodeJS.Timeout | null = null;
-  let running = false;
+  // Gates whether a *new* runOnce attempt starts — released by the watchdog on a hang, so it
+  // does not track whether the real tick has actually finished (see `pendingRealTicks`).
+  let singleFlightBusy = false;
+  // How many real `runTick()` calls have not yet settled, watchdog or not — what `stop()`
+  // actually waits on, so a watchdog-released tick can never be killed mid-dispatch by a
+  // subsequent shutdown.
+  let pendingRealTicks = 0;
   let lastPruneMs = 0;
 
   async function runTick(): Promise<void> {
@@ -93,29 +101,34 @@ export function createEngineRunner(opts: {
   }
 
   async function runOnce(): Promise<void> {
-    if (running) return; // single-flight: never overlap ticks
-    running = true;
-    let watchdog: NodeJS.Timeout | undefined;
+    if (singleFlightBusy) return; // single-flight: never overlap NEW tick attempts
+    singleFlightBusy = true;
+    pendingRealTicks += 1;
+    // Errors are handled here, at the source, so `real` always resolves — the only way the
+    // race below can reject is the watchdog's own timeout, never a real tick failure. This
+    // also guarantees a failure that surfaces only after the watchdog gave up is still logged
+    // exactly once, rather than becoming an unhandled rejection.
+    const real = runTick()
+      .then(
+        () => undefined,
+        (err: unknown) => logger.error("tick failed", err)
+      )
+      .finally(() => {
+        pendingRealTicks -= 1;
+      });
+
     try {
-      await Promise.race([
-        runTick(),
-        new Promise<never>((_, reject) => {
-          watchdog = setTimeout(() => reject(new TickWatchdogError(maxTickMs)), maxTickMs);
-        })
-      ]);
+      await withTimeout(real, maxTickMs, `tick did not complete within ${maxTickMs}ms`);
     } catch (err) {
-      if (err instanceof TickWatchdogError) {
+      if (err instanceof TimeoutError) {
         logger.error(
           `tick watchdog fired — a tick has not completed in ${maxTickMs}ms, likely a ` +
             `hung DB or provider call; releasing the in-process lock so the next scheduled ` +
-            `tick can attempt again`
+            `tick can attempt again (the hung tick is still tracked to completion for shutdown)`
         );
-      } else {
-        logger.error("tick failed", err);
       }
     } finally {
-      if (watchdog) clearTimeout(watchdog);
-      running = false;
+      singleFlightBusy = false;
     }
   }
 
@@ -130,7 +143,7 @@ export function createEngineRunner(opts: {
         clearInterval(timer);
         timer = null;
       }
-      while (running) await new Promise((r) => setTimeout(r, 50));
+      while (pendingRealTicks > 0) await new Promise((r) => setTimeout(r, 50));
     }
   };
 }

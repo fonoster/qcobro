@@ -7,6 +7,7 @@ import {
   type OutboundCallInput,
   type VoiceCallStatusTracker
 } from "@qcobro/common";
+import { withTimeout as raceTimeout } from "../utils/withTimeout.js";
 
 type FonosterSettings = NonNullable<FonosterConfig>;
 
@@ -14,12 +15,7 @@ type FonosterSettings = NonNullable<FonosterConfig>;
 const CALL_TIMEOUT_MS = 15_000;
 
 function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Fonoster ${label} timed out`)), CALL_TIMEOUT_MS)
-    )
-  ]);
+  return raceTimeout(promise, CALL_TIMEOUT_MS, `Fonoster ${label} timed out`);
 }
 
 /** The Fonoster SDK's gRPC client throws `ServiceError`s carrying a numeric `.code` (grpc.status). */

@@ -62,6 +62,32 @@ describe("createEngineRunner watchdog", () => {
     assert.equal(attempts, 2);
   });
 
+  it("stop() waits for a watchdog-released tick to actually finish, not just for the watchdog", async () => {
+    let tickFinished = false;
+    const runner = createEngineRunner({
+      prisma: fakePrisma(),
+      tick: async () => {
+        await new Promise((r) => setTimeout(r, 150)); // longer than maxTickMs below
+        tickFinished = true;
+        return REPORT;
+      },
+      tickSeconds: 60,
+      log: () => undefined,
+      maxTickMs: 50
+    });
+
+    await runner.runOnce(); // resolves once the watchdog fires at ~50ms
+    assert.equal(tickFinished, false, "runOnce returned before the real tick actually finished");
+
+    await runner.stop(); // must block until the real tick (finishing at ~150ms) actually settles
+    assert.equal(
+      tickFinished,
+      true,
+      "stop() waited for the watchdog-released tick to complete before resolving " +
+        "(a shutdown right after stop() must never kill a mid-dispatch tick)"
+    );
+  });
+
   it("single-flight: a concurrent runOnce call while one is in-flight is a no-op", async () => {
     let attempts = 0;
     const runner = createEngineRunner({

@@ -1,5 +1,6 @@
 import twilio from "twilio";
 import { DispatchError, type SmsClient, type TwilioConfig } from "@qcobro/common";
+import { withTimeout as raceTimeout } from "../utils/withTimeout.js";
 
 type TwilioSettings = NonNullable<TwilioConfig>;
 
@@ -7,12 +8,7 @@ type TwilioSettings = NonNullable<TwilioConfig>;
 const SEND_TIMEOUT_MS = 15_000;
 
 function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Twilio ${label} timed out`)), SEND_TIMEOUT_MS)
-    )
-  ]);
+  return raceTimeout(promise, SEND_TIMEOUT_MS, `Twilio ${label} timed out`);
 }
 
 /** The `twilio` SDK throws `RestException`s carrying an HTTP `status` and a Twilio `code`. */
