@@ -387,7 +387,25 @@ export type BillingConfig = z.infer<typeof billingConfigSchema>;
 
 export const qcobroConfigSchema = z.object({
   /** Application (apiserver) database. */
-  database: z.object({ url: z.string().min(1) }),
+  database: z.object({
+    url: z.string().min(1),
+    /**
+     * Server-side `statement_timeout` (ms) applied to the apiserver's connections. Bounds how
+     * long Postgres will let a single statement run before cancelling it.
+     *
+     * This is not a nicety: without it, a stalled query blocks its connection indefinitely,
+     * and because the campaigns engine holds a session-scoped advisory lock for the duration
+     * of a tick, one stalled query freezes *all* dispatch until the stall clears on its own.
+     * A client-side timeout does not solve this — it stops the client waiting, but the server
+     * keeps executing, so the connection stays busy and the lock stays held. Only a
+     * server-side cancellation frees the connection and releases the lock.
+     *
+     * Applies per statement, not per transaction, so a long import made of many fast
+     * statements is unaffected. `0` disables it (Postgres semantics) and restores the old
+     * unbounded behavior.
+     */
+    statementTimeoutMs: z.number().int().nonnegative().default(30_000)
+  }),
   identity: identityConfigSchema,
   apiserver: z
     .object({
