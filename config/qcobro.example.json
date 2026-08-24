@@ -1,6 +1,7 @@
 {
   "database": {
-    "url": "postgresql://qcobro:CHANGE_ME@db:5432/qcobro?schema=public"
+    "url": "postgresql://qcobro:CHANGE_ME@db:5432/qcobro?schema=public",
+    "statementTimeoutMs": 30000
   },
   "identity": {
     "endpoint": "identity:50051",
