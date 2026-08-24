@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.34.1](https://github.com/fonoster/qcobro/compare/v1.34.0...v1.34.1) (2026-08-24)
+
+### Bug Fixes
+
+- **db:** bound statements server-side so a stalled query can't freeze the engine ([#125](https://github.com/fonoster/qcobro/issues/125)) ([59c5431](https://github.com/fonoster/qcobro/commit/59c5431c88ad25d7441b76705a877bcccef785d8))
+
 # [1.34.0](https://github.com/fonoster/qcobro/compare/v1.33.0...v1.34.0) (2026-08-22)
 
 ### Features
