@@ -69,6 +69,12 @@ export function createEngineRunner(opts: {
   // actually waits on, so a watchdog-released tick can never be killed mid-dispatch by a
   // subsequent shutdown.
   let pendingRealTicks = 0;
+  // When the current single-flight-busy period started — lets a skip log report how long a
+  // tick has already been stuck, without waiting for the watchdog to fire (up to `maxTickMs`
+  // later) to find out. Every scheduled tick a hang eats is a real, un-recoverable-that-day
+  // loss of dispatch throughput (each tick's per-channel budget is only available that tick —
+  // see `perTickCapacity`), so this must be visible well before the watchdog bound.
+  let busySince: number | null = null;
   let lastPruneMs = 0;
 
   async function runTick(): Promise<void> {
@@ -101,8 +107,19 @@ export function createEngineRunner(opts: {
   }
 
   async function runOnce(): Promise<void> {
-    if (singleFlightBusy) return; // single-flight: never overlap NEW tick attempts
+    if (singleFlightBusy) {
+      // A scheduled tick's whole per-channel budget for this cycle is lost when skipped —
+      // log it every time, not just once, so "how long has this been stuck" is visible from
+      // the logs alone well before the watchdog bound.
+      const busyForMs = busySince ? Date.now() - busySince : undefined;
+      logger.warn(
+        `scheduled tick skipped — a previous tick is still in flight` +
+          (busyForMs !== undefined ? ` (busy for ${busyForMs}ms so far)` : "")
+      );
+      return; // single-flight: never overlap NEW tick attempts
+    }
     singleFlightBusy = true;
+    busySince = Date.now();
     pendingRealTicks += 1;
     // Errors are handled here, at the source, so `real` always resolves — the only way the
     // race below can reject is the watchdog's own timeout, never a real tick failure. This
@@ -129,6 +146,7 @@ export function createEngineRunner(opts: {
       }
     } finally {
       singleFlightBusy = false;
+      busySince = null;
     }
   }
 
