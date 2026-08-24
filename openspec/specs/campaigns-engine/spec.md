@@ -103,3 +103,28 @@ outcome shows the channel is currently reachable.
 - **WHEN** a campaign has been auto-paused by the circuit breaker
 - **THEN** it stays `PAUSED` until an operator explicitly transitions it back to `ACTIVE`
 - **AND** nothing in the engine automatically resumes it
+
+### Requirement: A hung tick does not block every future tick
+
+The runner SHALL bound how long a single tick (advisory-lock acquisition through dispatch and
+release) may run before releasing its in-process single-flight guard, so a tick that hangs —
+a stalled database connection, an unresponsive provider call — cannot silently block every
+scheduled tick after it. The bound SHALL be configurable via `engine.maxTickMs` (from
+`qcobro.json`). The hung operation itself is not cancelled (not possible for an in-flight
+promise); it may still settle later, harmlessly — the Postgres advisory lock, not the
+in-process guard, is what actually prevents two ticks from dispatching at once, so a released
+guard that lets a new tick attempt while the old one is still technically pending is safe: the
+new attempt observes the lock is still held and no-ops cleanly. A watchdog trip SHALL be logged
+distinctly from an ordinary tick failure, so it is diagnosable rather than silent.
+
+#### Scenario: A tick that never resolves does not block subsequent ticks
+
+- **WHEN** a tick's underlying work hangs (never resolves or rejects) past `engine.maxTickMs`
+- **THEN** the runner's in-process single-flight guard releases
+- **AND** the next scheduled tick is attempted rather than skipped forever
+
+#### Scenario: A watchdog trip is logged distinctly
+
+- **WHEN** the watchdog releases a hung tick
+- **THEN** a distinct log entry records that the watchdog fired, separately from the existing
+  "tick failed" error path used for a tick that actually threw

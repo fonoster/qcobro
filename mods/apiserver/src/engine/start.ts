@@ -67,7 +67,8 @@ export function startEngine(): EngineRunner | null {
     pruneEvents:
       config.engine.eventsRetentionDays > 0
         ? createEventPruner(prisma, config.engine.eventsRetentionDays)
-        : null
+        : null,
+    maxTickMs: config.engine.maxTickMs
   });
   runner.start();
   logger.verbose(`started — tick every ${config.engine.tickSeconds}s`);

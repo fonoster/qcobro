@@ -1,9 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import { fieldEncryptionExtension } from "prisma-field-encryption";
 import { config } from "./config.js";
+import { withConnectionTimeouts } from "./dbConnectionUrl.js";
 import { contactLogEventsExtension } from "./services/contactLogEvents.js";
 
-const client = new PrismaClient({ datasourceUrl: config.database.url });
+const client = new PrismaClient({ datasourceUrl: withConnectionTimeouts(config.database.url) });
 
 // Realtime-streaming capability: emits a change signal on every accountContactLog /
 // paymentPromise write, covering every write path (manual create, engine dispatch, webhook

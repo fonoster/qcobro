@@ -78,7 +78,8 @@
     "enabled": true,
     "tickSeconds": 60,
     "eventsRetentionDays": 30,
-    "consecutiveSystemErrorPauseThreshold": 10
+    "consecutiveSystemErrorPauseThreshold": 10,
+    "maxTickMs": 180000
   },
   "billing": {
     "enabled": false,

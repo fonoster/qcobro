@@ -474,7 +474,16 @@ export const qcobroConfigSchema = z.object({
        * any success or `DELIVERY_REJECTED` failure. Sized to ride out a short blip without
        * silently burning through every account's attempt cap during a real outage.
        */
-      consecutiveSystemErrorPauseThreshold: z.number().int().positive().default(10)
+      consecutiveSystemErrorPauseThreshold: z.number().int().positive().default(10),
+      /**
+       * Maximum time (ms) a single tick may run before the runner gives up waiting on it
+       * and allows the next scheduled tick to attempt again — a watchdog for a tick that
+       * hangs (a stalled DB connection, an unresponsive provider call) rather than erroring,
+       * which would otherwise block every future tick forever (see `runner.ts`). Default is
+       * generous relative to the default `tickSeconds` (60s) so a legitimately slow tick
+       * (many campaigns, a slow provider) is never mistaken for a hang.
+       */
+      maxTickMs: z.number().int().positive().default(180_000)
     })
     .prefault({})
 });
