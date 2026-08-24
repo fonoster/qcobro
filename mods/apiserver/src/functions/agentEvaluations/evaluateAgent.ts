@@ -4,6 +4,7 @@ import {
   type EmailAutopilot,
   type EvalAgentTemplateClient,
   type EvalEvent,
+  type TextSimilarityJudge,
   type VoiceApplicationClient
 } from "@qcobro/common";
 import { resolveEvalTarget } from "./resolveEvalTarget.js";
@@ -26,7 +27,8 @@ export function createEvaluateAgent(
   // Deployment default reply caps — EMAIL's comes from `resend`, WHATSAPP's from
   // `whatsapp`, exactly as the live `ingestEmailReply`/`ingestWhatsAppMessage` paths do.
   emailMaxRepliesDefault: number,
-  whatsAppMaxRepliesDefault: number
+  whatsAppMaxRepliesDefault: number,
+  textSimilarityJudge: TextSimilarityJudge
 ) {
   return async function* evaluateAgent(params: unknown): AsyncGenerator<EvalEvent> {
     const result = evaluateInputSchema.safeParse(params);
@@ -45,6 +47,6 @@ export function createEvaluateAgent(
     const autopilot = agent.type === "EMAIL" ? emailAutopilot : whatsAppAutopilot;
     const maxRepliesDefault =
       agent.type === "EMAIL" ? emailMaxRepliesDefault : whatsAppMaxRepliesDefault;
-    yield* runAutopilotEvaluation(agent, autopilot, maxRepliesDefault);
+    yield* runAutopilotEvaluation(agent, autopilot, maxRepliesDefault, textSimilarityJudge);
   };
 }

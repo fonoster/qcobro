@@ -18,6 +18,7 @@ import { TwilioSmsClient } from "../services/twilioSmsClient.js";
 import { createStripeGateway } from "../services/stripeGateway.js";
 import { ResendEmailClient } from "../services/resendEmailClient.js";
 import { createInsightGenerator } from "../services/insightGenerator.js";
+import { createTextSimilarityJudge } from "../services/textSimilarityJudge.js";
 import { createEmailAutopilot } from "../services/emailAutopilot.js";
 import { createWhatsAppAutopilot } from "../services/whatsAppAutopilot.js";
 import { createGetWorkspaceSettings } from "../functions/workspaceSettings/getWorkspaceSettings.js";
@@ -97,6 +98,10 @@ const emailAutopilot = createEmailAutopilot(config.ai);
 const whatsAppAutopilot = createWhatsAppAutopilot(config.ai);
 const emailMaxRepliesDefault = config.resend?.maxRepliesDefault ?? 3;
 const whatsAppMaxRepliesDefault = config.whatsapp?.maxRepliesDefault ?? 3;
+// Grades EMAIL/WHATSAPP scenarios' `expected.text` SIMILAR assertions — see
+// `textSimilarityJudge.ts` for why this needs its own (entity-faithful) prompt rather than
+// reusing an intent-only judge.
+const textSimilarityJudge = createTextSimilarityJudge(config.ai);
 
 function headerValue(value: string | string[] | undefined): string | null {
   if (Array.isArray(value)) return value[0] ?? null;
@@ -176,6 +181,7 @@ function assembleContext(
     whatsAppAutopilot,
     emailMaxRepliesDefault,
     whatsAppMaxRepliesDefault,
+    textSimilarityJudge,
     aiGeneration: config.ai?.generation ?? "onDemand",
     timezone: settings.timezone,
     currency: settings.currency,

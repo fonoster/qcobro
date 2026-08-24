@@ -129,3 +129,36 @@
       `agents:preview` commands — `docs-site/cli/overview.mdx`'s "Agentes" section rewritten,
       stale "no conversational evaluation" disclaimer removed; `sdk/reference.mdx` also
       updated with the new exports
+
+## 10. Judge-based SIMILAR grading for EMAIL/WHATSAPP (post-ship addition, 2026-08-24)
+
+Resolves the deferred judge-grading open question — see design.md's "Post-ship revision"
+section. Prompted by a real hallucinated-bank-account incident.
+
+- [x] 10.1 Add the `TextSimilarityJudge` port (`mods/common/src/types/evalJudge.ts`):
+      `compare({expected, actual, context}) -> {passed, reason?}`
+- [x] 10.2 Add the production adapter (`mods/apiserver/src/services/textSimilarityJudge.ts`),
+      mirroring `insightGenerator.ts`'s provider-abstracted shape (`mock` offline heuristic +
+      `google` REST, `openai`/`anthropic` not yet implemented) — an entity-faithful prompt,
+      not Fonoster's intent-only one (see design.md)
+- [x] 10.3 Wire the judge into the tRPC context (`trpc/context.ts`) and thread it through
+      `createEvaluateAgent` -> `runAutopilotEvaluation`, replacing the placeholder
+      substring-match `SIMILAR` grading; `EXACT` unchanged (literal match, never judged)
+- [x] 10.4 Ground the judge's grounding context in the scenario's already-rendered account
+      context (`buildSyntheticAccountContext`'s output) so a reply correctly citing real
+      account data isn't flagged as hallucination
+- [x] 10.5 Populate `errorMessage` on a failing turn (action/resultado mismatch, EXACT
+      mismatch, or the judge's `reason`) — previously computed but never surfaced; update
+      `agents:eval`'s CLI output to print it under the turn line
+- [x] 10.6 Unit tests: judge port stub in `runAutopilotEvaluation.test.ts` (EXACT never calls
+      the judge, SIMILAR defers to it and surfaces its `reason` on failure, account context is
+      passed through); `textSimilarityJudge.test.ts` for the mock-fallback and
+      unimplemented-provider paths
+- [ ] 10.7 Author the concrete scenario reproducing the hallucinated-bank-account incident,
+      once the real system prompt / initial email / hallucinated response are available —
+      **blocked on that input**, not yet done
+- [ ] 10.8 Docs: `docs-site/sdk/agent-evaluations.mdx`'s scenario-format section and
+      `sdk/reference.mdx` still describe EMAIL/WHATSAPP `expected.text` as it stood before this
+      addition (and still use the stale `.outcome` field name predating the `resultado`
+      rename) — **not done**, deferred; report generation (JSON/Markdown/PDF) explicitly
+      lower priority, not started

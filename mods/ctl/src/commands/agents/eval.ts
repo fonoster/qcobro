@@ -64,6 +64,9 @@ export default class Eval extends AuthenticatedCommand<typeof Eval> {
       const verdict = event.result.passed === undefined ? "" : event.result.passed ? " ✓" : " ✗";
       const detail = event.result.action ?? event.result.aiResponse ?? event.result.input;
       this.log(`[${event.scenarioRef}] turn ${event.result.turnIndex}: ${detail}${verdict}`);
+      if (event.result.passed === false && event.result.errorMessage) {
+        this.log(`  ↳ ${event.result.errorMessage}`);
+      }
       return event.result.passed === false;
     }
     if (event.type === "scenarioSummary") {
