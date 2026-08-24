@@ -154,9 +154,14 @@ section. Prompted by a real hallucinated-bank-account incident.
       the judge, SIMILAR defers to it and surfaces its `reason` on failure, account context is
       passed through); `textSimilarityJudge.test.ts` for the mock-fallback and
       unimplemented-provider paths
-- [ ] 10.7 Author the concrete scenario reproducing the hallucinated-bank-account incident,
-      once the real system prompt / initial email / hallucinated response are available —
-      **blocked on that input**, not yet done
+- [x] 10.7 Author the concrete scenario reproducing the hallucinated-bank-account incident —
+      `evals/email-hallucinated-payment-info.yaml` (customer/lender/bank details redacted to
+      fakes). Two scenarios: the actual incident (agent asked for account info must redirect
+      to WhatsApp, not invent bank details) and a control (citing the real context-provided
+      balance must NOT be flagged as hallucination). Schema-validated and smoke-run end to end
+      against the real judge wiring (mock provider, since no LLM key is configured in this
+      sandbox — confirms no crash and correct event shape; judge quality itself needs a real
+      `google` provider run, which only the user can do)
 - [ ] 10.8 Docs: `docs-site/sdk/agent-evaluations.mdx`'s scenario-format section and
       `sdk/reference.mdx` still describe EMAIL/WHATSAPP `expected.text` as it stood before this
       addition (and still use the stale `.outcome` field name predating the `resultado`
