@@ -103,3 +103,40 @@ outcome shows the channel is currently reachable.
 - **WHEN** a campaign has been auto-paused by the circuit breaker
 - **THEN** it stays `PAUSED` until an operator explicitly transitions it back to `ACTIVE`
 - **AND** nothing in the engine automatically resumes it
+
+### Requirement: Exactly one instance ticks, without silently losing ticks
+
+The engine SHALL ensure that at most one instance dispatches at a time, using a lease row
+whose validity does not depend on which pooled database connection a query lands on. An
+instance that cannot tick SHALL say so in the logs rather than returning silently, because a
+skipped tick is dispatch capacity that day cannot recover.
+
+#### Scenario: The lease holder keeps ticking
+
+- **WHEN** an instance holds an unexpired engine lease
+- **THEN** every scheduled tick runs
+- **AND** the lease is renewed on a heartbeat independent of tick progress, so a slow tick
+  cannot let the lease lapse while that instance is still dispatching
+
+#### Scenario: A peer is refused while the lease is held
+
+- **WHEN** a second instance attempts a tick while another instance holds an unexpired lease
+- **THEN** it does not dispatch
+- **AND** it logs that the lease is held by another instance
+
+#### Scenario: A failed instance is failed over
+
+- **WHEN** the instance holding the lease stops renewing it and the lease expires
+- **THEN** another instance MAY claim the lease and resume ticking
+
+#### Scenario: Graceful shutdown hands the lease back immediately
+
+- **WHEN** an instance shuts down gracefully
+- **THEN** it releases its lease
+- **AND** a replacement instance may tick without waiting for the lease to expire
+
+#### Scenario: A skipped tick is never silent
+
+- **WHEN** a scheduled tick does not run, because a previous tick is still in flight or the
+  lease is held elsewhere
+- **THEN** the engine logs a warning identifying which of the two occurred

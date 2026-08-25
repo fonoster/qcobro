@@ -99,6 +99,7 @@ export function startEngine(): EngineRunner | null {
     prisma,
     tick: engine.tick,
     tickSeconds: config.engine.tickSeconds,
+    leaseTtlSeconds: config.engine.leaseTtlSeconds,
     eventSink: createPrismaEngineEventSink(prisma),
     pruneEvents:
       config.engine.eventsRetentionDays > 0

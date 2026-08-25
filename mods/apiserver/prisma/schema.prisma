@@ -511,6 +511,24 @@ model EngineEvent {
   @@map("engine_events")
 }
 
+// Single-row leader lease for the campaigns engine: whoever holds an unexpired row may
+// tick. Replaces the session-scoped Postgres advisory lock, which could not survive
+// Prisma's connection pool — the lock was taken on one pooled connection and released
+// on another, so `pg_advisory_unlock` silently returned false and the lock stranded on
+// an idle-but-alive connection until the pool recycled it. Every tick in between saw
+// the lock held and skipped, emitting no error and no event. A row is visible to every
+// connection, so claiming and renewing it does not depend on connection affinity, and
+// a crashed holder's lease simply expires.
+model EngineLease {
+  // Always `engine` — this table holds exactly one row.
+  id        String   @id
+  // Opaque per-process identity, so the holder can renew but others cannot steal.
+  holder    String
+  expiresAt DateTime
+
+  @@map("engine_lease")
+}
+
 // ---------------------------------------------------------------------------
 // Workspace billing (workspace-billing capability)
 // ---------------------------------------------------------------------------
