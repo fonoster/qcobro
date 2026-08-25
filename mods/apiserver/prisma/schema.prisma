@@ -24,7 +24,7 @@ enum Currency {
 model WorkspaceSettings {
   workspaceRef String   @id
   currency     Currency @default(USD)
-  timezone     String   @default("America/Costa_Rica")
+  timezone     String   @default("America/Santo_Domingo")
   // Governs how amounts are formatted in rendered outreach bodies (grouping and decimal
   // separators). Application-managed: there is no console control while `supportedLocales`
   // has a single member. The default backfills existing rows.

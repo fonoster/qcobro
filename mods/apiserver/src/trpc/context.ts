@@ -138,7 +138,7 @@ async function resolveWorkspaceSettings(
   workspace: ActiveWorkspace | null
 ): Promise<WorkspaceRuntimeSettings> {
   if (!workspace) {
-    return { timezone: "America/Costa_Rica", currency: "USD", locale: DEFAULT_LOCALE };
+    return { timezone: "America/Santo_Domingo", currency: "USD", locale: DEFAULT_LOCALE };
   }
   const settings = await createGetWorkspaceSettings(prisma as never)(workspace.accessKeyId);
   return {

@@ -1,0 +1,12 @@
+-- Every customer is in the Dominican Republic (UTC-4), but new workspace settings rows were
+-- seeded America/Costa_Rica (UTC-6). The timezone drives schedule-window evaluation, the
+-- daily-cap reset boundary, and the end-date check, so the wrong value silently shifts when a
+-- campaign is allowed to dispatch — a "09:00-18:00" campaign would have run 11:00-20:00 in
+-- real local time.
+--
+-- Only the DEFAULT changes: existing rows keep whatever value they hold. Backfilling
+-- America/Costa_Rica -> America/Santo_Domingo is deliberately NOT done here, because it would
+-- also overwrite a deliberate choice by any workspace genuinely operating in Costa Rica.
+-- Audit before changing stored values:
+--   SELECT workspace_ref, timezone FROM workspace_settings ORDER BY timezone;
+ALTER TABLE "workspace_settings" ALTER COLUMN "timezone" SET DEFAULT 'America/Santo_Domingo';

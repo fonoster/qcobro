@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createGetWorkspaceSettings } from "./getWorkspaceSettings.js";
 
 // The stub simulates the WorkspaceSettings column defaults (currency USD, timezone
-// America/Costa_Rica) that fill any field the upsert `create` omits.
+// America/Santo_Domingo) that fill any field the upsert `create` omits.
 function makeClient(existing: Record<string, unknown> | null) {
   const cap: { upsert?: { where: unknown; create: Record<string, unknown> } } = {};
   const client = {
@@ -13,7 +13,7 @@ function makeClient(existing: Record<string, unknown> | null) {
         cap.upsert = args;
         return {
           currency: "USD",
-          timezone: "America/Costa_Rica",
+          timezone: "America/Santo_Domingo",
           ...args.create,
           createdAt: new Date(),
           updatedAt: new Date()
@@ -43,7 +43,7 @@ describe("getWorkspaceSettings", () => {
     const { client, cap } = makeClient(null);
     const settings = await createGetWorkspaceSettings(client as never)("ws1");
     assert.equal(settings.currency, "USD");
-    assert.equal(settings.timezone, "America/Costa_Rica");
+    assert.equal(settings.timezone, "America/Santo_Domingo");
     // The seed passes only the key; currency/timezone are filled by column defaults.
     assert.deepEqual(cap.upsert?.create, { workspaceRef: "ws1" });
   });
