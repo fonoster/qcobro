@@ -162,11 +162,16 @@ section. Prompted by a real hallucinated-bank-account incident.
       against the real judge wiring (mock provider, since no LLM key is configured in this
       sandbox — confirms no crash and correct event shape; judge quality itself needs a real
       `google` provider run, which only the user can do)
-- [ ] 10.8 Docs: `docs-site/sdk/agent-evaluations.mdx`'s scenario-format section and
-      `sdk/reference.mdx` still describe EMAIL/WHATSAPP `expected.text` as it stood before this
-      addition (and still use the stale `.outcome` field name predating the `resultado`
-      rename) — **not done**, deferred; report generation (JSON/Markdown/PDF) explicitly
-      lower priority, not started
+- [x] 10.8 Docs: `docs-site/sdk/agent-evaluations.mdx`'s `expected.text` `ParamField` said
+      "Para `VOICE_AI`" only, omitting that `EMAIL`/`WHATSAPP` now support it too (graded by
+      QCobro's own entity-faithful judge, not Fonoster's intent-only one) — fixed. Also added
+      `errorMessage` to the "Lee los eventos" turn-event field list (populated since 10.5, was
+      undocumented). Checked for the `.outcome` stale-field-name issue this task originally
+      flagged — grepped `docs-site/` and `mods/`; no eval-scenario doc or code refers to it
+      (every remaining `outcome` hit is an unrelated DB/webhook field), so nothing to fix
+      there. `sdk/reference.mdx` only links out to `agent-evaluations.mdx` for detail, no
+      separate fix needed. Report generation (JSON/Markdown/PDF) explicitly lower priority,
+      still not started — out of scope here
 - [x] 10.9 Manually validated against a real `google` provider (gemini-2.5-flash) — the risk
       10.7 flagged as untested. Ran the actual (redacted) production system prompt for an
       EMAIL "mora temprana" agent through the shipped regression scenario plus an ad hoc
