@@ -15,15 +15,15 @@ export default class Login extends BaseCommand<typeof Login> {
 
     const answers = {
       endpoint: await input({ message: "Endpoint", default: DEFAULT_ENDPOINT }),
+      workspaceAccessKeyId: await input({
+        message: "Workspace to act in (accessKeyId, starts with WO)",
+        required: true
+      }),
       accessKeyId: await input({
         message: "Access Key Id (API key, starts with AP)",
         required: true
       }),
       accessKeySecret: await password({ message: "Access Key Secret" }),
-      workspaceAccessKeyId: await input({
-        message: "Workspace to act in (accessKeyId, starts with WO)",
-        required: true
-      }),
       confirmed: await confirm({ message: "Ready?" })
     };
 
