@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.34.4](https://github.com/fonoster/qcobro/compare/v1.34.3...v1.34.4) (2026-08-25)
+
+### Bug Fixes
+
+- **apiserver:** default VOICE_PRERECORDED camino to ENGAGED on call completion ([#127](https://github.com/fonoster/qcobro/issues/127)) ([a24250c](https://github.com/fonoster/qcobro/commit/a24250ccdc0cd3ff129cec0a4504bc00cd2a3daf))
+
 ## [1.34.3](https://github.com/fonoster/qcobro/compare/v1.34.2...v1.34.3) (2026-08-25)
 
 ### Bug Fixes

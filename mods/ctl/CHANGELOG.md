@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.34.4](https://github.com/fonoster/qcobro/compare/v1.34.3...v1.34.4) (2026-08-25)
+
+**Note:** Version bump only for package @qcobro/ctl
+
 ## [1.34.3](https://github.com/fonoster/qcobro/compare/v1.34.2...v1.34.3) (2026-08-25)
 
 **Note:** Version bump only for package @qcobro/ctl
