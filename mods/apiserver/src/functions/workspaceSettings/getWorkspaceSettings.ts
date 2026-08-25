@@ -2,7 +2,7 @@ import type { WorkspaceSettingsClient, WorkspaceSettingsRecord } from "@qcobro/c
 
 /**
  * Resolve the active workspace's settings, seeding a default row the first time a
- * workspace is used. The defaults (currency `USD`, timezone `America/Costa_Rica`) come
+ * workspace is used. The defaults (currency `USD`, timezone `America/Santo_Domingo`) come
  * from the `WorkspaceSettings` column defaults, so a fresh workspace is always populated
  * without ever touching Identity.
  */
