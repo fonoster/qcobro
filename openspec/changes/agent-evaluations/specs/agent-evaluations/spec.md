@@ -140,18 +140,18 @@ a `hangup` invocation) SHALL map to Fonoster's tool-call expectation.
 For an `EMAIL` or `WHATSAPP` target, each scenario's ordered turns SHALL be run one at a time
 through the existing autopilot decision loop (`reply` / `ignore` / `resolve` / `escalate`)
 against the accumulated thread and account context, exactly as it runs on a real correlated
-inbound reply. Each turn's `expected`, when present, SHALL be `{ action?, outcome? }` — the
+inbound reply. Each turn's `expected`, when present, MAY be `{ action?, resultado? }` — the
 EMAIL/WHATSAPP analog of VOICE_AI's `expected.tools` — asserting the decision action and/or
-captured outcome the turn should produce; a turn's result SHALL report `passed: false` when the
-actual action or outcome differs from what was expected. Reply-cap behavior SHALL match the
-corresponding live channel exactly: once the scripted run's agent reply count reaches the cap,
-no further turn SHALL produce a `reply` action.
+captured resultado the turn should produce; a turn's result SHALL report `passed: false` when
+the actual action or resultado differs from what was expected. Reply-cap behavior SHALL match
+the corresponding live channel exactly: once the scripted run's agent reply count reaches the
+cap, no further turn SHALL produce a `reply` action.
 
 #### Scenario: A scripted reply that states intent to pay is captured
 
 - **WHEN** an `EMAIL` evaluation's scenario includes a turn whose input states intent to pay
-  and whose `expected` is `{ outcome: "PAYMENT_PROMISE" }`
-- **THEN** the turn's result reports the decision `reply` with a `PAYMENT_PROMISE` outcome, a
+  and whose `expected` is `{ resultado: "PAYMENT_PROMISE" }`
+- **THEN** the turn's result reports the decision `reply` with a `PAYMENT_PROMISE` resultado, a
   captured `PaymentPromise`, and `passed: true`
 
 #### Scenario: An unmet expectation is reported as failed, not silently accepted
@@ -171,6 +171,58 @@ no further turn SHALL produce a `reply` action.
 - **WHEN** a `WHATSAPP` agent is evaluated with a scripted scenario
 - **THEN** the same autopilot decision-loop mechanism used for `EMAIL` evaluation runs against
   it, honoring its `systemPrompt` and `maxReplies`
+
+### Requirement: EMAIL and WHATSAPP `expected.text` is graded by an entity-faithful judge
+
+`EMAIL`/`WHATSAPP` scenarios SHALL support a turn's `expected.text`, exactly as `VOICE_AI` does.
+`EXACT` SHALL be a literal string match against the autopilot's `replyBody`, never calling the
+judge. `SIMILAR` SHALL be graded by a dedicated judge (`TextSimilarityJudge`) rather than
+Fonoster's intent-only evaluator: it SHALL fail unless (a) the actual reply's intent matches the
+expected reply's, ignoring wording/phrasing, AND (b) the actual reply introduces no fact, entity,
+or number absent from the expected reply, the scenario's rendered account context, today's
+reference date, and the customer's own message that turn — the last two so the judge can
+recognize a legitimate restatement or derivation (e.g. resolving a date the customer gave
+relatively, like "the 15th", into an absolute one) rather than flagging it as invented. An
+intent-only judge (Fonoster's own VOICE_AI evaluator explicitly ignores entities) would pass a
+reply that invents a detail such as a bank account number; this judge SHALL NOT. The judge's
+failure `reason` SHALL be surfaced on the turn's result so a hallucinated detail is visible
+without re-running the scenario by hand.
+
+The judge is reached through the same deployment-wide `ai` provider config (`qcobro.json`'s
+`ai` section) the AI-insight generator uses, reused for a different purpose. Absent or `mock`
+configuration SHALL fall back to an offline heuristic rather than making `SIMILAR` assertions
+unusable when no LLM key is configured.
+
+#### Scenario: A hallucinated fact fails even when intent matches
+
+- **WHEN** an `EMAIL` evaluation's turn expects `{ text: { type: "SIMILAR", response: "Le
+enviaremos las instrucciones de pago por separado." } }` and the account context contains no
+  bank account number
+- **AND** the autopilot's actual reply states a specific bank account number
+- **THEN** the turn's result reports `passed: false` with a `reason` naming the invented detail,
+  even though the reply's overall intent (deferring payment instructions) matches
+
+#### Scenario: A reply citing real account context is not flagged as hallucination
+
+- **WHEN** a turn's expected reply does not itself state the account's exact balance
+- **AND** the autopilot's actual reply correctly cites the balance from the scenario's account
+  context
+- **THEN** the turn's result reports `passed: true` — the balance is grounded in context, not
+  invented
+
+#### Scenario: A reply resolving a date the customer stated is not flagged as hallucination
+
+- **WHEN** a turn's customer message states a payment date in relative terms (e.g. "el día 15")
+- **AND** the autopilot's actual reply confirms the commitment using the resolved absolute date
+  (e.g. "15 de septiembre")
+- **THEN** the turn's result reports `passed: true` — the date is grounded in the customer's own
+  message and today's reference date, not invented by the agent
+
+#### Scenario: EXACT never calls the judge
+
+- **WHEN** a turn's `expected.text.type` is `EXACT`
+- **THEN** grading is a literal string comparison against the actual reply, and the judge is
+  never invoked
 
 ### Requirement: Evaluation runs have no live outreach side effects
 

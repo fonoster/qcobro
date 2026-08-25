@@ -11,7 +11,8 @@ export interface EvalStepResult {
   input: string;
   passed?: boolean;
   errorMessage?: string;
-  /** VOICE_AI (relayed from Fonoster's `stepResult`). */
+  /** The agent's reply/response text for this turn — VOICE_AI (relayed from Fonoster's
+   * `stepResult`) or EMAIL/WHATSAPP (the autopilot's `replyBody`, when it replied). */
   aiResponse?: string;
   expectedResponse?: string;
   evaluationType?: "EXACT" | "SIMILAR";

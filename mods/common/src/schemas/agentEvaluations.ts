@@ -39,15 +39,20 @@ export const evalExpectedToolSchema = z.object({
 });
 
 /**
- * A single turn's optional expectation. `text`/`tools` are graded for `VOICE_AI` (relayed
- * from Fonoster); `action`/`resultado` are graded for `EMAIL`/`WHATSAPP` (the behavioral analog
- * of an expected tool call — see design.md). A turn with no `expected` still runs and streams
- * a result, it just has nothing to grade — **except for VOICE_AI**: Fonoster's
- * `evaluateIntelligence` requires `expected.text` on every conversation turn (confirmed
- * against the live service, correcting an earlier assumption in design.md), so
- * `resolveEvalTarget` rejects a VOICE_AI scenario with any turn missing it before ever
- * calling Fonoster. The VOICE_AI-specific requirement is enforced at
- * resolution time, not here, since this shape is shared across all three channel types.
+ * A single turn's optional expectation. `tools` is graded for `VOICE_AI` only (relayed from
+ * Fonoster); `action`/`resultado` are graded for `EMAIL`/`WHATSAPP` (the behavioral analog of
+ * an expected tool call — see design.md). `text` is graded for all three: VOICE_AI relays it
+ * to Fonoster's own `evaluateIntelligence` judge; EMAIL/WHATSAPP grade it in-process —
+ * `EXACT` is a literal match, `SIMILAR` runs QCobro's own judge (`TextSimilarityJudge`),
+ * which checks intent match AND that the reply introduces no fact/entity absent from both
+ * the expected reply and the scenario's account context (catches hallucination, unlike an
+ * intent-only judge). A turn with no `expected` still runs and streams a result, it just has
+ * nothing to grade — **except for VOICE_AI**: Fonoster's `evaluateIntelligence` requires
+ * `expected.text` on every conversation turn (confirmed against the live service, correcting
+ * an earlier assumption in design.md), so `resolveEvalTarget` rejects a VOICE_AI scenario
+ * with any turn missing it before ever calling Fonoster. The VOICE_AI-specific requirement is
+ * enforced at resolution time, not here, since this shape is shared across all three channel
+ * types.
  */
 export const evalExpectedSchema = z
   .object({

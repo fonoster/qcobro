@@ -17,7 +17,8 @@ export const agentEvaluationsRouter = router({
         ctx.emailAutopilot,
         ctx.whatsAppAutopilot,
         ctx.emailMaxRepliesDefault,
-        ctx.whatsAppMaxRepliesDefault
+        ctx.whatsAppMaxRepliesDefault,
+        ctx.textSimilarityJudge
       )(input)
     )
 });

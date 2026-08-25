@@ -221,14 +221,65 @@ parameters)` is untouched by this change.
   expected action could make writing a scenario tedious. Mitigation: `expected` stays optional
   per turn (matching Fonoster's own behavior) — an author can run a scenario purely to observe
   behavior before committing to assertions.
-- **`evalsLanguageModel`-style judge grading is deferred** (see Decisions) → EMAIL/WHATSAPP
-  `expected.text` starts as exact/substring match only; a future change can add LLM-judged
-  `SIMILAR` grading if exact matching proves too brittle in practice.
+- **`evalsLanguageModel`-style judge grading was deferred at initial ship, then added** — see
+  "Post-ship revision — 2026-08-24" below. EMAIL/WHATSAPP `expected.text.type: SIMILAR` now
+  runs QCobro's own entity-faithful judge rather than exact/substring match.
 
 ## Open Questions
 
 - Whether evaluation runs should be rate-limited/metered separately from real dispatch quota,
   given they can invoke the same LLM/Fonoster costs without producing real outreach.
-- Whether EMAIL/WHATSAPP `expected.text` grading should ever grow Fonoster's `SIMILAR`
-  judge-LLM approach, or whether exact/substring matching proves sufficient in practice —
-  deliberately not decided now (see Decisions).
+
+## Post-ship revision — 2026-08-24: judge-based SIMILAR grading
+
+Resolves the second open question above and the deferred "judge grading" risk. Prompted by a
+real production incident: an EMAIL agent hallucinated a bank account number in a reply. The
+shipped exact/substring `SIMILAR` matching (§ "EMAIL and WHATSAPP...") could not express "the
+reply's intent is right but it invented a fact" as an assertion at all — it can only compare
+strings.
+
+**Researched against the real Fonoster implementation** (`../fonoster`, not guessed):
+`mods/autopilot/src/models/evaluations/createTestTextSimilarity.ts` is a genuine LLM-as-judge
+(`ChatOpenAI`, temperature 0), and its default prompt (`textSimilaryPrompt.ts`) explicitly
+instructs the judge to compare intent "ignoring the actual text content, the entities, and
+length of the text." That design is right for VOICE_AI's purpose (tolerate phrasing variance)
+but wrong for this incident: an intent-only judge would pass a reply that hallucinates a bank
+account, since the invented account number is exactly the kind of "entity" it's told to ignore.
+
+**Decision: QCobro's EMAIL/WHATSAPP judge is entity-faithful, not intent-only, and is its own
+prompt/implementation — not a copy of Fonoster's.** It fails whenever the actual reply
+introduces a fact/entity/number absent from **both** the expected reply and the scenario's
+account context (not just the expected reply alone — a correct reply legitimately cites real
+balances/dates/names that a short hand-authored expected reply won't restate verbatim; grounding
+against context-only-in-expected would make every correct context-citing reply a false
+"hallucination"). `EXACT` is unaffected — still a literal match, never calling the judge.
+
+**Decision: reuse `qcobro.json`'s `ai` config, don't add a new one.** Mirrors
+`insightGenerator.ts`'s exact shape (provider-abstracted, `mock` offline + `google` REST, same
+`openai`/`anthropic` "not yet implemented" gap) rather than adding `@langchain/openai` (what
+Fonoster's implementation uses) — this repo's LLM calls are already plain `fetch`-based with no
+langchain dependency, and introducing one for a single judge call would be inconsistent with
+every other LLM integration here. Unlike the insight generator, the judge is **not** gated on
+`ai.enabled` — that flag governs automatic per-gestión insight generation; an eval run is
+always a deliberate, explicit action (CLI/console), so an absent/disabled `ai` config falls back
+to an offline heuristic instead of making `SIMILAR` unusable.
+
+No new CLI surface: `agents:eval --template-id --scenarios <file>` already accepted
+`expected.text.type: SIMILAR` for EMAIL/WHATSAPP (the schema always allowed it); only the
+grading behavior behind it changes. The CLI now also prints a turn's failure `reason` (judge or
+exact-mismatch), previously silently dropped.
+
+**Follow-up: broaden judge grounding to `referenceDate` and the customer's own message.**
+Manually stress-tested against a real `google` provider run (the risk flagged above as
+untested) using the actual production system prompt for an EMAIL "mora temprana" agent
+(redacted) plus a battery of legitimate and adversarial scenarios. The core claim held under a
+real LLM: the judge caught the incident's bank-account hallucination every run, and never
+false-positived on real account data. It did false-positive on one legitimate case not
+anticipated by the original design — a multi-turn scenario where the customer proposed a
+payment date in relative terms ("el día 15") and the agent's confirmation resolved it to an
+absolute date ("15 de septiembre"); the judge had no way to tell that date was grounded
+(derived from the customer's own message plus today's date) rather than invented, since neither
+was part of its `context`. Fix: `context` passed to the judge now
+also carries `referenceDate` (the same reference date `EmailAutopilot.decide` itself is called
+with) and `customerMessage` (the current turn's `input`) alongside the rendered account
+context — see the updated requirement and new scenario above.

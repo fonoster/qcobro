@@ -129,3 +129,56 @@
       `agents:preview` commands — `docs-site/cli/overview.mdx`'s "Agentes" section rewritten,
       stale "no conversational evaluation" disclaimer removed; `sdk/reference.mdx` also
       updated with the new exports
+
+## 10. Judge-based SIMILAR grading for EMAIL/WHATSAPP (post-ship addition, 2026-08-24)
+
+Resolves the deferred judge-grading open question — see design.md's "Post-ship revision"
+section. Prompted by a real hallucinated-bank-account incident.
+
+- [x] 10.1 Add the `TextSimilarityJudge` port (`mods/common/src/types/evalJudge.ts`):
+      `compare({expected, actual, context}) -> {passed, reason?}`
+- [x] 10.2 Add the production adapter (`mods/apiserver/src/services/textSimilarityJudge.ts`),
+      mirroring `insightGenerator.ts`'s provider-abstracted shape (`mock` offline heuristic +
+      `google` REST, `openai`/`anthropic` not yet implemented) — an entity-faithful prompt,
+      not Fonoster's intent-only one (see design.md)
+- [x] 10.3 Wire the judge into the tRPC context (`trpc/context.ts`) and thread it through
+      `createEvaluateAgent` -> `runAutopilotEvaluation`, replacing the placeholder
+      substring-match `SIMILAR` grading; `EXACT` unchanged (literal match, never judged)
+- [x] 10.4 Ground the judge's grounding context in the scenario's already-rendered account
+      context (`buildSyntheticAccountContext`'s output) so a reply correctly citing real
+      account data isn't flagged as hallucination
+- [x] 10.5 Populate `errorMessage` on a failing turn (action/resultado mismatch, EXACT
+      mismatch, or the judge's `reason`) — previously computed but never surfaced; update
+      `agents:eval`'s CLI output to print it under the turn line
+- [x] 10.6 Unit tests: judge port stub in `runAutopilotEvaluation.test.ts` (EXACT never calls
+      the judge, SIMILAR defers to it and surfaces its `reason` on failure, account context is
+      passed through); `textSimilarityJudge.test.ts` for the mock-fallback and
+      unimplemented-provider paths
+- [x] 10.7 Author the concrete scenario reproducing the hallucinated-bank-account incident —
+      `evals/email-hallucinated-payment-info.yaml` (customer/lender/bank details redacted to
+      fakes). Two scenarios: the actual incident (agent asked for account info must redirect
+      to WhatsApp, not invent bank details) and a control (citing the real context-provided
+      balance must NOT be flagged as hallucination). Schema-validated and smoke-run end to end
+      against the real judge wiring (mock provider, since no LLM key is configured in this
+      sandbox — confirms no crash and correct event shape; judge quality itself needs a real
+      `google` provider run, which only the user can do)
+- [x] 10.8 Docs: `docs-site/sdk/agent-evaluations.mdx`'s `expected.text` `ParamField` said
+      "Para `VOICE_AI`" only, omitting that `EMAIL`/`WHATSAPP` now support it too (graded by
+      QCobro's own entity-faithful judge, not Fonoster's intent-only one) — fixed. Also added
+      `errorMessage` to the "Lee los eventos" turn-event field list (populated since 10.5, was
+      undocumented). Checked for the `.outcome` stale-field-name issue this task originally
+      flagged — grepped `docs-site/` and `mods/`; no eval-scenario doc or code refers to it
+      (every remaining `outcome` hit is an unrelated DB/webhook field), so nothing to fix
+      there. `sdk/reference.mdx` only links out to `agent-evaluations.mdx` for detail, no
+      separate fix needed. Report generation (JSON/Markdown/PDF) explicitly lower priority,
+      still not started — out of scope here
+- [x] 10.9 Manually validated against a real `google` provider (gemini-2.5-flash) — the risk
+      10.7 flagged as untested. Ran the actual (redacted) production system prompt for an
+      EMAIL "mora temprana" agent through the shipped regression scenario plus an ad hoc
+      battery of legitimate/adversarial scenarios (balance/payment-date questions, discount
+      requests, prompt-injection attempts, hostile customers, fake-authority data requests).
+      The bank-account hallucination was reproduced and caught by the judge every run; real
+      account data was never false-flagged. One judge false positive found and fixed: see
+      design.md's "Follow-up: broaden judge grounding" and the new spec scenario above —
+      `context` now also carries `referenceDate` and `customerMessage`
+      (`runAutopilotEvaluation.ts`, `runAutopilotEvaluation.test.ts`)

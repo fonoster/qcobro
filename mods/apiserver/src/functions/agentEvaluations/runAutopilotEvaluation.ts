@@ -2,7 +2,8 @@ import type {
   EmailAutopilot,
   EmailThreadMessage,
   EvalEvent,
-  EvalScenarioSummary
+  EvalScenarioSummary,
+  TextSimilarityJudge
 } from "@qcobro/common";
 import { buildSyntheticAccountContext } from "./buildSyntheticAccount.js";
 import type { ResolvedEvalAgent } from "./resolveEvalTarget.js";
@@ -23,7 +24,8 @@ type ResolvedAutopilotAgent = Extract<ResolvedEvalAgent, { type: "EMAIL" | "WHAT
 export async function* runAutopilotEvaluation(
   agent: ResolvedAutopilotAgent,
   autopilot: EmailAutopilot,
-  maxRepliesDefault: number
+  maxRepliesDefault: number,
+  textSimilarityJudge: TextSimilarityJudge
 ): AsyncGenerator<EvalEvent> {
   const cap = Math.min(agent.maxReplies ?? maxRepliesDefault, maxRepliesDefault);
   const scenarioSummaries: EvalScenarioSummary[] = [];
@@ -60,18 +62,35 @@ export async function* runAutopilotEvaluation(
       }
 
       let passed: boolean | undefined;
+      let errorMessage: string | undefined;
       if (turn.expected) {
         passed = true;
-        if (turn.expected.action && turn.expected.action !== action) passed = false;
-        if (turn.expected.resultado && turn.expected.resultado !== decision.resultado)
+        if (turn.expected.action && turn.expected.action !== action) {
           passed = false;
+          errorMessage = `Expected action "${turn.expected.action}", got "${action}".`;
+        }
+        if (turn.expected.resultado && turn.expected.resultado !== decision.resultado) {
+          passed = false;
+          errorMessage = `Expected resultado "${turn.expected.resultado}", got "${decision.resultado ?? "null"}".`;
+        }
         if (turn.expected.text) {
           const body = decision.replyBody ?? "";
-          const ok =
-            turn.expected.text.type === "EXACT"
-              ? body === turn.expected.text.response
-              : body.toLowerCase().includes(turn.expected.text.response.toLowerCase());
-          if (!ok) passed = false;
+          if (turn.expected.text.type === "EXACT") {
+            if (body !== turn.expected.text.response) {
+              passed = false;
+              errorMessage = `Expected exact response "${turn.expected.text.response}", but got "${body}".`;
+            }
+          } else {
+            const verdict = await textSimilarityJudge.compare({
+              expected: turn.expected.text.response,
+              actual: body,
+              context: { ...accountContext, referenceDate, customerMessage: turn.input }
+            });
+            if (!verdict.passed) {
+              passed = false;
+              errorMessage = verdict.reason ?? `Judge rejected response "${body}".`;
+            }
+          }
         }
       }
       if (passed === false) scenarioPassed = false;
@@ -83,6 +102,10 @@ export async function* runAutopilotEvaluation(
           turnIndex,
           input: turn.input,
           passed,
+          errorMessage,
+          aiResponse: decision.replyBody ?? undefined,
+          expectedResponse: turn.expected?.text?.response,
+          evaluationType: turn.expected?.text?.type,
           action,
           resultado: decision.resultado ?? null
         }

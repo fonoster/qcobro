@@ -107,8 +107,13 @@ Lo que puede llevar `expected` depende del canal:
   `PAYMENT_PROMISE`), cuando el turno debería capturar uno.
 </ParamField>
 <ParamField body="expected.text" type="object">
-  Para `VOICE_AI`: `{ type: "EXACT" | "SIMILAR", response }`. Compara la respuesta generada
-  por el agente contra `response`, de forma exacta o por similitud.
+  Para `VOICE_AI`, `EMAIL` y `WHATSAPP`: `{ type: "EXACT" | "SIMILAR", response }`. Compara
+  la respuesta generada por el agente contra `response`. `EXACT` es una comparación literal de
+  texto. `SIMILAR` evalúa intención y fidelidad a los hechos: para `VOICE_AI` la corre el
+  evaluador de Fonoster; para `EMAIL`/`WHATSAPP` la corre el juez propio de QCobro, que falla
+  la respuesta si coincide en intención pero **inventa un dato** (monto, número de cuenta,
+  fecha, nombre, etc.) ausente tanto de `response` como del contexto de la cuenta del
+  escenario — no solo cuando la intención no coincide.
 </ParamField>
 <ParamField body="expected.tools" type="array">
   Para `VOICE_AI`: acciones puntuales que el agente debería ejecutar en ese turno (por
@@ -124,7 +129,8 @@ escenario terminado, y por último un resumen del run completo.
 for await (const event of client.agentEvaluations.evaluate(input)) {
   switch (event.type) {
     case "turn":
-      // event.result: passed?, action?/resultado? (EMAIL/WHATSAPP), aiResponse? (VOICE_AI)
+      // event.result: passed?, action?/resultado? (EMAIL/WHATSAPP), aiResponse? (VOICE_AI),
+      // errorMessage? (por qué falló: mismatch de EXACT, o el `reason` del juez en SIMILAR)
       console.log(event.scenarioRef, event.result);
       break;
     case "scenarioSummary":
