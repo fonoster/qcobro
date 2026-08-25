@@ -64,7 +64,7 @@ export function Workspaces() {
         </div>
 
         <div className="flex flex-wrap justify-center gap-6">
-          {items.slice(0, 3).map((ws) => (
+          {items.map((ws) => (
             <div
               key={ws.accessKeyId}
               onClick={() => onSelect(ws.accessKeyId)}
