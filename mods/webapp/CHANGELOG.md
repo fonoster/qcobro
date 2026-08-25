@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.35.2](https://github.com/fonoster/qcobro/compare/v1.35.1...v1.35.2) (2026-08-25)
+
+### Bug Fixes
+
+- **webapp:** show all workspaces on the post-login landing page ([#135](https://github.com/fonoster/qcobro/issues/135)) ([4aca557](https://github.com/fonoster/qcobro/commit/4aca55720644ef07f5ee45bcfc0528fab2dcea73))
+
 ## [1.35.1](https://github.com/fonoster/qcobro/compare/v1.35.0...v1.35.1) (2026-08-25)
 
 **Note:** Version bump only for package @qcobro/webapp
