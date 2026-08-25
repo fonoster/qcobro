@@ -1,6 +1,6 @@
 {
   "name": "@qcobro/ctl",
-  "version": "1.34.1",
+  "version": "1.34.2",
   "description": "Command-line tool for QCobro developers, built on @qcobro/sdk.",
   "type": "module",
   "bin": {
