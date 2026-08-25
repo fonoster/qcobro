@@ -4,8 +4,11 @@
 export interface TextSimilarityRequest {
   expected: string;
   actual: string;
-  /** Rendered account context (see `buildOutreachContext`) — facts the actual reply may
-   * legitimately state even when absent from `expected` verbatim. */
+  /** Grounding facts the actual reply may legitimately state even when absent from `expected`
+   * verbatim: the rendered account context (see `buildOutreachContext`), plus `referenceDate`
+   * (today, for resolving a relative date the customer stated, e.g. "the 15th") and
+   * `customerMessage` (this turn's inbound message, so a detail the customer themselves
+   * supplied isn't mistaken for an invented one). */
   context?: Record<string, unknown>;
 }
 

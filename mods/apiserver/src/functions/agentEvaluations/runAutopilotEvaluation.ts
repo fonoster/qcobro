@@ -84,7 +84,7 @@ export async function* runAutopilotEvaluation(
             const verdict = await textSimilarityJudge.compare({
               expected: turn.expected.text.response,
               actual: body,
-              context: accountContext
+              context: { ...accountContext, referenceDate, customerMessage: turn.input }
             });
             if (!verdict.passed) {
               passed = false;

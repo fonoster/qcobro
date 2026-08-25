@@ -287,6 +287,39 @@ describe("runAutopilotEvaluation", () => {
     assert.ok(requests[0].context && Object.keys(requests[0].context).length > 0);
   });
 
+  it("also grounds the judge's context in today's reference date and the customer's own message", async () => {
+    // A real stress-test run surfaced a false positive: a customer stated a payment date
+    // relatively ("el 15 de septiembre") and the agent echoed it back to confirm the
+    // commitment — the judge flagged the resolved date as an invented entity because neither
+    // today's date nor the customer's own message were part of its grounding context.
+    const { judge, requests } = recordingJudge({ passed: true });
+    const a = agent({
+      scenarios: [
+        {
+          ref: "date-grounded",
+          account: account(),
+          turns: [
+            {
+              input: "Puedo pagar los $4,200 el 15 de septiembre",
+              expected: { text: { type: "SIMILAR", response: "Quedamos en el 15 de septiembre." } }
+            }
+          ]
+        }
+      ]
+    });
+    const autopilot = scriptedAutopilot([
+      { action: "reply", replyBody: "Perfecto, quedamos en el 15 de septiembre." }
+    ]);
+
+    await collect(runAutopilotEvaluation(a, autopilot, 3, judge));
+    assert.equal(requests.length, 1);
+    assert.equal(
+      requests[0].context?.customerMessage,
+      "Puedo pagar los $4,200 el 15 de septiembre"
+    );
+    assert.match(String(requests[0].context?.referenceDate), /^\d{4}-\d{2}-\d{2}$/);
+  });
+
   it("never invokes any persistence — the autopilot port has no write method to call", async () => {
     // `EmailAutopilot.decide` is the only dependency the runner takes besides the agent
     // and cap; there is no gestión/PaymentPromise client in scope at all, so a captured

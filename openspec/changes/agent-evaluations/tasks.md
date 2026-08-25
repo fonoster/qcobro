@@ -167,3 +167,13 @@ section. Prompted by a real hallucinated-bank-account incident.
       addition (and still use the stale `.outcome` field name predating the `resultado`
       rename) — **not done**, deferred; report generation (JSON/Markdown/PDF) explicitly
       lower priority, not started
+- [x] 10.9 Manually validated against a real `google` provider (gemini-2.5-flash) — the risk
+      10.7 flagged as untested. Ran the actual (redacted) production system prompt for an
+      EMAIL "mora temprana" agent through the shipped regression scenario plus an ad hoc
+      battery of legitimate/adversarial scenarios (balance/payment-date questions, discount
+      requests, prompt-injection attempts, hostile customers, fake-authority data requests).
+      The bank-account hallucination was reproduced and caught by the judge every run; real
+      account data was never false-flagged. One judge false positive found and fixed: see
+      design.md's "Follow-up: broaden judge grounding" and the new spec scenario above —
+      `context` now also carries `referenceDate` and `customerMessage`
+      (`runAutopilotEvaluation.ts`, `runAutopilotEvaluation.test.ts`)

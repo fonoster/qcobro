@@ -179,7 +179,10 @@ cap, no further turn SHALL produce a `reply` action.
 judge. `SIMILAR` SHALL be graded by a dedicated judge (`TextSimilarityJudge`) rather than
 Fonoster's intent-only evaluator: it SHALL fail unless (a) the actual reply's intent matches the
 expected reply's, ignoring wording/phrasing, AND (b) the actual reply introduces no fact, entity,
-or number absent from BOTH the expected reply and the scenario's rendered account context. An
+or number absent from the expected reply, the scenario's rendered account context, today's
+reference date, and the customer's own message that turn — the last two so the judge can
+recognize a legitimate restatement or derivation (e.g. resolving a date the customer gave
+relatively, like "the 15th", into an absolute one) rather than flagging it as invented. An
 intent-only judge (Fonoster's own VOICE_AI evaluator explicitly ignores entities) would pass a
 reply that invents a detail such as a bank account number; this judge SHALL NOT. The judge's
 failure `reason` SHALL be surfaced on the turn's result so a hallucinated detail is visible
@@ -206,6 +209,14 @@ enviaremos las instrucciones de pago por separado." } }` and the account context
   context
 - **THEN** the turn's result reports `passed: true` — the balance is grounded in context, not
   invented
+
+#### Scenario: A reply resolving a date the customer stated is not flagged as hallucination
+
+- **WHEN** a turn's customer message states a payment date in relative terms (e.g. "el día 15")
+- **AND** the autopilot's actual reply confirms the commitment using the resolved absolute date
+  (e.g. "15 de septiembre")
+- **THEN** the turn's result reports `passed: true` — the date is grounded in the customer's own
+  message and today's reference date, not invented by the agent
 
 #### Scenario: EXACT never calls the judge
 

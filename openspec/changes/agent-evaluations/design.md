@@ -268,3 +268,18 @@ No new CLI surface: `agents:eval --template-id --scenarios <file>` already accep
 `expected.text.type: SIMILAR` for EMAIL/WHATSAPP (the schema always allowed it); only the
 grading behavior behind it changes. The CLI now also prints a turn's failure `reason` (judge or
 exact-mismatch), previously silently dropped.
+
+**Follow-up: broaden judge grounding to `referenceDate` and the customer's own message.**
+Manually stress-tested against a real `google` provider run (the risk flagged above as
+untested) using the actual production system prompt for an EMAIL "mora temprana" agent
+(redacted) plus a battery of legitimate and adversarial scenarios. The core claim held under a
+real LLM: the judge caught the incident's bank-account hallucination every run, and never
+false-positived on real account data. It did false-positive on one legitimate case not
+anticipated by the original design — a multi-turn scenario where the customer proposed a
+payment date in relative terms ("el día 15") and the agent's confirmation resolved it to an
+absolute date ("15 de septiembre"); the judge had no way to tell that date was grounded
+(derived from the customer's own message plus today's date) rather than invented, since neither
+was part of its `context`. Fix: `context` passed to the judge now
+also carries `referenceDate` (the same reference date `EmailAutopilot.decide` itself is called
+with) and `customerMessage` (the current turn's `input`) alongside the rendered account
+context — see the updated requirement and new scenario above.
