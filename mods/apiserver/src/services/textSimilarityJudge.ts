@@ -4,6 +4,7 @@ import type {
   TextSimilarityRequest,
   TextSimilarityResult
 } from "@qcobro/common";
+import { LLM_TIMEOUT_MS } from "./httpTimeouts.js";
 
 /**
  * The judge's instructions: match VOICE_AI's evaluator in checking overall intent, but —
@@ -103,7 +104,8 @@ async function googleCompare(
         // goes to the JSON answer instead of being consumed by reasoning.
         thinkingConfig: { thinkingBudget: 0 }
       }
-    })
+    }),
+    signal: AbortSignal.timeout(LLM_TIMEOUT_MS)
   });
   if (!res.ok) throw new Error(`Google GenAI ${res.status}: ${await res.text()}`);
   const data = (await res.json()) as {

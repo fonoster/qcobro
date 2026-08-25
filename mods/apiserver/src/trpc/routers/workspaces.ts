@@ -20,6 +20,7 @@ import { identityCall } from "../identityCall.js";
 import { createUpdateWorkspaceSettings } from "../../functions/workspaceSettings/updateWorkspaceSettings.js";
 import { config } from "../../config.js";
 import { TRPCError } from "@trpc/server";
+import { PROVIDER_TIMEOUT_MS } from "../../services/httpTimeouts.js";
 
 export const workspacesRouter = router({
   // Accept a workspace invitation by forwarding the signed token to the
@@ -28,7 +29,10 @@ export const workspacesRouter = router({
   // distinguish the two by checking the Location header.
   acceptInvitation: publicProcedure.input(acceptInvitationSchema).mutation(async ({ input }) => {
     const url = `${config.identity.httpBridgeUrl}/api/identity/accept-invite?token=${encodeURIComponent(input.token)}`;
-    const res = await fetch(url, { redirect: "manual" });
+    const res = await fetch(url, {
+      redirect: "manual",
+      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS)
+    });
     if (res.status !== 302) {
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Identity bridge error" });
     }

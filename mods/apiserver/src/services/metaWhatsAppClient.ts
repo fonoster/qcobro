@@ -4,9 +4,9 @@ import {
   type WhatsAppFetchedTemplate,
   type WhatsAppSendTemplateInput
 } from "@qcobro/common";
+import { PROVIDER_TIMEOUT_MS } from "./httpTimeouts.js";
 
 /** Cap the provider call so an unreachable Meta endpoint can't hang the request/tick path. */
-const SEND_TIMEOUT_MS = 15_000;
 
 /** Retry policy for `fetchTemplate` reads (transient 5xx / network errors only). */
 const FETCH_TEMPLATE_MAX_ATTEMPTS = 3;
@@ -88,7 +88,7 @@ export class MetaWhatsAppClient implements WhatsAppClient {
           "Content-Type": "application/json"
         },
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(SEND_TIMEOUT_MS)
+        signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS)
       });
     } catch (err) {
       // Never reached Meta at all — network failure or our own timeout abort.
@@ -193,7 +193,7 @@ export class MetaWhatsAppClient implements WhatsAppClient {
     const url = `${apiBaseUrl}/${apiVersion}/${wabaId}/message_templates?limit=200`;
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${accessToken}` },
-      signal: AbortSignal.timeout(SEND_TIMEOUT_MS)
+      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS)
     });
     const data = (await res.json().catch(() => ({}))) as MetaTemplateListResponse;
     if (!res.ok) {
@@ -238,7 +238,7 @@ export class MetaWhatsAppClient implements WhatsAppClient {
     try {
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${accessToken}` },
-        signal: AbortSignal.timeout(SEND_TIMEOUT_MS)
+        signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS)
       });
       return res.ok;
     } catch {

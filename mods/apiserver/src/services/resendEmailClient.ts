@@ -5,11 +5,11 @@ import {
   type ReceivedEmail,
   type ResendConfig
 } from "@qcobro/common";
+import { PROVIDER_TIMEOUT_MS } from "./httpTimeouts.js";
 
 type ResendSettings = NonNullable<ResendConfig>;
 
 /** Cap the provider call so an unreachable Resend can't hang the request/tick path. */
-const SEND_TIMEOUT_MS = 15_000;
 
 /**
  * Resend-backed {@link EmailClient}. Sends a single email over Resend's REST API (no SDK
@@ -40,7 +40,7 @@ export class ResendEmailClient implements EmailClient {
             ? { headers: { "In-Reply-To": input.inReplyTo, References: input.inReplyTo } }
             : {})
         }),
-        signal: AbortSignal.timeout(SEND_TIMEOUT_MS)
+        signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS)
       });
     } catch (err) {
       // Never reached Resend at all — network failure or our own timeout abort.
@@ -74,7 +74,7 @@ export class ResendEmailClient implements EmailClient {
   async getReceivedEmail(id: string): Promise<ReceivedEmail | null> {
     const res = await fetch(`https://api.resend.com/emails/receiving/${id}`, {
       headers: { Authorization: `Bearer ${this.settings.apiKey}` },
-      signal: AbortSignal.timeout(SEND_TIMEOUT_MS)
+      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS)
     });
     if (res.status === 404) return null;
     if (!res.ok) {
