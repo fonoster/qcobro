@@ -36,6 +36,27 @@ deployment-level tick events (aggregate per-tick channel counts) so it remains v
 on a workspace-scoped stream. Each violation SHALL identify the invariant and the
 offending events.
 
+The attempt-cap checks (SAF-2, SAF-3) SHALL count only attempts that actually consumed
+attempt budget. An `attempt.reserved` whose dispatch failed with `errorClass: SYSTEM_ERROR`
+in the same tick SHALL NOT be counted, because the engine charges no attempt budget for it
+(see the campaigns-engine requirement "Attempt budget excludes system-error dispatch
+failures"). `attempt.reserved` is emitted before the dispatch outcome is known, so counting
+it unconditionally makes the judge contradict the engine it judges — reporting cap breaches
+for budget that was never spent.
+
+#### Scenario: A system-error attempt is not counted against the caps
+
+- **WHEN** an attempt's dispatch fails with `errorClass: SYSTEM_ERROR` and the account is
+  attempted again within the same local day
+- **THEN** the scorecard does not fail SAF-3 for that account
+- **AND** it does not count that attempt toward SAF-2 either
+
+#### Scenario: A delivery-rejected attempt is counted against the caps
+
+- **WHEN** an attempt's dispatch fails with `errorClass: DELIVERY_REJECTED` and the account
+  is attempted again within the same local day, exceeding the daily cap
+- **THEN** the scorecard fails SAF-3
+
 #### Scenario: Out-of-window dispatch is flagged
 
 - **WHEN** the stream contains a `dispatch.requested` whose timestamp falls outside the

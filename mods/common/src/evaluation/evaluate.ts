@@ -73,6 +73,10 @@ function inSnapshotWindow(s: CampaignSnapshot, at: Date): boolean {
 
 const key = (campaignId: string, accountId: string) => `${campaignId}|${accountId}`;
 
+/** Identifies one (campaign, account) attempt within a single tick. */
+const attemptKey = (tickId: string | undefined, campaignId: string, accountId: string) =>
+  `${tickId ?? ""}|${campaignId}|${accountId}`;
+
 /** A (campaign, account) pair's aggregated reservations — structured, no key parsing. */
 interface PairAgg {
   campaignId: string;
@@ -211,6 +215,20 @@ export function evaluate(events: EngineEvent[], parameters: EvaluationParameters
   const idx = indexStream(sorted);
   const { tickSeconds, ratesPerMinute, thresholds } = parameters;
 
+  // Attempts whose dispatch failed with SYSTEM_ERROR consumed no attempt budget: the engine
+  // only increments `attemptCount`/`attemptsToday` on a success or DELIVERY_REJECTED, because
+  // a SYSTEM_ERROR never reached the recipient (campaigns-engine spec, "Attempt budget
+  // excludes system-error dispatch failures"). `attempt.reserved` fires before dispatch and so
+  // cannot know the outcome; counting it regardless made SAF-2/SAF-3 report cap breaches for
+  // attempts the caps were never charged for — the judge disagreeing with the engine it judges.
+  const budgetFreeAttempts = new Set<string>();
+  for (const f of idx.failed) {
+    if (f.errorClass !== "SYSTEM_ERROR") continue;
+    budgetFreeAttempts.add(attemptKey(f.tickId, f.campaignId, f.portfolioAccountId));
+  }
+  const consumedBudget = (r: AttemptReservedEvent) =>
+    !budgetFreeAttempts.has(attemptKey(r.tickId, r.campaignId, r.portfolioAccountId));
+
   // SAF-1 — no dispatch outside the campaign window.
   const saf1: Violation[] = [];
   for (const d of idx.requested) {
@@ -232,9 +250,10 @@ export function evaluate(events: EngineEvent[], parameters: EvaluationParameters
   // alone exceeding the cap is a proven breach (the true total can only be higher).
   const saf2: Violation[] = [];
   for (const pair of idx.reservedByPair.values()) {
+    const charged = pair.reservations.filter(consumedBudget);
     const offending: AttemptReservedEvent[] = [];
     let capAtBreach = 0;
-    pair.reservations.forEach((r, i) => {
+    charged.forEach((r, i) => {
       const snap = snapshotFor(idx, r.tickId, pair.campaignId);
       if (!snap) return;
       if (i + 1 > snap.maxAttemptsPerAccount) {
@@ -247,7 +266,7 @@ export function evaluate(events: EngineEvent[], parameters: EvaluationParameters
         campaignId: pair.campaignId,
         portfolioAccountId: pair.portfolioAccountId,
         eventIds: offending.map((r) => r.id),
-        detail: `${pair.reservations.length} attempts recorded, cap in force was ${capAtBreach}`
+        detail: `${charged.length} attempts recorded, cap in force was ${capAtBreach}`
       });
     }
   }
@@ -259,6 +278,7 @@ export function evaluate(events: EngineEvent[], parameters: EvaluationParameters
     const countByDay = new Map<string, number>();
     const offendingByDay = new Map<string, { events: AttemptReservedEvent[]; cap: number }>();
     for (const r of pair.reservations) {
+      if (!consumedBudget(r)) continue;
       const snap = snapshotFor(idx, r.tickId, pair.campaignId);
       if (!snap) continue;
       const day = localDateString(new Date(r.at), snap.timezone);
