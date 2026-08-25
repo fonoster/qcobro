@@ -21,8 +21,8 @@ import { cn } from "@/lib/utils.js";
 const NAV: { icon: LucideIcon; labelKey: MessageId; to?: string; end?: boolean }[] = [
   { icon: LayoutDashboard, labelKey: "nav.panel", to: "/", end: true },
   { icon: Folder, labelKey: "nav.portfolios", to: "/portfolios" },
-  { icon: Megaphone, labelKey: "nav.campaigns", to: "/campaigns" },
   { icon: Bot, labelKey: "nav.agents", to: "/agent-templates" },
+  { icon: Megaphone, labelKey: "nav.campaigns", to: "/campaigns" },
   { icon: PhoneCall, labelKey: "nav.gestiones", to: "/gestiones" },
   { icon: HandCoins, labelKey: "nav.paymentPromises", to: "/payment-promises" }
 ];
