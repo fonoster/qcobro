@@ -13,10 +13,10 @@ import {
 
 /**
  * `prerecordedCompletionSchema` (in `@qcobro/common`) still carries only the boolean
- * `answered` signal; the fields this recovery/DTMF path derives locally — `deliveryReason`
- * from the Fonoster CDR clearing cause (see `resolveVoiceCallFromCdr`), and `camino`/
- * `resultado`/`repeatCount` from the optional DTMF menu (see the VoiceServer) — are layered
- * on locally rather than added to the shared schema.
+ * `answered` signal; the fields this path derives locally — `deliveryReason` for an
+ * unanswered call, and `camino`/`resultado`/`repeatCount` from call completion / the
+ * optional DTMF menu (see the VoiceServer) — are layered on locally rather than added to the
+ * shared schema.
  */
 const prerecordedOutcomeInputSchema = prerecordedCompletionSchema.extend({
   deliveryReason: deliveryReasonSchema.optional(),
@@ -81,11 +81,12 @@ export type RecordPrerecordedOutcomeResult =
  * `durationSeconds` (the honest signal, never fabricated). An unanswered completion records
  * `FAILED` with a `deliveryReason` and zero duration.
  *
- * `camino`/`resultado` are set only when the template's optional DTMF menu was configured and
- * the caller pressed a digit: any configured-digit press sets `camino: ENGAGED`; the opt-out
- * digit specifically also sets `resultado: OPT_OUT`. With no menu, or no/an unrecognized
- * press, both stay null exactly as before this capability (see `channelCanEngage` and its
- * `VOICE_PRERECORDED` carve-out).
+ * `camino` mirrors Voz IA's `decideCamino`: reaching call completion at all (the script
+ * played to the end, menu or no menu, press or no press — an early hangup never reaches this
+ * far) means the account holder heard the message, so `camino: ENGAGED` is always recorded on
+ * a finalizing completion. `resultado: OPT_OUT` is the one exception, set only when the
+ * template's optional DTMF menu was configured and the caller specifically pressed the
+ * opt-out digit (see `channelCanEngage` and its `VOICE_PRERECORDED` carve-out).
  *
  * Idempotent per call ref: `entrega` only ever advances, and `camino`/`resultado` are written
  * only alongside that same finalizing completion — once a gestión has left `DISPATCHED`, a

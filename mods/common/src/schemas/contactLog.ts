@@ -60,9 +60,11 @@ export type Resultado = z.infer<typeof resultadoSchema>;
  * Channels with an inbound path, and therefore the only ones that can observe a `camino` or
  * produce a `resultado`. `SMS` has no inbound ingestion at all, so both axes are not merely
  * usually-null there — they are unreachable. `VOICE_PRERECORDED` is the one exception: it has
- * no inbound path of its own, but its optional DTMF menu (see `prerecorded-audio`) can produce
- * exactly `camino: ENGAGED` and/or `resultado: OPT_OUT` — nothing else. See
- * {@link isAllowedOnPrerecorded} for that narrow carve-out.
+ * no inbound path of its own, but reaching call completion (the script played to the end,
+ * with or without an optional DTMF menu — see `prerecorded-audio`) always sets
+ * `camino: ENGAGED`, and the opt-out digit specifically also sets `resultado: OPT_OUT` — no
+ * other camino/resultado value is reachable. See {@link isAllowedOnPrerecorded} for that
+ * narrow carve-out.
  */
 export const CHANNEL_CAN_ENGAGE = ["VOICE_AI", "EMAIL", "WHATSAPP"] as const;
 
@@ -75,9 +77,10 @@ const PRERECORDED_ALLOWED_CAMINO: ReadonlySet<Camino> = new Set(["ENGAGED"]);
 const PRERECORDED_ALLOWED_RESULTADO: ReadonlySet<Resultado> = new Set(["OPT_OUT"]);
 
 /**
- * `VOICE_PRERECORDED`'s one carve-out from {@link channelCanEngage}: a DTMF press can set
- * `camino: ENGAGED` and/or `resultado: OPT_OUT`, and nothing else — `ABANDONED`/`VOICEMAIL`
- * and every other `resultado` value stay unreachable, exactly as for any other one-way channel.
+ * `VOICE_PRERECORDED`'s one carve-out from {@link channelCanEngage}: call completion sets
+ * `camino: ENGAGED`, and the opt-out digit specifically also sets `resultado: OPT_OUT` — and
+ * nothing else. `ABANDONED`/`VOICEMAIL` and every other `resultado` value stay unreachable,
+ * exactly as for any other one-way channel.
  */
 function isAllowedOnPrerecorded(field: "camino" | "resultado", value: Camino | Resultado): boolean {
   return field === "camino"
