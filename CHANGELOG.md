@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.35.1](https://github.com/fonoster/qcobro/compare/v1.35.0...v1.35.1) (2026-08-25)
+
+### Bug Fixes
+
+- **apiserver:** bound every outbound fetch with a timeout ([#134](https://github.com/fonoster/qcobro/issues/134)) ([616f80c](https://github.com/fonoster/qcobro/commit/616f80cd446f70f8350ab35c0d8549a20004ed49))
+- **apiserver:** bound the unauthenticated TTS audio cache ([#131](https://github.com/fonoster/qcobro/issues/131)) ([52cdf89](https://github.com/fonoster/qcobro/commit/52cdf89012e8bb03921368dbb052d54e278177b5))
+- **engine:** hold the tick lock as a lease row, not an advisory lock ([#129](https://github.com/fonoster/qcobro/issues/129)) ([34c1ce3](https://github.com/fonoster/qcobro/commit/34c1ce3d27153bd38e64864655da09df0265fd3b))
+- **scorecard:** don't charge system-error attempts against SAF-2/SAF-3 ([#132](https://github.com/fonoster/qcobro/issues/132)) ([32549c4](https://github.com/fonoster/qcobro/commit/32549c40717abc9fbff9dde9487d4fb4de7d1877))
+- **workspaces:** default new workspaces to America/Santo_Domingo ([#133](https://github.com/fonoster/qcobro/issues/133)) ([0261268](https://github.com/fonoster/qcobro/commit/0261268746ae91daf46cfb451b28000101737acd))
+
 # [1.35.0](https://github.com/fonoster/qcobro/compare/v1.34.4...v1.35.0) (2026-08-25)
 
 ### Bug Fixes
