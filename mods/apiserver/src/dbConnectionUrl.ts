@@ -8,9 +8,9 @@ const logger = getLogger({ service: "db", filePath: import.meta.url });
  *
  * Server-side is the operative word. A client-side timeout (Prisma's `socket_timeout`) only
  * stops the client waiting: the server keeps executing the statement, so the connection stays
- * busy and any session-scoped advisory lock it holds stays held — which is exactly how one
- * stalled query can freeze the whole campaigns engine. Cancelling server-side frees the
- * connection, which releases the lock and lets the engine resume.
+ * busy and whatever waited on it stays blocked — which is how a single stalled query inside a
+ * tick stalls that tick, and with it every scheduled tick the engine's single-flight guard
+ * skips behind it. Cancelling server-side actually frees the connection and lets ticks resume.
  *
  * An operator's own `statement_timeout` in `database.url` always wins, and a URL this cannot
  * parse is returned unchanged (some valid Postgres connection strings, e.g. the Cloud SQL

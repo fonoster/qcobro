@@ -152,6 +152,45 @@ describe("createEngineRunner — engine lease gating", () => {
     assert.equal(released, 1);
   });
 
+  it("keeps renewing until an in-flight tick finishes, then releases", async () => {
+    // stop() must not stop the heartbeat before the tick settles: letting the lease lapse
+    // mid-dispatch reopens the concurrent-dispatch window the heartbeat exists to close.
+    const events: string[] = [];
+    let releaseTick: (() => void) | undefined;
+    const tickDone = new Promise<void>((resolve) => (releaseTick = resolve));
+    const runner = createEngineRunner({
+      prisma: makePrisma(),
+      tickSeconds: 60,
+      leaseTtlSeconds: 30,
+      tick: async () => {
+        events.push("tick-start");
+        await tickDone;
+        events.push("tick-end");
+        return emptyReport;
+      },
+      lease: {
+        holder: "self",
+        acquire: async () => true,
+        release: async () => {
+          events.push("release");
+        }
+      }
+    });
+
+    runner.start();
+    const inFlight = runner.runOnce();
+    await new Promise((r) => setTimeout(r, 10));
+    const stopping = runner.stop();
+    await new Promise((r) => setTimeout(r, 10));
+
+    assert.ok(!events.includes("release"), "release must not happen while the tick is running");
+    releaseTick!();
+    await inFlight;
+    await stopping;
+
+    assert.deepEqual(events, ["tick-start", "tick-end", "release"]);
+  });
+
   it("a failing lease release never fails shutdown", async () => {
     const runner = createEngineRunner({
       prisma: makePrisma(),

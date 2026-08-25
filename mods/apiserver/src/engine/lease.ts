@@ -43,9 +43,10 @@ export interface EngineLease {
 
 export interface EngineLeaseOptions {
   /**
-   * How long a claim stays valid without renewal. Must exceed the longest plausible tick,
-   * or a peer could claim the lease mid-tick and two instances would dispatch at once. It
-   * is also the failover delay after an ungraceful exit, so it trades those two off.
+   * How long a claim stays valid *without renewal*. A caller that renews — the engine
+   * runner does, on a heartbeat — can keep this short, and it then bounds only how long a
+   * dead holder blocks its peers. A caller that does NOT renew must size it above its
+   * longest operation, or a peer could claim the lease out from under work in progress.
    */
   ttlSeconds: number;
   /** Overridable for tests; defaults to a per-process UUID. */

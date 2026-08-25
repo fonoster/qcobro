@@ -40,9 +40,10 @@ export function createEngineRunner(opts: {
   tick: () => Promise<TickReport>;
   tickSeconds: number;
   /**
-   * How long a lease claim stays valid without renewal. Must exceed the longest plausible
-   * tick; also the failover delay after an ungraceful exit. Defaults to 3 tick intervals
-   * (minimum 3 minutes).
+   * How long a lease claim stays valid without renewal — i.e. how long an ungracefully
+   * killed instance blocks its peers. It does not have to cover a long tick: the holder
+   * renews on a heartbeat independent of tick progress. Defaults to two tick intervals
+   * (minimum 120s).
    */
   leaseTtlSeconds?: number;
   /** Overridable for tests; defaults to a lease backed by `prisma`. */
@@ -135,7 +136,19 @@ export function createEngineRunner(opts: {
       // peer dispatch the same accounts concurrently.
       renewTimer = setInterval(
         () => {
-          void lease.acquire().catch((err) => logger.error("engine lease renewal failed", err));
+          void lease
+            .acquire()
+            .then((held) => {
+              if (held) return;
+              // Losing the lease while alive means renewals failed long enough for it to
+              // expire and a peer to claim it. If a tick is in flight, both instances may
+              // now be dispatching the same accounts — the one thing the lease exists to
+              // prevent — so this must never be silent.
+              logger.error(
+                `engine lease lost while running (this instance is ${lease.holder}); another instance has claimed it and a tick already in flight may still be dispatching`
+              );
+            })
+            .catch((err) => logger.error("engine lease renewal failed", err));
         },
         Math.max(1000, Math.floor((leaseTtlSeconds * 1000) / 3))
       );
@@ -145,11 +158,14 @@ export function createEngineRunner(opts: {
         clearInterval(timer);
         timer = null;
       }
+      // Keep renewing until the in-flight tick actually finishes: stopping the heartbeat
+      // first would let the lease lapse mid-dispatch on a slow shutdown, which is exactly
+      // the concurrent-dispatch window the heartbeat exists to close.
+      while (running) await new Promise((r) => setTimeout(r, 50));
       if (renewTimer) {
         clearInterval(renewTimer);
         renewTimer = null;
       }
-      while (running) await new Promise((r) => setTimeout(r, 50));
       // Hand the lease back so a redeploy's replacement instance can tick immediately
       // instead of waiting out the TTL. Best-effort: a shutdown must not fail on this,
       // and an unreleased lease only costs the TTL.

@@ -11,6 +11,14 @@ const RUN = !!process.env.DATABASE_URL;
 
 const ADVISORY_LOCK_KEY = 4242_0001;
 
+/**
+ * Append a connection parameter without assuming the URL has no query string — the
+ * documented dev URL carries `?schema=public` and managed Postgres needs `?sslmode=require`,
+ * so naive `?key=value` concatenation produces an unparseable connection string.
+ */
+const withParam = (url: string, param: string) =>
+  `${url}${url.includes("?") ? "&" : "?"}${param}`;
+
 describe("engine lease (integration)", { skip: !RUN ? "no DATABASE_URL" : false }, () => {
   const prisma = new PrismaClient();
 
@@ -76,8 +84,8 @@ describe("engine lease (integration)", { skip: !RUN ? "no DATABASE_URL" : false 
     // pg_try_advisory_lock is SESSION scoped, so acquiring on one pooled connection and
     // releasing on another silently fails and strands the lock.
     const url = process.env.DATABASE_URL!;
-    const one = new PrismaClient({ datasources: { db: { url: `${url}?connection_limit=1` } } });
-    const two = new PrismaClient({ datasources: { db: { url: `${url}?connection_limit=1` } } });
+    const one = new PrismaClient({ datasources: { db: { url: withParam(url, "connection_limit=1") } } });
+    const two = new PrismaClient({ datasources: { db: { url: withParam(url, "connection_limit=1") } } });
     try {
       const [locked] = await one.$queryRaw<
         { locked: boolean }[]
@@ -100,8 +108,8 @@ describe("engine lease (integration)", { skip: !RUN ? "no DATABASE_URL" : false 
 
     // The lease has no such affinity: two independent clients (guaranteed different
     // sessions) agree on who holds it.
-    const clientA = new PrismaClient({ datasources: { db: { url: `${url}?connection_limit=1` } } });
-    const clientB = new PrismaClient({ datasources: { db: { url: `${url}?connection_limit=1` } } });
+    const clientA = new PrismaClient({ datasources: { db: { url: withParam(url, "connection_limit=1") } } });
+    const clientB = new PrismaClient({ datasources: { db: { url: withParam(url, "connection_limit=1") } } });
     try {
       const a = createEngineLease(clientA, { ttlSeconds: 60, holder: "instance-a" });
       const b = createEngineLease(clientB, { ttlSeconds: 60, holder: "instance-b" });
@@ -120,7 +128,7 @@ describe("engine lease (integration)", { skip: !RUN ? "no DATABASE_URL" : false 
     // 12 ticks because the unlock kept landing on a different pooled connection. The tick
     // body issues concurrent queries, which is what scatters them across the pool.
     const url = process.env.DATABASE_URL!;
-    const client = new PrismaClient({ datasources: { db: { url: `${url}?connection_limit=5` } } });
+    const client = new PrismaClient({ datasources: { db: { url: withParam(url, "connection_limit=5") } } });
     try {
       let ticks = 0;
       const runner = createEngineRunner({

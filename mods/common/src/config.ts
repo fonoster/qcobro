@@ -393,12 +393,12 @@ export const qcobroConfigSchema = z.object({
      * Server-side `statement_timeout` (ms) applied to the apiserver's connections. Bounds how
      * long Postgres will let a single statement run before cancelling it.
      *
-     * This is not a nicety: without it, a stalled query blocks its connection indefinitely,
-     * and because the campaigns engine holds a session-scoped advisory lock for the duration
-     * of a tick, one stalled query freezes *all* dispatch until the stall clears on its own.
-     * A client-side timeout does not solve this — it stops the client waiting, but the server
-     * keeps executing, so the connection stays busy and the lock stays held. Only a
-     * server-side cancellation frees the connection and releases the lock.
+     * This is not a nicety: without it, a stalled query blocks its connection indefinitely
+     * and holds up whatever work was waiting on it — a stalled query inside a tick stalls
+     * that tick, and the engine's single-flight guard then skips every scheduled tick behind
+     * it until the stall clears on its own. A client-side timeout does not solve this — it
+     * stops the client waiting, but the server keeps executing and the connection stays busy.
+     * Only a server-side cancellation actually frees it.
      *
      * Applies per statement, not per transaction, so a long import made of many fast
      * statements is unaffected. `0` disables it (Postgres semantics) and restores the old
@@ -486,8 +486,12 @@ export const qcobroConfigSchema = z.object({
        * long an ungracefully-killed instance blocks its peers — not how long a tick may run.
        * A graceful shutdown releases the lease immediately, so redeploys don't wait on it.
        * Defaults to two tick intervals (minimum 120s).
+       *
+       * Floored at 10s: below roughly that, the renewal interval (a third of the TTL) leaves
+       * so little slack that ordinary scheduling jitter or a slow round-trip lets a peer
+       * claim the lease from a perfectly healthy holder.
        */
-      leaseTtlSeconds: z.number().int().positive().optional(),
+      leaseTtlSeconds: z.number().int().min(10).optional(),
       /**
        * Days the flight-recorder event stream (`engine_events`) is kept before the
        * runner prunes it. `0` disables pruning. Telemetry only — gestiones are the

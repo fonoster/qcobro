@@ -88,9 +88,16 @@ async function main(): Promise<void> {
       recordedEvents += r.events?.length ?? 0;
     }
   });
-  for (let i = 0; i < simTicks; i++) await runner.runOnce();
+  try {
+    for (let i = 0; i < simTicks; i++) await runner.runOnce();
+  } finally {
+    // Hand the engine lease back. Unlike the advisory lock this replaced, the lease is not
+    // released after each tick — so a sim that exited without stopping would leave a dead
+    // holder blocking the real apiserver's dispatch for the whole TTL.
+    await runner.stop();
+  }
   if (!report) {
-    throw new Error("No tick ran — another apiserver instance holds the engine advisory lock");
+    throw new Error("No tick ran — another apiserver instance holds the engine lease");
   }
 
   // Resolve names so the report reads clearly (the TickReport carries only IDs).
