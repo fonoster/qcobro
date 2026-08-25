@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+/**
+ * Longest pre-recorded script that can be saved. This is the same bound the TTS route
+ * enforces on the text it will synthesize (`tts.maxTextLength`), and the two must agree:
+ * a script the console accepts but the player refuses to speak shows up as a silently
+ * dead audio element on the gestión detail, with nothing explaining why. Real scripts run
+ * a couple of hundred characters, so this is generous headroom rather than a tight fit.
+ */
+export const PRERECORDED_SCRIPT_MAX_LENGTH = 2000;
+
 export const agentTypeSchema = z.enum([
   "SMS",
   "VOICE_PRERECORDED",
@@ -131,7 +140,7 @@ export const createAgentTemplateSchema = z
       ...baseFields,
       type: z.literal("VOICE_PRERECORDED"),
       voice: z.string().min(1),
-      script: z.string().min(1),
+      script: z.string().min(1).max(PRERECORDED_SCRIPT_MAX_LENGTH),
       language: z.string().min(1),
       fonosterAppName: z.string().min(1).optional(),
       ...voicePrerecordedDtmfFields

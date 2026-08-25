@@ -28,7 +28,8 @@ audio) without error.
 ### Requirement: TTS provider is configured in qcobro.json
 
 The deployment SHALL configure text-to-speech through an optional `tts` section in
-`qcobro.json` (`provider` `elevenlabs`, `apiKey`, `model`). The API key MAY be supplied via
+`qcobro.json` (`provider` `elevenlabs`, `apiKey`, `model`, `maxTextLength`,
+`cache.maxEntries`, `cache.maxBytes`). The API key MAY be supplied via
 the `ELEVENLABS_API_KEY` environment variable instead of `tts.apiKey`; the voice is taken
 from the deployment's `fonoster.voices` catalog. When neither the `tts` key nor the
 environment fallback resolves, synthesis is unavailable.
@@ -38,6 +39,44 @@ environment fallback resolves, synthesis is unavailable.
 - **WHEN** `tts` is configured (or a key resolves from a fallback) and audio is requested for a
   script
 - **THEN** the configured provider/model synthesizes the audio using the resolved key
+
+### Requirement: Synthesized audio cache is bounded
+
+The in-memory cache of synthesized audio (keyed by voice + text) SHALL be bounded by
+both a maximum entry count and a maximum total byte budget, configurable via
+`tts.cache.maxEntries`/`tts.cache.maxBytes` in `qcobro.json` (see "TTS provider is
+configured in qcobro.json"). When either limit would be exceeded, the least-recently-used
+entry SHALL be evicted first, repeated until both limits are satisfied. A cache hit SHALL
+refresh the entry's recency. A single item larger than the whole byte budget SHALL NOT be
+cached, but SHALL still be synthesized and served for that request.
+
+The `text` query parameter accepted for synthesis SHALL be capped at
+`tts.maxTextLength` characters (configurable in `qcobro.json`); a request over the limit
+SHALL be rejected with `400` before any call to the TTS provider.
+
+#### Scenario: Cache evicts least-recently-used entries under either limit
+
+- **WHEN** caching a new synthesized audio item would exceed the configured entry-count or
+  byte-budget limit
+- **THEN** the least-recently-used cached entry is evicted first, repeated until both limits
+  are satisfied
+
+#### Scenario: A cache hit refreshes recency
+
+- **WHEN** a previously cached voice+text pair is requested again before being evicted
+- **THEN** it is served from cache
+- **AND** it becomes the most-recently-used entry, making it the last to be evicted next
+
+#### Scenario: An oversized single item is not cached but is still served
+
+- **WHEN** a synthesized audio item is larger than the configured total byte budget
+- **THEN** it is not added to the cache
+- **AND** it is still synthesized and returned to the caller for that request
+
+#### Scenario: Over-long text is rejected before synthesis
+
+- **WHEN** the `text` query parameter exceeds the configured `tts.maxTextLength`
+- **THEN** the request is rejected with `400` and no call is made to the TTS provider
 
 ### Requirement: Pre-recorded call completion is recorded in-process
 
