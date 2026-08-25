@@ -221,13 +221,45 @@ export function evaluate(events: EngineEvent[], parameters: EvaluationParameters
   // excludes system-error dispatch failures"). `attempt.reserved` fires before dispatch and so
   // cannot know the outcome; counting it regardless made SAF-2/SAF-3 report cap breaches for
   // attempts the caps were never charged for — the judge disagreeing with the engine it judges.
-  const budgetFreeAttempts = new Set<string>();
-  for (const f of idx.failed) {
-    if (f.errorClass !== "SYSTEM_ERROR") continue;
-    budgetFreeAttempts.add(attemptKey(f.tickId, f.campaignId, f.portfolioAccountId));
+  //
+  // Correlation is POSITIONAL, per attempt, not per (campaign, account). The engine emits
+  // reserved → requested → outcome for each attempt in order, so within one tick the Nth
+  // reservation for a pair belongs to the Nth outcome. Excusing the whole pair on a single
+  // system error would let one failed attempt de-count genuinely charged ones alongside it,
+  // hiding real cap breaches — a false negative on a safety invariant, worse than the
+  // false positive being fixed. An attempt with no recorded outcome counts, so a truncated
+  // stream can only under-report violations, never invent an exemption.
+  interface AttemptSlot {
+    reserved: AttemptReservedEvent[];
+    systemError: boolean[];
   }
-  const consumedBudget = (r: AttemptReservedEvent) =>
-    !budgetFreeAttempts.has(attemptKey(r.tickId, r.campaignId, r.portfolioAccountId));
+  const slots = new Map<string, AttemptSlot>();
+  const slotFor = (k: string): AttemptSlot => {
+    let s = slots.get(k);
+    if (!s) {
+      s = { reserved: [], systemError: [] };
+      slots.set(k, s);
+    }
+    return s;
+  };
+  for (const e of sorted) {
+    if (e.kind === "attempt.reserved") {
+      slotFor(attemptKey(e.tickId, e.campaignId, e.portfolioAccountId)).reserved.push(e);
+    } else if (e.kind === "dispatch.succeeded") {
+      slotFor(attemptKey(e.tickId, e.campaignId, e.portfolioAccountId)).systemError.push(false);
+    } else if (e.kind === "dispatch.failed") {
+      slotFor(attemptKey(e.tickId, e.campaignId, e.portfolioAccountId)).systemError.push(
+        e.errorClass === "SYSTEM_ERROR"
+      );
+    }
+  }
+  const budgetFreeReservations = new Set<string>();
+  for (const s of slots.values()) {
+    s.reserved.forEach((r, i) => {
+      if (s.systemError[i] === true) budgetFreeReservations.add(r.id);
+    });
+  }
+  const consumedBudget = (r: AttemptReservedEvent) => !budgetFreeReservations.has(r.id);
 
   // SAF-1 — no dispatch outside the campaign window.
   const saf1: Violation[] = [];
