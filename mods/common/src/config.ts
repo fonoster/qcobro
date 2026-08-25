@@ -481,6 +481,14 @@ export const qcobroConfigSchema = z.object({
       /** Seconds between engine ticks. */
       tickSeconds: z.number().int().positive().default(60),
       /**
+       * Seconds an engine lease claim stays valid without renewal. The lease is what makes
+       * exactly one instance tick; its holder renews it on a heartbeat, so this bounds how
+       * long an ungracefully-killed instance blocks its peers — not how long a tick may run.
+       * A graceful shutdown releases the lease immediately, so redeploys don't wait on it.
+       * Defaults to two tick intervals (minimum 120s).
+       */
+      leaseTtlSeconds: z.number().int().positive().optional(),
+      /**
        * Days the flight-recorder event stream (`engine_events`) is kept before the
        * runner prunes it. `0` disables pruning. Telemetry only — gestiones are the
        * record of contact attempts and are never pruned.

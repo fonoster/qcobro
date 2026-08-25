@@ -369,6 +369,8 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
     });
 
     await runner.runOnce();
+    // Hand back the engine lease; a runner left holding it would block the next test's.
+    await runner.stop();
 
     assert.ok(sink.events.length > 0, "sink received the tick's events");
     assert.ok(sink.events.some((e) => e.kind === "tick.completed"));
@@ -386,6 +388,7 @@ describe("campaigns engine (integration)", { skip: !RUN ? "no DATABASE_URL" : fa
     });
 
     await runner.runOnce();
+    await runner.stop();
 
     assert.equal(mine(sms).length, 1, "dispatch went out despite the sink failure");
     const logs = await prisma.accountContactLog.findMany({ where: { campaignId } });
