@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.35.0](https://github.com/fonoster/qcobro/compare/v1.34.4...v1.35.0) (2026-08-25)
+
+### Bug Fixes
+
+- **agent-evaluations:** ground the SIMILAR judge in reference date and customer message ([5f41410](https://github.com/fonoster/qcobro/commit/5f41410725f21e8ce77592375d7da03775e4d718))
+
+### Features
+
+- **agent-evaluations:** add the hallucinated-bank-account regression scenario ([b49530d](https://github.com/fonoster/qcobro/commit/b49530dfd94307f16f7d960a4f15514f7b4fdbca))
+- **agent-evaluations:** grade EMAIL/WHATSAPP SIMILAR text with an entity-faithful judge ([c46cccf](https://github.com/fonoster/qcobro/commit/c46cccff462d143c7c30221d6e185bcabdf4940e))
+
 ## [1.34.4](https://github.com/fonoster/qcobro/compare/v1.34.3...v1.34.4) (2026-08-25)
 
 ### Bug Fixes
