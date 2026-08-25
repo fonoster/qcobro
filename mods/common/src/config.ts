@@ -311,7 +311,9 @@ export const ttsConfigSchema = z
          */
         maxBytes: z.number().int().positive().default(25 * 1024 * 1024)
       })
-      .default({ maxEntries: 100, maxBytes: 25 * 1024 * 1024 })
+      // `prefault` runs the value through this schema, so the field defaults above stay the
+      // single source of truth — restating them here would drift the moment one changed.
+      .prefault({})
   })
   .optional();
 
