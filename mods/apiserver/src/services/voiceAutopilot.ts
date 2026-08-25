@@ -8,6 +8,7 @@ import {
   type EmailThreadMessage,
   type TranscriptLine
 } from "@qcobro/common";
+import { LLM_TIMEOUT_MS } from "./httpTimeouts.js";
 
 /**
  * Maps a Voz IA transcript onto the shared thread shape so the EMAIL/WhatsApp decision
@@ -104,7 +105,8 @@ async function googleDecide(
         responseMimeType: "application/json",
         thinkingConfig: { thinkingBudget: 0 }
       }
-    })
+    }),
+    signal: AbortSignal.timeout(LLM_TIMEOUT_MS)
   });
   if (!res.ok) throw new Error(`Google GenAI ${res.status}: ${await res.text()}`);
   const data = (await res.json()) as {

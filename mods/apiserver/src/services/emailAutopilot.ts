@@ -6,6 +6,7 @@ import {
   type EmailAutopilotDecision,
   type EmailAutopilotRequest
 } from "@qcobro/common";
+import { LLM_TIMEOUT_MS } from "./httpTimeouts.js";
 
 /** Render the thread + light context + the agent's system prompt into the user prompt. */
 function buildPrompt(req: EmailAutopilotRequest): string {
@@ -93,7 +94,8 @@ async function googleDecide(
         responseMimeType: "application/json",
         thinkingConfig: { thinkingBudget: 0 }
       }
-    })
+    }),
+    signal: AbortSignal.timeout(LLM_TIMEOUT_MS)
   });
   if (!res.ok) throw new Error(`Google GenAI ${res.status}: ${await res.text()}`);
   const data = (await res.json()) as {

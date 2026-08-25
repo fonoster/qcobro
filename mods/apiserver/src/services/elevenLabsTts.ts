@@ -1,4 +1,5 @@
 import { config } from "../config.js";
+import { TTS_TIMEOUT_MS } from "./httpTimeouts.js";
 
 /**
  * Synthesize speech from text via ElevenLabs, used to preview a pre-recorded agent's
@@ -29,7 +30,8 @@ export async function synthesizeSpeech(text: string, voiceId: string): Promise<B
       "content-type": "application/json",
       accept: "audio/mpeg"
     },
-    body: JSON.stringify({ text, model_id: model })
+    body: JSON.stringify({ text, model_id: model }),
+    signal: AbortSignal.timeout(TTS_TIMEOUT_MS)
   });
   if (!res.ok) throw new Error(`ElevenLabs ${res.status}: ${await res.text()}`);
   return Buffer.from(await res.arrayBuffer());

@@ -5,6 +5,7 @@ import {
   type InsightGenerator,
   type InsightRequest
 } from "@qcobro/common";
+import { LLM_TIMEOUT_MS } from "./httpTimeouts.js";
 
 /**
  * Render the transcript + light context into the user prompt. Instructions are written
@@ -89,7 +90,8 @@ async function googleAnalyze(cfg: NonNullable<AiConfig>, prompt: string): Promis
         // goes to the JSON answer instead of being consumed by reasoning.
         thinkingConfig: { thinkingBudget: 0 }
       }
-    })
+    }),
+    signal: AbortSignal.timeout(LLM_TIMEOUT_MS)
   });
   if (!res.ok) throw new Error(`Google GenAI ${res.status}: ${await res.text()}`);
   const data = (await res.json()) as {
