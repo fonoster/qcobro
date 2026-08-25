@@ -57,13 +57,15 @@ export class TtsCache {
    * evicted.
    */
   set(key: string, value: Buffer): void {
-    if (value.byteLength > this.maxBytes) return;
-
+    // Drop any existing entry BEFORE the size check: returning early while leaving the old
+    // value in place would keep serving stale audio for a key whose new value is oversized.
     const existing = this.entries.get(key);
     if (existing !== undefined) {
       this.totalBytes -= existing.byteLength;
       this.entries.delete(key);
     }
+
+    if (value.byteLength > this.maxBytes) return;
 
     this.entries.set(key, value);
     this.totalBytes += value.byteLength;

@@ -33,6 +33,7 @@ import { createEngineEventsHandler } from "./rest/engineEvents.js";
 import { resolveWhatsAppClient } from "./services/resolveWhatsAppClient.js";
 import { createInsightGenerator } from "./services/insightGenerator.js";
 import { synthesizeSpeech } from "./services/elevenLabsTts.js";
+import { ttsDefaults } from "@qcobro/common";
 import { TtsCache, ttsCacheKey, isTextWithinLimit } from "./services/ttsCache.js";
 import { startVoiceServer } from "./voice/voiceServer.js";
 import { startEngine } from "./engine/start.js";
@@ -174,13 +175,14 @@ app.get(
 // ttsCache.ts and ttsConfigSchema.cache/maxTextLength in @qcobro/common: the cached
 // text is a per-account script, so without bounds this would grow with account
 // count); 503 when TTS isn't configured (the player then has nothing to play).
-const DEFAULT_TTS_MAX_TEXT_LENGTH = 2000;
-const DEFAULT_TTS_CACHE_MAX_ENTRIES = 100;
-const DEFAULT_TTS_CACHE_MAX_BYTES = 25 * 1024 * 1024;
-const ttsMaxTextLength = config.tts?.maxTextLength ?? DEFAULT_TTS_MAX_TEXT_LENGTH;
+// `config.tts` is absent whenever a deployment supplies the ElevenLabs key through
+// ELEVENLABS_API_KEY instead of a `tts` section, so fall back to the schema's own resolved
+// defaults rather than restating the numbers — restating them would pin exactly those
+// deployments to stale bounds the next time a default changes.
+const ttsMaxTextLength = config.tts?.maxTextLength ?? ttsDefaults.maxTextLength;
 const ttsCache = new TtsCache({
-  maxEntries: config.tts?.cache?.maxEntries ?? DEFAULT_TTS_CACHE_MAX_ENTRIES,
-  maxBytes: config.tts?.cache?.maxBytes ?? DEFAULT_TTS_CACHE_MAX_BYTES
+  maxEntries: config.tts?.cache?.maxEntries ?? ttsDefaults.cache.maxEntries,
+  maxBytes: config.tts?.cache?.maxBytes ?? ttsDefaults.cache.maxBytes
 });
 const DEMO_TTS_VOICE = config.fonoster?.voices?.[0]?.id ?? "86V9x9hrQds83qf7zaGn";
 app.get("/api/voice/tts", async (req, res) => {

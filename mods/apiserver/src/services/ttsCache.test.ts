@@ -87,3 +87,18 @@ describe("TtsCache", () => {
     assert.equal(cache.size, 1);
   });
 });
+
+describe("TtsCache — oversized replacement of an existing key", () => {
+  it("drops the stale value rather than keeping it when the new one is too big", () => {
+    // set() early-returns for an oversized value; doing that before removing the existing
+    // entry would keep serving audio the key no longer maps to.
+    const cache = new TtsCache({ maxEntries: 10, maxBytes: 100 });
+    cache.set("k", Buffer.alloc(50));
+    assert.equal(cache.get("k")?.byteLength, 50);
+
+    cache.set("k", Buffer.alloc(500));
+
+    assert.equal(cache.get("k"), undefined, "the stale value is gone");
+    assert.equal(cache.byteSize, 0, "and its bytes are no longer counted");
+  });
+});

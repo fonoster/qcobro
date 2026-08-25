@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ratesSchema } from "./billing/rates.js";
+import { PRERECORDED_SCRIPT_MAX_LENGTH } from "./schemas/agentTemplates.js";
 
 /**
  * QCobro service configuration — the shape of `qcobro.json`.
@@ -273,20 +274,23 @@ export type AiConfig = z.infer<typeof aiConfigSchema>;
  * apiKey falls back to `ELEVENLABS_API_KEY`, and if no key resolves the player is simply
  * unavailable. Voices come from `fonoster.voices`.
  */
-export const ttsConfigSchema = z
+const ttsConfigObjectSchema = z
   .object({
     provider: z.literal("elevenlabs").default("elevenlabs"),
     apiKey: z.string().optional(),
     model: z.string().default("eleven_multilingual_v2"),
     /**
      * Maximum accepted length (characters) for the `text` query parameter on
-     * `/api/voice/tts`. The endpoint is unauthenticated, so this is the first line of
-     * defense against a pathological or abusive `?text=` driving up provider cost and
-     * cached-audio size — requests over the limit are rejected with 400 before any
-     * provider call. The default comfortably covers a full pre-recorded call script
-     * (a few short paragraphs) with headroom to spare.
+     * `/api/voice/tts`; over-long requests are rejected with 400 before any provider call.
+     * This bounds the cost and cached size of any ONE synthesis, not how many can be
+     * requested — the endpoint is unauthenticated and does not dedupe in flight, so a
+     * caller sending distinct strings can still drive an unbounded number of billed calls.
+     * Auth or rate limiting on the route is the control for that; this is not it.
+     *
+     * Kept equal to `PRERECORDED_SCRIPT_MAX_LENGTH` so a script the console accepts is
+     * always one the player can speak.
      */
-    maxTextLength: z.number().int().positive().default(2000),
+    maxTextLength: z.number().int().positive().default(PRERECORDED_SCRIPT_MAX_LENGTH),
     /**
      * Bounds for the in-memory cache of synthesized audio (keyed by `voiceId:text`).
      * Both limits are enforced together as an LRU: entry count alone isn't enough
@@ -314,8 +318,17 @@ export const ttsConfigSchema = z
       // `prefault` runs the value through this schema, so the field defaults above stay the
       // single source of truth — restating them here would drift the moment one changed.
       .prefault({})
-  })
-  .optional();
+  });
+
+export const ttsConfigSchema = ttsConfigObjectSchema.optional();
+
+/**
+ * The TTS settings a deployment gets when `qcobro.json` has no `tts` section at all — which
+ * is a real configuration, since the ElevenLabs key can also arrive via `ELEVENLABS_API_KEY`.
+ * Callers MUST use this rather than restating the numbers, or those deployments would silently
+ * keep the old bounds whenever a default here changes.
+ */
+export const ttsDefaults = ttsConfigObjectSchema.parse({});
 
 export type TtsConfig = z.infer<typeof ttsConfigSchema>;
 
