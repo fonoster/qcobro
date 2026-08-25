@@ -38,6 +38,12 @@ interface DispatchSpec {
   ref?: string;
   /** default true; false skips the attempt.reserved event */
   reserve?: boolean;
+  /**
+   * `errorClass` recorded on dispatch.failed (only meaningful with `ok: false`).
+   * `SYSTEM_ERROR` is the one the attempt-cap checks treat specially: the engine charges
+   * no attempt budget for it, so it must not count toward SAF-2/SAF-3.
+   */
+  errorClass?: string;
 }
 
 interface TickSpec {
@@ -135,7 +141,7 @@ function tick(spec: TickSpec): EngineEvent[] {
         portfolioAccountId: d.account,
         channel: snap.channel ?? "SMS",
         latencyMs: d.latencyMs ?? 150,
-        errorClass: "Error",
+        errorClass: d.errorClass ?? "Error",
         errorMessage: "emulated failure",
         toMasked: "********1234"
       });
@@ -279,6 +285,133 @@ describe("evaluate", () => {
       })
     ];
     assertOnlyFails(evaluate(events, params()), "SAF-3");
+  });
+
+  it("SAF-3: a SYSTEM_ERROR attempt is not charged, so a same-day retry is not a breach", () => {
+    // The engine leaves attemptsToday untouched for a SYSTEM_ERROR — the provider never
+    // reached the recipient — and deliberately keeps the account eligible. The judge must
+    // agree, or it reports a cap breach for budget that was never spent.
+    const daily = snapshot({ maxAttemptsPerDay: 1 });
+    const events = [
+      ...tick({
+        tickId: "t1",
+        at: "2026-07-06T10:00:00.000Z",
+        snapshot: daily,
+        dispatches: [{ account: "a1", ok: false, errorClass: "SYSTEM_ERROR" }]
+      }),
+      ...tick({
+        tickId: "t2",
+        at: "2026-07-06T10:01:00.000Z",
+        snapshot: daily,
+        dispatches: [{ account: "a1" }]
+      })
+    ];
+    // PERF-3 fires on the failed dispatch itself (1 of 2 over the error-rate threshold);
+    // what matters here is that SAF-3 is NOT among the failures.
+    assertOnlyFails(evaluate(events, params()), "PERF-3");
+  });
+
+  it("SAF-3: a DELIVERY_REJECTED attempt IS charged, so a same-day retry breaches the cap", () => {
+    // The counterpart: the provider reached the recipient side, the engine charges the
+    // attempt, and a second same-day attempt is a real breach the judge must still catch.
+    const daily = snapshot({ maxAttemptsPerDay: 1 });
+    const events = [
+      ...tick({
+        tickId: "t1",
+        at: "2026-07-06T10:00:00.000Z",
+        snapshot: daily,
+        dispatches: [{ account: "a1", ok: false, errorClass: "DELIVERY_REJECTED" }]
+      }),
+      ...tick({
+        tickId: "t2",
+        at: "2026-07-06T10:01:00.000Z",
+        snapshot: daily,
+        dispatches: [{ account: "a1" }]
+      })
+    ];
+    assertOnlyFails(evaluate(events, params()), "SAF-3", "PERF-3");
+  });
+
+  it("SAF-3: one SYSTEM_ERROR does not excuse the charged attempts beside it in the same tick", () => {
+    // The exemption is per attempt, not per (campaign, account): keying it on the pair let a
+    // single failed attempt de-count every other attempt for that account in the tick, hiding
+    // a genuine breach. Here the first attempt fails with SYSTEM_ERROR (uncharged) and two
+    // more succeed (charged) against a daily cap of 1 — that is a real SAF-3 breach.
+    const daily = snapshot({ maxAttemptsPerDay: 1 });
+    const events = tick({
+      tickId: "t1",
+      at: "2026-07-06T10:00:00.000Z",
+      snapshot: daily,
+      dispatches: [
+        { account: "a1", ok: false, errorClass: "SYSTEM_ERROR" },
+        { account: "a1", ref: "r2" },
+        { account: "a1", ref: "r3" }
+      ]
+    });
+    assertOnlyFails(evaluate(events, params()), "SAF-3", "PERF-3");
+  });
+
+  it("SAF-3: an attempt with no recorded outcome still counts", () => {
+    // A truncated stream must not manufacture an exemption — an unmatched reservation is
+    // treated as charged, so the judge can under-report but never invent a pass.
+    const daily = snapshot({ maxAttemptsPerDay: 1 });
+    const events = [
+      ...tick({
+        tickId: "t1",
+        at: "2026-07-06T10:00:00.000Z",
+        snapshot: daily,
+        dispatches: [{ account: "a1" }]
+      }),
+      ...tick({
+        tickId: "t2",
+        at: "2026-07-06T10:01:00.000Z",
+        snapshot: daily,
+        dispatches: [{ account: "a1" }]
+      })
+    ].filter((e) => e.kind !== "dispatch.succeeded");
+    assertOnlyFails(evaluate(events, params()), "SAF-3");
+  });
+
+  it("SAF-2: SYSTEM_ERROR attempts do not erode the lifetime cap either", () => {
+    const lifetime = snapshot({ maxAttemptsPerAccount: 2, maxAttemptsPerDay: 99 });
+    const failing = (tickId: string, at: string) =>
+      tick({
+        tickId,
+        at,
+        snapshot: lifetime,
+        dispatches: [{ account: "a1", ok: false, errorClass: "SYSTEM_ERROR" }]
+      });
+    const events = [
+      ...failing("t1", "2026-07-06T10:00:00.000Z"),
+      ...failing("t2", "2026-07-07T10:00:00.000Z"),
+      ...failing("t3", "2026-07-08T10:00:00.000Z"),
+      // Two genuinely charged attempts — exactly the cap, so still clean.
+      ...tick({
+        tickId: "t4",
+        at: "2026-07-09T10:00:00.000Z",
+        snapshot: lifetime,
+        dispatches: [{ account: "a1" }]
+      }),
+      ...tick({
+        tickId: "t5",
+        at: "2026-07-10T10:00:00.000Z",
+        snapshot: lifetime,
+        dispatches: [{ account: "a1" }]
+      })
+    ];
+    assertOnlyFails(evaluate(events, params()), "PERF-3");
+  });
+
+  it("SAF-2: charged attempts past the lifetime cap are still flagged", () => {
+    const lifetime = snapshot({ maxAttemptsPerAccount: 2, maxAttemptsPerDay: 99 });
+    const ok = (tickId: string, at: string) =>
+      tick({ tickId, at, snapshot: lifetime, dispatches: [{ account: "a1" }] });
+    const events = [
+      ...ok("t1", "2026-07-06T10:00:00.000Z"),
+      ...ok("t2", "2026-07-07T10:00:00.000Z"),
+      ...ok("t3", "2026-07-08T10:00:00.000Z")
+    ];
+    assertOnlyFails(evaluate(events, params()), "SAF-2");
   });
 
   it("SAF-3: two attempts on different local days are fine", () => {
