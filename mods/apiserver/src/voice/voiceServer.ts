@@ -13,7 +13,8 @@ const GATHER_TIMEOUT_MS = 5000;
 const DEFAULT_MAX_REPEATS = 2;
 
 export interface PrerecordedCallCompletion extends PrerecordedCompletionInput {
-  /** Set when the caller pressed any configured DTMF digit (repeat or opt-out). */
+  /** Always `ENGAGED`: reaching completion means the script played to the end without the
+   *  caller hanging up early (see `handlePrerecordedCall`). */
   camino?: Camino;
   /** Set when the caller pressed the opt-out digit specifically. */
   resultado?: Resultado;
@@ -92,6 +93,13 @@ export interface PrerecordedCallVerbs {
  * Returns the fields `onCompleted` needs beyond `answeredSeconds`/`providerRef`/`at`, which
  * the caller (the VoiceServer's real Fonoster callback, or a test) attaches itself — kept
  * out of this function so it stays a pure driver over the verb interface, not a clock.
+ *
+ * `camino` is always `ENGAGED` on a normal return: mirrors `decideCamino` on the Voz IA
+ * side (`decideVoiceOutcome.ts`) — reaching this function's return means the script played
+ * to the end (an early hangup mid-`say`/`gather` throws and never reaches it), so the
+ * recipient heard the whole message, menu or no menu, press or no press. Only `resultado`
+ * stays conditional on an explicit opt-out digit — it is a claim about what the caller did,
+ * not just that they listened.
  */
 export async function handlePrerecordedCall(
   message: string,
@@ -138,7 +146,7 @@ export async function handlePrerecordedCall(
   }
 
   await res.hangup();
-  return { camino, resultado, repeatCount };
+  return { camino: camino ?? "ENGAGED", resultado, repeatCount };
 }
 
 /**

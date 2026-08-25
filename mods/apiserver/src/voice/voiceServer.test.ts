@@ -50,16 +50,16 @@ describe("readDtmfMenu", () => {
 });
 
 describe("handlePrerecordedCall", () => {
-  it("no menu: plays the script once and hangs up, with no gather", async () => {
+  it("no menu: plays the script once and hangs up, camino defaults to ENGAGED", async () => {
     const { verbs, calls } = makeVerbs([]);
 
     const result = await handlePrerecordedCall("Su saldo es...", null, verbs);
 
     assert.deepEqual(calls, ["answer", "say:Su saldo es...", "hangup"]);
-    assert.deepEqual(result, { camino: undefined, resultado: undefined, repeatCount: 0 });
+    assert.deepEqual(result, { camino: "ENGAGED", resultado: undefined, repeatCount: 0 });
   });
 
-  it("menu configured but the caller presses nothing (timeout): hangs up, no camino/resultado", async () => {
+  it("menu configured but the caller presses nothing (timeout): hangs up, camino still ENGAGED, no resultado", async () => {
     const { verbs, calls } = makeVerbs([undefined]);
     const menu = { repeatDigit: "1", repeatMessage: "Presione 1.", maxRepeats: 2 };
 
@@ -72,16 +72,16 @@ describe("handlePrerecordedCall", () => {
       "gather",
       "hangup"
     ]);
-    assert.deepEqual(result, { camino: undefined, resultado: undefined, repeatCount: 0 });
+    assert.deepEqual(result, { camino: "ENGAGED", resultado: undefined, repeatCount: 0 });
   });
 
-  it("an unrecognized digit hangs up with no camino/resultado", async () => {
+  it("an unrecognized digit hangs up, camino still ENGAGED, no resultado", async () => {
     const { verbs } = makeVerbs(["5"]);
     const menu = { repeatDigit: "1", optOutDigit: "9", maxRepeats: 2 };
 
     const result = await handlePrerecordedCall("Su saldo es...", menu, verbs);
 
-    assert.deepEqual(result, { camino: undefined, resultado: undefined, repeatCount: 0 });
+    assert.deepEqual(result, { camino: "ENGAGED", resultado: undefined, repeatCount: 0 });
   });
 
   it("repeat digit replays the script and gathers again, setting camino ENGAGED", async () => {
