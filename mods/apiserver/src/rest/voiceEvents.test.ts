@@ -2,10 +2,13 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { createVoiceEventsHandler, type VoiceEventsDeps } from "./voiceEvents.js";
 
+const CONTACTED_AT = new Date(Date.now() - 42_000);
+
 interface FakeLog {
   id: string;
   channelData: Record<string, unknown> | null;
   aiSummary: string | null;
+  contactedAt?: Date;
 }
 
 function makePrisma(logs: Record<string, FakeLog>) {
@@ -14,7 +17,13 @@ function makePrisma(logs: Record<string, FakeLog>) {
     accountContactLog: {
       findFirst: async ({ where }: { where: { providerRef: string } }) => {
         const log = Object.values(logs).find((l) => l.id === where.providerRef);
-        return log ? { id: log.id, channelData: log.channelData } : null;
+        return log
+          ? {
+              id: log.id,
+              channelData: log.channelData,
+              contactedAt: log.contactedAt ?? CONTACTED_AT
+            }
+          : null;
       },
       findUnique: async ({ where }: { where: { id: string } }) => {
         const log = logs[where.id];
@@ -53,8 +62,9 @@ function makeRes() {
 
 function makeDeps(
   over: Partial<VoiceEventsDeps> = {}
-): VoiceEventsDeps & { decideCalls: string[] } {
+): VoiceEventsDeps & { decideCalls: string[]; recordCalls: unknown[] } {
   const decideCalls: string[] = [];
+  const recordCalls: unknown[] = [];
   return {
     generator: null,
     generation: "onDemand",
@@ -62,7 +72,11 @@ function makeDeps(
       decideCalls.push(id);
       return { decided: true, resultado: null };
     },
+    recordVoiceAiCallStatus: async (input: unknown) => {
+      recordCalls.push(input);
+    },
     decideCalls,
+    recordCalls,
     ...over
   };
 }
@@ -164,5 +178,80 @@ describe("POST /api/voice/events — payment-promise decision wiring", () => {
     await new Promise((resolve) => setImmediate(resolve));
 
     assert.equal(state.statusCode, 200);
+  });
+});
+
+describe("POST /api/voice/events — entrega finalization", () => {
+  it("finalizes DELIVERED with a duration derived from contactedAt on conversation.ended", async () => {
+    const { prisma } = makePrisma({
+      "log-1": { id: "log-1", channelData: null, aiSummary: null, contactedAt: CONTACTED_AT }
+    });
+    const deps = makeDeps();
+    const handler = createVoiceEventsHandler(prisma as never, deps);
+    const { res } = makeRes();
+
+    await handler(
+      {
+        body: {
+          eventType: "conversation.ended",
+          appRef: "app-1",
+          callRef: "log-1",
+          phone: "+1",
+          chatHistory: [{ human: "Hola." }]
+        }
+      } as never,
+      res as never
+    );
+    await new Promise((resolve) => setImmediate(resolve));
+
+    assert.equal(deps.recordCalls.length, 1);
+    const call = deps.recordCalls[0] as {
+      providerRef: string;
+      answered: boolean;
+      answeredSeconds: number;
+    };
+    assert.equal(call.providerRef, "log-1");
+    assert.equal(call.answered, true);
+    // ~42s elapsed since CONTACTED_AT — allow slack for test execution time.
+    assert.ok(
+      call.answeredSeconds >= 41 && call.answeredSeconds <= 50,
+      `got ${call.answeredSeconds}`
+    );
+  });
+
+  it("does not finalize on conversation.started", async () => {
+    const { prisma } = makePrisma({
+      "log-1": { id: "log-1", channelData: null, aiSummary: null }
+    });
+    const deps = makeDeps();
+    const handler = createVoiceEventsHandler(prisma as never, deps);
+    const { res } = makeRes();
+
+    await handler(
+      {
+        body: { eventType: "conversation.started", appRef: "app-1", callRef: "log-1", phone: "+1" }
+      } as never,
+      res as never
+    );
+    await new Promise((resolve) => setImmediate(resolve));
+
+    assert.deepEqual(deps.recordCalls, []);
+  });
+
+  it("does not finalize when no gestión matched the call ref", async () => {
+    const { prisma } = makePrisma({});
+    const deps = makeDeps();
+    const handler = createVoiceEventsHandler(prisma as never, deps);
+    const { res } = makeRes();
+
+    await handler(
+      {
+        body: { eventType: "conversation.ended", appRef: "app-1", callRef: "unknown", phone: "+1" }
+      } as never,
+      res as never
+    );
+    await new Promise((resolve) => setImmediate(resolve));
+
+    assert.deepEqual(deps.recordCalls, []);
   });
 });

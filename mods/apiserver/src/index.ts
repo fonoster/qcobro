@@ -14,6 +14,7 @@ import { createVoiceEventsHandler } from "./rest/voiceEvents.js";
 import { createSmsEventsHandler } from "./rest/smsEvents.js";
 import { createSettleVoiceUsage } from "./functions/billing/settleVoiceUsage.js";
 import { createRecordPrerecordedOutcome } from "./functions/voice/recordPrerecordedOutcome.js";
+import { createRecordVoiceAiCallStatus } from "./functions/voice/recordVoiceAiCallStatus.js";
 import {
   createDecideVoiceOutcome,
   createPrismaVoiceDecisionClient
@@ -82,6 +83,9 @@ app.post(
     // Billing settlement: replace the dispatch-time voice estimate with the
     // increment-billed amount for the answered duration (idempotent per ref).
     settleUsage: config.billing?.enabled ? createSettleVoiceUsage(prisma as never) : null,
+    // entrega finalization (DISPATCHED -> DELIVERED) — not billing-gated, this is the
+    // core correctness fix, independent of whether billing is enabled.
+    recordVoiceAiCallStatus: createRecordVoiceAiCallStatus(prisma as never),
     // Payment-promise capture: the Voz IA autopilot decision, run once over the final
     // transcript on conversation.ended (payment-promises capability). Falls back to a
     // deterministic mock when `ai` is absent/disabled, same as EMAIL/WhatsApp.

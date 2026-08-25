@@ -23890,7 +23890,7 @@
     {
       "type": "frame",
       "id": "h6wrw",
-      "x": 16433,
+      "x": 16422,
       "y": 10357,
       "name": "Detalle de gestión — Pre-grabada (bloque)",
       "clip": true,
@@ -24506,7 +24506,7 @@
     {
       "type": "frame",
       "id": "UJhkV",
-      "x": 17760,
+      "x": 18420,
       "y": 10357,
       "name": "Detalle de gestión — Voz IA (bloque)",
       "clip": true,
@@ -25827,7 +25827,7 @@
     {
       "type": "frame",
       "id": "Y8lQc",
-      "x": 17100,
+      "x": 17760,
       "y": 10357,
       "name": "Detalle de gestión — Email (bloque)",
       "clip": true,
@@ -30625,6 +30625,155 @@
                             },
                             "GsIQy": {
                               "content": "Hola, le llamamos de Mikro Créditos para recordarle su pago pendiente. \nPor favor comuníquese con nosotros para coordinar su pago."
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "b0ysq",
+                          "name": "DTMF Section Heading",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "DkMvY",
+                              "name": "title",
+                              "fill": "$--foreground",
+                              "content": "Menú DTMF (opcional)",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "wYVuX",
+                              "name": "description",
+                              "fill": "$--muted-foreground",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "El destinatario puede presionar un dígito durante la llamada para repetir el mensaje o darse de baja.",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "EyZ78",
+                          "type": "ref",
+                          "ref": "BoM07",
+                          "name": "Dígito para repetir",
+                          "width": "fill_container",
+                          "descendants": {
+                            "hTkn4": {
+                              "content": "Dígito para repetir"
+                            },
+                            "KmeTM": {
+                              "content": "1",
+                              "fill": "$--foreground"
+                            }
+                          }
+                        },
+                        {
+                          "id": "rBoXg",
+                          "type": "ref",
+                          "ref": "uJnVk",
+                          "name": "Mensaje de repetición",
+                          "width": "fill_container",
+                          "descendants": {
+                            "MV9CA": {
+                              "content": "Mensaje de repetición"
+                            },
+                            "ANU4E": {
+                              "flipX": false,
+                              "flipY": false,
+                              "width": "fill_container",
+                              "height": 80,
+                              "x": 0,
+                              "y": 26
+                            },
+                            "GsIQy": {
+                              "content": "Presione 1 para escuchar el mensaje de nuevo."
+                            }
+                          }
+                        },
+                        {
+                          "id": "hgTDZ",
+                          "type": "ref",
+                          "ref": "BoM07",
+                          "name": "Máximo de repeticiones",
+                          "width": "fill_container",
+                          "descendants": {
+                            "hTkn4": {
+                              "content": "Máximo de repeticiones"
+                            },
+                            "KmeTM": {
+                              "content": "2",
+                              "fill": "$--foreground"
+                            }
+                          }
+                        },
+                        {
+                          "id": "y37MNr",
+                          "type": "ref",
+                          "ref": "BoM07",
+                          "name": "Dígito para darse de baja",
+                          "width": "fill_container",
+                          "descendants": {
+                            "hTkn4": {
+                              "content": "Dígito para darse de baja"
+                            },
+                            "KmeTM": {
+                              "content": "9",
+                              "fill": "$--foreground"
+                            }
+                          }
+                        },
+                        {
+                          "id": "Y8KCD9",
+                          "type": "ref",
+                          "ref": "uJnVk",
+                          "name": "Mensaje de baja",
+                          "width": "fill_container",
+                          "descendants": {
+                            "MV9CA": {
+                              "content": "Mensaje de baja"
+                            },
+                            "ANU4E": {
+                              "flipX": false,
+                              "flipY": false,
+                              "width": "fill_container",
+                              "height": 80,
+                              "x": 0,
+                              "y": 26
+                            },
+                            "GsIQy": {
+                              "content": "Presione 9 si no desea recibir más llamadas."
+                            }
+                          }
+                        },
+                        {
+                          "id": "oVSuA",
+                          "type": "ref",
+                          "ref": "uJnVk",
+                          "name": "Mensaje de confirmación de baja",
+                          "width": "fill_container",
+                          "descendants": {
+                            "MV9CA": {
+                              "content": "Mensaje de confirmación de baja"
+                            },
+                            "ANU4E": {
+                              "flipX": false,
+                              "flipY": false,
+                              "width": "fill_container",
+                              "height": 80,
+                              "x": 0,
+                              "y": 26
+                            },
+                            "GsIQy": {
+                              "content": "Hemos registrado su solicitud. No recibirá más llamadas de este número."
                             }
                           }
                         }
@@ -74443,7 +74592,7 @@
     {
       "type": "frame",
       "id": "s0cuz",
-      "x": 18434,
+      "x": 19094,
       "y": 10357,
       "name": "Detalle de gestión — WhatsApp (bloque)",
       "clip": true,
@@ -77843,6 +77992,697 @@
           "width": 940,
           "height": 0,
           "content": "DEMO — GUÍA RÁPIDA (Slide 6)\n\nFORMATO: Grabación primero (garantiza el 'wow'), luego 1 llamada EN VIVO opcional solo si la sala está receptiva y el setup es confiable. Si solo hay margen para una → usa la grabación.\n\nQUÉ MOSTRAR: 1 llamada, 60–90 seg, canal Voz IA. (1) se identifica, (2) referencia la deuda específica (RD$ + mora), (3) maneja UNA objeción, (4) cierra un acuerdo de pago. Opción más fuerte: SMS/WhatsApp sin respuesta → Voz IA llama y cierra (muestra la orquestación de 5 canales).\n\nEN VIVO — mitigación de riesgo:\n· Probar en la red del lugar + hotspot de respaldo\n· Grabación cargada como fallback ('por si la red falla')\n· Audio por el PA de la sala, no el parlante del teléfono\n· Número dedicado, notificaciones en silencio\n· Si el 'cliente' es un colega, guionizarlo: una objeción, luego acepta\n· Hacer el vivo OPT-IN: '¿Llamo a alguien ahora mismo?'\n\nGUION:\n· Antes: 'Esta es una llamada real de cobro, de principio a fin. Escuchen cómo identifica la deuda, maneja la objeción y cierra.'\n· Durante: SILENCIO. Deja hablar la voz.\n· Después (1 seg de pausa): 'Eso fue un acuerdo de pago, sin un agente humano.' → 'Lo que acaban de oír, lo hacemos con su cartera: 100 interacciones reales en 15 días.'\n\n⚠️ Nada de 24/7 — ni en pantalla ni en voz."
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "AW2Op",
+      "x": 17087,
+      "y": 10357,
+      "name": "Detalle de gestión — Pre-grabada · Opt-out (bloque)",
+      "clip": true,
+      "width": 554,
+      "fill": "#FFFFFF",
+      "cornerRadius": 16,
+      "stroke": "#E2E8F0",
+      "strokeWidth": 1,
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "SJDWq",
+          "name": "Header",
+          "width": "fill_container",
+          "stroke": "#F1F5F9",
+          "strokeWidth": {
+            "bottom": 1
+          },
+          "strokeLinejoin": "round",
+          "padding": 24,
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "C7BkZL",
+              "name": "HL",
+              "layout": "vertical",
+              "gap": 4,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "V6AxG",
+                  "name": "t",
+                  "fill": "#0F172A",
+                  "content": "Detalle de gestión",
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "K7z7O",
+                  "name": "s",
+                  "fill": "#64748B",
+                  "content": "Carlos Ramírez · Cuenta #01120",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "icon",
+              "id": "v4Bin",
+              "name": "x",
+              "width": 20,
+              "height": 20,
+              "icon": "x",
+              "library": "lucide",
+              "fill": "#94A3B8"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "eeLiE",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "Aqv16",
+              "name": "sec-msg",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "w8JMG",
+                  "name": "h",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "NLsUv",
+                      "name": "i",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "scroll-text",
+                      "library": "lucide",
+                      "fill": "#047857"
+                    },
+                    {
+                      "type": "text",
+                      "id": "GE5Yw",
+                      "name": "t",
+                      "fill": "#0F172A",
+                      "content": "Guion reproducible",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "eWcpS",
+                  "name": "player",
+                  "width": "fill_container",
+                  "fill": "#F8FAFC",
+                  "cornerRadius": 10,
+                  "stroke": "#E2E8F0",
+                  "strokeWidth": 1,
+                  "gap": 12,
+                  "padding": [
+                    12,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "h1w6R",
+                      "name": "play",
+                      "width": 36,
+                      "height": 36,
+                      "fill": "#10B981",
+                      "cornerRadius": 999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "IUyRL",
+                          "name": "i",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "play",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "eLHaE",
+                      "name": "track",
+                      "width": "fill_container",
+                      "height": 4,
+                      "fill": "#E2E8F0",
+                      "cornerRadius": 999,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Ls6AI",
+                          "name": "fill",
+                          "width": 200,
+                          "height": 4,
+                          "fill": "#10B981",
+                          "cornerRadius": 999
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "J5V4Qh",
+                      "name": "dur",
+                      "fill": "#64748B",
+                      "content": "0:38",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "i0rXm2",
+                  "name": "script",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 10,
+                  "stroke": "#E2E8F0",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 6,
+                  "padding": 14,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ESCtU",
+                      "name": "l",
+                      "fill": "#94A3B8",
+                      "content": "Guion",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "600",
+                      "letterSpacing": 0.3
+                    },
+                    {
+                      "type": "text",
+                      "id": "OANLB",
+                      "name": "t",
+                      "fill": "#475569",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Estimado cliente, le llamamos de QCobro para recordarle que su cuenta registra un saldo pendiente. Para regularizar su situación o conocer sus opciones de pago, visite qcobro.mx/pagar o comuníquese con nosotros. Gracias.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "MSK16",
+              "name": "sec-ai",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "B4NNj",
+                  "name": "h",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "bLDUy",
+                      "name": "i",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "sparkles",
+                      "library": "lucide",
+                      "fill": "#7C3AED"
+                    },
+                    {
+                      "type": "text",
+                      "id": "wuMc8",
+                      "name": "t",
+                      "fill": "#0F172A",
+                      "content": "Análisis (AI Insights)",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "wr3G0",
+                  "name": "r",
+                  "fill": "#475569",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "La llamada fue contestada y duró 0:38. La duración no confirma que el mensaje se haya escuchado por completo; considere dar seguimiento por Voz IA para verificar la intención de pago.",
+                  "lineHeight": 1.5,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "FnQS4",
+              "name": "resRow",
+              "width": "fill_container",
+              "fill": "#F8FAFC",
+              "cornerRadius": 8,
+              "gap": 8,
+              "padding": [
+                10,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "p8DH1F",
+                  "name": "l",
+                  "fill": "#64748B",
+                  "content": "Resultado",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "H61ikj",
+                  "name": "sp",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "text",
+                  "id": "sOfGY",
+                  "name": "v",
+                  "fill": "$--foreground",
+                  "content": "Baja solicitada",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "hiCBC",
+              "name": "sec-meta",
+              "width": "fill_container",
+              "stroke": "#F1F5F9",
+              "strokeWidth": {
+                "top": 1
+              },
+              "strokeLinejoin": "round",
+              "layout": "vertical",
+              "gap": 12,
+              "padding": [
+                16,
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "o9A58",
+                  "name": "t",
+                  "fill": "#94A3B8",
+                  "content": "Metadatos",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "600",
+                  "letterSpacing": 0.4
+                },
+                {
+                  "type": "frame",
+                  "id": "i5WGkR",
+                  "name": "grid",
+                  "width": "fill_container",
+                  "gap": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "LAUFw",
+                      "name": "col",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "bQD4y",
+                          "name": "Entrega",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "bIqFq",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Entrega",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "FlDXo",
+                              "name": "v",
+                              "fill": "#334155",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Entregado",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "vGKh6",
+                          "name": "Camino",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "GQgYN",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Camino",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "K1lf8m",
+                              "name": "v",
+                              "fill": "#334155",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Despachado → Conversación",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "bMw16",
+                          "name": "it",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "lnb0F",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Fecha",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "AL310",
+                              "name": "v",
+                              "fill": "#334155",
+                              "content": "22 jun 2026, 17:48",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Ife2f",
+                          "name": "it",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "d9GA7A",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Canal",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "PLM28",
+                              "name": "v",
+                              "fill": "#334155",
+                              "content": "Pre-grabada",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "kxNwN",
+                          "name": "it",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Nd75z",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Duración",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "VRx5P",
+                              "name": "v",
+                              "fill": "#334155",
+                              "content": "0:38",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kzdL0",
+                      "name": "col",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "NyN8N",
+                          "name": "it",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Q2Okte",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Grabación",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "asP40",
+                              "name": "v",
+                              "fill": "#334155",
+                              "content": "Recordatorio general",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "yVIdm",
+                          "name": "it",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "vEspS",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Número destino",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "hwK9f",
+                              "name": "v",
+                              "fill": "#334155",
+                              "content": "+52 1 55 9876 5432",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "W49mz",
+                          "name": "Cuenta",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "NUlFQ",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "Cuenta",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "fJFEY",
+                              "name": "valRow",
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Ww49L",
+                                  "name": "v",
+                                  "fill": "#334155",
+                                  "content": "88230471…",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "l39JW",
+                                  "name": "copy",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "copy",
+                                  "library": "lucide",
+                                  "fill": "#94A3B8"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "cg22q",
+                          "name": "it",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "vxbdz",
+                              "name": "l",
+                              "fill": "#94A3B8",
+                              "content": "ID de gestión",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "le9mB",
+                              "name": "valRow",
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "zZpq8",
+                                  "name": "v",
+                                  "fill": "#334155",
+                                  "content": "9f8c1e42…",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "AgSIB",
+                                  "name": "copy",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "copy",
+                                  "library": "lucide",
+                                  "fill": "#94A3B8"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     }

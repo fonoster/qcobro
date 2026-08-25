@@ -492,7 +492,17 @@ export const qcobroConfigSchema = z.object({
        * any success or `DELIVERY_REJECTED` failure. Sized to ride out a short blip without
        * silently burning through every account's attempt cap during a real outage.
        */
-      consecutiveSystemErrorPauseThreshold: z.number().int().positive().default(10)
+      consecutiveSystemErrorPauseThreshold: z.number().int().positive().default(10),
+      /**
+       * Minutes a VOICE_AI/VOICE_PRERECORDED gestión may sit at entrega=DISPATCHED with no
+       * completion signal (autopilot conversation.ended webhook / pre-recorded VoiceServer
+       * onCompleted) before the timeout sweep finalizes it FAILED (deliveryReason:
+       * PROVIDER_ERROR) — the replacement for the old Fonoster-CDR polling recovery path.
+       * A single shared value across both channels, not per-channel, to keep this simple.
+       */
+      voiceCompletionTimeoutMinutes: z.number().int().positive().default(10),
+      /** How often the timeout sweep itself runs, piggybacked on the engine tick loop. */
+      voiceCompletionSweepIntervalSeconds: z.number().int().positive().default(120)
     })
     .prefault({})
 });

@@ -14,13 +14,21 @@ interface Captured {
  * (`from`/`to`/`messageBody`) — never `providerRef`. The stub correlates the way Prisma
  * would: by the `providerRef` column in the `where`.
  */
-function makeClient(records: { id: string; providerRef: string | null; channelData: unknown }[]) {
+function makeClient(
+  records: {
+    id: string;
+    providerRef: string | null;
+    channelData: unknown;
+    contactedAt?: Date;
+  }[]
+) {
   const cap: Captured = {};
   const client = {
     accountContactLog: {
       findFirst: async (args: { where: { agentType: string; providerRef: string } }) => {
         cap.findFirstCalled = true;
-        return records.find((r) => r.providerRef === args.where.providerRef) ?? null;
+        const record = records.find((r) => r.providerRef === args.where.providerRef);
+        return record ? { ...record, contactedAt: record.contactedAt ?? CONTACTED_AT } : null;
       },
       update: async (args: { where: { id: string }; data: Record<string, unknown> }) => {
         cap.update = args;
@@ -30,6 +38,8 @@ function makeClient(records: { id: string; providerRef: string | null; channelDa
   };
   return { client, cap };
 }
+
+const CONTACTED_AT = new Date("2026-08-18T09:58:00.000Z");
 
 const ENDED = {
   eventType: "conversation.ended" as const,
@@ -50,7 +60,7 @@ describe("ingestVoiceEvent", () => {
 
     const result = await createIngestVoiceEvent(client as never)(ENDED);
 
-    assert.deepEqual(result, { matched: true, id: "g-1" });
+    assert.deepEqual(result, { matched: true, id: "g-1", contactedAt: CONTACTED_AT });
     assert.equal(cap.update?.where.id, "g-1");
     const cd = cap.update?.data.channelData as Record<string, unknown>;
     assert.equal(cd.from, "+1999"); // existing channelData preserved
@@ -75,7 +85,7 @@ describe("ingestVoiceEvent", () => {
 
     const result = await createIngestVoiceEvent(client as never)(ENDED);
 
-    assert.deepEqual(result, { matched: true, id: "g-real" });
+    assert.deepEqual(result, { matched: true, id: "g-real", contactedAt: CONTACTED_AT });
     assert.equal(cap.update?.where.id, "g-real");
   });
 
@@ -89,7 +99,7 @@ describe("ingestVoiceEvent", () => {
       phone: "+15550001111"
     });
 
-    assert.deepEqual(result, { matched: true, id: "g-1" });
+    assert.deepEqual(result, { matched: true, id: "g-1", contactedAt: CONTACTED_AT });
     const cd = cap.update?.data.channelData as Record<string, unknown>;
     assert.ok(typeof cd.startedAt === "string");
     assert.equal(cd.transcript, undefined);

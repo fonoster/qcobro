@@ -1,11 +1,9 @@
 import * as SDK from "@fonoster/sdk";
 import {
   DispatchError,
-  type CallDetail,
   type FonosterConfig,
   type OutboundCallClient,
-  type OutboundCallInput,
-  type VoiceCallStatusTracker
+  type OutboundCallInput
 } from "@qcobro/common";
 
 type FonosterSettings = NonNullable<FonosterConfig>;
@@ -73,7 +71,7 @@ export function classifyVoiceError(err: unknown): DispatchError {
  * so login only happens once per process; a failed login is not memoized and is
  * retried on the next call.
  */
-export class FonosterOutboundCallClient implements OutboundCallClient, VoiceCallStatusTracker {
+export class FonosterOutboundCallClient implements OutboundCallClient {
   private readonly settings: FonosterSettings;
   private clientPromise: Promise<SDK.Client> | null = null;
 
@@ -120,31 +118,6 @@ export class FonosterOutboundCallClient implements OutboundCallClient, VoiceCall
       return { ref };
     } catch (err) {
       throw classifyVoiceError(err);
-    }
-  }
-
-  /**
-   * Historical CDR lookup (Fonoster `Calls.GetCall`) — the sole call-status-tracking
-   * signal (see `voice-call-status-tracking`). Deliberately not the live `Calls.TrackCall`
-   * dial-progress stream: `DialStatus` has no value for "the call ended", only for
-   * whether the dial attempt connected, so it cannot report a normal hangup at all.
-   * The CDR reflects every outcome and needs no separate live stream — callers poll this
-   * with backoff until the call is actually over.
-   */
-  async getCallDetail(providerRef: string): Promise<CallDetail | null> {
-    const calls = await this.calls();
-    try {
-      const record = await calls.getCall(providerRef);
-      if (!record) return null;
-      return {
-        status: String(record.status),
-        durationSeconds: Math.max(0, Math.round(record.duration ?? 0))
-      };
-    } catch {
-      // Not found (call still in progress / never reached the CDR store yet) or a
-      // transient lookup failure — the caller retries with backoff; treat both as
-      // "not available yet".
-      return null;
     }
   }
 }

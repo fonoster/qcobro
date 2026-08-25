@@ -37,10 +37,19 @@ export function createEngineRunner(opts: {
   eventSink?: EngineEventSink | null;
   /** Expired-event pruner (see `createEventPruner`); invoked at most hourly. */
   pruneEvents?: (() => Promise<number>) | null;
+  /**
+   * Stale-voice-dispatch timeout sweep (see `createVoiceCompletionTimeoutSweep`); invoked
+   * at most every `sweepVoiceDispatchesIntervalMs`, piggybacked on the tick like `pruneEvents`.
+   */
+  sweepVoiceDispatches?: (() => Promise<number>) | null;
+  /** Default 2 minutes — the sweep's own threshold is itself only minutes long. */
+  sweepVoiceDispatchesIntervalMs?: number;
 }): EngineRunner {
   let timer: NodeJS.Timeout | null = null;
   let running = false;
   let lastPruneMs = 0;
+  let lastVoiceSweepMs = 0;
+  const voiceSweepIntervalMs = opts.sweepVoiceDispatchesIntervalMs ?? 120_000;
 
   async function runOnce(): Promise<void> {
     if (running) return; // single-flight: never overlap ticks
@@ -67,6 +76,15 @@ export function createEngineRunner(opts: {
             await opts.pruneEvents();
           } catch (err) {
             logger.error("event pruning failed", err);
+          }
+        }
+        if (opts.sweepVoiceDispatches && Date.now() - lastVoiceSweepMs > voiceSweepIntervalMs) {
+          lastVoiceSweepMs = Date.now();
+          try {
+            const n = await opts.sweepVoiceDispatches();
+            if (n > 0) logger.verbose(`voice completion timeout sweep: finalized ${n} gestión(es)`);
+          } catch (err) {
+            logger.error("voice completion timeout sweep failed", err);
           }
         }
       } finally {

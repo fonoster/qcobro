@@ -36,7 +36,7 @@ export interface VoiceAiCallStatusClient {
       data: {
         entrega?: Entrega;
         deliveryReason?: DeliveryReason | null;
-        durationSeconds: number;
+        durationSeconds?: number;
         channelData: Record<string, unknown>;
       };
     }): Promise<unknown>;
@@ -78,17 +78,21 @@ export function createRecordVoiceAiCallStatus(client: VoiceAiCallStatusClient) {
       shouldFinalize && reportedEntrega === "FAILED" ? input.deliveryReason : undefined;
 
     const existing = (match.channelData as Record<string, unknown> | null) ?? {};
-    const channelData: Record<string, unknown> = {
-      ...existing,
-      endedAt: new Date(input.at).toISOString()
-    };
+    const channelData: Record<string, unknown> = shouldFinalize
+      ? { ...existing, endedAt: new Date(input.at).toISOString() }
+      : existing;
 
+    // durationSeconds/channelData must only be written on the completion that actually
+    // finalizes entrega (shouldFinalize) — otherwise a later, unguarded caller (e.g. the
+    // timeout sweep racing a real completion that landed first) would clobber the real
+    // answered duration/endedAt with its own stale/zero values even though entrega itself
+    // is correctly left untouched. See voiceCompletionTimeoutSweep.
     await client.accountContactLog.update({
       where: { id: match.id },
       data: {
         ...(entrega ? { entrega } : {}),
         ...(deliveryReason ? { deliveryReason } : {}),
-        durationSeconds: input.answeredSeconds,
+        ...(shouldFinalize ? { durationSeconds: input.answeredSeconds } : {}),
         channelData
       }
     });

@@ -27,7 +27,6 @@ import {
   type Rates,
   type SmsClient,
   type TickReport,
-  type VoiceCallStatusTracker,
   type WhatsAppClient
 } from "@qcobro/common";
 import { getLogger } from "@fonoster/logger";
@@ -35,10 +34,6 @@ import { createTickRecorder, type TickRecorder } from "./recorder.js";
 import { createDispatchOutreach } from "../functions/outreach/dispatchOutreach.js";
 import { createReserveAttempt } from "../functions/campaigns/reserveAttempt.js";
 import { createRecordOutcome, recordOutcomeTx } from "../functions/campaigns/recordOutcome.js";
-import { createRecordPrerecordedOutcome } from "../functions/voice/recordPrerecordedOutcome.js";
-import { createRecordVoiceAiCallStatus } from "../functions/voice/recordVoiceAiCallStatus.js";
-import { startVoiceCallStatusTracking } from "../functions/voice/startVoiceCallStatusTracking.js";
-import { createSettleVoiceUsage } from "../functions/billing/settleVoiceUsage.js";
 import { createGetWorkspaceSettings } from "../functions/workspaceSettings/getWorkspaceSettings.js";
 import { isInWindow, isPastEndDate, type WindowCampaign } from "./window.js";
 import { runFunnel, type FunnelAccount } from "./funnel.js";
@@ -142,15 +137,6 @@ export interface EngineDeps {
   /** Same client the reserve/record functions use (the Prisma client). */
   reserveRecordClient: unknown;
   outboundCallClient: OutboundCallClient | null;
-  /**
-   * Real-time Fonoster call-status tracking, started for every VOICE_AI/VOICE_PRERECORDED
-   * dispatch right after the OTHER placeholder gestión is written — independent of
-   * whether the call ever reaches a channel-specific completion path (the pre-recorded
-   * VoiceServer's answer/say/hangup flow, or the Voz IA autopilot webhook), since neither
-   * is guaranteed for every failure mode. `null` disables the recovery path (e.g.
-   * Fonoster not configured). See `voice-call-status-tracking`.
-   */
-  voiceCallStatusTracker?: VoiceCallStatusTracker | null;
   smsClient: SmsClient | null;
   emailClient?: EmailClient | null;
   emailFrom?: { email: string; name?: string; inboundDomain: string } | null;
@@ -225,53 +211,6 @@ export function createEngine(deps: EngineDeps) {
   // ticks (not just within one) but not a process restart — a restart naturally gives
   // the campaign a fresh chance, so nothing durable is needed here.
   const consecutiveSystemErrors = new Map<string, number>();
-  // Only constructed when a tracker is configured — a Prisma client is always available
-  // here (reserveRecordClient), so the guard is purely "is Fonoster call-status tracking
-  // wired up", matching the other channel clients' null-when-unconfigured pattern.
-  // recordPrerecordedOutcome is reused as-is — it already has exactly the shape
-  // call-status tracking needs (answered/not + duration), same as VoiceServer's own use.
-  const recordVoiceAiCallStatus = deps.voiceCallStatusTracker
-    ? createRecordVoiceAiCallStatus(deps.reserveRecordClient as never)
-    : null;
-  const recordPrerecordedOutcome = deps.voiceCallStatusTracker
-    ? createRecordPrerecordedOutcome(deps.reserveRecordClient as never)
-    : null;
-  // Call-status tracking is a completion path in its own right (not just a fallback the
-  // channel-specific handlers already settle for) — it must settle usage itself, the
-  // same way the VoiceServer onCompleted callback / autopilot webhook already do.
-  const settleVoiceCallStatusUsage = billingCfg ? createSettleVoiceUsage(billingDb) : null;
-  function withVoiceUsageSettlement(
-    record: (input: {
-      providerRef: string;
-      answered: boolean;
-      deliveryReason?: DeliveryReason;
-      answeredSeconds: number;
-      at: string;
-    }) => Promise<unknown>
-  ) {
-    return async (input: {
-      providerRef: string;
-      answered: boolean;
-      deliveryReason?: DeliveryReason;
-      answeredSeconds: number;
-      at: string;
-    }) => {
-      if (settleVoiceCallStatusUsage) {
-        void settleVoiceCallStatusUsage({
-          providerRef: input.providerRef,
-          answeredSeconds: input.answeredSeconds,
-          at: input.at
-        }).catch((err: unknown) =>
-          logger.error(
-            `[billing] call-status-tracking settlement failed providerRef=${input.providerRef}: ${
-              err instanceof Error ? err.message : err
-            }`
-          )
-        );
-      }
-      return record(input);
-    };
-  }
 
   /**
    * Writes the dispatch gestión and, when the workspace is metered, the priced
@@ -524,6 +463,26 @@ export function createEngine(deps: EngineDeps) {
       if (errorKind === "DELIVERY_REJECTED") {
         await reserve({ campaignId: c.id, portfolioAccountId: acc.id, at });
       }
+      // Immediate FAILED gestión: the API call itself never reached the recipient
+      // side, so there is no completion signal to ever wait for. Unmetered — no
+      // successful dispatch occurred, so nothing is billed for it.
+      const failureReason: DeliveryReason =
+        errorKind === "DELIVERY_REJECTED" ? "INVALID_DESTINATION" : "PROVIDER_ERROR";
+      await record({
+        portfolioAccountId: acc.id,
+        campaignId: c.id,
+        agentType: channel,
+        contactedAt: at,
+        entrega: "FAILED",
+        deliveryReason: failureReason,
+        debtAmountSnapshot: acc.outstandingBalance,
+        notes: err instanceof Error ? err.message : String(err)
+      }).catch((writeErr: unknown) =>
+        logger.error(
+          `failed to record dispatch-failure gestión campaign=${c.id} account=${acc.id}:`,
+          writeErr instanceof Error ? writeErr.message : writeErr
+        )
+      );
       return { decision: "dispatch_failed", errorKind };
     }
     recorder.emit({
@@ -563,26 +522,6 @@ export function createEngine(deps: EngineDeps) {
           }
         : null
     );
-
-    // Fire-and-forget: must never add latency to the dispatch loop or fail this
-    // function. Started here — right after the dispatch-time DISPATCHED gestión is
-    // written — rather than from any channel-specific handler (VoiceServer /
-    // autopilot webhook), so coverage does not depend on the call ever reaching one.
-    if (
-      (channel === "VOICE_AI" || channel === "VOICE_PRERECORDED") &&
-      deps.voiceCallStatusTracker
-    ) {
-      const record = channel === "VOICE_AI" ? recordVoiceAiCallStatus : recordPrerecordedOutcome;
-      if (record) {
-        startVoiceCallStatusTracking({
-          tracker: deps.voiceCallStatusTracker,
-          channel,
-          providerRef: result.providerRef,
-          now: () => deps.clock.now(),
-          finalize: withVoiceUsageSettlement(record)
-        });
-      }
-    }
 
     return { decision: "dispatched", providerRef: result.providerRef };
   }

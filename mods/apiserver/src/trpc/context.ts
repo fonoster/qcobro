@@ -5,8 +5,7 @@ import type {
   Locale,
   OutboundCallClient,
   SmsClient,
-  VoiceApplicationClient,
-  VoiceCallStatusTracker
+  VoiceApplicationClient
 } from "@qcobro/common";
 import { DEFAULT_LOCALE, parseLocale } from "@qcobro/common";
 
@@ -59,12 +58,8 @@ const voiceApplications: VoiceApplicationClient | null = config.fonoster
 // Outreach dispatch clients + sending-number pools, each gated on their provider
 // config. When a provider is absent, dispatch for that channel fails with a clear
 // error (mirroring the voice-template "saves locally when Fonoster absent" posture).
-// One instance implements both OutboundCallClient and VoiceCallStatusTracker — shared so
-// manual/ad-hoc voice dispatch's call-status tracking reuses the same authenticated
-// Fonoster client/login as call origination (see voice-call-status-tracking).
 const fonosterCallClient = config.fonoster ? new FonosterOutboundCallClient(config.fonoster) : null;
 const outboundCallClient: OutboundCallClient | null = fonosterCallClient;
-const voiceCallStatusTracker: VoiceCallStatusTracker | null = fonosterCallClient;
 const smsClient: SmsClient | null = config.twilio ? new TwilioSmsClient(config.twilio) : null;
 const emailClient: EmailClient | null = config.resend ? new ResendEmailClient(config.resend) : null;
 const fonosterNumbers = config.fonoster?.numbers ?? [];
@@ -163,7 +158,6 @@ function assembleContext(
     identity,
     voiceApplications,
     outboundCallClient,
-    voiceCallStatusTracker,
     smsClient,
     emailClient,
     emailFrom,
