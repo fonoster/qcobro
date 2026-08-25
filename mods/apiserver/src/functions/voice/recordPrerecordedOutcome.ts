@@ -54,7 +54,7 @@ export interface PrerecordedOutcomeClient {
         deliveryReason?: DeliveryReason | null;
         camino?: Camino;
         resultado?: Resultado;
-        durationSeconds: number;
+        durationSeconds?: number;
         channelData: Record<string, unknown>;
       };
     }): Promise<unknown>;
@@ -117,17 +117,21 @@ export function createRecordPrerecordedOutcome(client: PrerecordedOutcomeClient)
     const resultado: Resultado | undefined = shouldFinalize ? input.resultado : undefined;
 
     const existing = (match.channelData as Record<string, unknown> | null) ?? {};
-    const channelData: Record<string, unknown> = {
-      ...existing,
-      endedAt: new Date(input.at).toISOString()
-    };
-    if (input.scriptDurationSeconds != null) {
+    const channelData: Record<string, unknown> = shouldFinalize
+      ? { ...existing, endedAt: new Date(input.at).toISOString() }
+      : existing;
+    if (shouldFinalize && input.scriptDurationSeconds != null) {
       channelData.scriptDurationSeconds = input.scriptDurationSeconds;
     }
-    if (input.repeatCount != null) {
+    if (shouldFinalize && input.repeatCount != null) {
       channelData.repeatCount = input.repeatCount;
     }
 
+    // durationSeconds/channelData must only be written on the completion that actually
+    // finalizes entrega (shouldFinalize) — otherwise a later, unguarded caller (e.g. the
+    // timeout sweep racing a real completion that landed first) would clobber the real
+    // answered duration/endedAt with its own stale/zero values even though entrega itself
+    // is correctly left untouched. See voiceCompletionTimeoutSweep.
     await client.accountContactLog.update({
       where: { id: match.id },
       data: {
@@ -135,7 +139,7 @@ export function createRecordPrerecordedOutcome(client: PrerecordedOutcomeClient)
         ...(deliveryReason ? { deliveryReason } : {}),
         ...(camino ? { camino } : {}),
         ...(resultado ? { resultado } : {}),
-        durationSeconds: input.answered ? input.answeredSeconds : 0,
+        ...(shouldFinalize ? { durationSeconds: input.answered ? input.answeredSeconds : 0 } : {}),
         channelData
       }
     });

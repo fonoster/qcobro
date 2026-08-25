@@ -36,6 +36,23 @@ export interface VoiceEventsDeps {
    * is absent/disabled, same as EMAIL/WhatsApp.
    */
   decideOutcome: (id: string) => Promise<DecideVoiceOutcomeResult>;
+  /**
+   * Finalizes entrega DISPATCHED -> DELIVERED for a VOICE_AI gestión once the autopilot
+   * reports the conversation ended. Fonoster's conversation.ended payload carries no
+   * duration, so the answered duration is derived here from the gestión's own dispatch
+   * timestamp (`contactedAt`, returned by `ingest`) to now — a best-effort local measure
+   * until Fonoster's webhook carries real timing. Idempotent (entrega only ever
+   * advances) — safe on webhook replay. Optional only so tests that don't exercise this
+   * path can omit it, same as settleUsage.
+   */
+  recordVoiceAiCallStatus?:
+    | ((input: {
+        providerRef: string;
+        answered: boolean;
+        answeredSeconds: number;
+        at: string;
+      }) => Promise<unknown>)
+    | null;
 }
 
 /**
@@ -113,6 +130,36 @@ export function createVoiceEventsHandler(
             `[billing] conversation.ended for ${req.body.callRef} carried no durationSeconds — estimate left unsettled`
           );
         }
+      }
+
+      // entrega finalization: DISPATCHED -> DELIVERED. conversation.ended only ever
+      // fires for a call that was actually routed into the autopilot (i.e. answered),
+      // so `answered` is always true here — a call that never connects never reaches
+      // this webhook at all and is instead closed out by the timeout sweep. Duration is
+      // derived locally (Fonoster's payload carries none) from the gestión's own
+      // dispatch timestamp, so ring time is included — a best-effort approximation.
+      if (
+        result.matched &&
+        deps.recordVoiceAiCallStatus &&
+        req.body?.eventType === "conversation.ended" &&
+        typeof req.body?.callRef === "string"
+      ) {
+        const answeredSeconds = Math.max(
+          0,
+          Math.round((Date.now() - result.contactedAt.getTime()) / 1000)
+        );
+        deps
+          .recordVoiceAiCallStatus({
+            providerRef: req.body.callRef,
+            answered: true,
+            answeredSeconds,
+            at: new Date().toISOString()
+          })
+          .catch((err: unknown) =>
+            logger.error(
+              `entrega finalize failed for callRef=${req.body?.callRef}: ${err instanceof Error ? err.message : err}`
+            )
+          );
       }
 
       // On-ingestion analysis: best-effort, after responding (the autopilot does not

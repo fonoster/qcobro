@@ -4,6 +4,7 @@ import {
   BILLING_METER_OF_CHANNEL,
   buildOutreachContext,
   createContactLogSchema,
+  DispatchError,
   manualOutreachSchema,
   ValidationError,
   type BillingClient,
@@ -16,10 +17,6 @@ import { router, workspaceProcedure } from "../trpc.js";
 import { config } from "../../config.js";
 import { createDispatchOutreach } from "../../functions/outreach/dispatchOutreach.js";
 import { createRecordOutcome, recordOutcomeTx } from "../../functions/campaigns/recordOutcome.js";
-import { createRecordPrerecordedOutcome } from "../../functions/voice/recordPrerecordedOutcome.js";
-import { createRecordVoiceAiCallStatus } from "../../functions/voice/recordVoiceAiCallStatus.js";
-import { startVoiceCallStatusTracking } from "../../functions/voice/startVoiceCallStatusTracking.js";
-import { createSettleVoiceUsage } from "../../functions/billing/settleVoiceUsage.js";
 import { assessManualDispatch } from "../../functions/billing/manualDispatchGate.js";
 import { meterDispatchTx } from "../../functions/billing/meterDispatch.js";
 import { resolveWhatsAppClient } from "../../services/resolveWhatsAppClient.js";
@@ -128,47 +125,6 @@ function buildDispatchRequest(
 }
 
 const logger = getLogger({ service: "outreach", filePath: import.meta.url });
-
-/**
- * Wraps a call-status-tracking finalizer so it also settles the voice usage estimate to
- * the real answered duration — call-status tracking is a completion path in its own
- * right here (started at dispatch, not just a fallback something else already settles
- * for), so it must settle usage itself, mirroring the VoiceServer/autopilot-webhook paths.
- */
-function withVoiceUsageSettlement(
-  prisma: Parameters<typeof createSettleVoiceUsage>[0],
-  record: (input: {
-    providerRef: string;
-    answered: boolean;
-    deliveryReason?: DeliveryReason;
-    answeredSeconds: number;
-    at: string;
-  }) => Promise<unknown>
-) {
-  const settle = config.billing?.enabled ? createSettleVoiceUsage(prisma) : null;
-  return async (input: {
-    providerRef: string;
-    answered: boolean;
-    deliveryReason?: DeliveryReason;
-    answeredSeconds: number;
-    at: string;
-  }) => {
-    if (settle) {
-      void settle({
-        providerRef: input.providerRef,
-        answeredSeconds: input.answeredSeconds,
-        at: input.at
-      }).catch((err: unknown) =>
-        logger.error(
-          `[billing] call-status-tracking settlement failed providerRef=${input.providerRef}: ${
-            err instanceof Error ? err.message : err
-          }`
-        )
-      );
-    }
-    return record(input);
-  };
-}
 
 export const outreachRouter = router({
   /**
@@ -290,7 +246,34 @@ export const outreachRouter = router({
 
     const at = new Date().toISOString();
 
-    const result = await dispatch(request);
+    let result;
+    try {
+      result = await dispatch(request);
+    } catch (err) {
+      // Immediate FAILED gestión: the API call itself never reached the recipient
+      // side, so there is no completion signal to ever wait for. Unmetered — no
+      // successful dispatch occurred, so nothing is billed for it.
+      const failureReason: DeliveryReason =
+        err instanceof DispatchError && err.kind === "DELIVERY_REJECTED"
+          ? "INVALID_DESTINATION"
+          : "PROVIDER_ERROR";
+      await createRecordOutcome(ctx.prisma as never)({
+        portfolioAccountId: account.id,
+        agentTemplateId: input.agentTemplateId,
+        agentType: template.type as DispatchOutreachInput["channel"],
+        contactedAt: at,
+        entrega: "FAILED",
+        deliveryReason: failureReason,
+        notes: err instanceof Error ? err.message : String(err),
+        debtAmountSnapshot: account.outstandingBalance
+      }).catch((writeErr: unknown) =>
+        logger.error(
+          `failed to record dispatch-failure gestión account=${account.id}:`,
+          writeErr instanceof Error ? writeErr.message : writeErr
+        )
+      );
+      throw err;
+    }
 
     // One campaign-less gestión per attempt, correlated by providerRef (richer outcomes
     // arrive via callbacks and enrich this same row). No campaign → no CampaignAccountState.
@@ -339,27 +322,6 @@ export const outreachRouter = router({
       });
     } else {
       await createRecordOutcome(ctx.prisma as never)(logParams);
-    }
-
-    // Fire-and-forget: must never add latency to this request or fail it. Started here
-    // — right after the dispatch-time DISPATCHED gestión is written — rather than from
-    // any channel-specific handler, so coverage does not depend on the call ever
-    // reaching one (see voice-call-status-tracking).
-    if (
-      (template.type === "VOICE_AI" || template.type === "VOICE_PRERECORDED") &&
-      ctx.voiceCallStatusTracker
-    ) {
-      const record =
-        template.type === "VOICE_AI"
-          ? createRecordVoiceAiCallStatus(ctx.prisma as never)
-          : createRecordPrerecordedOutcome(ctx.prisma as never);
-      startVoiceCallStatusTracking({
-        tracker: ctx.voiceCallStatusTracker,
-        channel: template.type,
-        providerRef: result.providerRef,
-        now: () => new Date(),
-        finalize: withVoiceUsageSettlement(ctx.prisma as never, record)
-      });
     }
 
     return result;

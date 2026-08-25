@@ -447,6 +447,8 @@ model AccountContactLog {
   @@index([portfolioAccountId, createdAt])
   @@index([entrega])
   @@index([resultado])
+  // The voice completion timeout sweep's query (entrega=DISPATCHED, agentType IN (...), contactedAt < cutoff).
+  @@index([entrega, agentType, contactedAt])
   @@map("account_contact_logs")
 }
 

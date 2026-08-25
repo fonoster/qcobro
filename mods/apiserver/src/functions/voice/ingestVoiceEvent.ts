@@ -11,8 +11,8 @@ export interface VoiceEventClient {
   accountContactLog: {
     findFirst(args: {
       where: { agentType: string; providerRef: string };
-      select: { id: true; channelData: true };
-    }): Promise<{ id: string; channelData: unknown } | null>;
+      select: { id: true; channelData: true; contactedAt: true };
+    }): Promise<{ id: string; channelData: unknown; contactedAt: Date } | null>;
     update(args: {
       where: { id: string };
       data: { channelData: Record<string, unknown>; durationSeconds?: number };
@@ -20,7 +20,9 @@ export interface VoiceEventClient {
   };
 }
 
-export type IngestVoiceEventResult = { matched: false } | { matched: true; id: string };
+export type IngestVoiceEventResult =
+  | { matched: false }
+  | { matched: true; id: string; contactedAt: Date };
 
 /**
  * Ingests a Fonoster autopilot conversation event into the matching Voz IA gestión.
@@ -39,7 +41,7 @@ export function createIngestVoiceEvent(client: VoiceEventClient) {
   const fn = async (event: VoiceConversationEvent): Promise<IngestVoiceEventResult> => {
     const match = await client.accountContactLog.findFirst({
       where: { agentType: "VOICE_AI", providerRef: event.callRef },
-      select: { id: true, channelData: true }
+      select: { id: true, channelData: true, contactedAt: true }
     });
     if (!match) return { matched: false };
 
@@ -67,7 +69,7 @@ export function createIngestVoiceEvent(client: VoiceEventClient) {
         ...(event.durationSeconds != null ? { durationSeconds: event.durationSeconds } : {})
       }
     });
-    return { matched: true, id: match.id };
+    return { matched: true, id: match.id, contactedAt: match.contactedAt };
   };
 
   return withErrorHandlingAndValidation(fn, voiceConversationEventSchema);
