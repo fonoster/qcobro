@@ -33,6 +33,7 @@ import { createEngineEventsHandler } from "./rest/engineEvents.js";
 import { resolveWhatsAppClient } from "./services/resolveWhatsAppClient.js";
 import { createInsightGenerator } from "./services/insightGenerator.js";
 import { synthesizeSpeech } from "./services/elevenLabsTts.js";
+import { TtsCache, ttsCacheKey, isTextWithinLimit } from "./services/ttsCache.js";
 import { startVoiceServer } from "./voice/voiceServer.js";
 import { startEngine } from "./engine/start.js";
 import {
@@ -169,9 +170,18 @@ app.get(
 );
 
 // Synthesize a pre-recorded agent's script to audio (ElevenLabs) so the Pre-grabada
-// gestión detail can play it. Cached in-memory per voice+text; 503 when TTS isn't
-// configured (the player then has nothing to play).
-const ttsCache = new Map<string, Buffer>();
+// gestión detail can play it. Cached in-memory per voice+text (bounded LRU — see
+// ttsCache.ts and ttsConfigSchema.cache/maxTextLength in @qcobro/common: the cached
+// text is a per-account script, so without bounds this would grow with account
+// count); 503 when TTS isn't configured (the player then has nothing to play).
+const DEFAULT_TTS_MAX_TEXT_LENGTH = 2000;
+const DEFAULT_TTS_CACHE_MAX_ENTRIES = 100;
+const DEFAULT_TTS_CACHE_MAX_BYTES = 25 * 1024 * 1024;
+const ttsMaxTextLength = config.tts?.maxTextLength ?? DEFAULT_TTS_MAX_TEXT_LENGTH;
+const ttsCache = new TtsCache({
+  maxEntries: config.tts?.cache?.maxEntries ?? DEFAULT_TTS_CACHE_MAX_ENTRIES,
+  maxBytes: config.tts?.cache?.maxBytes ?? DEFAULT_TTS_CACHE_MAX_BYTES
+});
 const DEMO_TTS_VOICE = config.fonoster?.voices?.[0]?.id ?? "86V9x9hrQds83qf7zaGn";
 app.get("/api/voice/tts", async (req, res) => {
   const text = typeof req.query.text === "string" ? req.query.text : "";
@@ -180,7 +190,11 @@ app.get("/api/voice/tts", async (req, res) => {
     res.status(400).json({ error: "text is required" });
     return;
   }
-  const key = `${voiceId}:${text}`;
+  if (!isTextWithinLimit(text, ttsMaxTextLength)) {
+    res.status(400).json({ error: `text exceeds maximum length of ${ttsMaxTextLength} characters` });
+    return;
+  }
+  const key = ttsCacheKey(voiceId, text);
   try {
     let audio = ttsCache.get(key);
     if (!audio) {

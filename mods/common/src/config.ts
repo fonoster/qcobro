@@ -277,7 +277,41 @@ export const ttsConfigSchema = z
   .object({
     provider: z.literal("elevenlabs").default("elevenlabs"),
     apiKey: z.string().optional(),
-    model: z.string().default("eleven_multilingual_v2")
+    model: z.string().default("eleven_multilingual_v2"),
+    /**
+     * Maximum accepted length (characters) for the `text` query parameter on
+     * `/api/voice/tts`. The endpoint is unauthenticated, so this is the first line of
+     * defense against a pathological or abusive `?text=` driving up provider cost and
+     * cached-audio size — requests over the limit are rejected with 400 before any
+     * provider call. The default comfortably covers a full pre-recorded call script
+     * (a few short paragraphs) with headroom to spare.
+     */
+    maxTextLength: z.number().int().positive().default(2000),
+    /**
+     * Bounds for the in-memory cache of synthesized audio (keyed by `voiceId:text`).
+     * Both limits are enforced together as an LRU: entry count alone isn't enough
+     * because a synthesized MP3 can run from tens of KB to a few MB depending on
+     * script length, so a handful of long scripts could exhaust memory well under any
+     * reasonable entry cap.
+     */
+    cache: z
+      .object({
+        /**
+         * Max distinct `voiceId:text` entries retained at once. Sized for a working
+         * set of concurrently-referenced per-account scripts, not the full account
+         * base — least-recently-used entries are evicted first.
+         */
+        maxEntries: z.number().int().positive().default(100),
+        /**
+         * Max total bytes of cached audio. This runs alongside Postgres on a 2 vCPU /
+         * 2 GB VM with no container memory limit, so the cache needs a hard ceiling
+         * rather than growing with account count; 25 MiB keeps resident TTS audio to a
+         * small, fixed slice of that budget while still holding a realistic working
+         * set of scripts.
+         */
+        maxBytes: z.number().int().positive().default(25 * 1024 * 1024)
+      })
+      .default({ maxEntries: 100, maxBytes: 25 * 1024 * 1024 })
   })
   .optional();
 
