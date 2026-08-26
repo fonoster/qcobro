@@ -47,17 +47,25 @@ export interface PrerecordedOutcomeClient {
       resultado: Resultado | null;
       channelData: unknown;
     } | null>;
-    update(args: {
-      where: { id: string };
+    /**
+     * Guarded, conditional finalize: `where.entrega: "DISPATCHED"` is re-checked by
+     * Postgres against the row's live committed value at write time (not the stale value
+     * read earlier by `findFirst`), so of two concurrent finalizers — the in-process
+     * VoiceServer completion and `voiceCompletionTimeoutSweep` — racing for the same row,
+     * exactly one `count` comes back 1 and applies; the other comes back 0 and is a safe
+     * no-op, regardless of which one's write physically reaches the database last.
+     */
+    updateMany(args: {
+      where: { id: string; entrega: "DISPATCHED" };
       data: {
-        entrega?: Entrega;
-        deliveryReason?: DeliveryReason | null;
-        camino?: Camino;
-        resultado?: Resultado;
-        durationSeconds?: number;
+        entrega: Entrega;
+        deliveryReason: DeliveryReason | null;
+        camino: Camino | null;
+        resultado: Resultado | null;
+        durationSeconds: number;
         channelData: Record<string, unknown>;
       };
-    }): Promise<unknown>;
+    }): Promise<{ count: number }>;
   };
 }
 
@@ -109,49 +117,83 @@ export function createRecordPrerecordedOutcome(client: PrerecordedOutcomeClient)
     if (!match) return { matched: false };
 
     const reportedEntrega: Entrega = input.answered ? "DELIVERED" : "FAILED";
-    // entrega only ever advances: once it has left DISPATCHED it is never changed again.
-    const shouldFinalize = match.entrega === "DISPATCHED";
-    const entrega: Entrega | undefined = shouldFinalize ? reportedEntrega : undefined;
-    const deliveryReason: DeliveryReason | undefined =
-      shouldFinalize && reportedEntrega === "FAILED" ? input.deliveryReason : undefined;
-    const camino: Camino | undefined = shouldFinalize ? input.camino : undefined;
-    const resultado: Resultado | undefined = shouldFinalize ? input.resultado : undefined;
+    const reportedDeliveryReason: DeliveryReason | null =
+      reportedEntrega === "FAILED" ? (input.deliveryReason ?? null) : null;
+    const reportedCamino: Camino | null = input.camino ?? null;
+    const reportedResultado: Resultado | null = input.resultado ?? null;
 
     const existing = (match.channelData as Record<string, unknown> | null) ?? {};
-    const channelData: Record<string, unknown> = shouldFinalize
-      ? { ...existing, endedAt: new Date(input.at).toISOString() }
-      : existing;
-    if (shouldFinalize && input.scriptDurationSeconds != null) {
+    const channelData: Record<string, unknown> = {
+      ...existing,
+      endedAt: new Date(input.at).toISOString()
+    };
+    if (input.scriptDurationSeconds != null) {
       channelData.scriptDurationSeconds = input.scriptDurationSeconds;
     }
-    if (shouldFinalize && input.repeatCount != null) {
+    if (input.repeatCount != null) {
       channelData.repeatCount = input.repeatCount;
     }
 
-    // durationSeconds/channelData must only be written on the completion that actually
-    // finalizes entrega (shouldFinalize) — otherwise a later, unguarded caller (e.g. the
-    // timeout sweep racing a real completion that landed first) would clobber the real
-    // answered duration/endedAt with its own stale/zero values even though entrega itself
-    // is correctly left untouched. See voiceCompletionTimeoutSweep.
-    await client.accountContactLog.update({
-      where: { id: match.id },
+    // Guarded at the database, not at this earlier read: `where.entrega: "DISPATCHED"` is
+    // re-checked by Postgres against the row's live value when it applies the update, so
+    // exactly one of two racing finalizers (this call vs. voiceCompletionTimeoutSweep) ever
+    // wins, however their reads and writes happen to interleave.
+    const { count } = await client.accountContactLog.updateMany({
+      where: { id: match.id, entrega: "DISPATCHED" },
       data: {
-        ...(entrega ? { entrega } : {}),
-        ...(deliveryReason ? { deliveryReason } : {}),
-        ...(camino ? { camino } : {}),
-        ...(resultado ? { resultado } : {}),
-        ...(shouldFinalize ? { durationSeconds: input.answered ? input.answeredSeconds : 0 } : {}),
+        entrega: reportedEntrega,
+        deliveryReason: reportedDeliveryReason,
+        camino: reportedCamino,
+        resultado: reportedResultado,
+        durationSeconds: input.answered ? input.answeredSeconds : 0,
         channelData
       }
     });
-    return {
-      matched: true,
-      id: match.id,
-      entrega: entrega ?? match.entrega,
-      deliveryReason: deliveryReason ?? (entrega ? null : match.deliveryReason),
-      camino: camino ?? (entrega ? null : match.camino),
-      resultado: resultado ?? (entrega ? null : match.resultado)
-    };
+
+    if (count === 1) {
+      return {
+        matched: true,
+        id: match.id,
+        entrega: reportedEntrega,
+        deliveryReason: reportedDeliveryReason,
+        camino: reportedCamino,
+        resultado: reportedResultado
+      };
+    }
+
+    // Lost the race (or the row had already finalized before our read): report the state
+    // that actually won rather than the one we would have written.
+    if (match.entrega !== "DISPATCHED") {
+      return {
+        matched: true,
+        id: match.id,
+        entrega: match.entrega,
+        deliveryReason: match.deliveryReason,
+        camino: match.camino,
+        resultado: match.resultado
+      };
+    }
+    const current = await client.accountContactLog.findFirst({
+      where: { providerRef: input.providerRef, agentType: "VOICE_PRERECORDED" },
+      select: {
+        id: true,
+        entrega: true,
+        deliveryReason: true,
+        camino: true,
+        resultado: true,
+        channelData: true
+      }
+    });
+    return current
+      ? {
+          matched: true,
+          id: current.id,
+          entrega: current.entrega,
+          deliveryReason: current.deliveryReason,
+          camino: current.camino,
+          resultado: current.resultado
+        }
+      : { matched: false };
   };
 
   return withErrorHandlingAndValidation(fn, prerecordedOutcomeInputSchema);

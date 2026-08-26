@@ -150,6 +150,49 @@ export async function handlePrerecordedCall(
 }
 
 /**
+ * Runs `handlePrerecordedCall` to completion, but never lets an early hangup suppress
+ * the completion signal. The callee having picked up at all is real, billable delivery
+ * (`onCompleted` reports `answered: true` unconditionally — see its doc comment); hanging
+ * up mid-`say`/`gather` throws on the dead channel and previously propagated straight out
+ * of the request handler, skipping `onCompleted` entirely. That left the gestión stuck at
+ * `DISPATCHED` until `voiceCompletionTimeoutSweep` swept it — 10 minutes later — into
+ * `FAILED`/`PROVIDER_ERROR`/duration 0, indistinguishable from a call that never
+ * connected at all. Catching here instead reports the real elapsed `answeredSeconds` with
+ * no `camino`/`resultado` (the caller didn't necessarily hear the whole script, so this
+ * doesn't claim `ENGAGED` the way a clean completion does).
+ */
+export async function runPrerecordedCall(
+  message: string,
+  menu: DtmfMenu | null,
+  res: PrerecordedCallVerbs,
+  now: () => number = Date.now
+): Promise<{
+  camino?: Camino;
+  resultado?: Resultado;
+  repeatCount: number;
+  answeredSeconds: number;
+}> {
+  const answeredAt = now();
+  try {
+    const { camino, resultado, repeatCount } = await handlePrerecordedCall(message, menu, res);
+    return {
+      camino,
+      resultado,
+      repeatCount,
+      answeredSeconds: Math.max(0, Math.round((now() - answeredAt) / 1000))
+    };
+  } catch (err) {
+    logger.warn(
+      `pre-recorded call ended before completion (early hangup?): ${err instanceof Error ? err.message : err}`
+    );
+    return {
+      repeatCount: 0,
+      answeredSeconds: Math.max(0, Math.round((now() - answeredAt) / 1000))
+    };
+  }
+}
+
+/**
  * Embedded Fonoster VoiceServer for PRE-RECORDED voice agents.
  *
  * Unlike Voz IA (AUTOPILOT apps that live inside Fonoster), pre-recorded agents
@@ -171,13 +214,15 @@ export function startVoiceServer(deps: VoiceServerDeps = {}): void {
         message
       );
 
-      const answeredAt = Date.now();
-      const { camino, resultado, repeatCount } = await handlePrerecordedCall(message, menu, res);
+      const { camino, resultado, repeatCount, answeredSeconds } = await runPrerecordedCall(
+        message,
+        menu,
+        res
+      );
 
       // The call was answered (this handler only runs on pickup): report the
       // answered duration in-process so the gestión records DELIVERED + duration
       // and usage settles. Never let a completion failure break the call.
-      const answeredSeconds = Math.max(0, Math.round((Date.now() - answeredAt) / 1000));
       try {
         deps.onCompleted?.({
           providerRef: req.callRef,
