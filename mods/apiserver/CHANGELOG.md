@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.38.0](https://github.com/fonoster/qcobro/compare/v1.37.0...v1.38.0) (2026-08-26)
+
+### Features
+
+- **webapp:** add change-password to My Profile ([#140](https://github.com/fonoster/qcobro/issues/140)) ([2a4b525](https://github.com/fonoster/qcobro/commit/2a4b5257df6e9cc1313471000b395e4fa7c1bc6f))
+
 ## [1.36.2](https://github.com/fonoster/qcobro/compare/v1.36.1...v1.36.2) (2026-08-26)
 
 ### Bug Fixes
