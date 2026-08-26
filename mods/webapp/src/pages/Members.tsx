@@ -48,15 +48,9 @@ function MenuItem({
   );
 }
 
-function initialsOf(name: string, email: string) {
-  const base = name?.trim() || email?.split("@")[0] || "";
-  const p = base.split(/[\s.]+/).filter(Boolean);
-  return ((p.length >= 2 ? p[0][0] + p[1][0] : base.slice(0, 2)) || "?").toUpperCase();
-}
-
 export function Members() {
   const { t } = useI18n();
-  const { workspace, currentUser } = useAuth();
+  const { workspace } = useAuth();
   const utils = trpc.useUtils();
   const workspaces = trpc.workspaces.list.useQuery();
   const members = trpc.workspaces.listMembers.useQuery();
@@ -77,16 +71,17 @@ export function Members() {
     run: () => Promise<void>;
   }>(null);
 
-  const wsName =
-    workspaces.data?.items.find((w) => w.accessKeyId === workspace)?.name ??
-    t("members.wsFallback");
+  const activeWorkspace = workspaces.data?.items.find((w) => w.accessKeyId === workspace);
+  const wsName = activeWorkspace?.name ?? t("members.wsFallback");
 
-  // The owner isn't a member row in Identity — show the current user as owner first.
-  const ownerRow: Row | null = currentUser
+  // The owner isn't a member row in Identity — build their row from the workspace's own
+  // owner record. Whoever is viewing this page isn't necessarily the owner (admins can
+  // view Members too), so the owner row must never be built from the viewer's identity.
+  const ownerRow: Row | null = activeWorkspace?.owner
     ? {
         ref: "owner",
-        name: currentUser.name,
-        email: currentUser.email,
+        name: activeWorkspace.owner.name,
+        email: activeWorkspace.owner.email,
         role: "WORKSPACE_OWNER",
         status: "ACTIVE",
         removable: false
@@ -181,14 +176,9 @@ export function Members() {
                 i < rows.length - 1 && "border-b border-slate-100"
               )}
             >
-              <div className="flex flex-1 items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
-                  {initialsOf(r.name, r.email)}
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">{r.name}</p>
-                  <p className="text-xs text-slate-400">{r.email}</p>
-                </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-slate-900">{r.name}</p>
+                <p className="text-xs text-slate-400">{r.email}</p>
               </div>
               <div className="w-40">
                 <span className="text-sm font-medium text-slate-600">

@@ -29,7 +29,7 @@
     "billing:sim": "tsx scripts/simulate-billing.ts"
   },
   "dependencies": {
-    "@fonoster/identity-client": "0.22.0",
+    "@fonoster/identity-client": "0.22.8",
     "@fonoster/logger": "0.22.0",
     "@fonoster/sdk": "0.22.2",
     "@fonoster/voice": "0.22.0",
