@@ -41,6 +41,13 @@
       and Vence=12/30/2026 rendered correctly (no garbage/1970 dates); created a second key with
       no expiry, confirmed "Sin vencimiento" renders; deleted both test keys afterward.
 - [x] 5.3 lint + typecheck + test all green.
+- [x] 5.4 User review: fixed date-format/color fidelity to Pencil (Intl.DateTimeFormat +
+      muted/right-aligned styling, matching Portfolios.tsx's lastSynced convention). Investigated
+      showing updatedAt too — found it's dead data upstream (never bumped on regenerate); user
+      said skip it, keep createdAt/expiresAt only.
+- [x] 5.5 Upstream fix merged (fonoster/fonoster#877) and published as v0.22.7. Bumped
+      compose.yaml/compose.dev.yaml to fonoster/identity:0.22.7. Re-verified live against the
+      real published image (not the local Docker build).
 
 ## 6. Sync — gate first
 
