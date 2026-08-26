@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.36.2](https://github.com/fonoster/qcobro/compare/v1.36.1...v1.36.2) (2026-08-26)
+
+### Bug Fixes
+
+- **webapp:** show the real workspace owner name on Members, not email ([#138](https://github.com/fonoster/qcobro/issues/138)) ([50ec9dc](https://github.com/fonoster/qcobro/commit/50ec9dc6b573d02c508c39ed15d6a3c8e6a9337e)), closes [fonoster/fonoster#878](https://github.com/fonoster/fonoster/issues/878) [fonoster/fonoster#878](https://github.com/fonoster/fonoster/issues/878)
+
 # [1.36.0](https://github.com/fonoster/qcobro/compare/v1.35.2...v1.36.0) (2026-08-26)
 
 ### Features
