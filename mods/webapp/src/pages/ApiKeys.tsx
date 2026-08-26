@@ -16,6 +16,7 @@ type Row = {
   ref: string;
   accessKeyId: string;
   role: string;
+  createdAt?: number | string | null;
   expiresAt?: number | string | null;
 };
 
@@ -40,8 +41,7 @@ export function ApiKeys() {
   const remove = trpc.apiKeys.delete.useMutation();
 
   // Returns a localized date, or null when the value is absent or implausible.
-  // Identity returns these timestamps in epoch SECONDS (widen to ms); it can also
-  // return a garbage value for an API key's createdAt, which we treat as "no date".
+  // Identity returns these timestamps in epoch SECONDS (widen to ms).
   function fmtDate(v: number | string | null | undefined): string | null {
     if (v === null || v === undefined || v === "") return null;
     let value: number | string = v;
@@ -88,6 +88,7 @@ export function ApiKeys() {
     ref: k.ref,
     accessKeyId: k.accessKeyId,
     role: k.role,
+    createdAt: k.createdAt,
     expiresAt: k.expiresAt
   }));
 
@@ -116,6 +117,11 @@ export function ApiKeys() {
               key: "role",
               header: t("apiKeys.col.role"),
               render: (r) => t(`apiKeys.role.${r.role}` as MessageId)
+            },
+            {
+              key: "createdAt",
+              header: t("apiKeys.col.created"),
+              render: (r) => fmtDate(r.createdAt) ?? "—"
             },
             {
               key: "expiresAt",
