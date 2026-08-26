@@ -41,4 +41,19 @@ test.describe("member actions", () => {
     await expect(page.getByText("Activo")).toBeVisible();
     await expect(page.getByText("Propietario")).toBeVisible();
   });
+
+  test("the owner's row shows their real name, not their email", async ({ page }) => {
+    const unique = Date.now();
+    const owner = newOwner();
+    await signUpAndEnter(page, owner, `QA Espacio ${unique}`);
+    await openUserMenu(page, "Miembros");
+
+    // Identity's ID token never carries a name claim, so the owner row must be
+    // sourced from the workspace's own owner record, not the viewer's decoded token.
+    // Scoped to <main> (excludes the sidebar): the sidebar user menu independently
+    // shows the correct name too (via profile.get), which would otherwise
+    // false-positive a page-wide text match regardless of whether the row itself
+    // is fixed.
+    await expect(page.locator("main").getByText(owner.name)).toBeVisible();
+  });
 });
