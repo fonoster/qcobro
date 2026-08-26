@@ -18,6 +18,7 @@ export function Profile() {
   const profile = trpc.profile.get.useQuery();
   const update = trpc.profile.update.useMutation();
   const setLang = trpc.profile.setLanguage.useMutation();
+  const changePassword = trpc.profile.changePassword.useMutation();
   const remove = trpc.profile.delete.useMutation();
 
   const serverName = profile.data?.name ?? "";
@@ -35,6 +36,30 @@ export function Profile() {
     !!profile.data &&
     nameValue.trim().length > 0 &&
     (nameValue.trim() !== serverName || phoneValue.trim() !== serverPhone);
+
+  // Change password.
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordStatus, setPasswordStatus] = useState<null | "ok" | "error">(null);
+
+  async function onChangePassword(event: FormEvent) {
+    event.preventDefault();
+    setPasswordStatus(null);
+    setPasswordError(null);
+    if (newPassword !== confirmPassword) {
+      setPasswordError(t("profile.password.mismatch"));
+      return;
+    }
+    try {
+      await changePassword.mutateAsync({ password: newPassword });
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordStatus("ok");
+    } catch {
+      setPasswordStatus("error");
+    }
+  }
 
   // Type-to-confirm account deletion.
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -141,6 +166,50 @@ export function Profile() {
             )}
             <Button type="submit" disabled={!dirty || update.isPending}>
               {t("profile.save")}
+            </Button>
+          </div>
+        </form>
+      </Card>
+
+      <Card className="max-w-[680px] rounded-xl border-slate-200 shadow-none">
+        <form onSubmit={onChangePassword} className="flex flex-col gap-5 p-6">
+          <div>
+            <h2 className="text-[15px] font-semibold text-slate-900">
+              {t("profile.password.title")}
+            </h2>
+            <p className="mt-0.5 text-[13px] text-slate-500">{t("profile.password.subtitle")}</p>
+          </div>
+          <InputGroup
+            id="profile-new-password"
+            label={t("profile.password.newPassword")}
+            type="password"
+            required
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="••••••••"
+          />
+          <InputGroup
+            id="profile-confirm-password"
+            label={t("profile.password.confirmPassword")}
+            type="password"
+            required
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="••••••••"
+            error={passwordError ?? undefined}
+          />
+          <div className="flex items-center justify-end gap-3">
+            {passwordStatus === "ok" && (
+              <span className="text-[13px] text-emerald-600">{t("profile.password.saved")}</span>
+            )}
+            {passwordStatus === "error" && (
+              <span className="text-[13px] text-red-600">{t("profile.password.saveError")}</span>
+            )}
+            <Button
+              type="submit"
+              disabled={changePassword.isPending || !newPassword || !confirmPassword}
+            >
+              {changePassword.isPending ? t("profile.password.saving") : t("profile.password.save")}
             </Button>
           </div>
         </form>
