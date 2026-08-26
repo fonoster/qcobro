@@ -22,6 +22,9 @@ change — the data was already there).
 - `Members.tsx` sources the owner row's `name`/`email` from the active workspace's `owner` field
   (already fetched via `trpc.workspaces.list`, reused from the existing `wsName` lookup) instead of
   the viewer's decoded ID token.
+- Removes the per-row initials-avatar circle from the member list — a fidelity gap against Pencil's
+  design (its shared table component's Name Cell is two stacked text nodes, name + email, with no
+  avatar), found during review. The now-unused `initialsOf` helper is removed with it.
 - No apiserver changes — the `workspaces.list` procedure already passes the Identity response
   through untouched; only the qcobro-facing type needed the upstream fix.
 - Adds a "List workspace members" requirement to the `workspaces` capability spec: this behavior
@@ -42,9 +45,9 @@ change — the data was already there).
 ## Impact
 
 - `mods/webapp/src/pages/Members.tsx` — owner row's name/email sourced from the workspace's `owner`
-  field instead of the decoded ID token.
+  field instead of the decoded ID token; avatar circle removed to match Pencil.
+- `e2e/member-actions.spec.ts` — new regression test.
 - Upstream dependency: `@fonoster/identity-client`'s `Workspace.owner` type fix
-  (fonoster/fonoster#878) must be published before this change is meaningful outside local
-  verification.
-- Pencil: the Members screen mock data already shows the owner row with a real name (verified) — no
-  design change needed.
+  (fonoster/fonoster#878), merged and published as `0.22.8`; qcobro's dependency bumped accordingly.
+- Pencil: the Members screen design already shows the owner row with a real name and no avatar — no
+  design change needed; the implementation was drifted from it in both respects.
