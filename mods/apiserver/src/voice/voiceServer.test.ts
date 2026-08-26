@@ -1,6 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { handlePrerecordedCall, readDtmfMenu, type PrerecordedCallVerbs } from "./voiceServer.js";
+import {
+  handlePrerecordedCall,
+  readDtmfMenu,
+  runPrerecordedCall,
+  type PrerecordedCallVerbs
+} from "./voiceServer.js";
 
 /** Fakes the verb surface `handlePrerecordedCall` drives, queuing gather() responses in
  * call order and recording every verb invocation for assertions. */
@@ -182,5 +187,57 @@ describe("handlePrerecordedCall", () => {
       "gather",
       "hangup"
     ]);
+  });
+});
+
+describe("runPrerecordedCall", () => {
+  it("clean completion: delegates to handlePrerecordedCall and reports elapsed answeredSeconds", async () => {
+    const { verbs } = makeVerbs([]);
+    let clock = 1_000;
+    const now = () => clock;
+
+    clock = 1_000;
+    const resultPromise = runPrerecordedCall("Su saldo es...", null, verbs, now);
+    clock = 4_500; // 3.5s elapsed by the time the (synchronous, in this fake) call resolves
+    const result = await resultPromise;
+
+    assert.deepEqual(result, {
+      camino: "ENGAGED",
+      resultado: undefined,
+      repeatCount: 0,
+      answeredSeconds: 4
+    });
+  });
+
+  it("early hangup mid-script (say() throws on the dead channel) still reports answered — not lost", async () => {
+    let clock = 1_000;
+    const now = () => clock;
+    const calls: string[] = [];
+    const verbs: PrerecordedCallVerbs = {
+      answer: async () => {
+        calls.push("answer");
+      },
+      say: async () => {
+        calls.push("say");
+        clock = 1_000 + 12_000; // caller listened 12s before hanging up
+        throw new Error("channel not found (hangup)");
+      },
+      hangup: async () => {
+        calls.push("hangup");
+      },
+      gather: async () => ({ digits: undefined })
+    };
+
+    // Must not reject: an early hangup is a real, answered call. Before this fix, the
+    // throw from say() propagated straight out of handlePrerecordedCall (and out of the
+    // request handler), so `onCompleted` was never invoked — the gestión was left at
+    // DISPATCHED and later swept into FAILED/PROVIDER_ERROR/duration 0 by
+    // voiceCompletionTimeoutSweep, indistinguishable from a call that never connected.
+    const result = await runPrerecordedCall("Su saldo es...", null, verbs, now);
+
+    assert.deepEqual(calls, ["answer", "say"]); // hangup() from handlePrerecordedCall never ran
+    assert.deepEqual(result, { repeatCount: 0, answeredSeconds: 12 });
+    assert.equal(result.camino, undefined);
+    assert.equal(result.resultado, undefined);
   });
 });
