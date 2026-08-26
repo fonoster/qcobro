@@ -4,6 +4,8 @@ import { SignUp } from "./pages/SignUp.js";
 import { Workspaces } from "./pages/Workspaces.js";
 import { VerifyContact } from "./pages/VerifyContact.js";
 import { AcceptInvitation } from "./pages/AcceptInvitation.js";
+import { ForgotPassword } from "./pages/ForgotPassword.js";
+import { ResetPassword } from "./pages/ResetPassword.js";
 import { Home } from "./pages/Home.js";
 import { Members } from "./pages/Members.js";
 import { WorkspaceSettings } from "./pages/WorkspaceSettings.js";
@@ -30,6 +32,8 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/accept-invite" element={<AcceptInvitation />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route
         element={
           <RequireAuth>
