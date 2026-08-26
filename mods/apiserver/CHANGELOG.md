@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.36.0](https://github.com/fonoster/qcobro/compare/v1.35.2...v1.36.0) (2026-08-26)
+
+### Features
+
+- **api-keys:** show createdAt and allow setting expiry when creating a key ([#136](https://github.com/fonoster/qcobro/issues/136)) ([611641d](https://github.com/fonoster/qcobro/commit/611641d763b6d34eab99eb7e6fed76ae4b3f9856)), closes [fonoster/fonoster#877](https://github.com/fonoster/fonoster/issues/877) [fonoster/fonoster#877](https://github.com/fonoster/fonoster/issues/877)
+
 ## [1.35.1](https://github.com/fonoster/qcobro/compare/v1.35.0...v1.35.1) (2026-08-25)
 
 ### Bug Fixes
