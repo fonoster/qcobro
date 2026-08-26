@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.38.1](https://github.com/fonoster/qcobro/compare/v1.38.0...v1.38.1) (2026-08-26)
+
+### Bug Fixes
+
+- **apiserver:** close voice completion race, stop losing early hangups ([#141](https://github.com/fonoster/qcobro/issues/141)) ([de05a49](https://github.com/fonoster/qcobro/commit/de05a49d8b0d3db6f4f005037eee7838a9891ad1))
+
 # [1.38.0](https://github.com/fonoster/qcobro/compare/v1.37.0...v1.38.0) (2026-08-26)
 
 ### Features
