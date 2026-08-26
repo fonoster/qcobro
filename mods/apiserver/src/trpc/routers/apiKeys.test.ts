@@ -84,13 +84,23 @@ describe("apiKeys router", () => {
     assert.deepEqual(calls.listApiKeys[0], ["ak_ws", "tkn"]);
   });
 
-  it("create forwards role/expiry and returns the secret once", async () => {
+  it("create converts expiresAt from ms to Identity's epoch-seconds wire format", async () => {
     const caller = appRouter.createCaller(adminCtx(identity));
     const future = Date.now() + 86_400_000;
     const res = await caller.apiKeys.create({ role: "WORKSPACE_ADMIN", expiresAt: future });
     assert.equal(res.accessKeySecret, "sk_secret");
     assert.equal(calls.createApiKey.length, 1);
-    assert.deepEqual(calls.createApiKey[0][0], { role: "WORKSPACE_ADMIN", expiresAt: future });
+    assert.deepEqual(calls.createApiKey[0][0], {
+      role: "WORKSPACE_ADMIN",
+      expiresAt: Math.floor(future / 1000)
+    });
+  });
+
+  it("create without an expiry forwards undefined", async () => {
+    const caller = appRouter.createCaller(adminCtx(identity));
+    const res = await caller.apiKeys.create({ role: "WORKSPACE_ADMIN" });
+    assert.equal(res.accessKeySecret, "sk_secret");
+    assert.deepEqual(calls.createApiKey[0][0], { role: "WORKSPACE_ADMIN", expiresAt: undefined });
   });
 
   it("create with invalid input rejects WITHOUT calling Identity", async () => {

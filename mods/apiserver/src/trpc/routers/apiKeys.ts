@@ -14,17 +14,20 @@ export const apiKeysRouter = router({
 
   // Create a key with a role and optional expiry; the response carries the
   // secret, which the client shows exactly once.
-  create: adminProcedure
-    .input(createApiKeySchema)
-    .mutation(({ ctx, input }) =>
-      identityCall(() =>
-        ctx.identity.createApiKey(
-          { role: input.role, expiresAt: input.expiresAt },
-          ctx.workspace.accessKeyId,
-          ctx.token
-        )
+  create: adminProcedure.input(createApiKeySchema).mutation(({ ctx, input }) =>
+    identityCall(() =>
+      ctx.identity.createApiKey(
+        {
+          role: input.role,
+          // Identity's expiresAt wire field is int32 epoch seconds; the
+          // schema validates in epoch ms like the rest of the app.
+          expiresAt: input.expiresAt ? Math.floor(input.expiresAt / 1000) : undefined
+        },
+        ctx.workspace.accessKeyId,
+        ctx.token
       )
-    ),
+    )
+  ),
 
   // Rotate a key's secret in place (same ref/role); the new secret is shown once.
   regenerate: adminProcedure
