@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.37.0](https://github.com/fonoster/qcobro/compare/v1.36.2...v1.37.0) (2026-08-26)
+
+### Features
+
+- **webapp:** implement forgot/reset password screens ([#139](https://github.com/fonoster/qcobro/issues/139)) ([457d6d3](https://github.com/fonoster/qcobro/commit/457d6d3cd432f933208aa58f626fba45c6742119))
+
 ## [1.36.2](https://github.com/fonoster/qcobro/compare/v1.36.1...v1.36.2) (2026-08-26)
 
 ### Bug Fixes
