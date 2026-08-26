@@ -21,7 +21,7 @@ type Row = {
 };
 
 export function ApiKeys() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { workspace, accessToken } = useAuth();
   const utils = trpc.useUtils();
 
@@ -40,8 +40,9 @@ export function ApiKeys() {
   const regenerate = trpc.apiKeys.regenerate.useMutation();
   const remove = trpc.apiKeys.delete.useMutation();
 
-  // Returns a localized date, or null when the value is absent or implausible.
-  // Identity returns these timestamps in epoch SECONDS (widen to ms).
+  // Returns a localized "12 ene. 2026"-style date, or null when the value is
+  // absent or implausible. Identity returns these timestamps in epoch SECONDS
+  // (widen to ms).
   function fmtDate(v: number | string | null | undefined): string | null {
     if (v === null || v === undefined || v === "") return null;
     let value: number | string = v;
@@ -49,7 +50,11 @@ export function ApiKeys() {
     if (typeof value === "number" && value < 1e12) value = value * 1000;
     const d = new Date(value);
     if (Number.isNaN(d.getTime()) || d.getFullYear() < 2000) return null;
-    return d.toLocaleDateString();
+    return new Intl.DateTimeFormat(language, {
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    }).format(d);
   }
 
   async function onCreate(input: CreateApiKeyInput) {
@@ -121,11 +126,15 @@ export function ApiKeys() {
             {
               key: "createdAt",
               header: t("apiKeys.col.created"),
+              align: "right",
+              className: "text-[13px] text-slate-500",
               render: (r) => fmtDate(r.createdAt) ?? "—"
             },
             {
               key: "expiresAt",
               header: t("apiKeys.col.expires"),
+              align: "right",
+              className: "text-[13px] text-slate-500",
               render: (r) => fmtDate(r.expiresAt) ?? t("apiKeys.noExpiry")
             },
             {
