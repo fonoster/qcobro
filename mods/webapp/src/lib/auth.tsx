@@ -85,12 +85,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const setWorkspace = useCallback((accessKeyId: string | null) => {
-    if (accessKeyId) {
-      localStorage.setItem(WORKSPACE_KEY, accessKeyId);
-    } else {
-      localStorage.removeItem(WORKSPACE_KEY);
-    }
-    setWorkspaceState(accessKeyId);
+    setWorkspaceState((prev) => {
+      if (prev === accessKeyId) return prev;
+      if (accessKeyId) {
+        localStorage.setItem(WORKSPACE_KEY, accessKeyId);
+      } else {
+        localStorage.removeItem(WORKSPACE_KEY);
+      }
+      // The active workspace is threaded into every request as a header (see the
+      // httpBatchLink/wsClient headers()/connectionParams() in trpc.ts), never as part of a
+      // query's key. React Query has no way to know the active workspace changed, so an
+      // already-mounted screen (e.g. Home, Portfolios) would otherwise keep rendering
+      // whatever the previous workspace's cached queries resolved to. Reset every query so
+      // mounted screens drop the old workspace's data immediately and refetch under the new
+      // one, mirroring how logout() below clears the cache on session end.
+      queryClient.resetQueries();
+      return accessKeyId;
+    });
   }, []);
 
   const logout = useCallback(() => {
