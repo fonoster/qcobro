@@ -144,6 +144,10 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         aiResult: string | null;
         aiNextStep: string | null;
         channelData: Record<string, unknown> | null;
+        // Resolved server-side from the deployment's Fonoster recording base URL and the
+        // provider call ref, falling back to whatever URL the provider reported at
+        // completion. `null` when neither is available.
+        recordingUrl: string | null;
         portfolioAccount: { fullName: string; externalId: string; phone: string | null };
         campaign: { name: string } | null;
         paymentPromises: {
