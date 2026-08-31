@@ -51,7 +51,7 @@
 
 ## 6. Sync and release
 
-- [ ] 6.1 Run `/opsx:sync` to fold the delta into `openspec/specs/prerecorded-audio/spec.md`
+- [x] 6.1 Run `/opsx:sync` to fold the delta into `openspec/specs/prerecorded-audio/spec.md`
 - [ ] 6.2 Note in the release description that pre-recorded `DELIVERED` counts will fall, with
       the "answered but nothing played" count as the explanation — this is a correction, not a
       regression
