@@ -111,6 +111,11 @@ export class FonosterOutboundCallClient implements OutboundCallClient {
           from: input.from,
           to: input.to,
           appRef: input.appRef,
+          // Ring timeout, in seconds — unrelated to CALL_TIMEOUT_MS above, which caps
+          // this dispatch RPC. Left unset, Fonoster applies its own 30s default, which
+          // in practice leaves only ~21s of real ringing once SIP setup is paid for and
+          // cancels calls a moment before slower recipients pick up.
+          timeout: this.settings.callTimeoutSeconds,
           metadata: input.metadata
         }),
         "createCall"

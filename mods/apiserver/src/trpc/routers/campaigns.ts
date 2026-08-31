@@ -12,9 +12,11 @@ import {
   createContactLogSchema,
   updatePaymentPromiseSchema,
   followUpPaymentPromiseSchema,
-  generateInsightInputSchema
+  generateInsightInputSchema,
+  recordingUrlForCall
 } from "@qcobro/common";
 import { router, workspaceProcedure } from "../trpc.js";
+import { config } from "../../config.js";
 import { createCreateCampaign } from "../../functions/campaigns/createCampaign.js";
 import { createUpdateCampaign } from "../../functions/campaigns/updateCampaign.js";
 import { createUpdateCampaignStatus } from "../../functions/campaigns/updateCampaignStatus.js";
@@ -80,8 +82,8 @@ const contactLogRouter = router({
       return { items, total };
     }),
 
-  get: workspaceProcedure.input(z.object({ id: z.string() })).query(({ input, ctx }) =>
-    ctx.prisma.accountContactLog.findFirstOrThrow({
+  get: workspaceProcedure.input(z.object({ id: z.string() })).query(async ({ input, ctx }) => {
+    const gestion = await ctx.prisma.accountContactLog.findFirstOrThrow({
       where: {
         id: input.id,
         portfolioAccount: { portfolio: { workspaceRef: ctx.workspace.accessKeyId } }
@@ -91,8 +93,19 @@ const contactLogRouter = router({
         campaign: { select: { name: true, agentTemplateId: true } },
         paymentPromises: { orderBy: { dueDate: "asc" } }
       }
-    })
-  ),
+    });
+
+    // Recordings live in Fonoster, so the URL is derived from the deployment base URL
+    // and the provider call ref rather than stored per row — changing the base fixes
+    // every historical gestión at once. Falls back to whatever URL the provider reported
+    // at completion time when no base URL is configured.
+    const channelData = (gestion.channelData ?? {}) as Record<string, unknown>;
+    const recordingUrl =
+      recordingUrlForCall(gestion.providerRef, config.fonoster?.recordingBaseUrl) ??
+      (typeof channelData.recordingUrl === "string" ? channelData.recordingUrl : undefined);
+
+    return { ...gestion, recordingUrl: recordingUrl ?? null };
+  }),
 
   create: workspaceProcedure
     .input(createContactLogSchema)

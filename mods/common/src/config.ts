@@ -126,11 +126,59 @@ export const fonosterConfigSchema = z
      * workspaces). A conservative value bounds in-flight concurrency given the pool
      * size and typical call duration. Reserve `0` to pause voice dispatch.
      */
-    maxCallsPerMinute: z.number().int().nonnegative().default(6)
+    maxCallsPerMinute: z.number().int().nonnegative().default(6),
+    /**
+     * How long Fonoster lets an outbound call ring before giving up, in seconds.
+     *
+     * Fonoster's own default is 30s, and that is not 30 seconds of ringing: SIP setup
+     * (gateway auth, the carrier's own handshake, PSTN ringback) consumes several
+     * seconds before the handset rings at all, leaving barely 21s of real ring time.
+     * Recipients who answer at a normal 25–26 seconds were being cancelled a moment
+     * before they picked up — and because the cancel loses the race with the carrier's
+     * answer, they answered into a dead line. Anyone slower than about 21 seconds was
+     * being filtered out of every campaign, invisibly, since the result is
+     * indistinguishable from a genuine no-answer.
+     *
+     * Fonoster's validator caps this at 120.
+     */
+    callTimeoutSeconds: z.number().int().positive().max(120).default(60),
+    /**
+     * Where call recordings are served from, e.g.
+     * `https://app.fonoster.com/api/recordings`. Recordings live in Fonoster, not here,
+     * so the console links to them rather than storing copies; the gestión's provider
+     * call ref is appended to this base (see {@link recordingUrlForCall}).
+     *
+     * Resolved on read rather than stored per row, so changing the deployment's URL
+     * fixes every historical gestión at once instead of only the ones recorded
+     * afterwards. Omit to fall back to whatever URL the provider reported at completion
+     * time.
+     */
+    recordingBaseUrl: z.string().url().optional()
   })
   .optional();
 
 export type FonosterConfig = z.infer<typeof fonosterConfigSchema>;
+
+/** Container format Fonoster records calls in; the ref alone has no extension. */
+const RECORDING_FILE_EXTENSION = ".wav";
+
+/**
+ * Resolves a gestión's recording URL by appending its provider call ref to the
+ * deployment's recording base URL. Returns `undefined` when either is missing, so
+ * callers fall back to whatever URL the provider reported.
+ *
+ * The extension is fixed here rather than configured: Fonoster records to wav, and a
+ * base URL plus a ref cannot express a suffix on its own. If that ever changes it is a
+ * one-line change here rather than a config edit.
+ */
+export function recordingUrlForCall(
+  providerRef: string | null | undefined,
+  baseUrl: string | null | undefined
+): string | undefined {
+  if (!providerRef || !baseUrl) return undefined;
+  const base = baseUrl.replace(/\/+$/, "");
+  return `${base}/${encodeURIComponent(providerRef)}${RECORDING_FILE_EXTENSION}`;
+}
 
 /**
  * Derives the TTS product ref for a voice from its provider (e.g. an `elevenlabs`
@@ -274,51 +322,54 @@ export type AiConfig = z.infer<typeof aiConfigSchema>;
  * apiKey falls back to `ELEVENLABS_API_KEY`, and if no key resolves the player is simply
  * unavailable. Voices come from `fonoster.voices`.
  */
-const ttsConfigObjectSchema = z
-  .object({
-    provider: z.literal("elevenlabs").default("elevenlabs"),
-    apiKey: z.string().optional(),
-    model: z.string().default("eleven_multilingual_v2"),
-    /**
-     * Maximum accepted length (characters) for the `text` query parameter on
-     * `/api/voice/tts`; over-long requests are rejected with 400 before any provider call.
-     * This bounds the cost and cached size of any ONE synthesis, not how many can be
-     * requested — the endpoint is unauthenticated and does not dedupe in flight, so a
-     * caller sending distinct strings can still drive an unbounded number of billed calls.
-     * Auth or rate limiting on the route is the control for that; this is not it.
-     *
-     * Kept equal to `PRERECORDED_SCRIPT_MAX_LENGTH` so a script the console accepts is
-     * always one the player can speak.
-     */
-    maxTextLength: z.number().int().positive().default(PRERECORDED_SCRIPT_MAX_LENGTH),
-    /**
-     * Bounds for the in-memory cache of synthesized audio (keyed by `voiceId:text`).
-     * Both limits are enforced together as an LRU: entry count alone isn't enough
-     * because a synthesized MP3 can run from tens of KB to a few MB depending on
-     * script length, so a handful of long scripts could exhaust memory well under any
-     * reasonable entry cap.
-     */
-    cache: z
-      .object({
-        /**
-         * Max distinct `voiceId:text` entries retained at once. Sized for a working
-         * set of concurrently-referenced per-account scripts, not the full account
-         * base — least-recently-used entries are evicted first.
-         */
-        maxEntries: z.number().int().positive().default(100),
-        /**
-         * Max total bytes of cached audio. This runs alongside Postgres on a 2 vCPU /
-         * 2 GB VM with no container memory limit, so the cache needs a hard ceiling
-         * rather than growing with account count; 25 MiB keeps resident TTS audio to a
-         * small, fixed slice of that budget while still holding a realistic working
-         * set of scripts.
-         */
-        maxBytes: z.number().int().positive().default(25 * 1024 * 1024)
-      })
-      // `prefault` runs the value through this schema, so the field defaults above stay the
-      // single source of truth — restating them here would drift the moment one changed.
-      .prefault({})
-  });
+const ttsConfigObjectSchema = z.object({
+  provider: z.literal("elevenlabs").default("elevenlabs"),
+  apiKey: z.string().optional(),
+  model: z.string().default("eleven_multilingual_v2"),
+  /**
+   * Maximum accepted length (characters) for the `text` query parameter on
+   * `/api/voice/tts`; over-long requests are rejected with 400 before any provider call.
+   * This bounds the cost and cached size of any ONE synthesis, not how many can be
+   * requested — the endpoint is unauthenticated and does not dedupe in flight, so a
+   * caller sending distinct strings can still drive an unbounded number of billed calls.
+   * Auth or rate limiting on the route is the control for that; this is not it.
+   *
+   * Kept equal to `PRERECORDED_SCRIPT_MAX_LENGTH` so a script the console accepts is
+   * always one the player can speak.
+   */
+  maxTextLength: z.number().int().positive().default(PRERECORDED_SCRIPT_MAX_LENGTH),
+  /**
+   * Bounds for the in-memory cache of synthesized audio (keyed by `voiceId:text`).
+   * Both limits are enforced together as an LRU: entry count alone isn't enough
+   * because a synthesized MP3 can run from tens of KB to a few MB depending on
+   * script length, so a handful of long scripts could exhaust memory well under any
+   * reasonable entry cap.
+   */
+  cache: z
+    .object({
+      /**
+       * Max distinct `voiceId:text` entries retained at once. Sized for a working
+       * set of concurrently-referenced per-account scripts, not the full account
+       * base — least-recently-used entries are evicted first.
+       */
+      maxEntries: z.number().int().positive().default(100),
+      /**
+       * Max total bytes of cached audio. This runs alongside Postgres on a 2 vCPU /
+       * 2 GB VM with no container memory limit, so the cache needs a hard ceiling
+       * rather than growing with account count; 25 MiB keeps resident TTS audio to a
+       * small, fixed slice of that budget while still holding a realistic working
+       * set of scripts.
+       */
+      maxBytes: z
+        .number()
+        .int()
+        .positive()
+        .default(25 * 1024 * 1024)
+    })
+    // `prefault` runs the value through this schema, so the field defaults above stay the
+    // single source of truth — restating them here would drift the moment one changed.
+    .prefault({})
+});
 
 export const ttsConfigSchema = ttsConfigObjectSchema.optional();
 
