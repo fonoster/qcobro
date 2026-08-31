@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.39.0](https://github.com/fonoster/qcobro/compare/v1.38.2...v1.39.0) (2026-08-31)
+
+### Features
+
+- **voice:** link recordings from Fonoster and raise the call timeout to 60s ([#145](https://github.com/fonoster/qcobro/issues/145)) ([d77df5a](https://github.com/fonoster/qcobro/commit/d77df5a61c3bfb69b4e45bdf3d39d1d1061bf08f))
+
 ## [1.38.2](https://github.com/fonoster/qcobro/compare/v1.38.1...v1.38.2) (2026-08-31)
 
 **Note:** Version bump only for package @qcobro/webapp
