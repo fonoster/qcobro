@@ -71,3 +71,42 @@ remain eligible for a further attempt under the campaign's retry rules.
 - **WHEN** a pre-recorded call completes
 - **THEN** the result is recorded in-process by the co-located VoiceServer
 - **AND** no external HTTP endpoint is required or exposed for pre-recorded completion
+
+### Requirement: Pre-recorded DTMF menu
+
+The VoiceServer SHALL offer a DTMF menu after the script when a `VOICE_PRERECORDED` template
+has `repeatDigit` and/or `optOutDigit` configured (see `agent-templates`): it plays the script,
+then plays whichever of `repeatMessage`/`optOutMessage` are set, then gathers a single DTMF
+digit with a 5-second timeout (`response.gather({ source: DTMF, maxDigits: 1, timeout: 5 })`)
+before hanging up. A template with neither digit configured SHALL NOT gather at all — the call
+flow, cost, and billed duration are unchanged from before this capability.
+
+Digit handling:
+
+- Pressing `repeatDigit` (while the per-call replay count is below `maxRepeats`, default 2)
+  replays the script, marks the call as having engaged (see below), and gathers again
+  afterward.
+- Pressing `repeatDigit` at or beyond `maxRepeats` hangs up, identically to an unrecognized
+  digit.
+- Pressing `optOutDigit` plays `optOutConfirmationMessage` (when configured — required
+  whenever `optOutDigit` is set, see `agent-templates`), then ends the call (no further
+  gather), marks the call as having engaged, and marks the completion so the gestión records
+  `resultado: OPT_OUT` (see "Pre-recorded call completion is recorded in-process").
+- Any other digit, or the gather timing out with no digit, hangs up — identical to the behavior
+  for a template with no menu. The script has still played to the end, so the gestión records
+  `camino: ENGAGED`; no `resultado` is recorded, because the caller chose nothing.
+
+Reaching the menu at all means the script played in full, so `camino` is `ENGAGED` for every
+call that gets this far, whether or not a digit was pressed. `resultado: OPT_OUT` remains the
+one axis gated on a specific press.
+
+The platform SHALL NOT synthesize, translate, or number the spoken options — `repeatMessage`
+and `optOutMessage` are the complete, operator-authored spoken text for each option.
+
+#### Scenario: Unrecognized digit or timeout hangs up
+
+- **WHEN** a menu is configured and the caller presses a digit that matches neither configured
+  digit, or the 5-second gather times out with no press
+- **THEN** the call hangs up
+- **AND** the correlated gestión's `camino` is `ENGAGED`, because the script played to the end
+- **AND** no `resultado` is recorded
