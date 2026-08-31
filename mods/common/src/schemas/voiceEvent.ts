@@ -27,14 +27,28 @@ export type VoiceConversationEvent = z.infer<typeof voiceConversationEventSchema
 
 /**
  * In-process completion signal for a PRE-RECORDED call, reported by the co-located
- * VoiceServer (not an HTTP callback like Voz IA). `answered` distinguishes a connected
- * call from one that never picked up; `answeredSeconds` is the answer→hangup duration
- * (0 when unanswered). `scriptDurationSeconds` is the nominal length of the synthesized
- * clip, stored so a future report can compare it against the answered duration.
+ * VoiceServer (not an HTTP callback like Voz IA).
+ *
+ * `answered` and `scriptCompleted` are two different facts and both are needed:
+ * `answered` says the callee picked up, `scriptCompleted` says the message actually
+ * played out to the end. A call can be answered and play nothing — a network element
+ * that answers and clears immediately, or a session that dies mid-verb — and only the
+ * pair distinguishes that from a real delivery. `entrega` is DELIVERED only when both
+ * hold; see `recordPrerecordedOutcome`.
+ *
+ * `scriptCompleted` is never a claim that a human listened, only that we played it.
+ * It defaults to `false` so a caller that omits it under-claims rather than
+ * over-claims delivery.
+ *
+ * `answeredSeconds` is the answer→hangup duration (0 when unanswered), recorded even
+ * when the script did not play — the time on the line is real either way.
+ * `scriptDurationSeconds` is the nominal length of the synthesized clip, stored so a
+ * future report can compare it against the answered duration.
  */
 export const prerecordedCompletionSchema = z.object({
   providerRef: z.string().min(1),
   answered: z.boolean(),
+  scriptCompleted: z.boolean().default(false),
   answeredSeconds: z.number().int().nonnegative(),
   scriptDurationSeconds: z.number().int().nonnegative().optional(),
   at: z.string().min(1)

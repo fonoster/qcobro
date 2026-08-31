@@ -24,11 +24,13 @@ export interface PrerecordedCallCompletion extends PrerecordedCompletionInput {
 
 export interface VoiceServerDeps {
   /**
-   * In-process completion sink, invoked when a pre-recorded call finishes playing.
-   * Best-effort: a throw here MUST NOT break the call. The embedded verb handler only
-   * runs when the call is ANSWERED, so this reports `answered: true`. A call that never
-   * reaches this handler at all — never answered, or never even routed to this app — is
-   * instead recovered by call-status tracking started at dispatch time (see
+   * In-process completion sink, invoked when a pre-recorded call ends, whether or not
+   * the message played. Best-effort: a throw here MUST NOT break the call. The embedded
+   * verb handler only runs when the call is ANSWERED, so this always reports
+   * `answered: true`; whether the message actually played is reported separately as
+   * `scriptCompleted`, and only the pair means delivery. A call that never reaches this
+   * handler at all — never answered, or never even routed to this app — is instead
+   * recovered by call-status tracking started at dispatch time (see
    * `startVoiceCallStatusTracking`, wired at the dispatch sites, not here).
    */
   onCompleted?: (completion: PrerecordedCallCompletion) => void;
@@ -150,16 +152,22 @@ export async function handlePrerecordedCall(
 }
 
 /**
- * Runs `handlePrerecordedCall` to completion, but never lets an early hangup suppress
- * the completion signal. The callee having picked up at all is real, billable delivery
- * (`onCompleted` reports `answered: true` unconditionally — see its doc comment); hanging
- * up mid-`say`/`gather` throws on the dead channel and previously propagated straight out
- * of the request handler, skipping `onCompleted` entirely. That left the gestión stuck at
- * `DISPATCHED` until `voiceCompletionTimeoutSweep` swept it — 10 minutes later — into
- * `FAILED`/`PROVIDER_ERROR`/duration 0, indistinguishable from a call that never
- * connected at all. Catching here instead reports the real elapsed `answeredSeconds` with
- * no `camino`/`resultado` (the caller didn't necessarily hear the whole script, so this
- * doesn't claim `ENGAGED` the way a clean completion does).
+ * Runs `handlePrerecordedCall` to completion, but never lets a failed verb suppress the
+ * completion signal. Hanging up mid-`say`/`gather` — or any verb rejecting because the
+ * session died under it — used to propagate straight out of the request handler, skipping
+ * `onCompleted` entirely. That left the gestión stuck at `DISPATCHED` until
+ * `voiceCompletionTimeoutSweep` swept it 10 minutes later into `FAILED`/`PROVIDER_ERROR`,
+ * indistinguishable from a call that never connected.
+ *
+ * Catching here reports the outcome immediately, and reports it honestly:
+ * `scriptCompleted` is `true` only on a clean return, so a call that connected but played
+ * nothing is not recorded as a delivery. Picking up is not the same as being told
+ * anything — see `recordPrerecordedOutcome` for how the pair maps to `entrega`. The catch
+ * path also records no `camino`/`resultado`, since the caller did not necessarily hear the
+ * script.
+ *
+ * `answeredSeconds` is the real elapsed time either way. A call stranded in silence for
+ * two minutes was two minutes long; it just was not a delivery.
  */
 export async function runPrerecordedCall(
   message: string,
@@ -171,6 +179,7 @@ export async function runPrerecordedCall(
   resultado?: Resultado;
   repeatCount: number;
   answeredSeconds: number;
+  scriptCompleted: boolean;
 }> {
   const answeredAt = now();
   try {
@@ -179,7 +188,8 @@ export async function runPrerecordedCall(
       camino,
       resultado,
       repeatCount,
-      answeredSeconds: Math.max(0, Math.round((now() - answeredAt) / 1000))
+      answeredSeconds: Math.max(0, Math.round((now() - answeredAt) / 1000)),
+      scriptCompleted: true
     };
   } catch (err) {
     logger.warn(
@@ -187,7 +197,8 @@ export async function runPrerecordedCall(
     );
     return {
       repeatCount: 0,
-      answeredSeconds: Math.max(0, Math.round((now() - answeredAt) / 1000))
+      answeredSeconds: Math.max(0, Math.round((now() - answeredAt) / 1000)),
+      scriptCompleted: false
     };
   }
 }
@@ -214,19 +225,18 @@ export function startVoiceServer(deps: VoiceServerDeps = {}): void {
         message
       );
 
-      const { camino, resultado, repeatCount, answeredSeconds } = await runPrerecordedCall(
-        message,
-        menu,
-        res
-      );
+      const { camino, resultado, repeatCount, answeredSeconds, scriptCompleted } =
+        await runPrerecordedCall(message, menu, res);
 
-      // The call was answered (this handler only runs on pickup): report the
-      // answered duration in-process so the gestión records DELIVERED + duration
-      // and usage settles. Never let a completion failure break the call.
+      // The call was answered — this handler only runs on pickup — but that alone is
+      // not a delivery, so `scriptCompleted` rides along to say whether the message
+      // actually played. Report in-process so the gestión finalizes and usage settles.
+      // Never let a completion failure break the call.
       try {
         deps.onCompleted?.({
           providerRef: req.callRef,
           answered: true,
+          scriptCompleted,
           answeredSeconds,
           at: new Date().toISOString(),
           ...(camino ? { camino } : {}),
