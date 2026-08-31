@@ -158,7 +158,9 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
   const messageBody = g?.channelData?.messageBody as string | undefined;
   const fromEmail = g?.channelData?.from as string | undefined;
   const subject = g?.channelData?.subject as string | undefined;
-  const recordingUrl = g?.channelData?.recordingUrl as string | undefined;
+  // Resolved server-side from the deployment's Fonoster recording template and the
+  // provider call ref, falling back to whatever URL the provider reported at completion.
+  const recordingUrl = g?.recordingUrl ?? undefined;
   const transcript = (g?.channelData?.transcript as TranscriptLine[] | undefined) ?? [];
   const emailThread =
     (g?.channelData?.emailThread as { messages: EmailThreadMessage[] } | undefined) ?? null;

@@ -47,7 +47,9 @@
       }
     ],
     "numbers": ["50670000000"],
-    "maxCallsPerMinute": 6
+    "maxCallsPerMinute": 6,
+    "callTimeoutSeconds": 60,
+    "recordingBaseUrl": "https://app.fonoster.com/api/recordings"
   },
   "twilio": {
     "accountSid": "CHANGE_ME",
