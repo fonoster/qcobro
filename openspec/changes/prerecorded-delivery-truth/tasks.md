@@ -1,52 +1,52 @@
 ## 1. Contract
 
-- [ ] 1.1 Add `scriptCompleted: boolean` to `prerecordedCompletionSchema` in
+- [x] 1.1 Add `scriptCompleted: boolean` to `prerecordedCompletionSchema` in
       `mods/common/src/schemas/voiceEvent.ts`, documenting that it means QCobro played the
       message out in full — not that anyone listened
-- [ ] 1.2 Update the schema's doc comment so the distinction between `answered` (the callee
+- [x] 1.2 Update the schema's doc comment so the distinction between `answered` (the callee
       picked up) and `scriptCompleted` (the message played) is explicit for future readers
 
 ## 2. Report script completion from the VoiceServer
 
-- [ ] 2.1 Have `runPrerecordedCall` in `mods/apiserver/src/voice/voiceServer.ts` return whether
+- [x] 2.1 Have `runPrerecordedCall` in `mods/apiserver/src/voice/voiceServer.ts` return whether
       the verb chain completed — `true` on a clean return from `handlePrerecordedCall`, `false`
       on the catch path
-- [ ] 2.2 Pass `scriptCompleted` through the `onCompleted` call in `startVoiceServer`, alongside
+- [x] 2.2 Pass `scriptCompleted` through the `onCompleted` call in `startVoiceServer`, alongside
       the existing `answered`/`answeredSeconds`
-- [ ] 2.3 Update the `runPrerecordedCall` doc comment, which currently states that an early
+- [x] 2.3 Update the `runPrerecordedCall` doc comment, which currently states that an early
       hangup still reports delivery — that is exactly what this change reverses
 
 ## 3. Classify the outcome
 
-- [ ] 3.1 In `mods/apiserver/src/functions/voice/recordPrerecordedOutcome.ts`, change the
+- [x] 3.1 In `mods/apiserver/src/functions/voice/recordPrerecordedOutcome.ts`, change the
       `entrega` mapping from `input.answered` to `input.answered && input.scriptCompleted`
-- [ ] 3.2 Default `deliveryReason` to `UNREACHABLE` when the call was answered but the script did
+- [x] 3.2 Default `deliveryReason` to `UNREACHABLE` when the call was answered but the script did
       not play, leaving the existing `NO_ANSWER`/`PROVIDER_ERROR` paths untouched
-- [ ] 3.3 Keep `durationSeconds` as the real answered duration on the failed-playback path — the
+- [x] 3.3 Keep `durationSeconds` as the real answered duration on the failed-playback path — the
       time on the line is real even when nothing was heard
-- [ ] 3.4 Confirm `voiceCompletionTimeoutSweep` still compiles and behaves unchanged, since it
+- [x] 3.4 Confirm `voiceCompletionTimeoutSweep` still compiles and behaves unchanged, since it
       reports `answered: false` and never sets `scriptCompleted`
 
 ## 4. Tests
 
-- [ ] 4.1 `recordPrerecordedOutcome.test.ts`: answered + script completed → `DELIVERED`, real
+- [x] 4.1 `recordPrerecordedOutcome.test.ts`: answered + script completed → `DELIVERED`, real
       duration, `camino: ENGAGED`
-- [ ] 4.2 `recordPrerecordedOutcome.test.ts`: answered + script NOT completed → `FAILED` /
+- [x] 4.2 `recordPrerecordedOutcome.test.ts`: answered + script NOT completed → `FAILED` /
       `UNREACHABLE`, real duration preserved, `camino`/`resultado` null
-- [ ] 4.3 `recordPrerecordedOutcome.test.ts`: unanswered → `FAILED` / `NO_ANSWER` unchanged
-- [ ] 4.4 `recordPrerecordedOutcome.test.ts`: idempotence still holds — a second completion does
+- [x] 4.3 `recordPrerecordedOutcome.test.ts`: unanswered → `FAILED` / `NO_ANSWER` unchanged
+- [x] 4.4 `recordPrerecordedOutcome.test.ts`: idempotence still holds — a second completion does
       not advance `entrega` or overwrite `camino`/`resultado`
-- [ ] 4.5 `voiceServer.test.ts`: a clean run reports `scriptCompleted: true`; a verb that throws
+- [x] 4.5 `voiceServer.test.ts`: a clean run reports `scriptCompleted: true`; a verb that throws
       mid-chain reports `scriptCompleted: false` with the real elapsed duration
-- [ ] 4.6 Verify the two incident shapes end to end: a ~0.6s answer that played nothing, and a
+- [x] 4.6 Verify the two incident shapes end to end: a ~0.6s answer that played nothing, and a
       call stranded in silence for 110s, both finalize `FAILED`/`UNREACHABLE` rather than
       `DELIVERED`
 
 ## 5. Verify the console needs no change
 
-- [ ] 5.1 Confirm `Fallido · Inalcanzable` renders correctly through `entregaLabel` in
+- [x] 5.1 Confirm `Fallido · Inalcanzable` renders correctly through `entregaLabel` in
       `mods/webapp/src/lib/contactAxes.ts` with the existing i18n keys
-- [ ] 5.2 Confirm no hardcoded assumption that a voice gestión with a non-zero
+- [x] 5.2 Confirm no hardcoded assumption that a voice gestión with a non-zero
       `durationSeconds` is `DELIVERED`
 
 ## 6. Sync and release

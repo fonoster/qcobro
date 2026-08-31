@@ -66,9 +66,11 @@ function makeClient(
   return { client, cap, getRow: () => row };
 }
 
+/** A normal successful call: picked up AND the message played out to the end. */
 const ANSWERED = {
   providerRef: "call-abc",
   answered: true,
+  scriptCompleted: true,
   answeredSeconds: 22,
   scriptDurationSeconds: 30,
   at: "2026-07-12T10:00:00.000Z"
@@ -122,6 +124,81 @@ describe("recordPrerecordedOutcome", () => {
     assert.equal(cap.updateMany?.data.entrega, "FAILED");
     assert.equal(cap.updateMany?.data.deliveryReason, "NO_ANSWER");
     assert.equal(cap.updateMany?.data.durationSeconds, 0);
+  });
+
+  it("answered but the script never played → FAILED/UNREACHABLE, keeping the real duration", async () => {
+    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+
+    const result = await createRecordPrerecordedOutcome(client as never)({
+      providerRef: "call-abc",
+      answered: true,
+      scriptCompleted: false,
+      answeredSeconds: 30,
+      at: "2026-07-12T10:00:00.000Z"
+    });
+
+    assert.deepEqual(result, {
+      matched: true,
+      id: "g-1",
+      entrega: "FAILED",
+      deliveryReason: "UNREACHABLE",
+      camino: null,
+      resultado: null
+    });
+    // The line was open for 30 real seconds even though nothing was heard.
+    assert.equal(cap.updateMany?.data.durationSeconds, 30);
+  });
+
+  /**
+   * The two shapes seen on 2026-08-30. Both picked up; neither heard anything. Reporting
+   * either as DELIVERED tells an operator the account holder was contacted, and the second
+   * would read as the longest successful contact of the day.
+   */
+  it("incident: a sub-second false answer that played nothing is not a delivery", async () => {
+    const { client } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+
+    const result = await createRecordPrerecordedOutcome(client as never)({
+      providerRef: "call-abc",
+      answered: true,
+      scriptCompleted: false,
+      answeredSeconds: 1,
+      at: "2026-08-30T18:08:56.000Z"
+    });
+
+    assert.equal(result.matched && result.entrega, "FAILED");
+    assert.equal(result.matched && result.deliveryReason, "UNREACHABLE");
+  });
+
+  it("incident: 110 seconds of silence is not a delivery", async () => {
+    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+
+    const result = await createRecordPrerecordedOutcome(client as never)({
+      providerRef: "call-abc",
+      answered: true,
+      scriptCompleted: false,
+      answeredSeconds: 110,
+      at: "2026-08-30T18:11:00.000Z"
+    });
+
+    assert.equal(result.matched && result.entrega, "FAILED");
+    assert.equal(result.matched && result.deliveryReason, "UNREACHABLE");
+    assert.equal(result.matched && result.camino, null);
+    assert.equal(cap.updateMany?.data.durationSeconds, 110);
+  });
+
+  it("an explicit deliveryReason still wins over the answered-but-silent default", async () => {
+    const { client } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+
+    const result = await createRecordPrerecordedOutcome(client as never)({
+      providerRef: "call-abc",
+      answered: true,
+      scriptCompleted: false,
+      answeredSeconds: 4,
+      deliveryReason: "PROVIDER_ERROR",
+      at: "2026-07-12T10:00:00.000Z"
+    });
+
+    assert.equal(result.matched && result.deliveryReason, "PROVIDER_ERROR");
   });
 
   /** No DTMF menu configured (the common case): neither axis ends up set. */

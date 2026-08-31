@@ -205,7 +205,8 @@ describe("runPrerecordedCall", () => {
       camino: "ENGAGED",
       resultado: undefined,
       repeatCount: 0,
-      answeredSeconds: 4
+      answeredSeconds: 4,
+      scriptCompleted: true
     });
   });
 
@@ -228,16 +229,44 @@ describe("runPrerecordedCall", () => {
       gather: async () => ({ digits: undefined })
     };
 
-    // Must not reject: an early hangup is a real, answered call. Before this fix, the
-    // throw from say() propagated straight out of handlePrerecordedCall (and out of the
-    // request handler), so `onCompleted` was never invoked — the gestión was left at
-    // DISPATCHED and later swept into FAILED/PROVIDER_ERROR/duration 0 by
-    // voiceCompletionTimeoutSweep, indistinguishable from a call that never connected.
+    // Must not reject: the completion signal has to reach onCompleted either way. Before
+    // this was caught, the throw from say() propagated straight out of
+    // handlePrerecordedCall (and out of the request handler), so `onCompleted` was never
+    // invoked — the gestión was left at DISPATCHED and later swept into
+    // FAILED/PROVIDER_ERROR/duration 0, indistinguishable from a call that never connected.
     const result = await runPrerecordedCall("Su saldo es...", null, verbs, now);
 
     assert.deepEqual(calls, ["answer", "say"]); // hangup() from handlePrerecordedCall never ran
-    assert.deepEqual(result, { repeatCount: 0, answeredSeconds: 12 });
+    // Reported, but NOT as a delivery: the callee picked up and heard nothing, so the
+    // elapsed time is real while scriptCompleted stays false.
+    assert.deepEqual(result, {
+      repeatCount: 0,
+      answeredSeconds: 12,
+      scriptCompleted: false
+    });
     assert.equal(result.camino, undefined);
     assert.equal(result.resultado, undefined);
+  });
+
+  it("a verb that rejects because the session died reports scriptCompleted false with real elapsed time", async () => {
+    // What Fonoster #880 now surfaces: instead of hanging forever, a verb rejects when the
+    // session ends under it. The call still occupied the line — 110 seconds of silence in
+    // the 2026-08-30 incident — but nothing played.
+    const { verbs, calls } = makeVerbs([]);
+    let clock = 1_000;
+    const now = () => clock;
+    verbs.answer = async () => {
+      calls.push("answer");
+      clock = 111_000;
+      throw new Error("voice session ended before the Answer verb completed");
+    };
+
+    const result = await runPrerecordedCall("Su saldo es...", null, verbs, now);
+
+    assert.deepEqual(result, {
+      repeatCount: 0,
+      answeredSeconds: 110,
+      scriptCompleted: false
+    });
   });
 });

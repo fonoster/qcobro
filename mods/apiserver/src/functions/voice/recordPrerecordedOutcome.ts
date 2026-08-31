@@ -84,16 +84,25 @@ export type RecordPrerecordedOutcomeResult =
  * Records a PRE-RECORDED call's result onto its gestión, IN-PROCESS (no HTTP callback).
  *
  * The gestión is created at dispatch with `providerRef = callRef` and `entrega: DISPATCHED`;
- * this enriches that row on completion. `DELIVERED` means the call was ANSWERED — never a
- * claim that the account holder heard the message — and carries the answered
- * `durationSeconds` (the honest signal, never fabricated). An unanswered completion records
- * `FAILED` with a `deliveryReason` and zero duration.
+ * this enriches that row on completion.
  *
- * `camino` mirrors Voz IA's `decideCamino`: reaching call completion at all (the script
- * played to the end, menu or no menu, press or no press — an early hangup never reaches this
- * far) means the account holder heard the message, so `camino: ENGAGED` is always recorded on
- * a finalizing completion. `resultado: OPT_OUT` is the one exception, set only when the
- * template's optional DTMF menu was configured and the caller specifically pressed the
+ * `DELIVERED` means the call was ANSWERED **and** the script played to completion — that we
+ * played the message out, never a claim that the account holder listened to it. Answering
+ * alone is not delivery: a network element can answer and clear in under a second, and a
+ * session can die mid-verb leaving the callee holding silence. Both pick up; neither hears
+ * anything. Those record `FAILED` with `UNREACHABLE`, which is transient, so the account
+ * stays eligible for another attempt — correct, since the message never arrived. An
+ * unanswered completion records `FAILED` with its own `deliveryReason` and zero duration.
+ *
+ * `durationSeconds` is the answered duration whenever the call connected, including when the
+ * script did not play. Time on the line is real either way; a call stranded in silence for
+ * two minutes was two minutes long, it just was not a delivery.
+ *
+ * `camino` mirrors Voz IA's `decideCamino`: the script playing to the end (menu or no menu,
+ * press or no press) means the account holder heard the message, so `camino: ENGAGED` is
+ * recorded alongside a delivered completion. A completion that played nothing records no
+ * `camino` — nothing was heard and nothing was pressed. `resultado: OPT_OUT` is set only when
+ * the template's optional DTMF menu was configured and the caller specifically pressed the
  * opt-out digit (see `channelCanEngage` and its `VOICE_PRERECORDED` carve-out).
  *
  * Idempotent per call ref: `entrega` only ever advances, and `camino`/`resultado` are written
@@ -116,9 +125,18 @@ export function createRecordPrerecordedOutcome(client: PrerecordedOutcomeClient)
     });
     if (!match) return { matched: false };
 
-    const reportedEntrega: Entrega = input.answered ? "DELIVERED" : "FAILED";
+    // Answering is not delivering. A network element can answer and clear immediately,
+    // and a session can die mid-verb leaving the callee holding silence — both pick up,
+    // neither hears the message. DELIVERED requires that we actually played it out.
+    const delivered = input.answered && input.scriptCompleted;
+    const reportedEntrega: Entrega = delivered ? "DELIVERED" : "FAILED";
     const reportedDeliveryReason: DeliveryReason | null =
-      reportedEntrega === "FAILED" ? (input.deliveryReason ?? null) : null;
+      reportedEntrega === "FAILED"
+        ? // An answered call whose script never played is UNREACHABLE rather than the
+          // caller-supplied reason: we reached the line but not the account holder.
+          // UNREACHABLE is transient, so the account stays eligible for another attempt.
+          (input.deliveryReason ?? (input.answered ? "UNREACHABLE" : null))
+        : null;
     const reportedCamino: Camino | null = input.camino ?? null;
     const reportedResultado: Resultado | null = input.resultado ?? null;
 
@@ -145,6 +163,9 @@ export function createRecordPrerecordedOutcome(client: PrerecordedOutcomeClient)
         deliveryReason: reportedDeliveryReason,
         camino: reportedCamino,
         resultado: reportedResultado,
+        // Keyed on `answered`, not on delivery: a connected call that played nothing
+        // still occupied the line for a real number of seconds, and that is what was
+        // billed. Only a call that never connected records zero.
         durationSeconds: input.answered ? input.answeredSeconds : 0,
         channelData
       }
