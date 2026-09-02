@@ -1,0 +1,81 @@
+---
+title: "Voz personalizada"
+description: "Clona una voz profesional para usarla en tus agentes de Voz IA y voz pregrabada, y qué necesitas para lograr buena calidad."
+---
+
+Además de las voces del catálogo, puedes usar una **voz personalizada** (por ejemplo, la de
+tu propio equipo o una voz de marca) en tus agentes de **Voz IA** y **voz pregrabada**. Esta
+guía cubre cómo prepararla y clonarla con buena calidad, y cómo llega a estar disponible en
+QCobro.
+
+<Frame caption="De tu grabación a un agente: cuatro pasos.">
+  <img src="/images/custom-voice/flow.png" alt="Flujo de cuatro pasos: grabas tu voz, la clonas en ElevenLabs, QCobro habilita la voz personalizada en tu espacio de trabajo, y la usas al crear un agente de Voz IA o voz pregrabada." />
+</Frame>
+
+## Antes de empezar: lo que necesitas para clonar la voz
+
+Esta guía usa **ElevenLabs**, uno de los proveedores de síntesis de voz que QCobro admite,
+como referencia. Si tu voz personalizada se clona con otro proveedor, la idea general
+(graba audio limpio, obtén el consentimiento, comparte el identificador de la voz) es la
+misma; sigue las recomendaciones propias de ese proveedor para lograr un buen resultado.
+
+Para clonar con ElevenLabs específicamente, sigue sus recomendaciones al preparar el
+audio:
+
+- **Cantidad mínima:** 30 minutos de audio limpio. Si puedes grabar más, mejor: una mayor
+  cantidad de audio consistente suele mejorar el resultado.
+- **Contenido limpio:** sin ruido de fondo, sin música ni efectos de sonido, y sin otras
+  voces que puedan confundir el resultado.
+- **Consistencia:** graba con el mismo tono y estilo a lo largo de toda la sesión.
+  Grabaciones inconsistentes entre sí dan peores resultados.
+- **Formato:** archivos WAV a 44.1kHz o 48kHz, con al menos 24 bits de profundidad.
+
+<Tip>
+  La calidad del audio de entrenamiento impacta directamente la calidad del resultado final.
+  Vale la pena invertir tiempo en prepararlo bien: un buen micrófono y un lugar silencioso
+  marcan la diferencia.
+</Tip>
+
+## Consentimiento
+
+Clonar una voz requiere el **consentimiento explícito** de la persona cuya voz se va a
+clonar, incluso si es alguien de tu propio equipo. Documenta ese consentimiento por
+escrito, más allá de cualquier confirmación que se pida durante el proceso de clonación.
+
+<Warning>
+  Las implicaciones legales de clonar una voz varían según tu jurisdicción. Verifica lo que
+  aplique a tu caso antes de clonar la voz de otra persona.
+</Warning>
+
+## Clona tu voz en ElevenLabs
+
+Con el audio listo, crea el clon en tu cuenta de ElevenLabs siguiendo su propio flujo de
+clonación de voz. Al terminar, anota el **ID de la voz** clonada: lo necesitarás en el
+siguiente paso.
+
+<Warning>
+  QCobro no puede completar este paso por ti: la clonación ocurre en tu cuenta de
+  ElevenLabs, no en QCobro.
+</Warning>
+
+## Habilita tu voz personalizada
+
+Contacta a tu equipo de QCobro para habilitar tu voz personalizada en tu espacio de
+trabajo.
+
+## Úsala en un agente
+
+Una vez habilitada, tu voz personalizada queda disponible junto con las demás voces al
+crear o editar un agente de **Voz IA** o **voz pregrabada**: ver [Plantillas de
+agente](/guides/agent-templates).
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Plantillas de agente" icon="robot" href="/guides/agent-templates">
+    Crea o edita un agente de Voz IA o voz pregrabada con tu voz personalizada.
+  </Card>
+  <Card title="Canales" icon="signal-stream" href="/concepts/channels">
+    Cómo funciona cada canal de contacto en QCobro.
+  </Card>
+</CardGroup>
