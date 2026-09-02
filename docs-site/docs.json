@@ -12,16 +12,17 @@
   "navigation": {
     "groups": [
       {
-        "group": "Get started",
+        "group": "Primeros pasos",
         "pages": ["index", "concepts/how-qcobro-works"]
       },
       {
-        "group": "Operator guides",
+        "group": "Guías del operador",
         "pages": [
           "guides/portfolios",
           "guides/import-accounts",
           "guides/campaigns",
           "guides/agent-templates",
+          "guides/custom-voice",
           "guides/whatsapp",
           "guides/payment-promises",
           "guides/ai-insights"
@@ -49,11 +50,11 @@
         "pages": ["cli/overview"]
       },
       {
-        "group": "API reference",
+        "group": "Referencia de la API",
         "pages": ["api/overview", "api/authentication", "api/contact-log"]
       },
       {
-        "group": "Concepts",
+        "group": "Conceptos",
         "pages": ["concepts/workspaces", "concepts/channels", "concepts/campaigns-engine"]
       }
     ],

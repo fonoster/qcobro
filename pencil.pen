@@ -36295,7 +36295,7 @@
           "name": "Mi perfil · Página",
           "clip": true,
           "width": 1440,
-          "height": 900,
+          "height": 1080,
           "fill": "#F8FAFC",
           "children": [
             {
@@ -36608,6 +36608,140 @@
                                 },
                                 "MQ2HP": {
                                   "content": "Guardar cambios"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "JedjY",
+                      "name": "Change Password Card",
+                      "width": 680,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 16,
+                      "layout": "vertical",
+                      "gap": 20,
+                      "padding": 24,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "R4B9n",
+                          "name": "Password Header",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "h9XG0",
+                              "name": "HText",
+                              "layout": "vertical",
+                              "gap": 2,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "vAR8m",
+                                  "name": "Title",
+                                  "fill": "#0F172A",
+                                  "content": "Cambiar contraseña",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 15,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "mkDwu",
+                                  "name": "Sub",
+                                  "fill": "#64748B",
+                                  "content": "Debe tener al menos 8 caracteres.",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "icon",
+                              "id": "w5hTS",
+                              "x": 372,
+                              "y": 10,
+                              "name": "Close",
+                              "enabled": false,
+                              "width": 20,
+                              "height": 20,
+                              "icon": "x",
+                              "library": "lucide",
+                              "fill": "#94A3B8"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "IAqJP",
+                          "type": "ref",
+                          "ref": "BoM07",
+                          "name": "New Password Field",
+                          "width": "fill_container",
+                          "descendants": {
+                            "hTkn4": {
+                              "content": "Nueva contraseña"
+                            },
+                            "KmeTM": {
+                              "content": "********"
+                            }
+                          }
+                        },
+                        {
+                          "id": "qzR0b",
+                          "type": "ref",
+                          "ref": "BoM07",
+                          "name": "Confirm Password Field",
+                          "width": "fill_container",
+                          "descendants": {
+                            "hTkn4": {
+                              "content": "Confirmar contraseña"
+                            },
+                            "KmeTM": {
+                              "content": "********"
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "clH8z",
+                          "name": "Password Footer",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "justifyContent": "end",
+                          "children": [
+                            {
+                              "id": "Y0uIL",
+                              "type": "ref",
+                              "ref": "VJCaF",
+                              "enabled": false,
+                              "name": "Cancel",
+                              "descendants": {
+                                "XyMlx": {
+                                  "enabled": false
+                                },
+                                "NkZAZ": {
+                                  "content": "Cancelar"
+                                }
+                              }
+                            },
+                            {
+                              "id": "EAfZJ",
+                              "type": "ref",
+                              "ref": "ws2MA",
+                              "name": "Update Password Button",
+                              "descendants": {
+                                "kGizg": {
+                                  "enabled": false
+                                },
+                                "MQ2HP": {
+                                  "content": "Actualizar contraseña"
                                 }
                               }
                             }
@@ -42822,12 +42956,6 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "hH2Zh",
-                          "type": "ref",
-                          "ref": "KoP5V",
-                          "name": "Search"
-                        },
-                        {
                           "type": "frame",
                           "id": "gkjqk",
                           "name": "Spacer",
@@ -42854,6 +42982,9 @@
                       "name": "Table",
                       "width": "fill_container",
                       "descendants": {
+                        "fXyc9": {
+                          "enabled": false
+                        },
                         "kHSpi": {
                           "content": "Miembro"
                         },
@@ -42863,6 +42994,9 @@
                         "d9mJwv": {
                           "content": "Último acceso"
                         },
+                        "UOqki": {
+                          "enabled": false
+                        },
                         "K1KYaH": {
                           "content": "Ana Méndez García"
                         },
@@ -42870,10 +43004,16 @@
                           "content": "ana@empresa.com"
                         },
                         "kQS5X": {
-                          "content": "Admin"
+                          "content": "Dueño"
                         },
                         "VMee8": {
                           "content": "Hace 5 min"
+                        },
+                        "Yukyy": {
+                          "enabled": false
+                        },
+                        "Hn0W4": {
+                          "enabled": false
                         },
                         "F0lXsA": {
                           "content": "Roberto Silva López"
@@ -42882,10 +43022,14 @@
                           "content": "roberto@empresa.com"
                         },
                         "C57iOr": {
-                          "content": "Manager"
+                          "content": "Administrador"
                         },
                         "dIEgG": {
-                          "content": "—"
+                          "content": "—",
+                          "enabled": false
+                        },
+                        "UZuYr": {
+                          "enabled": false
                         },
                         "SKeY2": {
                           "content": "Carmen Ruiz Espinoza"
@@ -42894,10 +43038,16 @@
                           "content": "carmen@empresa.com"
                         },
                         "F8NToT": {
-                          "content": "Agent"
+                          "content": "Miembro"
                         },
                         "tQt3C": {
                           "content": "Ayer, 10:20"
+                        },
+                        "sNQzz": {
+                          "enabled": false
+                        },
+                        "V3igvo": {
+                          "enabled": false
                         },
                         "EFSmw": {
                           "content": "Marcos Herrera Díaz"
@@ -42914,6 +43064,9 @@
                         "mehuL": {
                           "content": "Lun 16 jun"
                         },
+                        "fCKNe": {
+                          "enabled": false
+                        },
                         "PGB1O": {
                           "content": "Lucía Torres Vega"
                         },
@@ -42921,10 +43074,13 @@
                           "content": "lucia@empresa.com"
                         },
                         "G2HNh": {
-                          "content": "Admin"
+                          "content": "Miembro"
                         },
                         "y7Kbj": {
                           "content": "Mar 10 jun"
+                        },
+                        "jtZYB": {
+                          "enabled": false
                         },
                         "BUWRE": {
                           "content": "Mostrando 1–5 de 24 miembros"
@@ -43089,10 +43245,15 @@
                           "content": "Access Key ID"
                         },
                         "Zcy0b": {
-                          "enabled": false
+                          "enabled": true
+                        },
+                        "l3ssh": {
+                          "content": "Tipo",
+                          "textAlign": "left"
                         },
                         "tCM78": {
-                          "content": "Tipo"
+                          "content": "Creada",
+                          "textAlign": "right"
                         },
                         "d9mJwv": {
                           "content": "Expira"
@@ -43150,10 +43311,38 @@
                           "enabled": false
                         },
                         "Ac8ig": {
-                          "enabled": false
+                          "enabled": true,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "v3b1H",
+                              "name": "Type",
+                              "fill": "$--foreground",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Dueño",
+                              "fontFamily": "$--font-primary",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
                         },
-                        "F8NToT": {
-                          "content": "Dueño"
+                        "CtNZK": {
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "k81AvH",
+                              "name": "Created",
+                              "fill": "$--muted-foreground",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "1 sep. 2025",
+                              "textAlign": "right",
+                              "fontFamily": "$--font-primary",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
                         },
                         "tQt3C": {
                           "content": "5 dic. 2025"
@@ -43165,10 +43354,38 @@
                           "content": "APd2e6liqeue4pywtqlck4q4lrhu62boe6"
                         },
                         "O8lWl": {
-                          "enabled": false
+                          "enabled": true,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "h3YN0",
+                              "name": "Type",
+                              "fill": "$--foreground",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Dueño",
+                              "fontFamily": "$--font-primary",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
                         },
-                        "ZDfQG": {
-                          "content": "Dueño"
+                        "H7W2p": {
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Tymt2",
+                              "name": "Created",
+                              "fill": "$--muted-foreground",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "3 ago. 2025",
+                              "textAlign": "right",
+                              "fontFamily": "$--font-primary",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
                         },
                         "mehuL": {
                           "content": "18 nov. 2025"
@@ -43180,10 +43397,38 @@
                           "content": "APd2e6467eu940y0tq0ck4lrhu627o54"
                         },
                         "BoAhG": {
-                          "enabled": false
+                          "enabled": true,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "mAXez",
+                              "name": "Type",
+                              "fill": "$--foreground",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Dueño",
+                              "fontFamily": "$--font-primary",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
                         },
-                        "G2HNh": {
-                          "content": "Dueño"
+                        "dE9tN": {
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "o4y5H",
+                              "name": "Created",
+                              "fill": "$--muted-foreground",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "12 jun. 2025",
+                              "textAlign": "right",
+                              "fontFamily": "$--font-primary",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
                         },
                         "y7Kbj": {
                           "content": "No expira"
@@ -46356,6 +46601,21 @@
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "id": "ylCOr",
+                      "type": "ref",
+                      "ref": "BoM07",
+                      "name": "Expiry Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "hTkn4": {
+                          "content": "Fecha de expiración (opcional)"
+                        },
+                        "KmeTM": {
+                          "content": "Sin expiración"
+                        }
+                      }
                     },
                     {
                       "type": "frame",

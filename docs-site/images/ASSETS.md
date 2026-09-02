@@ -58,6 +58,7 @@ All assets are **hosted-product, customer-facing** — no internals, infra, or c
 | `home/hero`                    | illustration (brand)   | customer            | 1600×900 | `index`                     | `r0KBNV`    | —   | `home/hero.md`                 |
 | `guides/portfolios/list`       | screenshot (console)   | customer / operator | 1440×900 | `guides/portfolios`         | `wcl2T`     | —   | —                              |
 | `guides/import-accounts/modal` | screenshot (console)   | customer / operator | modal    | `guides/import-accounts`    | `XeP06`     | —   | —                              |
+| `custom-voice/flow`            | diagram (flow)         | customer / operator | 1600×900 | `guides/custom-voice`       | `HqFVE`     | v1  | `custom-voice/flow.md`         |
 | `guides/agent-templates/list`  | screenshot (console)   | customer / operator | 1440×900 | `guides/agent-templates`    | `pbtC9`     | —   | —                              |
 | `guides/campaigns/list`        | screenshot (console)   | customer / operator | 1440×900 | `guides/campaigns`          | `g1JZe`     | —   | —                              |
 | `guides/payment-promises/list` | screenshot (console)   | customer / operator | 1440×900 | `guides/payment-promises`   | `WPPyE`     | —   | —                              |
