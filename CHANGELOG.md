@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.39.2](https://github.com/fonoster/qcobro/compare/v1.39.1...v1.39.2) (2026-09-05)
+
+### Bug Fixes
+
+- **voice:** build recording URLs the way Fonoster names the files ([#150](https://github.com/fonoster/qcobro/issues/150)) ([7969d55](https://github.com/fonoster/qcobro/commit/7969d556cc5019f6b0248f170f3113b86ee13e10)), closes [#145](https://github.com/fonoster/qcobro/issues/145) [#145](https://github.com/fonoster/qcobro/issues/145) [#145](https://github.com/fonoster/qcobro/issues/145)
+
 ## [1.39.1](https://github.com/fonoster/qcobro/compare/v1.39.0...v1.39.1) (2026-08-31)
 
 **Note:** Version bump only for package qcobro
