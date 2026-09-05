@@ -102,6 +102,34 @@ describe("recordPrerecordedOutcome", () => {
     assert.ok(typeof cd.endedAt === "string");
   });
 
+  it("stores the recording's file name, so the console can compose its URL on read", async () => {
+    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: null });
+
+    await createRecordPrerecordedOutcome(client as never)({
+      ...ANSWERED,
+      recordingFile: "app-1_1756742400.123.wav"
+    });
+
+    const cd = cap.updateMany?.data.channelData as Record<string, unknown>;
+    assert.equal(cd.recordingFile, "app-1_1756742400.123.wav");
+    // The name, never a URL: the recordings host is a deployment setting resolved on read.
+    assert.equal(cd.recordingUrl, undefined);
+  });
+
+  it("records a file name even when the script never played — that call still has audio", async () => {
+    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: null });
+
+    await createRecordPrerecordedOutcome(client as never)({
+      ...ANSWERED,
+      scriptCompleted: false,
+      recordingFile: "app-1_1756742400.999.wav"
+    });
+
+    assert.equal(cap.updateMany?.data.entrega, "FAILED");
+    const cd = cap.updateMany?.data.channelData as Record<string, unknown>;
+    assert.equal(cd.recordingFile, "app-1_1756742400.999.wav");
+  });
+
   it("unanswered call → FAILED with its reason and zero duration", async () => {
     const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: null });
 

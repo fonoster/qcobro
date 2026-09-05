@@ -79,8 +79,12 @@ Each `AccountContactLog` entry SHALL capture:
 **Channel-specific metadata**
 
 - `channelData Json?` — raw channel data, shape depends on `agentType`:
-  - Voice (VOICE_AI, VOICE_PRERECORDED): `{ callSid, recordingUrl?, transcriptUrl?, transcriptText?, scriptDurationSeconds?, repeatCount? }`
-    where `scriptDurationSeconds?` is the nominal length of the synthesized pre-recorded clip,
+  - Voice (VOICE_AI, VOICE_PRERECORDED): `{ callSid, recordingUrl?, recordingFile?, transcriptUrl?, transcriptText?, scriptDurationSeconds?, repeatCount? }`
+    where `recordingUrl?` (VOICE_AI only) is the complete recording URL the voice provider
+    reported with the transcript, `recordingFile?` (VOICE_PRERECORDED only) is the name the
+    provider recorded the call under — the console composes its URL on read from the
+    deployment's recordings base, so moving that host fixes every historical gestión —
+    `scriptDurationSeconds?` is the nominal length of the synthesized pre-recorded clip,
     stored so a future report can compare it against the answered `durationSeconds`, and
     `repeatCount?` (VOICE_PRERECORDED only) is how many times the caller replayed the script
     via the DTMF menu

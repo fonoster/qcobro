@@ -44,6 +44,13 @@ export type VoiceConversationEvent = z.infer<typeof voiceConversationEventSchema
  * when the script did not play — the time on the line is real either way.
  * `scriptDurationSeconds` is the nominal length of the synthesized clip, stored so a
  * future report can compare it against the answered duration.
+ *
+ * `recordingFile` is the name Fonoster recorded the call under, derived from the voice
+ * request (see `recordingFileNameForCall`). Only the name is carried, not a URL: the
+ * console composes the URL on read from the deployment's `recordingBaseUrl`, so moving
+ * the recordings host fixes every historical gestión rather than only later ones. Voz IA
+ * reports a whole URL instead — the autopilot runs inside Fonoster and already knows the
+ * base; here we do not, so we report the half we do know.
  */
 export const prerecordedCompletionSchema = z.object({
   providerRef: z.string().min(1),
@@ -51,6 +58,7 @@ export const prerecordedCompletionSchema = z.object({
   scriptCompleted: z.boolean().default(false),
   answeredSeconds: z.number().int().nonnegative(),
   scriptDurationSeconds: z.number().int().nonnegative().optional(),
+  recordingFile: z.string().min(1).optional(),
   at: z.string().min(1)
 });
 export type PrerecordedCompletionInput = z.infer<typeof prerecordedCompletionSchema>;

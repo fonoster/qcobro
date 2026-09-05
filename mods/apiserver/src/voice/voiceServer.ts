@@ -1,7 +1,12 @@
 import { createRequire } from "node:module";
 import type { GatherSource, ServerConfig, VoiceRequest, VoiceResponse } from "@fonoster/voice";
 import { getLogger } from "@fonoster/logger";
-import type { Camino, PrerecordedCompletionInput, Resultado } from "@qcobro/common";
+import {
+  recordingFileNameForCall,
+  type Camino,
+  type PrerecordedCompletionInput,
+  type Resultado
+} from "@qcobro/common";
 import { config } from "../config.js";
 
 const logger = getLogger({ service: "voice", filePath: import.meta.url });
@@ -228,6 +233,12 @@ export function startVoiceServer(deps: VoiceServerDeps = {}): void {
       const { camino, resultado, repeatCount, answeredSeconds, scriptCompleted } =
         await runPrerecordedCall(message, menu, res);
 
+      // Fonoster records the call from its dialplan, under a name built from this same
+      // request — so the console can link the audio without us storing a copy. Reported
+      // even when the script never played: the recording of a call that connected and
+      // played nothing is exactly what an operator needs to hear.
+      const recordingFile = recordingFileNameForCall(req.appRef, req.mediaSessionRef);
+
       // The call was answered — this handler only runs on pickup — but that alone is
       // not a delivery, so `scriptCompleted` rides along to say whether the message
       // actually played. Report in-process so the gestión finalizes and usage settles.
@@ -239,6 +250,7 @@ export function startVoiceServer(deps: VoiceServerDeps = {}): void {
           scriptCompleted,
           answeredSeconds,
           at: new Date().toISOString(),
+          ...(recordingFile ? { recordingFile } : {}),
           ...(camino ? { camino } : {}),
           ...(resultado ? { resultado } : {}),
           ...(repeatCount > 0 ? { repeatCount } : {})
