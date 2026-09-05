@@ -13,7 +13,7 @@ import {
   updatePaymentPromiseSchema,
   followUpPaymentPromiseSchema,
   generateInsightInputSchema,
-  recordingUrlForCall
+  resolveRecordingUrl
 } from "@qcobro/common";
 import { router, workspaceProcedure } from "../trpc.js";
 import { config } from "../../config.js";
@@ -95,14 +95,13 @@ const contactLogRouter = router({
       }
     });
 
-    // Recordings live in Fonoster, so the URL is derived from the deployment base URL
-    // and the provider call ref rather than stored per row — changing the base fixes
-    // every historical gestión at once. Falls back to whatever URL the provider reported
-    // at completion time when no base URL is configured.
-    const channelData = (gestion.channelData ?? {}) as Record<string, unknown>;
-    const recordingUrl =
-      recordingUrlForCall(gestion.providerRef, config.fonoster?.recordingBaseUrl) ??
-      (typeof channelData.recordingUrl === "string" ? channelData.recordingUrl : undefined);
+    // Recordings live in Fonoster, so the console links to them rather than storing
+    // copies. Each voice channel reports a different half of the answer — see
+    // `resolveRecordingUrl`.
+    const recordingUrl = resolveRecordingUrl(
+      gestion.channelData as Record<string, unknown> | null,
+      config.fonoster?.recordingBaseUrl
+    );
 
     return { ...gestion, recordingUrl: recordingUrl ?? null };
   }),

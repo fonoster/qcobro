@@ -145,13 +145,16 @@ export const fonosterConfigSchema = z
     /**
      * Where call recordings are served from, e.g.
      * `https://app.fonoster.com/api/recordings`. Recordings live in Fonoster, not here,
-     * so the console links to them rather than storing copies; the gestión's provider
-     * call ref is appended to this base (see {@link recordingUrlForCall}).
+     * so the console links to them rather than storing copies; the recording's file
+     * name is appended to this base (see {@link recordingUrlForFile}).
      *
-     * Resolved on read rather than stored per row, so changing the deployment's URL
-     * fixes every historical gestión at once instead of only the ones recorded
-     * afterwards. Omit to fall back to whatever URL the provider reported at completion
-     * time.
+     * Must match the deployment's `AUTOPILOT_RECORDING_BASE_URL`, since that is the base
+     * Voz IA reports its own recordings against.
+     *
+     * Used for PRE-RECORDED calls, whose file name we derive ourselves at call time
+     * ({@link recordingFileNameForCall}) and resolve on read, so changing this base fixes
+     * every historical pre-recorded gestión at once. Voz IA is unaffected: the autopilot
+     * reports a complete URL with the transcript, and that URL is used as reported.
      */
     recordingBaseUrl: z.string().url().optional()
   })
@@ -159,25 +162,75 @@ export const fonosterConfigSchema = z
 
 export type FonosterConfig = z.infer<typeof fonosterConfigSchema>;
 
-/** Container format Fonoster records calls in; the ref alone has no extension. */
+/** Container format Fonoster records calls in; the file name alone has no extension. */
 const RECORDING_FILE_EXTENSION = ".wav";
 
 /**
- * Resolves a gestión's recording URL by appending its provider call ref to the
- * deployment's recording base URL. Returns `undefined` when either is missing, so
- * callers fall back to whatever URL the provider reported.
+ * The file name Fonoster records a call under.
  *
- * The extension is fixed here rather than configured: Fonoster records to wav, and a
- * base URL plus a ref cannot express a suffix on its own. If that ever changes it is a
- * one-line change here rather than a config edit.
+ * Fonoster records every call from its Asterisk dialplan, before the call ever reaches a
+ * voice application: `MixMonitor(${APP_REF}_${UNIQUEID}.wav)` (fonoster,
+ * `asterisk/config/extensions.conf`). `UNIQUEID` is the channel the voice app is handed
+ * as `mediaSessionRef`, so the pair a voice request already carries names the file
+ * exactly. This is the same construction the autopilot uses for the recording URL it
+ * reports on Voz IA calls (fonoster, `mods/autopilot/src/handleVoiceRequest.ts`), which
+ * is why emulating it here yields URLs that resolve for pre-recorded calls too.
+ *
+ * The call ref is deliberately NOT part of the name: it is a Fonoster-side call
+ * identifier that names no recording file, and a URL built from it 404s.
  */
-export function recordingUrlForCall(
-  providerRef: string | null | undefined,
+export function recordingFileNameForCall(
+  appRef: string | null | undefined,
+  mediaSessionRef: string | null | undefined
+): string | undefined {
+  if (!appRef || !mediaSessionRef) return undefined;
+  return `${appRef}_${mediaSessionRef}${RECORDING_FILE_EXTENSION}`;
+}
+
+/**
+ * Resolves a recording's URL by appending its file name to the deployment's recording
+ * base URL. Returns `undefined` when either is missing, so callers fall back to whatever
+ * URL the provider reported.
+ *
+ * The name is percent-encoded so an odd value cannot break out of the path.
+ */
+export function recordingUrlForFile(
+  fileName: string | null | undefined,
   baseUrl: string | null | undefined
 ): string | undefined {
-  if (!providerRef || !baseUrl) return undefined;
+  if (!fileName || !baseUrl) return undefined;
   const base = baseUrl.replace(/\/+$/, "");
-  return `${base}/${encodeURIComponent(providerRef)}${RECORDING_FILE_EXTENSION}`;
+  return `${base}/${encodeURIComponent(fileName)}`;
+}
+
+/**
+ * The recording URL for a gestión, from what its channel actually reported.
+ *
+ * The two voice channels report different halves, and the difference is not cosmetic:
+ *
+ * - Voz IA stores a whole `recordingUrl`, sent by the autopilot with the transcript.
+ *   The autopilot runs inside Fonoster and builds that URL against its own recording
+ *   base, so it is the provider's own answer about where the audio lives and is used
+ *   verbatim.
+ * - Pre-recorded stores only `recordingFile`, the name Fonoster recorded under (our
+ *   voice server knows the name but not the deployment's public recordings host). The
+ *   URL is composed here, on read, so moving that host fixes every historical gestión
+ *   at once instead of only the ones recorded afterwards.
+ *
+ * Returns `undefined` when the gestión has neither — a channel with no recording, a
+ * call that never connected, or a pre-recorded row on a deployment with no
+ * `recordingBaseUrl` set. Nothing is ever derived from the call ref: it names no
+ * recording file, and a URL built from it 404s.
+ */
+export function resolveRecordingUrl(
+  channelData: Record<string, unknown> | null | undefined,
+  baseUrl: string | null | undefined
+): string | undefined {
+  const reportedUrl = channelData?.recordingUrl;
+  if (typeof reportedUrl === "string" && reportedUrl) return reportedUrl;
+
+  const fileName = channelData?.recordingFile;
+  return recordingUrlForFile(typeof fileName === "string" ? fileName : undefined, baseUrl);
 }
 
 /**

@@ -2,7 +2,9 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   fonosterConfigSchema,
-  recordingUrlForCall,
+  recordingFileNameForCall,
+  recordingUrlForFile,
+  resolveRecordingUrl,
   ttsProductRefForVoice,
   twilioConfigSchema,
   type VoiceCatalogEntry
@@ -94,37 +96,96 @@ describe("callTimeoutSeconds", () => {
   });
 });
 
-describe("recordingUrlForCall", () => {
+describe("recordingFileNameForCall", () => {
+  it("names the file the way Fonoster's dialplan records it: appRef_mediaSessionRef.wav", () => {
+    assert.equal(
+      recordingFileNameForCall("7acb5d67-c660-49c4-af34-07bcc718683c", "1756742400.123"),
+      "7acb5d67-c660-49c4-af34-07bcc718683c_1756742400.123.wav"
+    );
+  });
+
+  it("returns undefined when either half is missing", () => {
+    assert.equal(recordingFileNameForCall(undefined, "1756742400.123"), undefined);
+    assert.equal(recordingFileNameForCall("app-ref", undefined), undefined);
+    assert.equal(recordingFileNameForCall("", "1756742400.123"), undefined);
+    assert.equal(recordingFileNameForCall("app-ref", ""), undefined);
+  });
+});
+
+describe("recordingUrlForFile", () => {
   const baseUrl = "https://app.fonoster.com/api/recordings";
 
-  it("appends the provider call ref to the base URL", () => {
+  it("appends the recording's file name to the base URL", () => {
     assert.equal(
-      recordingUrlForCall("c21ff1ab-5b46-4d99-8879-fad1e1d02d0a", baseUrl),
-      "https://app.fonoster.com/api/recordings/c21ff1ab-5b46-4d99-8879-fad1e1d02d0a.wav"
+      recordingUrlForFile("app-ref_1756742400.123.wav", baseUrl),
+      "https://app.fonoster.com/api/recordings/app-ref_1756742400.123.wav"
     );
   });
 
   it("tolerates a trailing slash on the configured base", () => {
     assert.equal(
-      recordingUrlForCall("ref1", "https://app.fonoster.com/api/recordings/"),
-      "https://app.fonoster.com/api/recordings/ref1.wav"
+      recordingUrlForFile("rec1.wav", "https://app.fonoster.com/api/recordings/"),
+      "https://app.fonoster.com/api/recordings/rec1.wav"
     );
   });
 
   it("returns undefined when no base URL is configured, so callers can fall back", () => {
-    assert.equal(recordingUrlForCall("call-ref", undefined), undefined);
-    assert.equal(recordingUrlForCall("call-ref", null), undefined);
+    assert.equal(recordingUrlForFile("rec1.wav", undefined), undefined);
+    assert.equal(recordingUrlForFile("rec1.wav", null), undefined);
   });
 
-  it("returns undefined when the gestión never reached a provider", () => {
-    assert.equal(recordingUrlForCall(null, baseUrl), undefined);
-    assert.equal(recordingUrlForCall("", baseUrl), undefined);
+  it("returns undefined when the gestión recorded no file name", () => {
+    assert.equal(recordingUrlForFile(null, baseUrl), undefined);
+    assert.equal(recordingUrlForFile("", baseUrl), undefined);
   });
 
-  it("percent-encodes the ref so an odd one cannot break out of the path", () => {
+  it("percent-encodes the name so an odd one cannot break out of the path", () => {
     assert.equal(
-      recordingUrlForCall("a b/../c", baseUrl),
+      recordingUrlForFile("a b/../c.wav", baseUrl),
       "https://app.fonoster.com/api/recordings/a%20b%2F..%2Fc.wav"
+    );
+  });
+});
+
+describe("resolveRecordingUrl", () => {
+  const baseUrl = "https://app.fonoster.com/api/recordings";
+
+  it("uses the URL Voz IA reported, exactly as reported", () => {
+    const reported = "https://rec.example/api/recordings/app-1_1756742400.123.wav";
+    assert.equal(resolveRecordingUrl({ recordingUrl: reported }, baseUrl), reported);
+  });
+
+  it("never overrides a reported URL with a locally composed one", () => {
+    // The regression this guards: a configured base URL used to win over the provider's
+    // own answer, replacing a working Voz IA recording link with one that 404s.
+    const reported = "https://rec.example/api/recordings/app-1_1756742400.123.wav";
+    assert.equal(
+      resolveRecordingUrl({ recordingUrl: reported, recordingFile: "other.wav" }, baseUrl),
+      reported
+    );
+  });
+
+  it("composes a pre-recorded gestión's URL from its file name and the deployment base", () => {
+    assert.equal(
+      resolveRecordingUrl({ recordingFile: "app-1_1756742400.123.wav" }, baseUrl),
+      "https://app.fonoster.com/api/recordings/app-1_1756742400.123.wav"
+    );
+  });
+
+  it("returns undefined when the gestión reported no recording at all", () => {
+    assert.equal(resolveRecordingUrl({}, baseUrl), undefined);
+    assert.equal(resolveRecordingUrl(null, baseUrl), undefined);
+    assert.equal(resolveRecordingUrl(undefined, baseUrl), undefined);
+  });
+
+  it("returns undefined for a pre-recorded gestión when no base URL is configured", () => {
+    assert.equal(resolveRecordingUrl({ recordingFile: "app-1_x.wav" }, undefined), undefined);
+  });
+
+  it("ignores non-string channelData values rather than rendering them", () => {
+    assert.equal(
+      resolveRecordingUrl({ recordingUrl: 42, recordingFile: null }, baseUrl),
+      undefined
     );
   });
 });
