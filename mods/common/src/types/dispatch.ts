@@ -44,9 +44,45 @@ export interface OutboundCallInput {
   metadata: Record<string, string>;
 }
 
+/**
+ * Fonoster's per-call clearing status (the call detail record, or CDR), consulted only once
+ * a gestión has sat at `delivery: DISPATCHED` past the voice completion sweep's floor.
+ * Mirrors `@fonoster/types`' `CallStatus`, plus `UNKNOWN`: the protobuf zero-value the SDK's
+ * own type declarations omit, but that Fonoster still returns for a call that has not
+ * cleared yet (only the start portion of the CDR has been written).
+ */
+export type VoiceCallStatus =
+  | "NORMAL_CLEARING"
+  | "CALL_REJECTED"
+  | "UNALLOCATED"
+  | "NO_USER_RESPONSE"
+  | "NO_ROUTE_DESTINATION"
+  | "NO_ANSWER"
+  | "USER_BUSY"
+  | "NOT_ACCEPTABLE_HERE"
+  | "SERVICE_UNAVAILABLE"
+  | "INVALID_NUMBER_FORMAT"
+  | "UNKNOWN";
+
+/**
+ * Result of looking up a call's CDR by provider ref. `found: false` is Fonoster's own
+ * `NOT_FOUND` (the call never originated at all) — surfaced as a typed result rather than a
+ * thrown error, since it is an expected, distinct outcome the sweep branches on.
+ *
+ * `setupToClearSeconds` is the CDR's own duration, measured from call setup and therefore
+ * including ring time. It is informational only: a gestión's own `durationSeconds` is the
+ * answered duration recorded by the channel's live completion signal, and must never be
+ * overwritten by this figure.
+ */
+export type VoiceCallLookupResult =
+  | { found: true; status: VoiceCallStatus; setupToClearSeconds: number }
+  | { found: false };
+
 export interface OutboundCallClient {
   /** Originate a call; resolves with the provider call ref. */
   createCall(input: OutboundCallInput): Promise<{ ref: string }>;
+  /** Look up a call's CDR by provider ref (the voice completion sweep's only consumer). */
+  getCall(ref: string): Promise<VoiceCallLookupResult>;
 }
 
 export interface SmsClient {

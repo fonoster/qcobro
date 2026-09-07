@@ -88,6 +88,10 @@ enum Delivery {
 
 // Why delivery failed. Set if and only if `delivery` is FAILED. Split so a retry policy can
 // tell transient (NO_ANSWER, BUSY) from permanent (INVALID_DESTINATION, CHANNEL_UNSUPPORTED).
+// OUTCOME_UNKNOWN and NOT_ORIGINATED are voice-only, written by the voice completion sweep
+// from Fonoster's CDR: OUTCOME_UNKNOWN when the call cleared normally but QCobro's own
+// completion signal never arrived, NOT_ORIGINATED when the provider has no record of the
+// call at all. Both transient.
 enum DeliveryReason {
   NO_ANSWER
   BUSY
@@ -96,6 +100,8 @@ enum DeliveryReason {
   CHANNEL_UNSUPPORTED
   INVALID_DESTINATION
   REJECTED
+  OUTCOME_UNKNOWN
+  NOT_ORIGINATED
 }
 
 // What path the interaction took once delivered. Null when none was observed — always so on

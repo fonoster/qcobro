@@ -8,6 +8,7 @@ import {
   type EmailClient,
   type EmailSendInput,
   type OutboundCallInput,
+  type VoiceCallLookupResult,
   type WhatsAppClient,
   type WhatsAppFetchedTemplate,
   type WhatsAppSendTemplateInput
@@ -63,6 +64,8 @@ export class EmulatedOutboundCallClient implements OutboundCallClient {
   readonly calls: EmulatedDispatch[] = [];
   private seq = 0;
   private readonly run = makeRunTag();
+  /** CDRs `getCall` returns, keyed by ref — see {@link setCallDetail}. */
+  private readonly cdrs = new Map<string, VoiceCallLookupResult>();
 
   constructor(private readonly opts: { fail?: FailOpt } = {}) {}
 
@@ -78,6 +81,16 @@ export class EmulatedOutboundCallClient implements OutboundCallClient {
       ref
     });
     return { ref };
+  }
+
+  /** Test setup: configure what `getCall(ref)` returns — a CDR, or `{ found: false }`. */
+  setCallDetail(ref: string, result: VoiceCallLookupResult): void {
+    this.cdrs.set(ref, result);
+  }
+
+  /** Unconfigured refs are `{ found: false }`, matching Fonoster's NOT_FOUND for an unknown ref. */
+  async getCall(ref: string): Promise<VoiceCallLookupResult> {
+    return this.cdrs.get(ref) ?? { found: false };
   }
 }
 

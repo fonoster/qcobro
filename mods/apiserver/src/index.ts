@@ -37,6 +37,7 @@ import { ttsDefaults } from "@qcobro/common";
 import { TtsCache, ttsCacheKey, isTextWithinLimit } from "./services/ttsCache.js";
 import { startVoiceServer } from "./voice/voiceServer.js";
 import { startEngine } from "./engine/start.js";
+import { startVoiceCompletionSweep } from "./functions/voice/startVoiceCompletionSweep.js";
 import {
   createPrismaEngineEventSink,
   createProviderEventRecorder,
@@ -298,4 +299,12 @@ for (const signal of ["SIGTERM", "SIGINT"] as const) {
   process.on(signal, () => {
     void engineRunner?.stop().finally(() => process.exit(0));
   });
+}
+
+// Voice completion sweep — its own interval, independent of engine.enabled: manual/ad-hoc
+// voice dispatch needs stuck-at-DISPATCHED gestiones finalized too, and coverage must not
+// depend on the campaigns engine happening to be running. See startVoiceCompletionSweep.
+const voiceCompletionSweepRunner = startVoiceCompletionSweep();
+for (const signal of ["SIGTERM", "SIGINT"] as const) {
+  process.on(signal, () => voiceCompletionSweepRunner?.stop());
 }

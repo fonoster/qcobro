@@ -657,17 +657,34 @@ export const qcobroConfigSchema = z.object({
        * any success or `DELIVERY_REJECTED` failure. Sized to ride out a short blip without
        * silently burning through every account's attempt cap during a real outage.
        */
-      consecutiveSystemErrorPauseThreshold: z.number().int().positive().default(10),
+      consecutiveSystemErrorPauseThreshold: z.number().int().positive().default(10)
+    })
+    .prefault({}),
+  /**
+   * Voice completion sweep. Finalizes a VOICE_AI/VOICE_PRERECORDED gestión stuck at
+   * `delivery: DISPATCHED` once its own completion signal (autopilot conversation.ended
+   * webhook / pre-recorded VoiceServer onCompleted) never arrives, by classifying it from
+   * Fonoster's call detail record (CDR) instead of guessing. Runs on its own interval,
+   * independent of `engine.enabled` — manual/ad-hoc voice dispatch needs this finalization
+   * too, and must not depend on the campaigns engine happening to be running.
+   */
+  voiceCompletionSweep: z
+    .object({
       /**
-       * Minutes a VOICE_AI/VOICE_PRERECORDED gestión may sit at delivery=DISPATCHED with no
-       * completion signal (autopilot conversation.ended webhook / pre-recorded VoiceServer
-       * onCompleted) before the timeout sweep finalizes it FAILED (deliveryReason:
-       * PROVIDER_ERROR) — the replacement for the old Fonoster-CDR polling recovery path.
-       * A single shared value across both channels, not per-channel, to keep this simple.
+       * Minutes a VOICE_AI/VOICE_PRERECORDED gestión may sit at `delivery: DISPATCHED`
+       * before the sweep starts consulting the CDR for it. Short on purpose: a CDR lookup
+       * is cheap, and the point is closing out a call that has genuinely ended, not
+       * waiting out a grace period.
        */
-      voiceCompletionTimeoutMinutes: z.number().int().positive().default(10),
-      /** How often the timeout sweep itself runs, piggybacked on the engine tick loop. */
-      voiceCompletionSweepIntervalSeconds: z.number().int().positive().default(120)
+      floorMinutes: z.number().int().positive().default(2),
+      /**
+       * Minutes past which a gestión whose CDR still carries no status (the provider lost
+       * the end-of-call record, or never writes one) is finalized anyway — `deliveryReason:
+       * OUTCOME_UNKNOWN` — rather than polled forever.
+       */
+      backstopMinutes: z.number().int().positive().default(30),
+      /** How often the sweep itself runs. */
+      intervalSeconds: z.number().int().positive().default(120)
     })
     .prefault({})
 });

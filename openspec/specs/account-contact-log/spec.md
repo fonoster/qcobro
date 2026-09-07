@@ -112,7 +112,9 @@ Each `AccountContactLog` entry SHALL capture:
 **Delivery enum:** `DISPATCHED` · `DELIVERED` · `FAILED`
 
 **DeliveryReason enum:** `NO_ANSWER` · `BUSY` · `UNREACHABLE` · `PROVIDER_ERROR` ·
-`CHANNEL_UNSUPPORTED` · `INVALID_DESTINATION` · `REJECTED`
+`CHANNEL_UNSUPPORTED` · `INVALID_DESTINATION` · `REJECTED` · `OUTCOME_UNKNOWN` ·
+`NOT_ORIGINATED`. The last two are voice-only, written by the voice completion sweep (see
+below) from Fonoster's CDR rather than a live completion signal.
 
 **Path enum:** `ENGAGED` · `ABANDONED` · `VOICEMAIL`
 
@@ -323,33 +325,47 @@ configuration in which SMS dispatches but no status callback is ever registered.
 - **WHEN** a `twilio` section is present without `webhookBaseUrl`
 - **THEN** configuration validation fails at startup
 
-### Requirement: Voice gestións are finalized from Fonoster call-status tracking
+### Requirement: Voice gestións stuck at DISPATCHED are finalized by the voice completion sweep
 
-A `VOICE_PRERECORDED` or `VOICE_AI` gestión at `delivery` `DISPATCHED` SHALL be finalized using
-Fonoster's call detail record (CDR) when the channel's own normal completion path (the
-co-located VoiceServer's in-process completion for `VOICE_PRERECORDED`; the autopilot
-`conversation.ended` webhook for `VOICE_AI`) does not resolve the gestión — most commonly
-because the call was never answered, or because it connected but the completion signal was lost.
+A `VOICE_PRERECORDED` or `VOICE_AI` gestión at `delivery` `DISPATCHED` SHALL be finalized by a
+periodic sweep when the channel's own normal completion path (the co-located VoiceServer's
+in-process completion for `VOICE_PRERECORDED`; the autopilot `conversation.ended` webhook for
+`VOICE_AI`) does not resolve it — most commonly because the call was never answered, or because
+it connected but the completion signal was lost.
 
-Call-status tracking is started once per dispatch, immediately after the gestión is written at
-`DISPATCHED`, regardless of which dispatch path originated the call (campaign or manual/ad-hoc
-outreach) and independent of whether the call ever reaches a channel-specific handler. The
-system SHALL poll for the call's CDR until it becomes available (the CDR is written once, at
-call end) or a bounded attempt budget is exhausted; a lookup before the call has ended SHALL NOT
-be treated as a failure to deliver.
+The sweep runs on its own interval, independent of whether the campaigns engine is running:
+manual/ad-hoc voice dispatch needs this finalization too, and coverage SHALL NOT depend on the
+engine happening to be enabled. It considers every `VOICE_AI`/`VOICE_PRERECORDED` gestión that
+has sat at `DISPATCHED` for at least `floorMinutes` (default 2), and classifies each one from
+Fonoster's call detail record (CDR, `Calls.getCall`):
 
-Once the CDR is available, the system SHALL finalize the gestión from it: `delivery` `DELIVERED`
-(with `durationSeconds` set to the CDR's real answered duration) when the CDR reflects a normal
-call clearing; otherwise `delivery` `FAILED` with `durationSeconds` 0/absent and a
-`deliveryReason` derived from the CDR's clearing cause — `NO_ANSWER` when the call rang out,
-`BUSY` when the line was busy, `UNREACHABLE` when the network could not reach the destination,
-and `PROVIDER_ERROR` otherwise. `DELIVERED` SHALL NOT be recorded with a fabricated or zero
-duration. If the attempt budget is exhausted before the CDR becomes available, the gestión SHALL
-be left at `DISPATCHED` rather than guessed.
+- **A CDR with a terminal clearing status** (the call has ended, one way or another) — the
+  gestión is finalized `delivery` `FAILED` with a `deliveryReason` derived from the CDR's
+  clearing status: `NO_ANSWER` when the call rang out or the callee never responded, `BUSY` when
+  the line was busy, `REJECTED` when the call was rejected, `INVALID_DESTINATION` when the
+  number was unallocated, malformed, or unroutable, `UNREACHABLE` when the network could not
+  reach the destination, and `OUTCOME_UNKNOWN` when the CDR shows a normal call clearing — the
+  call itself was fine, but QCobro's own completion signal never arrived, so it cannot say what
+  happened during the call.
+- **A CDR with no clearing status yet** (only the start portion has been written — the call is
+  still in progress) — the gestión SHALL NOT be finalized. It is left at `DISPATCHED` for a
+  later sweep pass to decide, unless the backstop below applies. This is not a failure.
+- **No CDR at all** (the provider has no record of the call — Fonoster's `Calls.getCall` returns
+  `NOT_FOUND`) — the gestión is finalized `delivery` `FAILED` with `deliveryReason`
+  `NOT_ORIGINATED`.
+- **Backstop** — a gestión that still has no clearing status past `backstopMinutes` (default 30)
+  is finalized `delivery` `FAILED` with `deliveryReason` `OUTCOME_UNKNOWN` rather than polled
+  forever: the provider can lose the end-of-call record and never produce one.
 
-Finalization via call-status tracking SHALL be idempotent per gestión: once a gestión's `delivery`
-has left `DISPATCHED`, tracking-based finalization SHALL NOT overwrite it, regardless of the
-order in which the normal completion path and the CDR become available.
+The sweep SHALL NOT record `delivery` `DELIVERED`: every path it finalizes is a failure to
+observe an answer, never a confirmed one. It SHALL NOT write the CDR's own duration (measured
+from call setup and including ring time) into a gestión's `durationSeconds` — that field is the
+answered duration recorded by the channel's own live completion signal, and is left untouched.
+
+Finalization via the sweep SHALL be idempotent per gestión: once a gestión's `delivery` has left
+`DISPATCHED` — whether via the channel's own normal completion path or a prior sweep pass — a
+later sweep finalization SHALL NOT overwrite it, and SHALL NOT overwrite `durationSeconds` or
+`channelData` either.
 
 `fonoster.webhookBaseUrl` SHALL be **required whenever a `fonoster` section is configured**. The
 `fonoster` section itself remains optional; omitting it disables the voice channels entirely.
@@ -357,41 +373,54 @@ order in which the normal completion path and the CDR become available.
 #### Scenario: Unanswered pre-recorded call is finalized from the CDR
 
 - **WHEN** a `VOICE_PRERECORDED` call is dispatched, the VoiceServer's own completion never
-  fires, and the call's CDR becomes available showing the call rang out
+  fires, and once past `floorMinutes` the call's CDR shows the call rang out
 - **THEN** the gestión `delivery` is set to `FAILED` with `deliveryReason` `NO_ANSWER` and
-  `durationSeconds` 0/absent
+  `durationSeconds` is left unset
 
 #### Scenario: Unanswered Voz IA call is finalized from the CDR
 
 - **WHEN** a `VOICE_AI` call is dispatched, no `conversation.started`/`conversation.ended` event
-  is ever received for that call, and the call's CDR becomes available showing the call rang out
+  is ever received for that call, and once past `floorMinutes` the call's CDR shows the call
+  rang out
 - **THEN** the gestión `delivery` is set to `FAILED` with `deliveryReason` `NO_ANSWER` and
-  `durationSeconds` 0/absent
+  `durationSeconds` is left unset
 
 #### Scenario: A busy line is distinguished from a call that rang out
 
 - **WHEN** the CDR reports the destination was busy
 - **THEN** the gestión `delivery` is `FAILED` with `deliveryReason` `BUSY`
 
-#### Scenario: Answered call recovered when the normal completion path is lost
+#### Scenario: A call that cleared normally is recorded as unknown, not answered
 
 - **WHEN** the channel's own normal completion path does not finalize a gestión, and the call's
-  CDR becomes available showing a normal call clearing
-- **THEN** the system finalizes `delivery` as `DELIVERED` with `durationSeconds` set
-  to the CDR's real answered duration
+  CDR shows a normal call clearing
+- **THEN** the gestión is finalized `delivery` `FAILED` with `deliveryReason` `OUTCOME_UNKNOWN`,
+  never `DELIVERED`
 
 #### Scenario: A call still in progress does not finalize the gestión
 
-- **WHEN** call-status tracking looks up a call's CDR before the call has ended
-- **THEN** the gestión is not finalized from that lookup — tracking continues polling until
-  either the CDR becomes available, the channel's normal completion path resolves it, or the
-  attempt budget is exhausted
+- **WHEN** the sweep looks up a call's CDR and it carries no clearing status yet, and the
+  gestión has not yet passed `backstopMinutes`
+- **THEN** the gestión is not finalized from that pass — it stays at `DISPATCHED` for a later
+  sweep pass to decide
 
-#### Scenario: Tracking-based finalization never overwrites a finalized delivery
+#### Scenario: A call with no CDR at all never originated
+
+- **WHEN** the sweep looks up a call's CDR and Fonoster reports `NOT_FOUND`
+- **THEN** the gestión is finalized `delivery` `FAILED` with `deliveryReason` `NOT_ORIGINATED`
+
+#### Scenario: A gestión with no CDR status past the backstop is finalized anyway
+
+- **WHEN** a gestión's CDR still carries no clearing status after `backstopMinutes` have passed
+  since it was dispatched
+- **THEN** the gestión is finalized `delivery` `FAILED` with `deliveryReason` `OUTCOME_UNKNOWN`
+
+#### Scenario: Sweep finalization never overwrites a finalized delivery
 
 - **WHEN** a gestión's `delivery` has already left `DISPATCHED` via the channel's own normal
   completion path
-- **THEN** a subsequently available CDR for the same call SHALL NOT modify `delivery` or duration
+- **THEN** a subsequent sweep pass for the same call SHALL NOT modify `delivery`,
+  `durationSeconds`, or `channelData`
 
 ### Requirement: Gestión log triggers hot-path field updates
 

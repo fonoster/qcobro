@@ -3,7 +3,9 @@ import {
   DispatchError,
   type FonosterConfig,
   type OutboundCallClient,
-  type OutboundCallInput
+  type OutboundCallInput,
+  type VoiceCallLookupResult,
+  type VoiceCallStatus
 } from "@qcobro/common";
 
 type FonosterSettings = NonNullable<FonosterConfig>;
@@ -29,6 +31,9 @@ interface GrpcServiceError {
 function isGrpcServiceError(err: unknown): err is GrpcServiceError {
   return typeof err === "object" && err !== null && "code" in err && typeof err.code === "number";
 }
+
+/** gRPC status code Fonoster returns from `Calls.getCall` when the ref has no CDR at all. */
+const GRPC_NOT_FOUND = 5;
 
 /**
  * gRPC status codes that mean the call request was actually evaluated and rejected on the
@@ -123,6 +128,33 @@ export class FonosterOutboundCallClient implements OutboundCallClient {
       return { ref };
     } catch (err) {
       throw classifyVoiceError(err);
+    }
+  }
+
+  /**
+   * Looks up a call's CDR by provider ref (the voice completion sweep's only consumer).
+   * Fonoster answers a ref with no record at all — the call never originated — with a gRPC
+   * `NOT_FOUND`, not a null; that is caught here and surfaced as `{ found: false }` rather
+   * than left to throw, since the sweep needs to branch on it, not treat it as failure.
+   */
+  async getCall(ref: string): Promise<VoiceCallLookupResult> {
+    try {
+      const calls = await withTimeout(this.calls(), "login");
+      const record = await withTimeout(calls.getCall(ref), "getCall");
+      return {
+        found: true,
+        // The SDK's own CallStatus type omits UNKNOWN (the protobuf zero-value), so an
+        // in-progress call's status can arrive as something outside that type at runtime.
+        status: (record.status as unknown as VoiceCallStatus) || "UNKNOWN",
+        setupToClearSeconds: record.duration ?? 0
+      };
+    } catch (err) {
+      if (isGrpcServiceError(err) && err.code === GRPC_NOT_FOUND) {
+        return { found: false };
+      }
+      // Unlike createCall, a lookup failure isn't a dispatch outcome to classify — just
+      // propagate it so the caller (the sweep) logs it and retries on its next pass.
+      throw err;
     }
   }
 }

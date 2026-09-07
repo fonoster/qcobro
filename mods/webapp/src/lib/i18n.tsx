@@ -475,6 +475,8 @@ export const messages = {
     "gestiones.deliveryReason.CHANNEL_UNSUPPORTED": "Channel not supported",
     "gestiones.deliveryReason.INVALID_DESTINATION": "Invalid destination",
     "gestiones.deliveryReason.REJECTED": "Rejected",
+    "gestiones.deliveryReason.OUTCOME_UNKNOWN": "Unknown outcome",
+    "gestiones.deliveryReason.NOT_ORIGINATED": "Never originated",
     "gestiones.path.ENGAGED": "Conversation",
     // On a threaded channel the same value reads as a reply, not a conversation.
     "gestiones.path.threaded.ENGAGED": "Replied",
@@ -1122,6 +1124,8 @@ export const messages = {
     "gestiones.deliveryReason.CHANNEL_UNSUPPORTED": "Canal no compatible",
     "gestiones.deliveryReason.INVALID_DESTINATION": "Destino inválido",
     "gestiones.deliveryReason.REJECTED": "Rechazado",
+    "gestiones.deliveryReason.OUTCOME_UNKNOWN": "Resultado desconocido",
+    "gestiones.deliveryReason.NOT_ORIGINATED": "No se realizó",
     "gestiones.path.ENGAGED": "Conversación",
     // En un canal de mensajería el mismo valor se lee como respuesta, no como conversación.
     "gestiones.path.threaded.ENGAGED": "Respondió",

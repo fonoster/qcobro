@@ -17,6 +17,12 @@ export type Delivery = z.infer<typeof deliverySchema>;
  * Why delivery failed. Set if and only if `delivery` is `FAILED`. The values are chosen so a
  * retry policy can branch on them: `NO_ANSWER` and `BUSY` are transient, `INVALID_DESTINATION`
  * and `CHANNEL_UNSUPPORTED` are permanent for that contact point.
+ *
+ * `OUTCOME_UNKNOWN` and `NOT_ORIGINATED` are voice-only, both written by the voice
+ * completion sweep from Fonoster's call detail record rather than a live completion
+ * signal: `OUTCOME_UNKNOWN` when the call connected and cleared normally but QCobro's own
+ * completion signal never arrived, `NOT_ORIGINATED` when the provider has no record of the
+ * call at all. Both are transient — the account stays eligible for a retry.
  */
 export const deliveryReasonSchema = z.enum([
   "NO_ANSWER",
@@ -25,7 +31,9 @@ export const deliveryReasonSchema = z.enum([
   "PROVIDER_ERROR",
   "CHANNEL_UNSUPPORTED",
   "INVALID_DESTINATION",
-  "REJECTED"
+  "REJECTED",
+  "OUTCOME_UNKNOWN",
+  "NOT_ORIGINATED"
 ]);
 export type DeliveryReason = z.infer<typeof deliveryReasonSchema>;
 
