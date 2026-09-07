@@ -10,11 +10,11 @@ import { agentTypeSchema } from "./agentTemplates.js";
  */
 
 /** Did the attempt reach the account holder's device or inbox? Never null. */
-export const entregaSchema = z.enum(["DISPATCHED", "DELIVERED", "FAILED"]);
-export type Entrega = z.infer<typeof entregaSchema>;
+export const deliverySchema = z.enum(["DISPATCHED", "DELIVERED", "FAILED"]);
+export type Delivery = z.infer<typeof deliverySchema>;
 
 /**
- * Why delivery failed. Set if and only if `entrega` is `FAILED`. The values are chosen so a
+ * Why delivery failed. Set if and only if `delivery` is `FAILED`. The values are chosen so a
  * retry policy can branch on them: `NO_ANSWER` and `BUSY` are transient, `INVALID_DESTINATION`
  * and `CHANNEL_UNSUPPORTED` are permanent for that contact point.
  */
@@ -35,14 +35,14 @@ export type DeliveryReason = z.infer<typeof deliveryReasonSchema>;
  * `VOICEMAIL` is reachable only on `VOICE_AI` and needs AMD before it can actually be
  * detected (issue #83); it is defined now so the enum needs no second migration later.
  */
-export const caminoSchema = z.enum(["ENGAGED", "ABANDONED", "VOICEMAIL"]);
-export type Camino = z.infer<typeof caminoSchema>;
+export const pathSchema = z.enum(["ENGAGED", "ABANDONED", "VOICEMAIL"]);
+export type Path = z.infer<typeof pathSchema>;
 
 /**
  * What came of the engagement. Nullable and single-valued; null is the common case and means
  * nothing came of it, which is a real and frequent answer rather than missing data.
  */
-export const resultadoSchema = z.enum([
+export const outcomeSchema = z.enum([
   "PAYMENT_PROMISE",
   "NEW_TERMS",
   "PAID",
@@ -54,16 +54,16 @@ export const resultadoSchema = z.enum([
   "WRONG_PARTY",
   "RESOLVED"
 ]);
-export type Resultado = z.infer<typeof resultadoSchema>;
+export type Outcome = z.infer<typeof outcomeSchema>;
 
 /**
- * Channels with an inbound path, and therefore the only ones that can observe a `camino` or
- * produce a `resultado`. `SMS` has no inbound ingestion at all, so both axes are not merely
+ * Channels with an inbound path, and therefore the only ones that can observe a `path` or
+ * produce an `outcome`. `SMS` has no inbound ingestion at all, so both axes are not merely
  * usually-null there — they are unreachable. `VOICE_PRERECORDED` is the one exception: it has
  * no inbound path of its own, but reaching call completion (the script played to the end,
  * with or without an optional DTMF menu — see `prerecorded-audio`) always sets
- * `camino: ENGAGED`, and the opt-out digit specifically also sets `resultado: OPT_OUT` — no
- * other camino/resultado value is reachable. See {@link isAllowedOnPrerecorded} for that
+ * `path: ENGAGED`, and the opt-out digit specifically also sets `outcome: OPT_OUT` — no
+ * other path/outcome value is reachable. See {@link isAllowedOnPrerecorded} for that
  * narrow carve-out.
  */
 export const CHANNEL_CAN_ENGAGE = ["VOICE_AI", "EMAIL", "WHATSAPP"] as const;
@@ -73,19 +73,19 @@ export function channelCanEngage(agentType: string): boolean {
   return (CHANNEL_CAN_ENGAGE as readonly string[]).includes(agentType);
 }
 
-const PRERECORDED_ALLOWED_CAMINO: ReadonlySet<Camino> = new Set(["ENGAGED"]);
-const PRERECORDED_ALLOWED_RESULTADO: ReadonlySet<Resultado> = new Set(["OPT_OUT"]);
+const PRERECORDED_ALLOWED_PATH: ReadonlySet<Path> = new Set(["ENGAGED"]);
+const PRERECORDED_ALLOWED_OUTCOME: ReadonlySet<Outcome> = new Set(["OPT_OUT"]);
 
 /**
  * `VOICE_PRERECORDED`'s one carve-out from {@link channelCanEngage}: call completion sets
- * `camino: ENGAGED`, and the opt-out digit specifically also sets `resultado: OPT_OUT` — and
- * nothing else. `ABANDONED`/`VOICEMAIL` and every other `resultado` value stay unreachable,
+ * `path: ENGAGED`, and the opt-out digit specifically also sets `outcome: OPT_OUT` — and
+ * nothing else. `ABANDONED`/`VOICEMAIL` and every other `outcome` value stay unreachable,
  * exactly as for any other one-way channel.
  */
-function isAllowedOnPrerecorded(field: "camino" | "resultado", value: Camino | Resultado): boolean {
-  return field === "camino"
-    ? PRERECORDED_ALLOWED_CAMINO.has(value as Camino)
-    : PRERECORDED_ALLOWED_RESULTADO.has(value as Resultado);
+function isAllowedOnPrerecorded(field: "path" | "outcome", value: Path | Outcome): boolean {
+  return field === "path"
+    ? PRERECORDED_ALLOWED_PATH.has(value as Path)
+    : PRERECORDED_ALLOWED_OUTCOME.has(value as Outcome);
 }
 
 export const aiSentimentSchema = z.enum(["POSITIVE", "NEUTRAL", "NEGATIVE", "HOSTILE"]);
@@ -112,10 +112,10 @@ const createContactLogFields = z.object({
   contactedAt: z.string().min(1),
   durationSeconds: z.number().int().nonnegative().optional(),
   /** Defaults to the dispatch-time state, so a dispatch call site need not spell it out. */
-  entrega: entregaSchema.default("DISPATCHED"),
+  delivery: deliverySchema.default("DISPATCHED"),
   deliveryReason: deliveryReasonSchema.optional(),
-  camino: caminoSchema.optional(),
-  resultado: resultadoSchema.optional(),
+  path: pathSchema.optional(),
+  outcome: outcomeSchema.optional(),
   notes: z.string().optional(),
   debtAmountSnapshot: z.number().nonnegative().optional(),
   aiSummary: z.string().optional(),
@@ -149,26 +149,26 @@ const createContactLogFields = z.object({
  *   only thing that makes `FAILED` actionable;
  * - an interaction recorded on a channel that cannot observe one.
  *
- * Note there is deliberately no rule tying `resultado` to `entrega`: a `FAILED` delivery can
- * still carry a `resultado` when someone answers and hangs up on a wrong-party identification.
+ * Note there is deliberately no rule tying `outcome` to `delivery`: a `FAILED` delivery can
+ * still carry an `outcome` when someone answers and hangs up on a wrong-party identification.
  */
 export const createContactLogSchema = createContactLogFields.superRefine((value, ctx) => {
-  if (value.entrega === "FAILED" && !value.deliveryReason) {
+  if (value.delivery === "FAILED" && !value.deliveryReason) {
     ctx.addIssue({
       code: "custom",
       path: ["deliveryReason"],
-      message: "deliveryReason is required when entrega is FAILED"
+      message: "deliveryReason is required when delivery is FAILED"
     });
   }
-  if (value.entrega !== "FAILED" && value.deliveryReason) {
+  if (value.delivery !== "FAILED" && value.deliveryReason) {
     ctx.addIssue({
       code: "custom",
       path: ["deliveryReason"],
-      message: `deliveryReason is only valid when entrega is FAILED (got ${value.entrega})`
+      message: `deliveryReason is only valid when delivery is FAILED (got ${value.delivery})`
     });
   }
   if (!channelCanEngage(value.agentType)) {
-    for (const field of ["camino", "resultado"] as const) {
+    for (const field of ["path", "outcome"] as const) {
       const fieldValue = value[field];
       if (!fieldValue) continue;
       if (value.agentType === "VOICE_PRERECORDED" && isAllowedOnPrerecorded(field, fieldValue)) {

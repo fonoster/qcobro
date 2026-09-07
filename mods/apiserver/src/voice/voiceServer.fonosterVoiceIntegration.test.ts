@@ -81,8 +81,8 @@ describe("runPrerecordedCall against the installed @fonoster/voice", () => {
       // The defect this guards against: before the dependency bump, this call never
       // settled at all and the assertion below would hang the test until timeout.
       assert.equal(result.scriptCompleted, false);
-      assert.equal(result.camino, undefined);
-      assert.equal(result.resultado, undefined);
+      assert.equal(result.path, undefined);
+      assert.equal(result.outcome, undefined);
     }
   );
 });

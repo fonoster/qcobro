@@ -8,7 +8,7 @@ const CALLBACK_URL = "https://qcobro.example.com/api/sms/events";
 
 interface FakeLog {
   id: string;
-  entrega: string;
+  delivery: string;
   deliveryReason: string | null;
   channelData: Record<string, unknown> | null;
 }
@@ -22,7 +22,7 @@ function makePrisma(logs: Record<string, FakeLog>) {
         return log
           ? {
               id: log.id,
-              entrega: log.entrega,
+              delivery: log.delivery,
               deliveryReason: log.deliveryReason,
               channelData: log.channelData
             }
@@ -67,7 +67,7 @@ function makeDeps(over: Partial<SmsEventsDeps> = {}): SmsEventsDeps {
 describe("createSmsEventsHandler", () => {
   it("processes a validly signed delivered callback and finalizes the gestión", async () => {
     const { prisma, updates } = makePrisma({
-      SM123: { id: "SM123", entrega: "DISPATCHED", deliveryReason: null, channelData: null }
+      SM123: { id: "SM123", delivery: "DISPATCHED", deliveryReason: null, channelData: null }
     });
     const body = { MessageSid: "SM123", MessageStatus: "delivered" };
     const signature = twilio.getExpectedTwilioSignature(AUTH_TOKEN, CALLBACK_URL, body);
@@ -79,14 +79,14 @@ describe("createSmsEventsHandler", () => {
 
     assert.equal(state.statusCode, 200);
     assert.equal(
-      updates[0]?.data && (updates[0].data as Record<string, unknown>).entrega,
+      updates[0]?.data && (updates[0].data as Record<string, unknown>).delivery,
       "DELIVERED"
     );
   });
 
   it("rejects a request with an invalid signature — no data is read or written", async () => {
     const { prisma, updates } = makePrisma({
-      SM123: { id: "SM123", entrega: "DISPATCHED", deliveryReason: null, channelData: null }
+      SM123: { id: "SM123", delivery: "DISPATCHED", deliveryReason: null, channelData: null }
     });
     const body = { MessageSid: "SM123", MessageStatus: "delivered" };
 
@@ -128,7 +128,7 @@ describe("createSmsEventsHandler", () => {
 
   it("a failed callback with a Twilio ErrorCode sets deliveryReason", async () => {
     const { prisma, updates } = makePrisma({
-      SM123: { id: "SM123", entrega: "DISPATCHED", deliveryReason: null, channelData: null }
+      SM123: { id: "SM123", delivery: "DISPATCHED", deliveryReason: null, channelData: null }
     });
     const body = { MessageSid: "SM123", MessageStatus: "failed", ErrorCode: "21614" };
     const signature = twilio.getExpectedTwilioSignature(AUTH_TOKEN, CALLBACK_URL, body);
@@ -140,13 +140,13 @@ describe("createSmsEventsHandler", () => {
 
     assert.equal(state.statusCode, 200);
     const data = updates[0]?.data as Record<string, unknown>;
-    assert.equal(data.entrega, "FAILED");
+    assert.equal(data.delivery, "FAILED");
     assert.equal(data.deliveryReason, "CHANNEL_UNSUPPORTED");
   });
 
   it("a signature computed for a different callback URL is rejected", async () => {
     const { prisma, updates } = makePrisma({
-      SM123: { id: "SM123", entrega: "DISPATCHED", deliveryReason: null, channelData: null }
+      SM123: { id: "SM123", delivery: "DISPATCHED", deliveryReason: null, channelData: null }
     });
     const body = { MessageSid: "SM123", MessageStatus: "delivered" };
     // Signed for a different URL than the one this handler is configured with.

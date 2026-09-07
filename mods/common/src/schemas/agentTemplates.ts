@@ -26,7 +26,7 @@ const digitSchema = z.string().regex(/^[0-9]$/, "must be a single digit 0-9");
 
 /**
  * Fields for the optional DTMF menu offered after a pre-recorded script plays: a "repeat"
- * digit that replays it and an "opt-out" digit that ends the call and records `resultado:
+ * digit that replays it and an "opt-out" digit that ends the call and records `outcome:
  * OPT_OUT` (see the `prerecorded-audio` and `account-contact-log` specs). Both pairs are
  * independently optional; neither set means no menu is offered at all.
  */

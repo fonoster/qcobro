@@ -473,7 +473,7 @@ export function createEngine(deps: EngineDeps) {
         campaignId: c.id,
         agentType: channel,
         contactedAt: at,
-        entrega: "FAILED",
+        delivery: "FAILED",
         deliveryReason: failureReason,
         debtAmountSnapshot: acc.outstandingBalance,
         notes: err instanceof Error ? err.message : String(err)
@@ -504,7 +504,7 @@ export function createEngine(deps: EngineDeps) {
         campaignId: c.id,
         agentType: channel,
         contactedAt: at,
-        entrega: "DISPATCHED",
+        delivery: "DISPATCHED",
         debtAmountSnapshot: acc.outstandingBalance,
         providerRef: result.providerRef,
         // EMAIL only — the key its outbound delivery/open events correlate on.

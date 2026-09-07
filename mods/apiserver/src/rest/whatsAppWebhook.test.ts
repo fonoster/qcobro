@@ -15,9 +15,9 @@ interface SenderRow {
 interface LogRow {
   id: string;
   portfolioAccountId: string;
-  entrega?: string;
+  delivery?: string;
   deliveryReason?: string | null;
-  resultado?: string | null;
+  outcome?: string | null;
   channelData?: Record<string, unknown> | null;
 }
 
@@ -26,9 +26,9 @@ function dispatchedLog(overrides: Partial<LogRow> = {}): LogRow {
   return {
     id: "log-1",
     portfolioAccountId: "acct-1",
-    entrega: "DISPATCHED",
+    delivery: "DISPATCHED",
     deliveryReason: null,
-    resultado: null,
+    outcome: null,
     channelData: null,
     ...overrides
   };
@@ -261,7 +261,7 @@ describe("whatsAppWebhook.events — signature", () => {
 });
 
 describe("whatsAppWebhook.events — delivery statuses", () => {
-  it("advances entrega to DELIVERED on a delivered status", async () => {
+  it("advances delivery to DELIVERED on a delivered status", async () => {
     const logs = { "msg-id-1": dispatchedLog() };
     const db = makeDb({ logs });
     const { events } = createWhatsAppWebhookHandlers(db, {});
@@ -270,14 +270,14 @@ describe("whatsAppWebhook.events — delivery statuses", () => {
     await events(req(messagesBody("pn-1", [{ id: "msg-id-1", status: "delivered" }])), res);
     await drain();
 
-    assert.equal(logs["msg-id-1"].entrega, "DELIVERED");
+    assert.equal(logs["msg-id-1"].delivery, "DELIVERED");
     assert.equal(logs["msg-id-1"].deliveryReason, null);
     // A delivery is not an engagement — the interaction axes stay untouched.
-    assert.equal(logs["msg-id-1"].resultado, null);
+    assert.equal(logs["msg-id-1"].outcome, null);
   });
 
   it("records a read receipt in channelData without moving an axis", async () => {
-    const logs = { "msg-id-1": dispatchedLog({ entrega: "DELIVERED" }) };
+    const logs = { "msg-id-1": dispatchedLog({ delivery: "DELIVERED" }) };
     const db = makeDb({ logs });
     const { events } = createWhatsAppWebhookHandlers(db, {});
 
@@ -289,14 +289,14 @@ describe("whatsAppWebhook.events — delivery statuses", () => {
     await drain();
 
     assert.equal(logs["msg-id-1"].channelData?.openedAt, "2025-08-20T00:00:00.000Z");
-    assert.equal(logs["msg-id-1"].entrega, "DELIVERED");
-    assert.equal(logs["msg-id-1"].resultado, null);
+    assert.equal(logs["msg-id-1"].delivery, "DELIVERED");
+    assert.equal(logs["msg-id-1"].outcome, null);
   });
 
   it("keeps the first read timestamp when a second read arrives", async () => {
     const logs = {
       "msg-id-1": dispatchedLog({
-        entrega: "DELIVERED",
+        delivery: "DELIVERED",
         channelData: { openedAt: "2025-08-19T00:00:00.000Z" }
       })
     };
@@ -325,10 +325,10 @@ describe("whatsAppWebhook.events — delivery statuses", () => {
     await events(req(body), res);
     await drain();
 
-    assert.equal(logs["msg-id-1"].entrega, "FAILED");
+    assert.equal(logs["msg-id-1"].delivery, "FAILED");
     assert.equal(logs["msg-id-1"].deliveryReason, "INVALID_DESTINATION");
     // Not an opt-out — only 131050 carries that meaning.
-    assert.equal(logs["msg-id-1"].resultado, null);
+    assert.equal(logs["msg-id-1"].outcome, null);
   });
 
   it("falls back to PROVIDER_ERROR for an unmapped error code", async () => {
@@ -343,12 +343,12 @@ describe("whatsAppWebhook.events — delivery statuses", () => {
     await events(req(body), res);
     await drain();
 
-    assert.equal(logs["msg-id-1"].entrega, "FAILED");
+    assert.equal(logs["msg-id-1"].delivery, "FAILED");
     assert.equal(logs["msg-id-1"].deliveryReason, "PROVIDER_ERROR");
-    assert.equal(logs["msg-id-1"].resultado, null);
+    assert.equal(logs["msg-id-1"].outcome, null);
   });
 
-  it("records error 131050 on both axes: FAILED/REJECTED and resultado OPT_OUT", async () => {
+  it("records error 131050 on both axes: FAILED/REJECTED and outcome OPT_OUT", async () => {
     const logs = { "msg-id-1": dispatchedLog() };
     const db = makeDb({
       senders: { "pn-1": { workspaceRef: "ws-1", qualityRating: null } },
@@ -363,10 +363,10 @@ describe("whatsAppWebhook.events — delivery statuses", () => {
     await events(req(body), res);
     await drain();
 
-    assert.equal(logs["msg-id-1"].resultado, "OPT_OUT");
-    // A platform block is also a delivery failure — recording only the resultado would keep
+    assert.equal(logs["msg-id-1"].outcome, "OPT_OUT");
+    // A platform block is also a delivery failure — recording only the outcome would keep
     // opt-outs invisible to the contactability KPI.
-    assert.equal(logs["msg-id-1"].entrega, "FAILED");
+    assert.equal(logs["msg-id-1"].delivery, "FAILED");
     assert.equal(logs["msg-id-1"].deliveryReason, "REJECTED");
   });
 
@@ -380,12 +380,12 @@ describe("whatsAppWebhook.events — delivery statuses", () => {
     await drain();
 
     assert.equal(logs["msg-id-1"].channelData?.deliveryStatus, "sent");
-    assert.equal(logs["msg-id-1"].entrega, "DISPATCHED");
+    assert.equal(logs["msg-id-1"].delivery, "DISPATCHED");
   });
 
-  it("never moves entrega back off a finalized value", async () => {
+  it("never moves delivery back off a finalized value", async () => {
     const logs = {
-      "msg-id-1": dispatchedLog({ entrega: "FAILED", deliveryReason: "INVALID_DESTINATION" })
+      "msg-id-1": dispatchedLog({ delivery: "FAILED", deliveryReason: "INVALID_DESTINATION" })
     };
     const db = makeDb({ logs });
     const { events } = createWhatsAppWebhookHandlers(db, {});
@@ -394,7 +394,7 @@ describe("whatsAppWebhook.events — delivery statuses", () => {
     await events(req(messagesBody("pn-1", [{ id: "msg-id-1", status: "delivered" }])), res);
     await drain();
 
-    assert.equal(logs["msg-id-1"].entrega, "FAILED");
+    assert.equal(logs["msg-id-1"].delivery, "FAILED");
     assert.equal(logs["msg-id-1"].deliveryReason, "INVALID_DESTINATION");
   });
 
@@ -411,7 +411,7 @@ describe("whatsAppWebhook.events — delivery statuses", () => {
     await events(req(body), res);
     await drain();
 
-    assert.equal(logs["msg-id-2"].entrega, "DELIVERED");
+    assert.equal(logs["msg-id-2"].delivery, "DELIVERED");
   });
 
   it("writes nothing when no gestión row matches the providerRef", async () => {

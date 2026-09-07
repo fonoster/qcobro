@@ -54,7 +54,7 @@ const PAYLOAD = {
   portfolioAccountId: "acc-1",
   agentType: "SMS",
   contactedAt: "2026-06-22T10:00:00.000Z",
-  entrega: "FAILED",
+  delivery: "FAILED",
   deliveryReason: "NO_ANSWER"
 };
 

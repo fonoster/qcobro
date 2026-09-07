@@ -5,19 +5,19 @@ import { createRecordVoiceAiCallStatus } from "./recordVoiceAiCallStatus.js";
 
 interface Row {
   id: string;
-  entrega: string;
+  delivery: string;
   deliveryReason: string | null;
   channelData: unknown;
 }
 
 interface Captured {
   findFirstCalled?: boolean;
-  updateMany?: { where: { id: string; entrega: string }; data: Record<string, unknown> };
+  updateMany?: { where: { id: string; delivery: string }; data: Record<string, unknown> };
 }
 
 /**
  * Simulates the real guard: `updateMany` only applies (and reports count: 1) when the
- * row's CURRENT entrega still matches `where.entrega` at write time — re-checked against
+ * row's CURRENT delivery still matches `where.delivery` at write time — re-checked against
  * live state, not whatever an earlier `findFirst` saw. This is what actually closes the
  * TOCTOU race between the live completion webhook and `voiceCompletionTimeoutSweep`.
  */
@@ -31,11 +31,11 @@ function makeClient(record: Row | null) {
         return row ? { ...row } : null;
       },
       updateMany: async (args: {
-        where: { id: string; entrega: string };
+        where: { id: string; delivery: string };
         data: Record<string, unknown>;
       }) => {
         cap.updateMany = args;
-        if (!row || row.id !== args.where.id || row.entrega !== args.where.entrega) {
+        if (!row || row.id !== args.where.id || row.delivery !== args.where.delivery) {
           return { count: 0 };
         }
         row = { ...row, ...args.data } as Row;
@@ -50,7 +50,7 @@ describe("recordVoiceAiCallStatus", () => {
   it("terminal tracking failure → FAILED with deliveryReason and zero duration", async () => {
     const { client, cap } = makeClient({
       id: "g-1",
-      entrega: "DISPATCHED",
+      delivery: "DISPATCHED",
       deliveryReason: null,
       channelData: null
     });
@@ -66,19 +66,19 @@ describe("recordVoiceAiCallStatus", () => {
     assert.deepEqual(result, {
       matched: true,
       id: "g-1",
-      entrega: "FAILED",
+      delivery: "FAILED",
       deliveryReason: "NO_ANSWER"
     });
-    assert.equal(cap.updateMany?.data.entrega, "FAILED");
+    assert.equal(cap.updateMany?.data.delivery, "FAILED");
     assert.equal(cap.updateMany?.data.deliveryReason, "NO_ANSWER");
     assert.equal(cap.updateMany?.data.durationSeconds, 0);
-    assert.equal(cap.updateMany?.where.entrega, "DISPATCHED");
+    assert.equal(cap.updateMany?.where.delivery, "DISPATCHED");
   });
 
   it("CDR recovery, answered → DELIVERED with the real duration, no deliveryReason", async () => {
     const { client, cap } = makeClient({
       id: "g-1",
-      entrega: "DISPATCHED",
+      delivery: "DISPATCHED",
       deliveryReason: null,
       channelData: { appRef: "app-1" }
     });
@@ -93,20 +93,20 @@ describe("recordVoiceAiCallStatus", () => {
     assert.deepEqual(result, {
       matched: true,
       id: "g-1",
-      entrega: "DELIVERED",
+      delivery: "DELIVERED",
       deliveryReason: null
     });
-    assert.equal(cap.updateMany?.data.entrega, "DELIVERED");
+    assert.equal(cap.updateMany?.data.delivery, "DELIVERED");
     assert.equal(cap.updateMany?.data.deliveryReason, null);
     assert.equal(cap.updateMany?.data.durationSeconds, 47);
     const cd = cap.updateMany?.data.channelData as Record<string, unknown>;
     assert.equal(cd.appRef, "app-1"); // existing preserved
   });
 
-  it("idempotent: entrega never regresses — once DELIVERED (e.g. via the autopilot webhook), a later CDR completion preserves it", async () => {
+  it("idempotent: delivery never regresses — once DELIVERED (e.g. via the autopilot webhook), a later CDR completion preserves it", async () => {
     const { client, getRow } = makeClient({
       id: "g-1",
-      entrega: "DELIVERED",
+      delivery: "DELIVERED",
       deliveryReason: null,
       channelData: {}
     });
@@ -122,12 +122,12 @@ describe("recordVoiceAiCallStatus", () => {
     assert.deepEqual(result, {
       matched: true,
       id: "g-1",
-      entrega: "DELIVERED",
+      delivery: "DELIVERED",
       deliveryReason: null
     });
-    // The guarded updateMany is attempted (where.entrega: "DISPATCHED") but the row is
+    // The guarded updateMany is attempted (where.delivery: "DISPATCHED") but the row is
     // already DELIVERED, so it must not actually apply.
-    assert.equal(getRow()?.entrega, "DELIVERED");
+    assert.equal(getRow()?.delivery, "DELIVERED");
     assert.equal(getRow()?.deliveryReason, null);
   });
 
@@ -157,11 +157,11 @@ describe("recordVoiceAiCallStatus", () => {
       // in production); the webhook's write commits first (DELIVERED, 47s). The sweep's
       // write — decided from its own earlier, now-stale read — is held back and only
       // applied afterward, reproducing "read first, write last." Because the write is
-      // guarded by `where.entrega: "DISPATCHED"` re-checked against live state, it must
+      // guarded by `where.delivery: "DISPATCHED"` re-checked against live state, it must
       // find the row already DELIVERED and no-op instead of clobbering it.
       const { client, getRow } = makeClient({
         id: "g-1",
-        entrega: "DISPATCHED",
+        delivery: "DISPATCHED",
         deliveryReason: null,
         channelData: {}
       });
@@ -198,21 +198,21 @@ describe("recordVoiceAiCallStatus", () => {
       const sweepResult = await sweepCall;
 
       assert.equal(
-        getRow()?.entrega,
+        getRow()?.delivery,
         "DELIVERED",
         "a call that was actually answered must not end up FAILED because the sweep's " +
           "write physically landed after the real completion's"
       );
       assert.equal(getRow()?.deliveryReason, null);
       // The sweep's own result must reflect the state that actually won, not FAILED.
-      assert.equal(sweepResult.matched && sweepResult.entrega, "DELIVERED");
+      assert.equal(sweepResult.matched && sweepResult.delivery, "DELIVERED");
     }
   );
 
   it("rejects invalid input with a ValidationError and never touches the database", async () => {
     const { client, cap } = makeClient({
       id: "g-1",
-      entrega: "DISPATCHED",
+      delivery: "DISPATCHED",
       deliveryReason: null,
       channelData: {}
     });

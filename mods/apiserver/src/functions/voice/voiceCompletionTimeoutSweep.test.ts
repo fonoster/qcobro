@@ -88,14 +88,14 @@ describe("createVoiceCompletionTimeoutSweep", () => {
     assert.equal((prerecordedCalls[0] as { providerRef: string }).providerRef, "call-2");
   });
 
-  it("queries with the correct entrega/agentType/cutoff filter", async () => {
+  it("queries with the correct delivery/agentType/cutoff filter", async () => {
     const { deps, calls } = makeDeps([]);
     const sweep = createVoiceCompletionTimeoutSweep(deps as never);
 
     await sweep();
 
-    const args = calls[0] as { where: { entrega: string; contactedAt: { lt: Date } } };
-    assert.equal(args.where.entrega, "DISPATCHED");
+    const args = calls[0] as { where: { delivery: string; contactedAt: { lt: Date } } };
+    assert.equal(args.where.delivery, "DISPATCHED");
     assert.deepEqual(args.where.contactedAt.lt, new Date(NOW.getTime() - 10 * 60_000));
   });
 

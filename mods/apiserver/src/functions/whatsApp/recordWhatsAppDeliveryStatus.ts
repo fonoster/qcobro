@@ -3,8 +3,8 @@ import {
   whatsAppStatusCallbackSchema,
   withErrorHandlingAndValidation,
   type DeliveryReason,
-  type Entrega,
-  type Resultado,
+  type Delivery,
+  type Outcome,
   type WhatsAppStatusCallbackInput
 } from "@qcobro/common";
 
@@ -16,25 +16,25 @@ export interface WhatsAppDeliveryStatusClient {
       select: {
         id: true;
         portfolioAccountId: true;
-        entrega: true;
+        delivery: true;
         deliveryReason: true;
-        resultado: true;
+        outcome: true;
         channelData: true;
       };
     }): Promise<{
       id: string;
       portfolioAccountId: string;
-      entrega: Entrega;
+      delivery: Delivery;
       deliveryReason: DeliveryReason | null;
-      resultado: Resultado | null;
+      outcome: Outcome | null;
       channelData: unknown;
     } | null>;
     update(args: {
       where: { id: string };
       data: {
-        entrega?: Entrega;
+        delivery?: Delivery;
         deliveryReason?: DeliveryReason | null;
-        resultado?: Resultado;
+        outcome?: Outcome;
         channelData: Record<string, unknown>;
       };
     }): Promise<unknown>;
@@ -47,7 +47,7 @@ export type RecordWhatsAppDeliveryStatusResult =
       matched: true;
       id: string;
       portfolioAccountId: string;
-      entrega: Entrega;
+      delivery: Delivery;
       deliveryReason: DeliveryReason | null;
       optOut: boolean;
     };
@@ -97,26 +97,26 @@ function deliveryReasonForFailure(codes: readonly number[]): DeliveryReason {
  *
  * Every status updates `channelData.deliveryStatus` to the raw value, terminal or not, so an
  * operator can see a message's progress before it finalizes. Only `delivered` and `failed`
- * finalize `entrega` (+ `deliveryReason` on failure); `sent` updates visibility only.
+ * finalize `delivery` (+ `deliveryReason` on failure); `sent` updates visibility only.
  *
  * `read` writes `channelData.openedAt` and moves no axis. Unlike an email open — a tracking
  * pixel that proxies inflate and blocked images suppress — Meta's read receipt is a genuine
  * signal, but read-but-unengaged stays unmodelled on both channels so the two render the same
- * `Camino` progression and neither enters a metric.
+ * `Path` progression and neither enters a metric.
  *
  * A `failed` status carrying error code 131050 (the recipient opted out) always records
- * `channelData.optOutAt`, and additionally sets `resultado: OPT_OUT` when the gestión has no
- * resultado yet. `resultado` is single-valued, so a complaint arriving after the customer
+ * `channelData.optOutAt`, and additionally sets `outcome: OPT_OUT` when the gestión has no
+ * outcome yet. `outcome` is single-valued, so a complaint arriving after the customer
  * already produced a payment promise must not erase it — `optOutAt` is what keeps the block
  * findable in that case. Neither is enforced suppression: the account-level `OPT_OUT` flag no
  * longer exists, and the workspace Do Not Contact list that replaces it is not built yet
  * (#101). Under the three-axis model an opt-out is also a delivery failure, so it writes the
- * delivery axis too — the axes are independent by design, and recording only the `resultado`
+ * delivery axis too — the axes are independent by design, and recording only the `outcome`
  * would leave platform blocks invisible to the contactability KPI.
  *
- * Idempotent per message id: `entrega` only ever advances. Once it has left the dispatch-time
+ * Idempotent per message id: `delivery` only ever advances. Once it has left the dispatch-time
  * `DISPATCHED` — by a prior status, or by a customer reply, which races these freely — a
- * repeated or later terminal status preserves the existing `entrega`/`deliveryReason`.
+ * repeated or later terminal status preserves the existing `delivery`/`deliveryReason`.
  */
 export function createRecordWhatsAppDeliveryStatus(client: WhatsAppDeliveryStatusClient) {
   const fn = async (
@@ -127,9 +127,9 @@ export function createRecordWhatsAppDeliveryStatus(client: WhatsAppDeliveryStatu
       select: {
         id: true,
         portfolioAccountId: true,
-        entrega: true,
+        delivery: true,
         deliveryReason: true,
-        resultado: true,
+        outcome: true,
         channelData: true
       }
     });
@@ -144,15 +144,15 @@ export function createRecordWhatsAppDeliveryStatus(client: WhatsAppDeliveryStatu
 
     const codes = input.errorCodes ?? [];
     const failed = FAILED_STATUSES.has(input.status);
-    const terminal: Entrega | null = DELIVERED_STATUSES.has(input.status)
+    const terminal: Delivery | null = DELIVERED_STATUSES.has(input.status)
       ? "DELIVERED"
       : failed
         ? "FAILED"
         : null;
 
-    // Never move entrega back off DISPATCHED once it has already left it.
-    const shouldFinalize = terminal !== null && match.entrega === "DISPATCHED";
-    const entrega: Entrega | undefined = shouldFinalize ? terminal : undefined;
+    // Never move delivery back off DISPATCHED once it has already left it.
+    const shouldFinalize = terminal !== null && match.delivery === "DISPATCHED";
+    const delivery: Delivery | undefined = shouldFinalize ? terminal : undefined;
     const deliveryReason: DeliveryReason | undefined =
       shouldFinalize && terminal === "FAILED" ? deliveryReasonForFailure(codes) : undefined;
 
@@ -161,20 +161,20 @@ export function createRecordWhatsAppDeliveryStatus(client: WhatsAppDeliveryStatu
     // error; and the `failed` check, because 131050 riding on a non-failed status would
     // otherwise write a suppression marker for a message that was actually delivered.
     const optOut = failed && codes.includes(META_OPT_OUT_ERROR_CODE);
-    // Recorded on every opt-out, even when `resultado` is left alone below — this is the
+    // Recorded on every opt-out, even when `outcome` is left alone below — this is the
     // durable trace of the block, and the axis write is best-effort on top of it.
     if (optOut && typeof existing.optOutAt !== "string") channelData.optOutAt = input.at;
-    // `resultado` is single-valued, so an opt-out does not overwrite a richer outcome the
+    // `outcome` is single-valued, so an opt-out does not overwrite a richer outcome the
     // conversation already produced (a payment promise, a dispute). `channelData.optOutAt`
     // above is what guarantees the signal survives that case.
-    const resultado: Resultado | undefined = optOut && !match.resultado ? "OPT_OUT" : undefined;
+    const outcome: Outcome | undefined = optOut && !match.outcome ? "OPT_OUT" : undefined;
 
     await client.accountContactLog.update({
       where: { id: match.id },
       data: {
-        ...(entrega ? { entrega } : {}),
+        ...(delivery ? { delivery } : {}),
         ...(deliveryReason ? { deliveryReason } : {}),
-        ...(resultado ? { resultado } : {}),
+        ...(outcome ? { outcome } : {}),
         channelData
       }
     });
@@ -182,8 +182,8 @@ export function createRecordWhatsAppDeliveryStatus(client: WhatsAppDeliveryStatu
       matched: true,
       id: match.id,
       portfolioAccountId: match.portfolioAccountId,
-      entrega: entrega ?? match.entrega,
-      deliveryReason: deliveryReason ?? (entrega ? null : match.deliveryReason),
+      delivery: delivery ?? match.delivery,
+      deliveryReason: deliveryReason ?? (delivery ? null : match.deliveryReason),
       optOut
     };
   };

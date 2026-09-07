@@ -33,7 +33,7 @@ export type VoiceConversationEvent = z.infer<typeof voiceConversationEventSchema
  * `answered` says the callee picked up, `scriptCompleted` says the message actually
  * played out to the end. A call can be answered and play nothing — a network element
  * that answers and clears immediately, or a session that dies mid-verb — and only the
- * pair distinguishes that from a real delivery. `entrega` is DELIVERED only when both
+ * pair distinguishes that from a real delivery. `delivery` is DELIVERED only when both
  * hold; see `recordPrerecordedOutcome`.
  *
  * `scriptCompleted` is never a claim that a human listened, only that we played it.

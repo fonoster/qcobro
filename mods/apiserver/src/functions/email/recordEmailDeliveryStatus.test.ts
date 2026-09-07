@@ -9,9 +9,9 @@ import {
 interface Row {
   id: string;
   providerRef: string | null;
-  entrega: string;
+  delivery: string;
   deliveryReason: string | null;
-  resultado: string | null;
+  outcome: string | null;
   channelData: Record<string, unknown> | null;
 }
 
@@ -20,9 +20,9 @@ function dispatched(overrides: Partial<Row> = {}): Row {
   return {
     id: "log-1",
     providerRef: "token-1",
-    entrega: "DISPATCHED",
+    delivery: "DISPATCHED",
     deliveryReason: null,
-    resultado: null,
+    outcome: null,
     channelData: null,
     ...overrides
   };
@@ -57,14 +57,14 @@ function event(type: string, extra: Record<string, unknown> = {}) {
 }
 
 describe("recordEmailDeliveryStatus — delivery axis", () => {
-  it("advances entrega to DELIVERED on email.delivered", async () => {
+  it("advances delivery to DELIVERED on email.delivered", async () => {
     const { client, row } = makeClient(dispatched());
     const record = createRecordEmailDeliveryStatus(client);
 
     const result = await record(event("email.delivered"));
 
     assert.equal(result.matched, true);
-    assert.equal(row!.entrega, "DELIVERED");
+    assert.equal(row!.delivery, "DELIVERED");
     assert.equal(row!.deliveryReason, null);
     assert.equal(row!.channelData?.deliveryStatus, "email.delivered");
   });
@@ -84,7 +84,7 @@ describe("recordEmailDeliveryStatus — delivery axis", () => {
 
     await record(event("email.bounced", { bounceType: "Permanent", bounceSubType: "NoEmail" }));
 
-    assert.equal(row!.entrega, "FAILED");
+    assert.equal(row!.delivery, "FAILED");
     assert.equal(row!.deliveryReason, "INVALID_DESTINATION");
   });
 
@@ -103,7 +103,7 @@ describe("recordEmailDeliveryStatus — delivery axis", () => {
 
     await record(event("email.bounced", { bounceType: "Transient", bounceSubType: "MailboxFull" }));
 
-    assert.equal(row!.entrega, "FAILED");
+    assert.equal(row!.delivery, "FAILED");
     assert.equal(row!.deliveryReason, "UNREACHABLE");
   });
 
@@ -122,7 +122,7 @@ describe("recordEmailDeliveryStatus — delivery axis", () => {
 
     await record(event("email.failed"));
 
-    assert.equal(row!.entrega, "FAILED");
+    assert.equal(row!.delivery, "FAILED");
     assert.equal(row!.deliveryReason, "PROVIDER_ERROR");
   });
 
@@ -132,7 +132,7 @@ describe("recordEmailDeliveryStatus — delivery axis", () => {
 
     await record(event("email.sent"));
 
-    assert.equal(row!.entrega, "DISPATCHED");
+    assert.equal(row!.delivery, "DISPATCHED");
     assert.equal(row!.deliveryReason, null);
     assert.equal(row!.channelData?.deliveryStatus, "email.sent");
   });
@@ -143,37 +143,37 @@ describe("recordEmailDeliveryStatus — delivery axis", () => {
 
     await record(event("email.delivery_delayed"));
 
-    assert.equal(row!.entrega, "DISPATCHED");
+    assert.equal(row!.delivery, "DISPATCHED");
     assert.equal(row!.channelData?.deliveryStatus, "email.delivery_delayed");
   });
 });
 
 describe("recordEmailDeliveryStatus — opens", () => {
   it("records openedAt without moving any axis", async () => {
-    const { client, row } = makeClient(dispatched({ entrega: "DELIVERED" }));
+    const { client, row } = makeClient(dispatched({ delivery: "DELIVERED" }));
     const record = createRecordEmailDeliveryStatus(client);
 
     await record(event("email.opened"));
 
     assert.equal(row!.channelData?.openedAt, AT);
-    assert.equal(row!.entrega, "DELIVERED");
-    assert.equal(row!.resultado, null);
+    assert.equal(row!.delivery, "DELIVERED");
+    assert.equal(row!.outcome, null);
   });
 
-  it("does not advance entrega on its own — a pixel load is not a delivery receipt", async () => {
+  it("does not advance delivery on its own — a pixel load is not a delivery receipt", async () => {
     const { client, row } = makeClient(dispatched());
     const record = createRecordEmailDeliveryStatus(client);
 
     await record(event("email.opened"));
 
-    assert.equal(row!.entrega, "DISPATCHED");
+    assert.equal(row!.delivery, "DISPATCHED");
     assert.equal(row!.channelData?.openedAt, AT);
   });
 
   it("keeps the first open when an image proxy re-fetches later", async () => {
     const first = "2026-08-19T09:00:00.000Z";
     const { client, row } = makeClient(
-      dispatched({ entrega: "DELIVERED", channelData: { openedAt: first } })
+      dispatched({ delivery: "DELIVERED", channelData: { openedAt: first } })
     );
     const record = createRecordEmailDeliveryStatus(client);
 
@@ -190,18 +190,18 @@ describe("recordEmailDeliveryStatus — complaints", () => {
 
     await record(event("email.complained"));
 
-    assert.equal(row!.entrega, "DELIVERED");
-    assert.equal(row!.resultado, "OPT_OUT");
+    assert.equal(row!.delivery, "DELIVERED");
+    assert.equal(row!.outcome, "OPT_OUT");
     assert.equal(row!.channelData?.optOutAt, AT);
   });
 
-  it("does not overwrite a resultado the conversation already produced", async () => {
-    const { client, row } = makeClient(dispatched({ resultado: "PAYMENT_PROMISE" }));
+  it("does not overwrite an outcome the conversation already produced", async () => {
+    const { client, row } = makeClient(dispatched({ outcome: "PAYMENT_PROMISE" }));
     const record = createRecordEmailDeliveryStatus(client);
 
     await record(event("email.complained"));
 
-    assert.equal(row!.resultado, "PAYMENT_PROMISE");
+    assert.equal(row!.outcome, "PAYMENT_PROMISE");
     // The realistic ordering — reply first, complain later — must not silently discard the
     // complaint just because the richer outcome is preserved.
     assert.equal(row!.channelData?.optOutAt, AT);
@@ -209,25 +209,25 @@ describe("recordEmailDeliveryStatus — complaints", () => {
 });
 
 describe("recordEmailDeliveryStatus — idempotency and correlation", () => {
-  it("never moves entrega back off a finalized value", async () => {
+  it("never moves delivery back off a finalized value", async () => {
     const { client, row } = makeClient(
-      dispatched({ entrega: "FAILED", deliveryReason: "INVALID_DESTINATION" })
+      dispatched({ delivery: "FAILED", deliveryReason: "INVALID_DESTINATION" })
     );
     const record = createRecordEmailDeliveryStatus(client);
 
     await record(event("email.delivered"));
 
-    assert.equal(row!.entrega, "FAILED");
+    assert.equal(row!.delivery, "FAILED");
     assert.equal(row!.deliveryReason, "INVALID_DESTINATION");
   });
 
   it("leaves a reply-set DELIVERED alone when a bounce arrives afterwards", async () => {
-    const { client, row } = makeClient(dispatched({ entrega: "DELIVERED" }));
+    const { client, row } = makeClient(dispatched({ delivery: "DELIVERED" }));
     const record = createRecordEmailDeliveryStatus(client);
 
     await record(event("email.bounced", { bounceType: "Permanent", bounceSubType: "NoEmail" }));
 
-    assert.equal(row!.entrega, "DELIVERED");
+    assert.equal(row!.delivery, "DELIVERED");
     assert.equal(row!.deliveryReason, null);
   });
 
@@ -248,6 +248,6 @@ describe("recordEmailDeliveryStatus — idempotency and correlation", () => {
       () => record({ providerMessageId: "", type: "email.delivered", at: AT }),
       ValidationError
     );
-    assert.equal(row!.entrega, "DISPATCHED");
+    assert.equal(row!.delivery, "DISPATCHED");
   });
 });

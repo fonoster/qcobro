@@ -2,11 +2,11 @@ import type { PrismaClient } from "@prisma/client";
 import {
   buildOutreachContext,
   parseLocale,
-  type Camino,
+  type Path,
   type CreateContactLogInput,
   type EmailAutopilot,
   type PortfolioAccountRecord,
-  type Resultado
+  type Outcome
 } from "@qcobro/common";
 import { transcriptToThread } from "../../services/voiceAutopilot.js";
 import { buildTranscript } from "./generateGestionInsight.js";
@@ -41,12 +41,12 @@ export interface DecideVoiceOutcomeDeps {
 
 export type DecideVoiceOutcomeResult =
   | { decided: false; reason: "not_found" | "no_transcript" }
-  | { decided: true; resultado: Resultado | null };
+  | { decided: true; outcome: Outcome | null };
 
-/** `resultado` values this decision step may record. `OTHER`/`WRONG_NUMBER` no longer
+/** `outcome` values this decision step may record. `OTHER`/`WRONG_NUMBER` no longer
  *  exist — an unrecognized string from the model (or a hallucinated removed value) collapses
- *  to `null`, same as no resultado at all. */
-const VALID_RESULTADOS = new Set<Resultado>([
+ *  to `null`, same as no outcome at all. */
+const VALID_OUTCOMES = new Set<Outcome>([
   "PAYMENT_PROMISE",
   "NEW_TERMS",
   "PAID",
@@ -59,29 +59,29 @@ const VALID_RESULTADOS = new Set<Resultado>([
   "RESOLVED"
 ]);
 
-/** Pure: map the autopilot's raw decision string onto a valid `Resultado`, or null when
+/** Pure: map the autopilot's raw decision string onto a valid `Outcome`, or null when
  *  absent or unrecognized. */
-export function decideResultado(raw: string | null | undefined): Resultado | null {
+export function decideOutcome(raw: string | null | undefined): Outcome | null {
   if (!raw) return null;
-  return (VALID_RESULTADOS as ReadonlySet<string>).has(raw) ? (raw as Resultado) : null;
+  return (VALID_OUTCOMES as ReadonlySet<string>).has(raw) ? (raw as Outcome) : null;
 }
 
 /** Pure: this decision step only ever runs once a transcript exists (see the
  *  `no_transcript` guard below), so reaching it means the call was answered and
  *  conversational — always `ENGAGED`. */
-export function decideCamino(): Camino {
+export function decidePath(): Path {
   return "ENGAGED";
 }
 
 /**
  * Runs the Voz IA autopilot decision once over a call's final transcript and records the
- * camino/resultado/Objective through the same {@link CreateContactLogInput} path
+ * path/outcome/Objective through the same {@link CreateContactLogInput} path
  * EMAIL/WhatsApp use.
  *
  * No-ops (without calling the autopilot) when the gestión is missing or its transcript is
  * empty — mirrors {@link createGenerateGestionInsight}'s `no_transcript` guard. Once the
- * autopilot has decided, the call was answered and conversational, so `camino: ENGAGED` is
- * always recorded — whether or not the decision also carries a `resultado`.
+ * autopilot has decided, the call was answered and conversational, so `path: ENGAGED` is
+ * always recorded — whether or not the decision also carries an `outcome`.
  */
 export function createDecideVoiceOutcome(deps: DecideVoiceOutcomeDeps) {
   return async (id: string): Promise<DecideVoiceOutcomeResult> => {
@@ -102,25 +102,25 @@ export function createDecideVoiceOutcome(deps: DecideVoiceOutcomeDeps) {
       referenceDate: deps.now().toISOString().slice(0, 10)
     });
 
-    const resultado = decideResultado(decision.resultado);
-    const camino = decideCamino();
+    const outcome = decideOutcome(decision.outcome);
+    const path = decidePath();
     const obj = decision.objective;
     await deps.recordOutcome({
       portfolioAccountId: g.portfolioAccountId,
       campaignId: g.campaignId ?? undefined,
       agentType: "VOICE_AI",
       contactedAt: deps.now().toISOString(),
-      // This step only enriches an existing (already-dispatched) gestión; entrega itself
+      // This step only enriches an existing (already-dispatched) gestión; delivery itself
       // is decided elsewhere (recordVoiceAiCallStatus / resolveVoiceCallFromCdr) and
       // recordOutcomeTx never regresses it off DISPATCHED once it has advanced.
-      entrega: "DISPATCHED",
-      camino,
-      resultado: resultado ?? undefined,
+      delivery: "DISPATCHED",
+      path,
+      outcome: outcome ?? undefined,
       providerRef: g.providerRef ?? undefined,
       debtAmountSnapshot: g.debtAmountSnapshot ?? undefined,
       intentMetadata: obj ? { promisedAmount: obj.amount, promisedDate: obj.dueDate } : undefined
     });
-    return { decided: true, resultado };
+    return { decided: true, outcome };
   };
 }
 

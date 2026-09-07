@@ -5,7 +5,7 @@ import {
 } from "@qcobro/common";
 
 export interface ContactStatsResult {
-  /** Distinct accounts with >=1 gestión (any entrega) in the window. The rate's denominator. */
+  /** Distinct accounts with >=1 gestión (any delivery) in the window. The rate's denominator. */
   total: number;
   /** Distinct accounts with >=1 DELIVERED gestión in the window. The rate's numerator. */
   contacted: number;
@@ -31,7 +31,7 @@ export interface ContactStatsClient {
     findMany(args: {
       where: {
         contactedAt: { gte: Date };
-        entrega?: "DELIVERED";
+        delivery?: "DELIVERED";
         portfolioAccount: { portfolio: { workspaceRef: string } };
       };
       distinct: ["portfolioAccountId"];
@@ -69,7 +69,7 @@ export interface ContactStatsClient {
  * an unreached account changes neither count; reaching it on any attempt inside the window
  * counts it as reached exactly once.
  *
- * **Reached is defined on `entrega` alone**, deliberately not on `camino` or `resultado`: a
+ * **Reached is defined on `delivery` alone**, deliberately not on `path` or `outcome`: a
  * delivered message that produced no interaction is still a reached account. An account whose
  * attempts are all `DISPATCHED` or `FAILED` is not reached — a message still in flight is not
  * a contact.
@@ -101,7 +101,7 @@ export function createContactStats(client: ContactStatsClient, workspaceRef: str
         select: { portfolioAccountId: true }
       }),
       client.accountContactLog.findMany({
-        where: { ...windowWhere, entrega: "DELIVERED" as const },
+        where: { ...windowWhere, delivery: "DELIVERED" as const },
         distinct: ["portfolioAccountId"],
         select: { portfolioAccountId: true }
       }),

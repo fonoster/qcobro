@@ -30,7 +30,7 @@ holder. Every one of them is still recorded on the gestión and visible to opera
 Removing a contact point from outreach is an explicit, labelled decision recorded on the Do
 Not Contact list and reached through `DNC_CHECK`. Until that list exists, `DNC_CHECK` matches
 nothing and **no request to stop contact is enforced automatically** — operators must act on
-the recorded `OPT_OUT` resultado themselves. This is a known, accepted gap; see issue #101.
+the recorded `OPT_OUT` outcome themselves. This is a known, accepted gap; see issue #101.
 
 #### Scenario: Account suppressed by max daily attempts
 
@@ -40,44 +40,44 @@ the recorded `OPT_OUT` resultado themselves. This is a known, accepted gap; see 
 
 #### Scenario: A wrong-party finding does not suppress
 
-- **WHEN** an account has a gestión whose `resultado` is `WRONG_PARTY`
+- **WHEN** an account has a gestión whose `outcome` is `WRONG_PARTY`
 - **THEN** the engine SHALL continue to consider that account eligible for dispatch
 - **AND** suppression SHALL require an explicit Do Not Contact entry
 
 #### Scenario: A delivery failure does not suppress
 
-- **WHEN** an account's attempts have recorded `entrega` `FAILED` with any `deliveryReason`
+- **WHEN** an account's attempts have recorded `delivery` `FAILED` with any `deliveryReason`
 - **THEN** the engine SHALL continue to consider that account eligible for dispatch
 
 ### Requirement: AI contact triggers (intent-based suppression)
 
 A Campaign SHALL support AI-derived suppression rules. These are applied when a
-contact log entry is written with an AI-detected resultado.
+contact log entry is written with an AI-detected outcome.
 
 Supported AI trigger types:
 
 - `PAYMENT_PROMISE`: config `{ suppressDays: number }` — when an account contact log
-  records a `PAYMENT_PROMISE` resultado, set the **campaign-local**
+  records a `PAYMENT_PROMISE` outcome, set the **campaign-local**
   `CampaignAccountState.suppressUntil` to the promise date (falling back to
   `contactedAt + suppressDays`). Default `suppressDays` is 7. This suppresses the
   account for this campaign only; other campaigns remain eligible.
-- `INTENT_MET`: when a contact log records a `RESOLVED` or `PAID` resultado, set
+- `INTENT_MET`: when a contact log records a `RESOLVED` or `PAID` outcome, set
   `intentStatus = INTENT_MET` on the account (global), suppressing all future
   dispatches across every campaign unless an operator explicitly clears it.
 - `CALLBACK_REQUESTED`: config `{ suppressHours: number }` — when a contact log records
-  a `CALLBACK_REQUESTED` resultado with a specific date/time extracted by the AI, set the
+  a `CALLBACK_REQUESTED` outcome with a specific date/time extracted by the AI, set the
   **campaign-local** `CampaignAccountState.suppressUntil` to that date/time. Falls back
   to `now + suppressHours` if no specific time was captured.
 
 #### Scenario: Payment promise suppresses this campaign only
 
-- **WHEN** a gestión records `resultado` `PAYMENT_PROMISE` with a promised date
+- **WHEN** a gestión records `outcome` `PAYMENT_PROMISE` with a promised date
 - **THEN** `CampaignAccountState.suppressUntil` is set for that campaign
 - **AND** other campaigns remain eligible to contact the account
 
 #### Scenario: Intent met suppresses globally
 
-- **WHEN** a gestión records `resultado` `RESOLVED` or `PAID`
+- **WHEN** a gestión records `outcome` `RESOLVED` or `PAID`
 - **THEN** `intentStatus` is set to `INTENT_MET` and the account is suppressed across all
   campaigns
 

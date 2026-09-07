@@ -60,9 +60,9 @@ describe("stripQuotedReply", () => {
 interface Row {
   id: string;
   providerRef: string | null;
-  entrega: string;
+  delivery: string;
   deliveryReason: string | null;
-  resultado: string | null;
+  outcome: string | null;
   channelData: Record<string, unknown> | null;
 }
 
@@ -70,9 +70,9 @@ function dispatched(overrides: Partial<Row> = {}): Row {
   return {
     id: "log-1",
     providerRef: "token-1",
-    entrega: "DISPATCHED",
+    delivery: "DISPATCHED",
     deliveryReason: null,
-    resultado: null,
+    outcome: null,
     channelData: null,
     ...overrides
   };
@@ -207,7 +207,7 @@ describe("email webhook — authentication", () => {
     await handler(signedReq(deliveredEvent()), res);
 
     assert.equal(code(), 503);
-    assert.equal(row!.entrega, "DISPATCHED");
+    assert.equal(row!.delivery, "DISPATCHED");
   });
 
   it("rejects an unsigned request with 401 and writes nothing", async () => {
@@ -218,7 +218,7 @@ describe("email webhook — authentication", () => {
     await handler(unsignedReq(deliveredEvent()), res);
 
     assert.equal(code(), 401);
-    assert.equal(row!.entrega, "DISPATCHED");
+    assert.equal(row!.delivery, "DISPATCHED");
   });
 
   it("rejects a signature computed with the wrong secret", async () => {
@@ -243,7 +243,7 @@ describe("email webhook — authentication", () => {
     await handler(unsignedReq(deliveredEvent()), res);
 
     assert.equal(code(), 401);
-    assert.equal(row!.entrega, "DISPATCHED");
+    assert.equal(row!.delivery, "DISPATCHED");
   });
 });
 
@@ -256,7 +256,7 @@ describe("email webhook — delivery events", () => {
     await handler(signedReq(deliveredEvent()), res);
 
     assert.equal(code(), 200);
-    assert.equal(row!.entrega, "DELIVERED");
+    assert.equal(row!.delivery, "DELIVERED");
   });
 
   it("acknowledges an uncorrelated event with 200 so Resend stops retrying", async () => {
@@ -332,7 +332,7 @@ describe("email webhook — routing between the two directions", () => {
 
     assert.equal(code(), 200);
     assert.deepEqual(body(), { ignored: true, reason: "not_a_reply" });
-    assert.equal(row!.entrega, "DISPATCHED");
+    assert.equal(row!.delivery, "DISPATCHED");
   });
 
   it("still declines a payload with no event type via the reply path", async () => {
@@ -344,6 +344,6 @@ describe("email webhook — routing between the two directions", () => {
 
     assert.equal(code(), 200);
     assert.deepEqual(body(), { ignored: true, reason: "not_a_reply" });
-    assert.equal(row!.entrega, "DISPATCHED");
+    assert.equal(row!.delivery, "DISPATCHED");
   });
 });

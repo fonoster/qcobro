@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createAgentTemplateSchema } from "./agentTemplates.js";
-import { resultadoSchema } from "./contactLog.js";
+import { outcomeSchema } from "./contactLog.js";
 
 /**
  * The account context an eval scenario runs against — author-facing fields only
@@ -40,7 +40,7 @@ export const evalExpectedToolSchema = z.object({
 
 /**
  * A single turn's optional expectation. `tools` is graded for `VOICE_AI` only (relayed from
- * Fonoster); `action`/`resultado` are graded for `EMAIL`/`WHATSAPP` (the behavioral analog of
+ * Fonoster); `action`/`outcome` are graded for `EMAIL`/`WHATSAPP` (the behavioral analog of
  * an expected tool call — see design.md). `text` is graded for all three: VOICE_AI relays it
  * to Fonoster's own `evaluateIntelligence` judge; EMAIL/WHATSAPP grade it in-process —
  * `EXACT` is a literal match, `SIMILAR` runs QCobro's own judge (`TextSimilarityJudge`),
@@ -59,9 +59,9 @@ export const evalExpectedSchema = z
     text: evalExpectedTextSchema.optional(),
     tools: z.array(evalExpectedToolSchema).optional(),
     action: z.enum(["reply", "ignore", "resolve", "escalate"]).optional(),
-    resultado: resultadoSchema.optional()
+    outcome: outcomeSchema.optional()
   })
-  // Strict so the `outcome` -> `resultado` rename fails loudly. A permissive object would
+  // Strict so the `outcome` -> `outcome` rename fails loudly. A permissive object would
   // strip an eval suite's legacy `outcome` key, leave the expectation unevaluated, and report
   // every turn as passing - a silently green suite that checks nothing.
   .strict();

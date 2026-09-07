@@ -11,7 +11,7 @@ interface Captured {
 function makeClient(
   record: {
     id: string;
-    entrega: string;
+    delivery: string;
     deliveryReason: string | null;
     channelData: unknown;
   } | null
@@ -36,7 +36,7 @@ describe("recordSmsDeliveryStatus", () => {
   it("delivered → DELIVERED, channelData.deliveryStatus set, preserves existing channelData", async () => {
     const { client, cap } = makeClient({
       id: "g-1",
-      entrega: "DISPATCHED",
+      delivery: "DISPATCHED",
       deliveryReason: null,
       channelData: { messageSid: "SM123" }
     });
@@ -50,10 +50,10 @@ describe("recordSmsDeliveryStatus", () => {
     assert.deepEqual(result, {
       matched: true,
       id: "g-1",
-      entrega: "DELIVERED",
+      delivery: "DELIVERED",
       deliveryReason: null
     });
-    assert.equal(cap.update?.data.entrega, "DELIVERED");
+    assert.equal(cap.update?.data.delivery, "DELIVERED");
     assert.equal(cap.update?.data.deliveryReason, undefined);
     const cd = cap.update?.data.channelData as Record<string, unknown>;
     assert.equal(cd.deliveryStatus, "delivered");
@@ -63,7 +63,7 @@ describe("recordSmsDeliveryStatus", () => {
   it("undelivered → FAILED with a deliveryReason derived from the default (no ErrorCode)", async () => {
     const { client, cap } = makeClient({
       id: "g-1",
-      entrega: "DISPATCHED",
+      delivery: "DISPATCHED",
       deliveryReason: null,
       channelData: null
     });
@@ -77,17 +77,17 @@ describe("recordSmsDeliveryStatus", () => {
     assert.deepEqual(result, {
       matched: true,
       id: "g-1",
-      entrega: "FAILED",
+      delivery: "FAILED",
       deliveryReason: "PROVIDER_ERROR"
     });
-    assert.equal(cap.update?.data.entrega, "FAILED");
+    assert.equal(cap.update?.data.delivery, "FAILED");
     assert.equal(cap.update?.data.deliveryReason, "PROVIDER_ERROR");
   });
 
   it("failed with ErrorCode 21614 (landline) → CHANNEL_UNSUPPORTED", async () => {
     const { client, cap } = makeClient({
       id: "g-1",
-      entrega: "DISPATCHED",
+      delivery: "DISPATCHED",
       deliveryReason: null,
       channelData: null
     });
@@ -107,7 +107,7 @@ describe("recordSmsDeliveryStatus", () => {
   it("failed with ErrorCode 21211 (invalid number) → INVALID_DESTINATION", async () => {
     const { client } = makeClient({
       id: "g-1",
-      entrega: "DISPATCHED",
+      delivery: "DISPATCHED",
       deliveryReason: null,
       channelData: null
     });
@@ -125,7 +125,7 @@ describe("recordSmsDeliveryStatus", () => {
   it("failed with ErrorCode 21610 (recipient opted out) → REJECTED", async () => {
     const { client } = makeClient({
       id: "g-1",
-      entrega: "DISPATCHED",
+      delivery: "DISPATCHED",
       deliveryReason: null,
       channelData: null
     });
@@ -144,7 +144,7 @@ describe("recordSmsDeliveryStatus", () => {
     for (const status of ["queued", "sending", "sent"]) {
       const { client, cap } = makeClient({
         id: "g-1",
-        entrega: "DISPATCHED",
+        delivery: "DISPATCHED",
         deliveryReason: null,
         channelData: null
       });
@@ -156,18 +156,18 @@ describe("recordSmsDeliveryStatus", () => {
       });
 
       assert.equal(result.matched, true);
-      assert.equal((result as { entrega: string }).entrega, "DISPATCHED");
-      assert.equal(cap.update?.data.entrega, undefined, status);
+      assert.equal((result as { delivery: string }).delivery, "DISPATCHED");
+      assert.equal(cap.update?.data.delivery, undefined, status);
       assert.equal(cap.update?.data.deliveryReason, undefined, status);
       const cd = cap.update?.data.channelData as Record<string, unknown>;
       assert.equal(cd.deliveryStatus, status);
     }
   });
 
-  it("idempotent: entrega never regresses — a later callback preserves an already-finalized entrega/deliveryReason", async () => {
+  it("idempotent: delivery never regresses — a later callback preserves an already-finalized delivery/deliveryReason", async () => {
     const { client, cap } = makeClient({
       id: "g-1",
-      entrega: "DELIVERED",
+      delivery: "DELIVERED",
       deliveryReason: null,
       channelData: {}
     });
@@ -182,12 +182,12 @@ describe("recordSmsDeliveryStatus", () => {
     assert.deepEqual(result, {
       matched: true,
       id: "g-1",
-      entrega: "DELIVERED",
+      delivery: "DELIVERED",
       deliveryReason: null
     });
-    assert.equal(cap.update?.data.entrega, undefined);
+    assert.equal(cap.update?.data.delivery, undefined);
     assert.equal(cap.update?.data.deliveryReason, undefined);
-    // deliveryStatus still updates for visibility even though entrega is locked
+    // deliveryStatus still updates for visibility even though delivery is locked
     const cd = cap.update?.data.channelData as Record<string, unknown>;
     assert.equal(cd.deliveryStatus, "failed");
   });
@@ -208,7 +208,7 @@ describe("recordSmsDeliveryStatus", () => {
   it("rejects invalid input with a ValidationError and never touches the database", async () => {
     const { client, cap } = makeClient({
       id: "g-1",
-      entrega: "DISPATCHED",
+      delivery: "DISPATCHED",
       deliveryReason: null,
       channelData: {}
     });

@@ -8,7 +8,7 @@ export interface StaleVoiceDispatchClient {
   accountContactLog: {
     findMany(args: {
       where: {
-        entrega: "DISPATCHED";
+        delivery: "DISPATCHED";
         agentType: { in: ["VOICE_AI", "VOICE_PRERECORDED"] };
         providerRef: { not: null };
         contactedAt: { lt: Date };
@@ -37,17 +37,17 @@ export interface VoiceCompletionTimeoutSweepDeps {
 }
 
 /**
- * Finalizes VOICE_AI / VOICE_PRERECORDED gestiones stuck at entrega=DISPATCHED past a
+ * Finalizes VOICE_AI / VOICE_PRERECORDED gestiones stuck at delivery=DISPATCHED past a
  * threshold with no completion signal — the autopilot conversation.ended webhook never
  * arrived, or the pre-recorded VoiceServer's answer/say/hangup verb chain never resolved
  * (neither has a timeout of its own). Always finalizes FAILED: if the call HAD been
- * answered, one of those two live signals would already have advanced entrega before
+ * answered, one of those two live signals would already have advanced delivery before
  * this runs, so the sweep only ever needs to close out the failure case.
  * deliveryReason is always PROVIDER_ERROR — with Fonoster's CDR no longer consulted,
  * there is no richer signal left to classify *why* it never completed.
  *
  * Reuses createRecordVoiceAiCallStatus / createRecordPrerecordedOutcome as-is — both are
- * idempotent (entrega only ever advances), so a race against a completion signal landing
+ * idempotent (delivery only ever advances), so a race against a completion signal landing
  * in the same window is safe either order.
  */
 export function createVoiceCompletionTimeoutSweep(
@@ -59,7 +59,7 @@ export function createVoiceCompletionTimeoutSweep(
     try {
       stale = await deps.client.accountContactLog.findMany({
         where: {
-          entrega: "DISPATCHED",
+          delivery: "DISPATCHED",
           agentType: { in: ["VOICE_AI", "VOICE_PRERECORDED"] },
           providerRef: { not: null },
           contactedAt: { lt: cutoff }

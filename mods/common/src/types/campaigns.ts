@@ -8,10 +8,10 @@ import type {
   DeleteCampaignInput
 } from "../schemas/campaigns.js";
 import type {
-  Entrega,
+  Delivery,
   DeliveryReason,
-  Camino,
-  Resultado,
+  Path,
+  Outcome,
   PaymentPromiseStatus,
   CreateContactLogInput,
   UpdatePaymentPromiseInput,
@@ -64,10 +64,10 @@ export interface AccountContactLogRecord {
   agentType: AgentType;
   contactedAt: Date;
   durationSeconds: number | null;
-  entrega: Entrega;
+  delivery: Delivery;
   deliveryReason: DeliveryReason | null;
-  camino: Camino | null;
-  resultado: Resultado | null;
+  path: Path | null;
+  outcome: Outcome | null;
   notes: string | null;
   debtAmountSnapshot: number | null;
   aiSummary: string | null;

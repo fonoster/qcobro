@@ -69,9 +69,9 @@ export async function* runAutopilotEvaluation(
           passed = false;
           errorMessage = `Expected action "${turn.expected.action}", got "${action}".`;
         }
-        if (turn.expected.resultado && turn.expected.resultado !== decision.resultado) {
+        if (turn.expected.outcome && turn.expected.outcome !== decision.outcome) {
           passed = false;
-          errorMessage = `Expected resultado "${turn.expected.resultado}", got "${decision.resultado ?? "null"}".`;
+          errorMessage = `Expected outcome "${turn.expected.outcome}", got "${decision.outcome ?? "null"}".`;
         }
         if (turn.expected.text) {
           const body = decision.replyBody ?? "";
@@ -107,7 +107,7 @@ export async function* runAutopilotEvaluation(
           expectedResponse: turn.expected?.text?.response,
           evaluationType: turn.expected?.text?.type,
           action,
-          resultado: decision.resultado ?? null
+          outcome: decision.outcome ?? null
         }
       };
     }

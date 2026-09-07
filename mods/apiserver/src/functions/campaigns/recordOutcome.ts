@@ -4,18 +4,18 @@ import {
   type AccountContactLogRecord,
   type CampaignClient,
   type CampaignTriggerRecord,
-  type Resultado,
+  type Outcome,
   type CreateContactLogInput
 } from "@qcobro/common";
 
 /**
- * Hard resultados that set a global, cross-campaign `intentStatus`. `OPT_OUT` and
+ * Hard outcomes that set a global, cross-campaign `intentStatus`. `OPT_OUT` and
  * `WRONG_PARTY` are recorded on the gestión and set no account flag — the engine does not
  * infer suppression from an identity/opt-out claim made during an interaction (that is an
  * explicit, labelled decision on the workspace Do Not Contact list; see issue #101).
  */
-function globalIntentFor(resultado: Resultado | null): "INTENT_MET" | null {
-  switch (resultado) {
+function globalIntentFor(outcome: Outcome | null): "INTENT_MET" | null {
+  switch (outcome) {
     case "RESOLVED":
     case "PAID":
       return "INTENT_MET";
@@ -65,10 +65,10 @@ function logData(params: CreateContactLogInput, contactedAt: Date): Record<strin
     agentType: params.agentType,
     contactedAt,
     durationSeconds: params.durationSeconds ?? null,
-    entrega: params.entrega,
+    delivery: params.delivery,
     deliveryReason: params.deliveryReason ?? null,
-    camino: params.camino ?? null,
-    resultado: params.resultado ?? null,
+    path: params.path ?? null,
+    outcome: params.outcome ?? null,
     notes: params.notes ?? null,
     debtAmountSnapshot: params.debtAmountSnapshot ?? null,
     aiSummary: params.aiSummary ?? null,
@@ -83,9 +83,9 @@ function logData(params: CreateContactLogInput, contactedAt: Date): Record<strin
   };
 }
 
-/** Resultados that imply a payment commitment QCobro can adjudicate (→ a PaymentPromise). */
-function isPaymentOutcome(resultado: Resultado | null): boolean {
-  return resultado === "PAYMENT_PROMISE";
+/** Outcomes that imply a payment commitment QCobro can adjudicate (→ a PaymentPromise). */
+function isPaymentOutcome(outcome: Outcome | null): boolean {
+  return outcome === "PAYMENT_PROMISE";
 }
 
 /**
@@ -99,13 +99,13 @@ async function applyOutcomeEffectsTx(
   tx: CampaignClient,
   log: AccountContactLogRecord,
   params: CreateContactLogInput,
-  effectiveResultado: Resultado | null
+  effectiveOutcome: Outcome | null
 ): Promise<void> {
   const contactedAt = new Date(params.contactedAt);
   const meta = params.intentMetadata ?? {};
 
-  // Global hard-resultado suppression.
-  const intentStatus = globalIntentFor(effectiveResultado);
+  // Global hard-outcome suppression.
+  const intentStatus = globalIntentFor(effectiveOutcome);
   if (intentStatus) {
     await tx.portfolioAccount.update({
       where: { id: params.portfolioAccountId },
@@ -113,10 +113,10 @@ async function applyOutcomeEffectsTx(
     });
   }
 
-  // PaymentPromise for payment resultados only — guarded so a re-delivered resultado doesn't
-  // duplicate (one promise per gestión). Non-payment resultados create no tracked entity.
+  // PaymentPromise for payment outcomes only — guarded so a re-delivered outcome doesn't
+  // duplicate (one promise per gestión). Non-payment outcomes create no tracked entity.
   let promiseDueDate: Date | null = null;
-  const isPayment = isPaymentOutcome(effectiveResultado);
+  const isPayment = isPaymentOutcome(effectiveOutcome);
 
   if (isPayment) {
     const amount = typeof meta.promisedAmount === "number" ? meta.promisedAmount : null;
@@ -138,7 +138,7 @@ async function applyOutcomeEffectsTx(
     }
   }
 
-  // Campaign-local suppression from the resultado (Lever B).
+  // Campaign-local suppression from the outcome (Lever B).
   if (params.campaignId) {
     const triggers = await tx.campaignTrigger.findMany({
       where: { campaignId: params.campaignId }
@@ -148,7 +148,7 @@ async function applyOutcomeEffectsTx(
     if (isPayment) {
       const suppressDays = triggerNumber(triggers, "PAYMENT_PROMISE", "suppressDays", 7);
       suppressUntil = promiseDueDate ?? addDays(contactedAt, suppressDays);
-    } else if (effectiveResultado === "CALLBACK_REQUESTED") {
+    } else if (effectiveOutcome === "CALLBACK_REQUESTED") {
       const requested = parseValidDate(meta.requestedDate);
       const suppressHours = triggerNumber(triggers, "CALLBACK_REQUESTED", "suppressHours", 24);
       suppressUntil = requested ?? addHours(contactedAt, suppressHours);
@@ -182,10 +182,10 @@ async function applyOutcomeEffectsTx(
  * effects — but does NOT count the attempt ({@link reserveAttempt} owns counters).
  *
  * Correlated by `providerRef`: when a row with that ref exists, it is enriched in place
- * (one gestión per attempt). `entrega` only ever advances — once a prior callback moved it
+ * (one gestión per attempt). `delivery` only ever advances — once a prior callback moved it
  * off `DISPATCHED` (to `DELIVERED` or `FAILED`), a later write SHALL NOT move it back to
  * `DISPATCHED` or flip it between `DELIVERED`/`FAILED`; its `deliveryReason` travels with it.
- * `camino`/`resultado` merge forward: a null incoming value never overwrites a non-null
+ * `path`/`outcome` merge forward: a null incoming value never overwrites a non-null
  * stored value. When no `providerRef` is given, a new gestión is always created.
  */
 export async function recordOutcomeTx(
@@ -198,14 +198,14 @@ export async function recordOutcomeTx(
     : null;
 
   let log: AccountContactLogRecord;
-  let effectiveResultado: Resultado | null = params.resultado ?? null;
+  let effectiveOutcome: Outcome | null = params.outcome ?? null;
 
   if (existing) {
     const data = logData(params, contactedAt);
 
-    // entrega only ever advances: once it has left DISPATCHED it is never changed again.
-    if (existing.entrega !== "DISPATCHED") {
-      data.entrega = existing.entrega;
+    // delivery only ever advances: once it has left DISPATCHED it is never changed again.
+    if (existing.delivery !== "DISPATCHED") {
+      data.delivery = existing.delivery;
       data.deliveryReason = existing.deliveryReason;
     }
 
@@ -229,8 +229,8 @@ export async function recordOutcomeTx(
       "aiResult",
       "aiNextStep",
       "intentMetadata",
-      "camino",
-      "resultado",
+      "path",
+      "outcome",
       // A correlation key, but merged rather than pinned like `providerRef` below: the
       // dispatch write sets it and every later enrichment call omits it, so pinning would be
       // equivalent — while merging also covers a dispatch-time write that arrives second.
@@ -241,7 +241,7 @@ export async function recordOutcomeTx(
     for (const field of MERGE_FORWARD) {
       data[field] = data[field] ?? prior[field] ?? null;
     }
-    effectiveResultado = data.resultado as Resultado | null;
+    effectiveOutcome = data.outcome as Outcome | null;
 
     // Preserve the original correlation + merge channel data.
     data.providerRef = existing.providerRef;
@@ -251,7 +251,7 @@ export async function recordOutcomeTx(
     log = await tx.accountContactLog.create({ data: logData(params, contactedAt) });
   }
 
-  await applyOutcomeEffectsTx(tx, log, params, effectiveResultado);
+  await applyOutcomeEffectsTx(tx, log, params, effectiveOutcome);
   return log;
 }
 

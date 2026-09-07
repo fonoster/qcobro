@@ -85,7 +85,7 @@ app.post(
     // Billing settlement: replace the dispatch-time voice estimate with the
     // increment-billed amount for the answered duration (idempotent per ref).
     settleUsage: config.billing?.enabled ? createSettleVoiceUsage(prisma as never) : null,
-    // entrega finalization (DISPATCHED -> DELIVERED) — not billing-gated, this is the
+    // delivery finalization (DISPATCHED -> DELIVERED) — not billing-gated, this is the
     // core correctness fix, independent of whether billing is enabled.
     recordVoiceAiCallStatus: createRecordVoiceAiCallStatus(prisma as never),
     // Payment-promise capture: the Voz IA autopilot decision, run once over the final
@@ -122,7 +122,7 @@ if (config.twilio?.webhookBaseUrl) {
 // The single Resend webhook, both directions. `email.received` is a customer reply: correlate
 // by reply-to token and run the autopilot decision loop. Every other event is about one of our
 // own sends: correlate by Resend message id and move the delivery axis, so EMAIL reaches
-// `entrega: DELIVERED` without needing the customer to reply (email-events-hook). Rejects any
+// `delivery: DELIVERED` without needing the customer to reply (email-events-hook). Rejects any
 // request it cannot verify against the shared secret, including when none is configured.
 app.post(
   "/api/email/inbound",
@@ -193,7 +193,9 @@ app.get("/api/voice/tts", async (req, res) => {
     return;
   }
   if (!isTextWithinLimit(text, ttsMaxTextLength)) {
-    res.status(400).json({ error: `text exceeds maximum length of ${ttsMaxTextLength} characters` });
+    res
+      .status(400)
+      .json({ error: `text exceeds maximum length of ${ttsMaxTextLength} characters` });
     return;
   }
   const key = ttsCacheKey(voiceId, text);

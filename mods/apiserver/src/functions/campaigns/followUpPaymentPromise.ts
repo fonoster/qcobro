@@ -12,7 +12,7 @@ import { recordOutcomeTx } from "./recordOutcome.js";
  * Writes a standalone gestión (`campaignId` null, the chosen `agentTemplateId`, and a link
  * to the promise) via {@link recordOutcomeTx}, which counts no attempt and — because there
  * is no `campaignId` — never creates or modifies a `CampaignAccountState`. The gestión is
- * recorded at `entrega: DISPATCHED`, enriched by a later callback, mirroring the engine's
+ * recorded at `delivery: DISPATCHED`, enriched by a later callback, mirroring the engine's
  * dispatch-then-callback flow. Escalation is just choosing a firmer template.
  */
 export function createFollowUpPaymentPromise(client: CampaignClient, workspaceRef: string) {
@@ -41,7 +41,7 @@ export function createFollowUpPaymentPromise(client: CampaignClient, workspaceRe
         paymentPromiseId: promise.id,
         agentType: template.type,
         contactedAt: new Date().toISOString(),
-        entrega: "DISPATCHED"
+        delivery: "DISPATCHED"
       });
     });
 
