@@ -480,6 +480,8 @@ export const messages = {
     "gestiones.path.ENGAGED": "Conversation",
     // On a threaded channel the same value reads as a reply, not a conversation.
     "gestiones.path.threaded.ENGAGED": "Replied",
+    // VOICE_PRERECORDED has no conversation: the value means the script played to the end.
+    "gestiones.path.prerecorded.ENGAGED": "Got the message",
     "gestiones.path.ABANDONED": "Hung up",
     "gestiones.path.VOICEMAIL": "Voicemail",
     // Display-only stage from channelData.openedAt — not a path value.
@@ -1129,6 +1131,8 @@ export const messages = {
     "gestiones.path.ENGAGED": "Conversación",
     // En un canal de mensajería el mismo valor se lee como respuesta, no como conversación.
     "gestiones.path.threaded.ENGAGED": "Respondió",
+    // Voz pregrabada no tiene conversación: el valor significa que el guion se reprodujo completo.
+    "gestiones.path.prerecorded.ENGAGED": "Recibido",
     "gestiones.path.ABANDONED": "Colgó",
     "gestiones.path.VOICEMAIL": "Buzón de voz",
     // Etapa solo visual, tomada de channelData.openedAt — no es un valor de camino.

@@ -53,10 +53,18 @@ export function deliveryLabel(
   return `${word} · ${t(key(`gestiones.deliveryReason.${deliveryReason}`))}`;
 }
 
-/** `ENGAGED` is a conversation on a call and a reply on a thread. */
+/**
+ * `ENGAGED` is a conversation on a Voz IA call and a reply on a thread. `VOICE_PRERECORDED`
+ * gets its own word too: there is no conversation on that channel, so the same value means
+ * the script played to the end (or the caller pressed a menu option) — see
+ * `account-contact-log`/`prerecorded-audio`.
+ */
 function pathWord(t: Translate, path: string, agentType: string): string {
   if (path === "ENGAGED" && THREADED_CHANNELS.has(agentType)) {
     return t(key("gestiones.path.threaded.ENGAGED"));
+  }
+  if (path === "ENGAGED" && agentType === "VOICE_PRERECORDED") {
+    return t(key("gestiones.path.prerecorded.ENGAGED"));
   }
   return t(key(`gestiones.path.${path}`));
 }

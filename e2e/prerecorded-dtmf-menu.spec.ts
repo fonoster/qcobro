@@ -181,7 +181,8 @@ test.describe("pre-recorded DTMF menu", () => {
     panel = page.getByRole("dialog");
     await expect(panel).toBeVisible();
     await expect(panel.getByText("Camino", { exact: true })).toBeVisible();
-    await expect(panel.getByText("Despachado → Conversación")).toBeVisible();
+    // VOICE_PRERECORDED has no conversation: ENGAGED reads "Recibido" here, not "Conversación".
+    await expect(panel.getByText("Despachado → Recibido")).toBeVisible();
     await expect(panel.getByText("Resultado", { exact: true })).toBeVisible();
     await expect(panel.getByText("Baja").first()).toBeVisible();
   });
