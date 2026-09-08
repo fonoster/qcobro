@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.39.3](https://github.com/fonoster/qcobro/compare/v1.39.2...v1.39.3) (2026-09-08)
+
+### Bug Fixes
+
+- **voice:** classify voice failures from the call record, and rename the contact-log axes to English ([#151](https://github.com/fonoster/qcobro/issues/151)) ([9ec6f96](https://github.com/fonoster/qcobro/commit/9ec6f96aec9358b4a6febd34f0d018b730a5033b))
+
 ## [1.39.2](https://github.com/fonoster/qcobro/compare/v1.39.1...v1.39.2) (2026-09-05)
 
 **Note:** Version bump only for package @qcobro/webapp
