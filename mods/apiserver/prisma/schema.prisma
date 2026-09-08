@@ -526,7 +526,8 @@ model EngineEvent {
 // connection, so claiming and renewing it does not depend on connection affinity, and
 // a crashed holder's lease simply expires.
 model EngineLease {
-  // Always `engine` — this table holds exactly one row.
+  // One row per single-writer job guarded this way — "engine" for the campaigns engine,
+  // "voice-completion-sweep" for the voice completion sweep. Each id is independent.
   id        String   @id
   // Opaque per-process identity, so the holder can renew but others cannot steal.
   holder    String

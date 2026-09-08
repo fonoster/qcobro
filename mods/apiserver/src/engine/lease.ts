@@ -1,7 +1,11 @@
 import { randomUUID } from "node:crypto";
 
 /**
- * The engine's single-writer guard, as a row rather than a session-scoped advisory lock.
+ * A single-writer guard, as a row rather than a session-scoped advisory lock. Originally the
+ * campaigns engine's own guard; reused as-is by the voice completion sweep under a distinct
+ * `id` (see `startVoiceCompletionSweep.ts`) so a multi-replica deployment doesn't run N
+ * concurrent sweep passes. Each `id` is independent — acquiring one never contends with the
+ * other.
  *
  * Why not `pg_try_advisory_lock`: advisory locks belong to a Postgres *session*, but Prisma
  * routes each `$queryRaw` to an arbitrary connection from its pool. Acquiring on one
@@ -21,7 +25,7 @@ import { randomUUID } from "node:crypto";
  * a redeploy fails over immediately rather than waiting out the TTL.
  */
 
-/** The single row's primary key; the table holds exactly one. */
+/** The campaigns engine's own lease row id — the default, for backward compatibility. */
 export const LEASE_ID = "engine";
 
 /** The `$queryRaw` surface this needs — satisfied structurally by the Prisma client. */
@@ -51,11 +55,18 @@ export interface EngineLeaseOptions {
   ttlSeconds: number;
   /** Overridable for tests; defaults to a per-process UUID. */
   holder?: string;
+  /**
+   * The lease row's id. Defaults to {@link LEASE_ID} (the campaigns engine's own lease); a
+   * caller guarding a different single-writer job (e.g. the voice completion sweep) must
+   * pass a distinct id so the two leases don't contend for the same row.
+   */
+  id?: string;
 }
 
 export function createEngineLease(client: LeaseClient, opts: EngineLeaseOptions): EngineLease {
   const holder = opts.holder ?? randomUUID();
   const ttlSeconds = Math.max(1, opts.ttlSeconds);
+  const id = opts.id ?? LEASE_ID;
 
   return {
     holder,
@@ -66,7 +77,7 @@ export function createEngineLease(client: LeaseClient, opts: EngineLeaseOptions)
       // someone else updates nothing and returns no rows.
       const rows = await client.$queryRaw<{ holder: string }[]>`
         INSERT INTO engine_lease (id, holder, "expiresAt")
-        VALUES (${LEASE_ID}, ${holder}, now() + make_interval(secs => ${ttlSeconds}))
+        VALUES (${id}, ${holder}, now() + make_interval(secs => ${ttlSeconds}))
         ON CONFLICT (id) DO UPDATE
            SET holder = EXCLUDED.holder,
                "expiresAt" = EXCLUDED."expiresAt"
@@ -81,7 +92,7 @@ export function createEngineLease(client: LeaseClient, opts: EngineLeaseOptions)
       await client.$queryRaw`
         UPDATE engine_lease
            SET "expiresAt" = now()
-         WHERE id = ${LEASE_ID} AND holder = ${holder}`;
+         WHERE id = ${id} AND holder = ${holder}`;
     }
   };
 }

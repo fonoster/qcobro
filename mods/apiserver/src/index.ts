@@ -306,5 +306,5 @@ for (const signal of ["SIGTERM", "SIGINT"] as const) {
 // depend on the campaigns engine happening to be running. See startVoiceCompletionSweep.
 const voiceCompletionSweepRunner = startVoiceCompletionSweep();
 for (const signal of ["SIGTERM", "SIGINT"] as const) {
-  process.on(signal, () => voiceCompletionSweepRunner?.stop());
+  process.on(signal, () => void voiceCompletionSweepRunner?.stop());
 }
