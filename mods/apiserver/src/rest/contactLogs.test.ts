@@ -126,4 +126,28 @@ describe("POST /api/contact-logs handler", () => {
 
     assert.equal(state.statusCode, 401);
   });
+
+  it("rejects the pre-rename Spanish field names with a 400 naming the unknown keys, instead of silently stripping them", async () => {
+    const prisma = makePrisma({ "acc-1": "ws-1" });
+    const handler = createContactLogHandler(prisma as never, {
+      apiserver: { contactLogAuth: { enabled: false } }
+    });
+    const { res, state } = makeRes();
+    const oldShapePayload = {
+      portfolioAccountId: "acc-1",
+      agentType: "VOICE_AI",
+      contactedAt: "2026-06-22T10:00:00.000Z",
+      entrega: "DELIVERED",
+      camino: "ENGAGED",
+      resultado: "PAYMENT_PROMISE"
+    };
+
+    await handler({ headers: {}, body: oldShapePayload } as never, res as never);
+
+    assert.equal(state.statusCode, 400);
+    const body = JSON.stringify(state.body);
+    assert.match(body, /entrega/);
+    assert.match(body, /camino/);
+    assert.match(body, /resultado/);
+  });
 });

@@ -1,5 +1,6 @@
 import {
   createContactLogSchema,
+  createContactLogSchemaStrict,
   withErrorHandlingAndValidation,
   type CampaignClient,
   type CreateContactLogInput
@@ -15,8 +16,17 @@ import { recordOutcomeTx } from "./recordOutcome.js";
  * {@link recordOutcomeTx} after, so it gets at-most-once.
  *
  * `timeZone` drives the daily-cap reset (see {@link reserveAttemptTx}).
+ *
+ * `strict` swaps in {@link createContactLogSchemaStrict}, which rejects an unrecognized key
+ * instead of silently stripping it — the REST contact-log ingress passes this, since it's the
+ * one caller taking a payload from outside this codebase. tRPC/operator-console callers stay
+ * on the lenient schema; they're TypeScript-typed already.
  */
-export function createCreateContactLog(client: CampaignClient, timeZone: string) {
+export function createCreateContactLog(
+  client: CampaignClient,
+  timeZone: string,
+  opts: { strict?: boolean } = {}
+) {
   const fn = (params: CreateContactLogInput) =>
     client.$transaction(async (tx) => {
       await reserveAttemptTx(
@@ -31,5 +41,8 @@ export function createCreateContactLog(client: CampaignClient, timeZone: string)
       return recordOutcomeTx(tx, params);
     });
 
-  return withErrorHandlingAndValidation(fn, createContactLogSchema);
+  return withErrorHandlingAndValidation(
+    fn,
+    opts.strict ? createContactLogSchemaStrict : createContactLogSchema
+  );
 }

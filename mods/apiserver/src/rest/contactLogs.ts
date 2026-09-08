@@ -78,7 +78,12 @@ export function createContactLogHandler(
       // Reset the daily cap in the account's workspace timezone, matching the engine and
       // tRPC paths. Every workspace has a settings row (seeded on read), so it always resolves.
       const timeZone = (await getSettings(account.portfolio.workspaceRef)).timezone;
-      const result = await createCreateContactLog(prisma as never, timeZone)(req.body);
+      // strict: this is the one contact-log write path a caller outside this codebase can
+      // reach directly, so an unrecognized key (e.g. the pre-rename entrega/camino/resultado)
+      // must 400 loudly instead of being silently stripped and written as DISPATCHED.
+      const result = await createCreateContactLog(prisma as never, timeZone, { strict: true })(
+        req.body
+      );
       res.status(201).json(result);
 
       recordEvent?.({

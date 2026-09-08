@@ -163,7 +163,10 @@ const createContactLogFields = z.object({
  * Note there is deliberately no rule tying `outcome` to `delivery`: a `FAILED` delivery can
  * still carry an `outcome` when someone answers and hangs up on a wrong-party identification.
  */
-export const createContactLogSchema = createContactLogFields.superRefine((value, ctx) => {
+function refineContactLogAxes(
+  value: z.infer<typeof createContactLogFields>,
+  ctx: z.RefinementCtx
+): void {
   if (value.delivery === "FAILED" && !value.deliveryReason) {
     ctx.addIssue({
       code: "custom",
@@ -194,8 +197,25 @@ export const createContactLogSchema = createContactLogFields.superRefine((value,
       });
     }
   }
-});
+}
+
+export const createContactLogSchema = createContactLogFields.superRefine(refineContactLogAxes);
 export type CreateContactLogInput = z.infer<typeof createContactLogSchema>;
+
+/**
+ * REST-facing variant of {@link createContactLogSchema}. `.strict()` rejects any key that
+ * isn't one of the known fields — named in a `400` — rather than the base schema's default
+ * of silently stripping it. Internal callers (tRPC, the campaigns engine) are TypeScript-typed
+ * against `CreateContactLogInput` already, so a stray key there is a compile error, not
+ * something worth defending against at runtime; `POST /api/contact-logs` is the one boundary
+ * an integrator outside this codebase posts to directly. It exists specifically to catch an
+ * integrator still posting the pre-rename Spanish field names (`entrega`/`camino`/`resultado`)
+ * — silently stripped by the lenient schema, which would write a `DISPATCHED` row with no
+ * outcome and still answer `201`.
+ */
+export const createContactLogSchemaStrict = createContactLogFields
+  .strict()
+  .superRefine(refineContactLogAxes);
 
 /**
  * Input to reserve a campaign attempt before the provider call (the engine's
