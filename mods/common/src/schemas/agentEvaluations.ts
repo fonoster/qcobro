@@ -61,9 +61,10 @@ export const evalExpectedSchema = z
     action: z.enum(["reply", "ignore", "resolve", "escalate"]).optional(),
     outcome: outcomeSchema.optional()
   })
-  // Strict so the `outcome` -> `outcome` rename fails loudly. A permissive object would
-  // strip an eval suite's legacy `outcome` key, leave the expectation unevaluated, and report
-  // every turn as passing - a silently green suite that checks nothing.
+  // Strict so an eval suite still using `resultado` (this field's name before the
+  // contact-log-axes English rename) fails loudly. A permissive object would strip that
+  // legacy key, leave the expectation unevaluated, and report every turn as passing - a
+  // silently green suite that checks nothing.
   .strict();
 
 export const evalTurnSchema = z.object({

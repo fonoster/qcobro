@@ -3,10 +3,13 @@ import { agentTypeSchema } from "./agentTemplates.js";
 
 /**
  * A gestión answers up to three independent questions, one per axis. They were previously
- * flattened into a single `outcome` enum, which is why no value meant one thing: `WRONG_NUMBER`
- * described both a carrier rejection (a delivery failure) and a human saying "that's not me"
- * (a delivery *success* carrying a valuable finding), and `OTHER` served as dispatch
- * placeholder, escalation marker, and unclassifiable-conversation catch-all at once.
+ * flattened into a single enum (then also confusingly called `outcome`, before the axis
+ * split introduced `resultado` — since renamed to today's `outcome` below, a coincidence of
+ * naming across two unrelated eras, not the same field), which is why no value meant one
+ * thing: `WRONG_NUMBER` described both a carrier rejection (a delivery failure) and a human
+ * saying "that's not me" (a delivery *success* carrying a valuable finding), and `OTHER`
+ * served as dispatch placeholder, escalation marker, and unclassifiable-conversation
+ * catch-all at once.
  */
 
 /** Did the attempt reach the account holder's device or inbox? Never null. */
