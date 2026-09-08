@@ -5,7 +5,7 @@ import {
   voiceAiCallStatusCompletionSchema,
   withErrorHandlingAndValidation,
   type DeliveryReason,
-  type Entrega
+  type Delivery
 } from "@qcobro/common";
 
 /**
@@ -24,15 +24,15 @@ export interface VoiceAiCallStatusClient {
   accountContactLog: {
     findFirst(args: {
       where: { providerRef: string; agentType: "VOICE_AI" };
-      select: { id: true; entrega: true; deliveryReason: true; channelData: true };
+      select: { id: true; delivery: true; deliveryReason: true; channelData: true };
     }): Promise<{
       id: string;
-      entrega: Entrega;
+      delivery: Delivery;
       deliveryReason: DeliveryReason | null;
       channelData: unknown;
     } | null>;
     /**
-     * Guarded, conditional finalize: `where.entrega: "DISPATCHED"` is re-checked by
+     * Guarded, conditional finalize: `where.delivery: "DISPATCHED"` is re-checked by
      * Postgres against the row's live committed value at write time (not the stale value
      * read earlier by `findFirst`), so of two concurrent finalizers — the live completion
      * webhook and `voiceCompletionTimeoutSweep` — racing for the same row, exactly one
@@ -40,9 +40,9 @@ export interface VoiceAiCallStatusClient {
      * regardless of which one's write physically reaches the database last.
      */
     updateMany(args: {
-      where: { id: string; entrega: "DISPATCHED" };
+      where: { id: string; delivery: "DISPATCHED" };
       data: {
-        entrega: Entrega;
+        delivery: Delivery;
         deliveryReason: DeliveryReason | null;
         durationSeconds: number;
         channelData: Record<string, unknown>;
@@ -53,7 +53,7 @@ export interface VoiceAiCallStatusClient {
 
 export type RecordVoiceAiCallStatusResult =
   | { matched: false }
-  | { matched: true; id: string; entrega: Entrega; deliveryReason: DeliveryReason | null };
+  | { matched: true; id: string; delivery: Delivery; deliveryReason: DeliveryReason | null };
 
 /**
  * Finalizes a VOICE_AI gestión from Fonoster call-status tracking — the recovery path for
@@ -61,40 +61,40 @@ export type RecordVoiceAiCallStatusResult =
  * most commonly because the call was never answered (see `voice-call-status-tracking`).
  *
  * Mirrors {@link createRecordPrerecordedOutcome}: an unanswered call finalizes
- * `entrega: FAILED` with the CDR-derived `deliveryReason` and zero duration; an answered
- * call finalizes `entrega: DELIVERED` with the real answered duration (recovered from the
+ * `delivery: FAILED` with the CDR-derived `deliveryReason` and zero duration; an answered
+ * call finalizes `delivery: DELIVERED` with the real answered duration (recovered from the
  * Fonoster CDR by the caller — never fabricated).
  *
- * Idempotent per call ref: `entrega` only ever advances. Once it has left the dispatch-time
+ * Idempotent per call ref: `delivery` only ever advances. Once it has left the dispatch-time
  * `DISPATCHED` (whether by the autopilot webhook or a prior call to this function), a
- * repeated completion preserves the existing `entrega`/`deliveryReason` and does not
+ * repeated completion preserves the existing `delivery`/`deliveryReason` and does not
  * overwrite them.
  */
 export function createRecordVoiceAiCallStatus(client: VoiceAiCallStatusClient) {
   const fn = async (input: VoiceAiCallStatusInput): Promise<RecordVoiceAiCallStatusResult> => {
     const match = await client.accountContactLog.findFirst({
       where: { providerRef: input.providerRef, agentType: "VOICE_AI" },
-      select: { id: true, entrega: true, deliveryReason: true, channelData: true }
+      select: { id: true, delivery: true, deliveryReason: true, channelData: true }
     });
     if (!match) return { matched: false };
 
-    const reportedEntrega: Entrega = input.answered ? "DELIVERED" : "FAILED";
+    const reportedDelivery: Delivery = input.answered ? "DELIVERED" : "FAILED";
     const reportedDeliveryReason: DeliveryReason | null =
-      reportedEntrega === "FAILED" ? (input.deliveryReason ?? null) : null;
+      reportedDelivery === "FAILED" ? (input.deliveryReason ?? null) : null;
     const existing = (match.channelData as Record<string, unknown> | null) ?? {};
     const channelData: Record<string, unknown> = {
       ...existing,
       endedAt: new Date(input.at).toISOString()
     };
 
-    // Guarded at the database, not at this earlier read: `where.entrega: "DISPATCHED"` is
+    // Guarded at the database, not at this earlier read: `where.delivery: "DISPATCHED"` is
     // re-checked by Postgres against the row's live value when it applies the update, so
     // exactly one of two racing finalizers (this call vs. voiceCompletionTimeoutSweep) ever
     // wins, however their reads and writes happen to interleave.
     const { count } = await client.accountContactLog.updateMany({
-      where: { id: match.id, entrega: "DISPATCHED" },
+      where: { id: match.id, delivery: "DISPATCHED" },
       data: {
-        entrega: reportedEntrega,
+        delivery: reportedDelivery,
         deliveryReason: reportedDeliveryReason,
         durationSeconds: input.answeredSeconds,
         channelData
@@ -105,30 +105,30 @@ export function createRecordVoiceAiCallStatus(client: VoiceAiCallStatusClient) {
       return {
         matched: true,
         id: match.id,
-        entrega: reportedEntrega,
+        delivery: reportedDelivery,
         deliveryReason: reportedDeliveryReason
       };
     }
 
     // Lost the race (or the row had already finalized before our read): report the state
     // that actually won rather than the one we would have written.
-    if (match.entrega !== "DISPATCHED") {
+    if (match.delivery !== "DISPATCHED") {
       return {
         matched: true,
         id: match.id,
-        entrega: match.entrega,
+        delivery: match.delivery,
         deliveryReason: match.deliveryReason
       };
     }
     const current = await client.accountContactLog.findFirst({
       where: { providerRef: input.providerRef, agentType: "VOICE_AI" },
-      select: { id: true, entrega: true, deliveryReason: true, channelData: true }
+      select: { id: true, delivery: true, deliveryReason: true, channelData: true }
     });
     return current
       ? {
           matched: true,
           id: current.id,
-          entrega: current.entrega,
+          delivery: current.delivery,
           deliveryReason: current.deliveryReason
         }
       : { matched: false };

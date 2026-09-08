@@ -7,9 +7,9 @@ type Key = Parameters<Translate>[0];
 /** Dynamic i18n keys are built from enum values, which the key union cannot express. */
 const key = (value: string) => value as Key;
 
-export const ENTREGAS = ["DISPATCHED", "DELIVERED", "FAILED"] as const;
+export const DELIVERIES = ["DISPATCHED", "DELIVERED", "FAILED"] as const;
 
-export const RESULTADOS = [
+export const OUTCOMES = [
   "PAYMENT_PROMISE",
   "NEW_TERMS",
   "PAID",
@@ -29,11 +29,11 @@ const THREADED_CHANNELS = new Set(["EMAIL", "WHATSAPP"]);
  * `DELIVERED` reads differently per channel — a call connects, a message is delivered — so the
  * voice channels get their own label for the same enum value.
  */
-function entregaWord(t: Translate, entrega: string, agentType: string): string {
-  if (entrega === "DELIVERED" && VOICE_CHANNELS.has(agentType)) {
-    return t(key("gestiones.entrega.voice.DELIVERED"));
+function deliveryWord(t: Translate, delivery: string, agentType: string): string {
+  if (delivery === "DELIVERED" && VOICE_CHANNELS.has(agentType)) {
+    return t(key("gestiones.delivery.voice.DELIVERED"));
   }
-  return t(key(`gestiones.entrega.${entrega}`));
+  return t(key(`gestiones.delivery.${delivery}`));
 }
 
 /**
@@ -42,23 +42,31 @@ function entregaWord(t: Translate, entrega: string, agentType: string): string {
  * most of what there is to say about the attempt, so it earns its place inline rather than in
  * a field of its own.
  */
-export function entregaLabel(
+export function deliveryLabel(
   t: Translate,
-  entrega: string,
+  delivery: string,
   deliveryReason: string | null | undefined,
   agentType: string
 ): string {
-  const word = entregaWord(t, entrega, agentType);
-  if (entrega !== "FAILED" || !deliveryReason) return word;
+  const word = deliveryWord(t, delivery, agentType);
+  if (delivery !== "FAILED" || !deliveryReason) return word;
   return `${word} · ${t(key(`gestiones.deliveryReason.${deliveryReason}`))}`;
 }
 
-/** `ENGAGED` is a conversation on a call and a reply on a thread. */
-function caminoWord(t: Translate, camino: string, agentType: string): string {
-  if (camino === "ENGAGED" && THREADED_CHANNELS.has(agentType)) {
-    return t(key("gestiones.camino.threaded.ENGAGED"));
+/**
+ * `ENGAGED` is a conversation on a Voz IA call and a reply on a thread. `VOICE_PRERECORDED`
+ * gets its own word too: there is no conversation on that channel, so the same value means
+ * the script played to the end (or the caller pressed a menu option) — see
+ * `account-contact-log`/`prerecorded-audio`.
+ */
+function pathWord(t: Translate, path: string, agentType: string): string {
+  if (path === "ENGAGED" && THREADED_CHANNELS.has(agentType)) {
+    return t(key("gestiones.path.threaded.ENGAGED"));
   }
-  return t(key(`gestiones.camino.${camino}`));
+  if (path === "ENGAGED" && agentType === "VOICE_PRERECORDED") {
+    return t(key("gestiones.path.prerecorded.ENGAGED"));
+  }
+  return t(key(`gestiones.path.${path}`));
 }
 
 /**
@@ -66,30 +74,30 @@ function caminoWord(t: Translate, camino: string, agentType: string): string {
  * starting from dispatch. Returns null on `SMS`, which has no inbound path at all. Also
  * returns null whenever there is nothing to describe — which, for every channel except
  * `VOICE_PRERECORDED`, is implied by `channelCanEngage`; `VOICE_PRERECORDED` gets its own
- * check just below because its DTMF menu can produce a real `camino: ENGAGED` even though
+ * check just below because its DTMF menu can produce a real `path: ENGAGED` even though
  * `channelCanEngage` (a channel-fixed check) says it can't — see `account-contact-log`.
  *
  * `Leído` is a display-only stage taken from `channelData.openedAt`; read-but-unengaged is
- * deliberately not modelled as a `camino` value, so it appears here and in no metric.
+ * deliberately not modelled as a `path` value, so it appears here and in no metric.
  */
-export function caminoPath(
+export function pathProgression(
   t: Translate,
   agentType: string,
-  camino: string | null | undefined,
+  path: string | null | undefined,
   channelData?: Record<string, unknown> | null
 ): string | null {
   if (agentType === "SMS") return null;
   if (!channelCanEngage(agentType) && agentType !== "VOICE_PRERECORDED") return null;
-  if (!camino && !channelData?.openedAt) return null;
+  if (!path && !channelData?.openedAt) return null;
 
-  const stages = [t(key("gestiones.entrega.DISPATCHED"))];
+  const stages = [t(key("gestiones.delivery.DISPATCHED"))];
   if (THREADED_CHANNELS.has(agentType) && channelData?.openedAt) {
-    stages.push(t(key("gestiones.camino.read")));
+    stages.push(t(key("gestiones.path.read")));
   }
-  if (camino) stages.push(caminoWord(t, camino, agentType));
+  if (path) stages.push(pathWord(t, path, agentType));
   return stages.join(" → ");
 }
 
-export function resultadoLabel(t: Translate, resultado: string | null | undefined): string | null {
-  return resultado ? t(key(`gestiones.resultado.${resultado}`)) : null;
+export function outcomeLabel(t: Translate, outcome: string | null | undefined): string | null {
+  return outcome ? t(key(`gestiones.outcome.${outcome}`)) : null;
 }

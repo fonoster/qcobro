@@ -262,7 +262,7 @@ export const outreachRouter = router({
         agentTemplateId: input.agentTemplateId,
         agentType: template.type as DispatchOutreachInput["channel"],
         contactedAt: at,
-        entrega: "FAILED",
+        delivery: "FAILED",
         deliveryReason: failureReason,
         notes: err instanceof Error ? err.message : String(err),
         debtAmountSnapshot: account.outstandingBalance
@@ -282,7 +282,7 @@ export const outreachRouter = router({
       agentTemplateId: input.agentTemplateId,
       agentType: template.type as DispatchOutreachInput["channel"],
       contactedAt: at,
-      entrega: "DISPATCHED" as const,
+      delivery: "DISPATCHED" as const,
       notes: "Contacto manual",
       debtAmountSnapshot: account.outstandingBalance,
       providerRef: result.providerRef,

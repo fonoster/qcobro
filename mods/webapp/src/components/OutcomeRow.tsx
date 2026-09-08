@@ -1,9 +1,9 @@
-export interface ResultadoRowProps {
+export interface OutcomeRowProps {
   /** Localized label, e.g. "Resultado". */
   label: string;
-  /** Localized resultado, e.g. "Promesa de pago". Null renders nothing at all. */
+  /** Localized outcome, e.g. "Promesa de pago". Null renders nothing at all. */
   value: string | null;
-  /** Linked promise, when the resultado is a payment commitment. */
+  /** Linked promise, when the outcome is a payment commitment. */
   promise?: { amount: string | null; dueDate: string; status: string } | null;
 }
 
@@ -22,7 +22,7 @@ export interface ResultadoRowProps {
  * Renders nothing when `value` is null. That is the common case: most interactions produce no
  * outcome, and an empty row would imply missing data rather than a real answer.
  */
-export function ResultadoRow({ label, value, promise }: ResultadoRowProps) {
+export function OutcomeRow({ label, value, promise }: OutcomeRowProps) {
   if (!value) return null;
   const detail = promise
     ? `${promise.amount ? `${promise.amount} · ` : ""}${promise.dueDate}`

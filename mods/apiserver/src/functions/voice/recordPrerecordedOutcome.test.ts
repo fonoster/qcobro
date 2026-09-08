@@ -2,30 +2,30 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   ValidationError,
-  type Camino,
+  type Path,
   type DeliveryReason,
-  type Entrega,
-  type Resultado
+  type Delivery,
+  type Outcome
 } from "@qcobro/common";
 import { createRecordPrerecordedOutcome } from "./recordPrerecordedOutcome.js";
 
 interface Row {
   id: string;
-  entrega: Entrega;
+  delivery: Delivery;
   deliveryReason: DeliveryReason | null;
-  camino: Camino | null;
-  resultado: Resultado | null;
+  path: Path | null;
+  outcome: Outcome | null;
   channelData: unknown;
 }
 
 interface Captured {
   findFirstCalled?: boolean;
-  updateMany?: { where: { id: string; entrega: string }; data: Record<string, unknown> };
+  updateMany?: { where: { id: string; delivery: string }; data: Record<string, unknown> };
 }
 
 /**
  * Simulates the real guard: `updateMany` only applies (and reports count: 1) when the
- * row's CURRENT entrega still matches `where.entrega` at write time — re-checked against
+ * row's CURRENT delivery still matches `where.delivery` at write time — re-checked against
  * live state, not whatever an earlier `findFirst` saw. This is what actually closes the
  * TOCTOU race between the in-process VoiceServer completion and
  * `voiceCompletionTimeoutSweep`.
@@ -33,16 +33,16 @@ interface Captured {
 function makeClient(
   record: {
     id: string;
-    entrega: Entrega;
+    delivery: Delivery;
     deliveryReason?: DeliveryReason | null;
-    camino?: Camino | null;
-    resultado?: Resultado | null;
+    path?: Path | null;
+    outcome?: Outcome | null;
     channelData: unknown;
   } | null
 ) {
   const cap: Captured = {};
   let row: Row | null = record
-    ? { deliveryReason: null, camino: null, resultado: null, ...record }
+    ? { deliveryReason: null, path: null, outcome: null, ...record }
     : null;
   const client = {
     accountContactLog: {
@@ -51,11 +51,11 @@ function makeClient(
         return row ? { ...row } : null;
       },
       updateMany: async (args: {
-        where: { id: string; entrega: string };
+        where: { id: string; delivery: string };
         data: Record<string, unknown>;
       }) => {
         cap.updateMany = args;
-        if (!row || row.id !== args.where.id || row.entrega !== args.where.entrega) {
+        if (!row || row.id !== args.where.id || row.delivery !== args.where.delivery) {
           return { count: 0 };
         }
         row = { ...row, ...args.data } as Row;
@@ -80,7 +80,7 @@ describe("recordPrerecordedOutcome", () => {
   it("answered call → DELIVERED with duration, preserves channelData, stores script length", async () => {
     const { client, cap } = makeClient({
       id: "g-1",
-      entrega: "DISPATCHED",
+      delivery: "DISPATCHED",
       channelData: { from: "+1999", to: "+1888" }
     });
 
@@ -89,12 +89,12 @@ describe("recordPrerecordedOutcome", () => {
     assert.deepEqual(result, {
       matched: true,
       id: "g-1",
-      entrega: "DELIVERED",
+      delivery: "DELIVERED",
       deliveryReason: null,
-      camino: null,
-      resultado: null
+      path: null,
+      outcome: null
     });
-    assert.equal(cap.updateMany?.data.entrega, "DELIVERED");
+    assert.equal(cap.updateMany?.data.delivery, "DELIVERED");
     assert.equal(cap.updateMany?.data.durationSeconds, 22);
     const cd = cap.updateMany?.data.channelData as Record<string, unknown>;
     assert.equal(cd.from, "+1999"); // existing preserved
@@ -103,7 +103,7 @@ describe("recordPrerecordedOutcome", () => {
   });
 
   it("stores the recording's file name, so the console can compose its URL on read", async () => {
-    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: null });
+    const { client, cap } = makeClient({ id: "g-1", delivery: "DISPATCHED", channelData: null });
 
     await createRecordPrerecordedOutcome(client as never)({
       ...ANSWERED,
@@ -117,7 +117,7 @@ describe("recordPrerecordedOutcome", () => {
   });
 
   it("records a file name even when the script never played — that call still has audio", async () => {
-    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: null });
+    const { client, cap } = makeClient({ id: "g-1", delivery: "DISPATCHED", channelData: null });
 
     await createRecordPrerecordedOutcome(client as never)({
       ...ANSWERED,
@@ -125,13 +125,13 @@ describe("recordPrerecordedOutcome", () => {
       recordingFile: "app-1_1756742400.999.wav"
     });
 
-    assert.equal(cap.updateMany?.data.entrega, "FAILED");
+    assert.equal(cap.updateMany?.data.delivery, "FAILED");
     const cd = cap.updateMany?.data.channelData as Record<string, unknown>;
     assert.equal(cd.recordingFile, "app-1_1756742400.999.wav");
   });
 
   it("unanswered call → FAILED with its reason and zero duration", async () => {
-    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: null });
+    const { client, cap } = makeClient({ id: "g-1", delivery: "DISPATCHED", channelData: null });
 
     const result = await createRecordPrerecordedOutcome(client as never)({
       providerRef: "call-abc",
@@ -144,18 +144,18 @@ describe("recordPrerecordedOutcome", () => {
     assert.deepEqual(result, {
       matched: true,
       id: "g-1",
-      entrega: "FAILED",
+      delivery: "FAILED",
       deliveryReason: "NO_ANSWER",
-      camino: null,
-      resultado: null
+      path: null,
+      outcome: null
     });
-    assert.equal(cap.updateMany?.data.entrega, "FAILED");
+    assert.equal(cap.updateMany?.data.delivery, "FAILED");
     assert.equal(cap.updateMany?.data.deliveryReason, "NO_ANSWER");
     assert.equal(cap.updateMany?.data.durationSeconds, 0);
   });
 
   it("answered but the script never played → FAILED/UNREACHABLE, keeping the real duration", async () => {
-    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+    const { client, cap } = makeClient({ id: "g-1", delivery: "DISPATCHED", channelData: {} });
 
     const result = await createRecordPrerecordedOutcome(client as never)({
       providerRef: "call-abc",
@@ -168,10 +168,10 @@ describe("recordPrerecordedOutcome", () => {
     assert.deepEqual(result, {
       matched: true,
       id: "g-1",
-      entrega: "FAILED",
+      delivery: "FAILED",
       deliveryReason: "UNREACHABLE",
-      camino: null,
-      resultado: null
+      path: null,
+      outcome: null
     });
     // The line was open for 30 real seconds even though nothing was heard.
     assert.equal(cap.updateMany?.data.durationSeconds, 30);
@@ -183,7 +183,7 @@ describe("recordPrerecordedOutcome", () => {
    * would read as the longest successful contact of the day.
    */
   it("incident: a sub-second false answer that played nothing is not a delivery", async () => {
-    const { client } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+    const { client } = makeClient({ id: "g-1", delivery: "DISPATCHED", channelData: {} });
 
     const result = await createRecordPrerecordedOutcome(client as never)({
       providerRef: "call-abc",
@@ -193,12 +193,12 @@ describe("recordPrerecordedOutcome", () => {
       at: "2026-08-30T18:08:56.000Z"
     });
 
-    assert.equal(result.matched && result.entrega, "FAILED");
+    assert.equal(result.matched && result.delivery, "FAILED");
     assert.equal(result.matched && result.deliveryReason, "UNREACHABLE");
   });
 
   it("incident: 110 seconds of silence is not a delivery", async () => {
-    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+    const { client, cap } = makeClient({ id: "g-1", delivery: "DISPATCHED", channelData: {} });
 
     const result = await createRecordPrerecordedOutcome(client as never)({
       providerRef: "call-abc",
@@ -208,14 +208,14 @@ describe("recordPrerecordedOutcome", () => {
       at: "2026-08-30T18:11:00.000Z"
     });
 
-    assert.equal(result.matched && result.entrega, "FAILED");
+    assert.equal(result.matched && result.delivery, "FAILED");
     assert.equal(result.matched && result.deliveryReason, "UNREACHABLE");
-    assert.equal(result.matched && result.camino, null);
+    assert.equal(result.matched && result.path, null);
     assert.equal(cap.updateMany?.data.durationSeconds, 110);
   });
 
   it("an explicit deliveryReason still wins over the answered-but-silent default", async () => {
-    const { client } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+    const { client } = makeClient({ id: "g-1", delivery: "DISPATCHED", channelData: {} });
 
     const result = await createRecordPrerecordedOutcome(client as never)({
       providerRef: "call-abc",
@@ -230,49 +230,49 @@ describe("recordPrerecordedOutcome", () => {
   });
 
   /** No DTMF menu configured (the common case): neither axis ends up set. */
-  it("leaves camino/resultado null when the completion carries neither", async () => {
-    const { client } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+  it("leaves path/outcome null when the completion carries neither", async () => {
+    const { client } = makeClient({ id: "g-1", delivery: "DISPATCHED", channelData: {} });
 
     const result = await createRecordPrerecordedOutcome(client as never)(ANSWERED);
 
-    assert.equal(result.matched && result.camino, null);
-    assert.equal(result.matched && result.resultado, null);
+    assert.equal(result.matched && result.path, null);
+    assert.equal(result.matched && result.outcome, null);
   });
 
-  it("a repeat press sets camino ENGAGED only, and stores repeatCount", async () => {
-    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+  it("a repeat press sets path ENGAGED only, and stores repeatCount", async () => {
+    const { client, cap } = makeClient({ id: "g-1", delivery: "DISPATCHED", channelData: {} });
 
     const result = await createRecordPrerecordedOutcome(client as never)({
       ...ANSWERED,
-      camino: "ENGAGED",
+      path: "ENGAGED",
       repeatCount: 2
     });
 
-    assert.equal(result.matched && result.camino, "ENGAGED");
-    assert.equal(result.matched && result.resultado, null);
-    assert.equal(cap.updateMany?.data.camino, "ENGAGED");
-    assert.equal(cap.updateMany?.data.resultado, null);
+    assert.equal(result.matched && result.path, "ENGAGED");
+    assert.equal(result.matched && result.outcome, null);
+    assert.equal(cap.updateMany?.data.path, "ENGAGED");
+    assert.equal(cap.updateMany?.data.outcome, null);
     const cd = cap.updateMany?.data.channelData as Record<string, unknown>;
     assert.equal(cd.repeatCount, 2);
   });
 
-  it("an opt-out press sets camino ENGAGED and resultado OPT_OUT", async () => {
-    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+  it("an opt-out press sets path ENGAGED and outcome OPT_OUT", async () => {
+    const { client, cap } = makeClient({ id: "g-1", delivery: "DISPATCHED", channelData: {} });
 
     const result = await createRecordPrerecordedOutcome(client as never)({
       ...ANSWERED,
-      camino: "ENGAGED",
-      resultado: "OPT_OUT"
+      path: "ENGAGED",
+      outcome: "OPT_OUT"
     });
 
-    assert.equal(result.matched && result.camino, "ENGAGED");
-    assert.equal(result.matched && result.resultado, "OPT_OUT");
-    assert.equal(cap.updateMany?.data.camino, "ENGAGED");
-    assert.equal(cap.updateMany?.data.resultado, "OPT_OUT");
+    assert.equal(result.matched && result.path, "ENGAGED");
+    assert.equal(result.matched && result.outcome, "OPT_OUT");
+    assert.equal(cap.updateMany?.data.path, "ENGAGED");
+    assert.equal(cap.updateMany?.data.outcome, "OPT_OUT");
   });
 
-  it("idempotent: entrega only advances, a finalized value is never downgraded", async () => {
-    const { client, getRow } = makeClient({ id: "g-1", entrega: "DELIVERED", channelData: {} });
+  it("idempotent: delivery only advances, a finalized value is never downgraded", async () => {
+    const { client, getRow } = makeClient({ id: "g-1", delivery: "DELIVERED", channelData: {} });
 
     const result = await createRecordPrerecordedOutcome(client as never)({
       providerRef: "call-abc",
@@ -282,30 +282,30 @@ describe("recordPrerecordedOutcome", () => {
       at: "2026-07-12T10:05:00.000Z"
     });
 
-    assert.equal(result.matched && result.entrega, "DELIVERED");
-    assert.equal(getRow()?.entrega, "DELIVERED", "entrega not rewritten");
+    assert.equal(result.matched && result.delivery, "DELIVERED");
+    assert.equal(getRow()?.delivery, "DELIVERED", "delivery not rewritten");
     assert.equal(getRow()?.deliveryReason, null, "no reason on a delivered call");
   });
 
-  it("idempotent: a duplicate completion does not overwrite a recorded camino/resultado", async () => {
+  it("idempotent: a duplicate completion does not overwrite a recorded path/outcome", async () => {
     const { client, getRow } = makeClient({
       id: "g-1",
-      entrega: "DELIVERED",
-      camino: "ENGAGED",
-      resultado: "OPT_OUT",
+      delivery: "DELIVERED",
+      path: "ENGAGED",
+      outcome: "OPT_OUT",
       channelData: {}
     });
 
     const result = await createRecordPrerecordedOutcome(client as never)({
       ...ANSWERED,
-      camino: "ENGAGED",
-      resultado: "OPT_OUT"
+      path: "ENGAGED",
+      outcome: "OPT_OUT"
     });
 
-    assert.equal(result.matched && result.camino, "ENGAGED");
-    assert.equal(result.matched && result.resultado, "OPT_OUT");
-    assert.equal(getRow()?.camino, "ENGAGED", "camino not rewritten");
-    assert.equal(getRow()?.resultado, "OPT_OUT", "resultado not rewritten");
+    assert.equal(result.matched && result.path, "ENGAGED");
+    assert.equal(result.matched && result.outcome, "OPT_OUT");
+    assert.equal(getRow()?.path, "ENGAGED", "path not rewritten");
+    assert.equal(getRow()?.outcome, "OPT_OUT", "outcome not rewritten");
   });
 
   it(
@@ -320,9 +320,9 @@ describe("recordPrerecordedOutcome", () => {
       // window in production); the real completion's write commits first (DELIVERED,
       // 22s). The sweep's write — decided from its own earlier, now-stale read — is held
       // back and only applied afterward, reproducing "read first, write last." Because the
-      // write is guarded by `where.entrega: "DISPATCHED"` re-checked against live state,
+      // write is guarded by `where.delivery: "DISPATCHED"` re-checked against live state,
       // it must find the row already DELIVERED and no-op instead of clobbering it.
-      const { client, getRow } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+      const { client, getRow } = makeClient({ id: "g-1", delivery: "DISPATCHED", channelData: {} });
       let releaseSweepWrite: () => void = () => {};
       const sweepWriteGate = new Promise<void>((resolve) => {
         releaseSweepWrite = resolve;
@@ -351,12 +351,12 @@ describe("recordPrerecordedOutcome", () => {
       const sweepResult = await sweepCall;
 
       assert.equal(
-        getRow()?.entrega,
+        getRow()?.delivery,
         "DELIVERED",
         "a call that was actually answered must not end up FAILED because the sweep's " +
           "write physically landed after the real completion's"
       );
-      assert.equal(sweepResult.matched && sweepResult.entrega, "DELIVERED");
+      assert.equal(sweepResult.matched && sweepResult.delivery, "DELIVERED");
     }
   );
 
@@ -370,7 +370,7 @@ describe("recordPrerecordedOutcome", () => {
   });
 
   it("rejects invalid input with a ValidationError and never touches the database", async () => {
-    const { client, cap } = makeClient({ id: "g-1", entrega: "DISPATCHED", channelData: {} });
+    const { client, cap } = makeClient({ id: "g-1", delivery: "DISPATCHED", channelData: {} });
 
     await assert.rejects(
       () =>

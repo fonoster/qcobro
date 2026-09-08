@@ -1,6 +1,6 @@
 import {
   inboundEmailSchema,
-  resultadoSchema,
+  outcomeSchema,
   withErrorHandlingAndValidation,
   type CreateContactLogInput,
   type EmailAutopilot,
@@ -9,14 +9,14 @@ import {
   type EmailThread,
   type EmailThreadMessage,
   type InboundEmailInput,
-  type Resultado
+  type Outcome
 } from "@qcobro/common";
 
-/** Maps the autopilot's raw decision string onto a valid `Resultado`, or null when absent
+/** Maps the autopilot's raw decision string onto a valid `Outcome`, or null when absent
  *  or unrecognized (e.g. a removed value like `OTHER`/`WRONG_NUMBER` the model hallucinates). */
-function toResultado(raw: string | null | undefined): Resultado | null {
+function toOutcome(raw: string | null | undefined): Outcome | null {
   if (!raw) return null;
-  const parsed = resultadoSchema.safeParse(raw);
+  const parsed = outcomeSchema.safeParse(raw);
   return parsed.success ? parsed.data : null;
 }
 
@@ -88,8 +88,8 @@ function isAutoReply(headers?: Record<string, string>): boolean {
  * reached, it generates + sends the reply and counts it.
  *
  * An inbound reply is proof of delivery, so every call records through {@link recordOutcomeTx}
- * (never downgrades `entrega` off DISPATCHED, idempotent Objective): `entrega: DELIVERED` and
- * `camino: ENGAGED` are always recorded, and `resultado` is set when the decision implies one.
+ * (never downgrades `delivery` off DISPATCHED, idempotent Objective): `delivery: DELIVERED` and
+ * `path: ENGAGED` are always recorded, and `outcome` is set when the decision implies one.
  */
 export function createIngestEmailReply(deps: IngestEmailReplyDeps) {
   const fn = async (inbound: InboundEmailInput): Promise<IngestEmailReplyResult> => {
@@ -159,20 +159,20 @@ export function createIngestEmailReply(deps: IngestEmailReplyDeps) {
 
     const channelData = { ...existing, emailThread: thread };
 
-    // An inbound reply is proof of delivery: entrega advances to DELIVERED (recordOutcomeTx
-    // never regresses it if a prior callback already moved it further) and camino is
-    // ENGAGED. resultado is set only when the decision implies one; this also writes the
+    // An inbound reply is proof of delivery: delivery advances to DELIVERED (recordOutcomeTx
+    // never regresses it if a prior callback already moved it further) and path is
+    // ENGAGED. outcome is set only when the decision implies one; this also writes the
     // merged channelData on the same gestión row.
-    const resultado = toResultado(decision.resultado);
+    const outcome = toOutcome(decision.outcome);
     const obj = decision.objective;
     await deps.recordOutcome({
       portfolioAccountId: g.portfolioAccountId,
       campaignId: g.campaignId ?? undefined,
       agentType: "EMAIL",
       contactedAt: nowIso,
-      entrega: "DELIVERED",
-      camino: "ENGAGED",
-      resultado: resultado ?? undefined,
+      delivery: "DELIVERED",
+      path: "ENGAGED",
+      outcome: outcome ?? undefined,
       providerRef: token,
       debtAmountSnapshot: g.debtAmountSnapshot ?? undefined,
       channelData,

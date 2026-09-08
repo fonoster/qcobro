@@ -18,8 +18,8 @@ import { useI18n } from "../lib/i18n.js";
 import { useMoney } from "../lib/useWorkspaceCurrency.js";
 import { channelIcon, type Channel } from "../lib/channelIcon.js";
 import { useContactLogRealtime } from "../lib/useContactLogRealtime.js";
-import { entregaLabel, caminoPath, resultadoLabel } from "../lib/contactAxes.js";
-import { ResultadoRow } from "../components/ResultadoRow.js";
+import { deliveryLabel, pathProgression, outcomeLabel } from "../lib/contactAxes.js";
+import { OutcomeRow } from "../components/OutcomeRow.js";
 
 // EMAIL is bidirectional (autopilot thread); the other two are one-way sends.
 const ONE_WAY: Channel[] = ["SMS", "VOICE_PRERECORDED"];
@@ -132,10 +132,10 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
     | {
         id: string;
         agentType: Channel;
-        entrega: string;
+        delivery: string;
         deliveryReason: string | null;
-        camino: string | null;
-        resultado: string | null;
+        path: string | null;
+        outcome: string | null;
         contactedAt: string;
         durationSeconds: number | null;
         aiSummary: string | null;
@@ -238,11 +238,11 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
 
   // The three axes, straight off typed columns. This replaced a switch that reverse-engineered
   // delivery from untyped channelData plus string sniffing, transcript length, and the outcome.
-  const entregaValue = g ? entregaLabel(t, g.entrega, g.deliveryReason, g.agentType) : "";
-  const caminoValue = g
-    ? caminoPath(t, g.agentType, g.camino, g.channelData as Record<string, unknown> | null)
+  const deliveryValue = g ? deliveryLabel(t, g.delivery, g.deliveryReason, g.agentType) : "";
+  const pathValue = g
+    ? pathProgression(t, g.agentType, g.path, g.channelData as Record<string, unknown> | null)
     : null;
-  const resultadoValue = g ? resultadoLabel(t, g.resultado) : null;
+  const outcomeValue = g ? outcomeLabel(t, g.outcome) : null;
   const promise = g?.paymentPromises?.[0] ?? null;
 
   return (
@@ -629,18 +629,18 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
           </Section>
         )}
 
-        {/* Resultado — a standalone row, never nested in the AI section, so it is shown
+        {/* Outcome — a standalone row, never nested in the AI section, so it is shown
             whether or not an analysis exists. Absent entirely when nothing came of the
             interaction, which is the common case. When it is a payment promise this row is
             the promise: there is no second card repeating it. */}
-        <ResultadoRow
+        <OutcomeRow
           label={t("gestiones.detail.result")}
-          // A linked promise is shown even when `resultado` is null. Historical gestións on
-          // the one-way channels had their `resultado` cleared by the axes migration (those
+          // A linked promise is shown even when `outcome` is null. Historical gestións on
+          // the one-way channels had their `outcome` cleared by the axes migration (those
           // channels cannot carry one), but their `PaymentPromise` rows survive and are still
-          // on the operator worklist — keying the row purely off `resultado` would make those
+          // on the operator worklist — keying the row purely off `outcome` would make those
           // promises invisible here while the worklist kept chasing them.
-          value={resultadoValue ?? (promise ? t("gestiones.detail.paymentPromise") : null)}
+          value={outcomeValue ?? (promise ? t("gestiones.detail.paymentPromise") : null)}
           promise={
             promise
               ? {
@@ -663,8 +663,8 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                 label={t("gestiones.col.agent")}
                 value={t(`agents.type.${g.agentType}` as Parameters<typeof t>[0])}
               />
-              <MetaItem label={t("gestiones.detail.delivery")} value={entregaValue} />
-              {caminoValue && <MetaItem label={t("gestiones.detail.camino")} value={caminoValue} />}
+              <MetaItem label={t("gestiones.detail.delivery")} value={deliveryValue} />
+              {pathValue && <MetaItem label={t("gestiones.detail.path")} value={pathValue} />}
               <MetaItem
                 label={t("gestiones.col.date")}
                 value={new Date(g.contactedAt).toLocaleString()}

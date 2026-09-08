@@ -1,11 +1,22 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import type { VoiceCallLookupResult } from "@qcobro/common";
 import { createVoiceCompletionTimeoutSweep } from "./voiceCompletionTimeoutSweep.js";
+import { parseEndedAt } from "../../services/fonosterOutboundCallClient.js";
 
 const NOW = new Date("2026-08-24T12:00:00.000Z");
+const FLOOR_MINUTES = 2;
+const GRACE_SECONDS = 60;
+const NOT_ORIGINATED_MINUTES = 5;
+const BACKSTOP_MINUTES = 30;
 
 function makeClient(
-  rows: { id: string; providerRef: string; agentType: "VOICE_AI" | "VOICE_PRERECORDED" }[]
+  rows: {
+    id: string;
+    providerRef: string;
+    agentType: "VOICE_AI" | "VOICE_PRERECORDED";
+    contactedAt: Date;
+  }[]
 ) {
   const calls: unknown[] = [];
   const client = {
@@ -19,8 +30,15 @@ function makeClient(
   return { client, calls };
 }
 
+function makeOutboundCallClient(cdrs: Record<string, VoiceCallLookupResult>) {
+  return {
+    getCall: async (ref: string): Promise<VoiceCallLookupResult> => cdrs[ref] ?? { found: false }
+  };
+}
+
 function makeDeps(
   rows: Parameters<typeof makeClient>[0],
+  cdrs: Record<string, VoiceCallLookupResult>,
   overrides: Partial<{
     recordVoiceAiCallStatus: (input: unknown) => Promise<unknown>;
     recordPrerecordedOutcome: (input: unknown) => Promise<unknown>;
@@ -36,6 +54,7 @@ function makeDeps(
     prerecordedCalls,
     deps: {
       client: client as never,
+      outboundCallClient: makeOutboundCallClient(cdrs),
       recordVoiceAiCallStatus:
         overrides.recordVoiceAiCallStatus ??
         (async (input: unknown) => {
@@ -46,80 +65,39 @@ function makeDeps(
         (async (input: unknown) => {
           prerecordedCalls.push(input);
         }),
-      thresholdMinutes: 10,
+      floorMinutes: FLOOR_MINUTES,
+      graceSeconds: GRACE_SECONDS,
+      notOriginatedMinutes: NOT_ORIGINATED_MINUTES,
+      backstopMinutes: BACKSTOP_MINUTES,
       now: () => NOW
     }
   };
 }
 
+const JUST_PAST_FLOOR = new Date(NOW.getTime() - 3 * 60_000);
+const PAST_NOT_ORIGINATED = new Date(NOW.getTime() - 6 * 60_000);
+const PAST_BACKSTOP = new Date(NOW.getTime() - 31 * 60_000);
+// Well past GRACE_SECONDS (60s), so a terminal CDR using this as its endedAt behaves as it
+// did before the grace period existed — these back the pre-existing branch tests below.
+const WELL_PAST_GRACE = new Date(NOW.getTime() - 90_000);
+
 describe("createVoiceCompletionTimeoutSweep", () => {
-  it("finalizes a stale VOICE_AI row as FAILED / PROVIDER_ERROR via recordVoiceAiCallStatus", async () => {
-    const { deps, aiCalls, prerecordedCalls } = makeDeps([
-      { id: "g-1", providerRef: "call-1", agentType: "VOICE_AI" }
-    ]);
-    const sweep = createVoiceCompletionTimeoutSweep(deps as never);
-
-    const count = await sweep();
-
-    assert.equal(count, 1);
-    assert.deepEqual(aiCalls, [
-      {
-        providerRef: "call-1",
-        answered: false,
-        deliveryReason: "PROVIDER_ERROR",
-        answeredSeconds: 0,
-        at: NOW.toISOString()
-      }
-    ]);
-    assert.deepEqual(prerecordedCalls, []);
-  });
-
-  it("finalizes a stale VOICE_PRERECORDED row via recordPrerecordedOutcome", async () => {
-    const { deps, aiCalls, prerecordedCalls } = makeDeps([
-      { id: "g-2", providerRef: "call-2", agentType: "VOICE_PRERECORDED" }
-    ]);
-    const sweep = createVoiceCompletionTimeoutSweep(deps as never);
-
-    const count = await sweep();
-
-    assert.equal(count, 1);
-    assert.deepEqual(aiCalls, []);
-    assert.equal(prerecordedCalls.length, 1);
-    assert.equal((prerecordedCalls[0] as { providerRef: string }).providerRef, "call-2");
-  });
-
-  it("queries with the correct entrega/agentType/cutoff filter", async () => {
-    const { deps, calls } = makeDeps([]);
+  it("queries with the correct delivery/agentType/floor-cutoff filter", async () => {
+    const { deps, calls } = makeDeps([], {});
     const sweep = createVoiceCompletionTimeoutSweep(deps as never);
 
     await sweep();
 
-    const args = calls[0] as { where: { entrega: string; contactedAt: { lt: Date } } };
-    assert.equal(args.where.entrega, "DISPATCHED");
-    assert.deepEqual(args.where.contactedAt.lt, new Date(NOW.getTime() - 10 * 60_000));
+    const args = calls[0] as { where: { delivery: string; contactedAt: { lt: Date } } };
+    assert.equal(args.where.delivery, "DISPATCHED");
+    assert.deepEqual(args.where.contactedAt.lt, new Date(NOW.getTime() - FLOOR_MINUTES * 60_000));
   });
 
-  it("isolates a per-row failure without stopping the batch", async () => {
-    let calls = 0;
-    const { deps, prerecordedCalls } = makeDeps(
-      [
-        { id: "g-1", providerRef: "call-1", agentType: "VOICE_AI" },
-        { id: "g-2", providerRef: "call-2", agentType: "VOICE_PRERECORDED" }
-      ],
-      {
-        recordVoiceAiCallStatus: async () => {
-          calls++;
-          throw new Error("db exploded");
-        }
-      }
-    );
+  it("returns 0 when nothing is stale", async () => {
+    const { deps } = makeDeps([], {});
     const sweep = createVoiceCompletionTimeoutSweep(deps as never);
 
-    const count = await sweep();
-
-    assert.equal(calls, 1);
-    assert.equal(count, 1); // only the successful VOICE_PRERECORDED row counted
-    assert.equal(prerecordedCalls.length, 1);
+    assert.equal(await sweep(), 0);
   });
 
   it("returns 0 and does not throw when the query itself fails", async () => {
@@ -132,9 +110,13 @@ describe("createVoiceCompletionTimeoutSweep", () => {
     };
     const sweep = createVoiceCompletionTimeoutSweep({
       client: client as never,
+      outboundCallClient: makeOutboundCallClient({}),
       recordVoiceAiCallStatus: async () => undefined,
       recordPrerecordedOutcome: async () => undefined,
-      thresholdMinutes: 10,
+      floorMinutes: FLOOR_MINUTES,
+      graceSeconds: GRACE_SECONDS,
+      notOriginatedMinutes: NOT_ORIGINATED_MINUTES,
+      backstopMinutes: BACKSTOP_MINUTES,
       now: () => NOW
     });
 
@@ -143,10 +125,373 @@ describe("createVoiceCompletionTimeoutSweep", () => {
     assert.equal(count, 0);
   });
 
-  it("returns 0 when nothing is stale", async () => {
-    const { deps } = makeDeps([]);
+  describe("branch: a terminal CDR status (past the grace period)", () => {
+    it("finalizes VOICE_AI FAILED with the mapped deliveryReason via recordVoiceAiCallStatus", async () => {
+      const { deps, aiCalls, prerecordedCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        {
+          "call-1": {
+            found: true,
+            status: "USER_BUSY",
+            setupToClearSeconds: 12,
+            endedAt: WELL_PAST_GRACE
+          }
+        }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 1);
+      assert.deepEqual(aiCalls, [
+        {
+          providerRef: "call-1",
+          answered: false,
+          deliveryReason: "BUSY",
+          answeredSeconds: 0,
+          at: NOW.toISOString()
+        }
+      ]);
+      assert.deepEqual(prerecordedCalls, []);
+    });
+
+    it("finalizes VOICE_PRERECORDED via recordPrerecordedOutcome", async () => {
+      const { deps, aiCalls, prerecordedCalls } = makeDeps(
+        [
+          {
+            id: "g-2",
+            providerRef: "call-2",
+            agentType: "VOICE_PRERECORDED",
+            contactedAt: JUST_PAST_FLOOR
+          }
+        ],
+        {
+          "call-2": {
+            found: true,
+            status: "NO_ANSWER",
+            setupToClearSeconds: 30,
+            endedAt: WELL_PAST_GRACE
+          }
+        }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 1);
+      assert.deepEqual(aiCalls, []);
+      assert.deepEqual(prerecordedCalls, [
+        {
+          providerRef: "call-2",
+          answered: false,
+          deliveryReason: "NO_ANSWER",
+          answeredSeconds: 0,
+          at: NOW.toISOString()
+        }
+      ]);
+    });
+
+    it("maps NORMAL_CLEARING to OUTCOME_UNKNOWN — the call was fine, our signal is what's missing", async () => {
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        {
+          "call-1": {
+            found: true,
+            status: "NORMAL_CLEARING",
+            setupToClearSeconds: 45,
+            endedAt: WELL_PAST_GRACE
+          }
+        }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      await sweep();
+
+      assert.equal((aiCalls[0] as { deliveryReason: string }).deliveryReason, "OUTCOME_UNKNOWN");
+    });
+
+    it("never passes the CDR's setupToClearSeconds through as answeredSeconds", async () => {
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        {
+          "call-1": {
+            found: true,
+            status: "USER_BUSY",
+            setupToClearSeconds: 999,
+            endedAt: WELL_PAST_GRACE
+          }
+        }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      await sweep();
+
+      assert.equal((aiCalls[0] as { answeredSeconds: number }).answeredSeconds, 0);
+    });
+  });
+
+  describe("branch: grace period — a terminal CDR races a live completion signal", () => {
+    it("does not finalize a terminal CDR ended only 5 seconds ago", async () => {
+      const { deps, aiCalls, prerecordedCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        {
+          "call-1": {
+            found: true,
+            status: "USER_BUSY",
+            setupToClearSeconds: 12,
+            endedAt: new Date(NOW.getTime() - 5_000)
+          }
+        }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 0);
+      assert.deepEqual(aiCalls, []);
+      assert.deepEqual(prerecordedCalls, []);
+    });
+
+    it("finalizes the same gestión on a later pass, once ended 90 seconds ago", async () => {
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        {
+          "call-1": {
+            found: true,
+            status: "USER_BUSY",
+            setupToClearSeconds: 12,
+            endedAt: new Date(NOW.getTime() - 90_000)
+          }
+        }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 1);
+      assert.deepEqual(aiCalls, [
+        {
+          providerRef: "call-1",
+          answered: false,
+          deliveryReason: "BUSY",
+          answeredSeconds: 0,
+          at: NOW.toISOString()
+        }
+      ]);
+    });
+
+    it("does not finalize a terminal CDR with no endedAt — never guess in the direction that discards a real outcome", async () => {
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        {
+          "call-1": {
+            found: true,
+            status: "USER_BUSY",
+            setupToClearSeconds: 12,
+            endedAt: null
+          }
+        }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 0);
+      assert.deepEqual(aiCalls, []);
+    });
+
+    it("finalizes end to end when endedAt is derived from a realistic epoch-seconds wire value, not a hand-made Date", async () => {
+      // `parseEndedAt` is what the real FonosterOutboundCallClient runs the CDR's raw
+      // `endedAt` through — on the wire it is an epoch-seconds integer, not a Date. Driving
+      // the sweep through the real parser (rather than a hand-made `new Date(...)` fixture)
+      // is what would have caught parseEndedAt rejecting every real CDR.
+      const endedAtEpochSeconds = Math.floor((NOW.getTime() - 90_000) / 1000);
+      const endedAt = parseEndedAt(endedAtEpochSeconds);
+      assert.ok(endedAt instanceof Date, "parseEndedAt must accept a raw epoch-seconds number");
+
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        { "call-1": { found: true, status: "USER_BUSY", setupToClearSeconds: 12, endedAt } }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 1);
+      assert.deepEqual(aiCalls, [
+        {
+          providerRef: "call-1",
+          answered: false,
+          deliveryReason: "BUSY",
+          answeredSeconds: 0,
+          at: NOW.toISOString()
+        }
+      ]);
+    });
+  });
+
+  describe("branch: no status yet (call still in progress)", () => {
+    it("leaves the gestión at DISPATCHED — no record call, not counted", async () => {
+      const { deps, aiCalls, prerecordedCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        { "call-1": { found: true, status: "UNKNOWN", setupToClearSeconds: 0, endedAt: null } }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 0);
+      assert.deepEqual(aiCalls, []);
+      assert.deepEqual(prerecordedCalls, []);
+    });
+  });
+
+  describe("branch: NOT_FOUND — the call never originated", () => {
+    it("finalizes FAILED / NOT_ORIGINATED once notOriginatedMinutes has passed", async () => {
+      const { deps, aiCalls } = makeDeps(
+        [
+          {
+            id: "g-1",
+            providerRef: "call-1",
+            agentType: "VOICE_AI",
+            contactedAt: PAST_NOT_ORIGINATED
+          }
+        ],
+        { "call-1": { found: false } }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 1);
+      assert.deepEqual(aiCalls, [
+        {
+          providerRef: "call-1",
+          answered: false,
+          deliveryReason: "NOT_ORIGINATED",
+          answeredSeconds: 0,
+          at: NOW.toISOString()
+        }
+      ]);
+    });
+
+    it("does not finalize before notOriginatedMinutes has passed, even though it is past floorMinutes", async () => {
+      // The CDR's start record can lag dispatch; this irreversible write gets a longer,
+      // dedicated age gate than the floor the query itself uses.
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        { "call-1": { found: false } }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 0);
+      assert.deepEqual(aiCalls, []);
+    });
+  });
+
+  describe("branch: backstop", () => {
+    it("finalizes FAILED / OUTCOME_UNKNOWN once a no-status gestión passes backstopMinutes", async () => {
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: PAST_BACKSTOP }],
+        { "call-1": { found: true, status: "UNKNOWN", setupToClearSeconds: 0, endedAt: null } }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 1);
+      assert.deepEqual(aiCalls, [
+        {
+          providerRef: "call-1",
+          answered: false,
+          deliveryReason: "OUTCOME_UNKNOWN",
+          answeredSeconds: 0,
+          at: NOW.toISOString()
+        }
+      ]);
+    });
+
+    it("does not backstop a gestión still short of backstopMinutes", async () => {
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        { "call-1": { found: true, status: "UNKNOWN", setupToClearSeconds: 0, endedAt: null } }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 0);
+      assert.deepEqual(aiCalls, []);
+    });
+
+    it("finalizes a terminal CDR with an unparseable endedAt once past the backstop, with the mapped reason — not OUTCOME_UNKNOWN, and never stalled forever", async () => {
+      // Regression: a terminal status used to return null unconditionally when endedAt was
+      // unusable, which skipped the backstop check entirely — the gestión would be
+      // re-polled every pass forever and never finalize. Past backstopMinutes it must
+      // finalize with the mapped reason, since the CDR does say how the call cleared even
+      // without a trustworthy end time.
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: PAST_BACKSTOP }],
+        { "call-1": { found: true, status: "USER_BUSY", setupToClearSeconds: 12, endedAt: null } }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 1);
+      assert.deepEqual(aiCalls, [
+        {
+          providerRef: "call-1",
+          answered: false,
+          deliveryReason: "BUSY",
+          answeredSeconds: 0,
+          at: NOW.toISOString()
+        }
+      ]);
+    });
+  });
+
+  it("isolates a per-row failure without stopping the batch", async () => {
+    let attempts = 0;
+    const { deps, prerecordedCalls } = makeDeps(
+      [
+        { id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR },
+        {
+          id: "g-2",
+          providerRef: "call-2",
+          agentType: "VOICE_PRERECORDED",
+          contactedAt: JUST_PAST_FLOOR
+        }
+      ],
+      {
+        "call-1": {
+          found: true,
+          status: "USER_BUSY",
+          setupToClearSeconds: 12,
+          endedAt: WELL_PAST_GRACE
+        },
+        "call-2": {
+          found: true,
+          status: "NO_ANSWER",
+          setupToClearSeconds: 30,
+          endedAt: WELL_PAST_GRACE
+        }
+      },
+      {
+        recordVoiceAiCallStatus: async () => {
+          attempts++;
+          throw new Error("db exploded");
+        }
+      }
+    );
     const sweep = createVoiceCompletionTimeoutSweep(deps as never);
 
-    assert.equal(await sweep(), 0);
+    const count = await sweep();
+
+    assert.equal(attempts, 1);
+    assert.equal(count, 1); // only the successful VOICE_PRERECORDED row counted
+    assert.equal(prerecordedCalls.length, 1);
   });
 });

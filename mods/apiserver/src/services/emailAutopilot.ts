@@ -19,10 +19,10 @@ function buildPrompt(req: EmailAutopilotRequest): string {
     req.systemPrompt,
     "",
     "Eres el autopiloto de cobranza por correo. Decide la siguiente acción para el hilo.",
-    "Devuelve SOLO un objeto JSON con las claves: action, replyBody, resultado, objective.",
+    "Devuelve SOLO un objeto JSON con las claves: action, replyBody, outcome, objective.",
     "action ∈ reply | ignore | resolve | escalate.",
     "Cuando action = reply, replyBody es el cuerpo de la respuesta (en el idioma del cliente).",
-    "Si el cliente promete pagar, usa resultado = PAYMENT_PROMISE y objective { amount, dueDate }.",
+    "Si el cliente promete pagar, usa outcome = PAYMENT_PROMISE y objective { amount, dueDate }.",
     req.referenceDate ? `Hoy es ${req.referenceDate} (formato YYYY-MM-DD).` : "",
     "objective.dueDate DEBE ser una fecha absoluta en formato YYYY-MM-DD. Convierte expresiones " +
       'relativas ("mañana", "el viernes", "la próxima semana") a esa fecha usando la fecha de hoy. ' +
@@ -59,14 +59,14 @@ function mockDecide(req: EmailAutopilotRequest): EmailAutopilotDecision {
       action: "reply",
       replyBody:
         "Gracias por su respuesta. Registramos su compromiso de pago y le reenviamos el enlace para coordinarlo. Quedamos atentos.",
-      resultado: "PAYMENT_PROMISE"
+      outcome: "PAYMENT_PROMISE"
     };
   }
   if (/(no es|equivocad|no soy|número|baja|no escrib|no contact)/.test(lc)) {
-    return { action: "resolve", resultado: "WRONG_PARTY" };
+    return { action: "resolve", outcome: "WRONG_PARTY" };
   }
   if (/(reclamo|abogad|demanda|queja)/.test(lc)) {
-    // escalate writes nothing beyond suppressing the auto-reply — it carries no resultado.
+    // escalate writes nothing beyond suppressing the auto-reply — it carries no outcome.
     return { action: "escalate" };
   }
   return {

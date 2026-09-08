@@ -9,7 +9,7 @@ const API = "http://localhost:3000";
 /**
  * Delivery signals on the threaded channels (`message-delivery-signals`, closing #103).
  *
- * Before this change, EMAIL and WHATSAPP left `entrega: DISPATCHED` unless the customer
+ * Before this change, EMAIL and WHATSAPP left `delivery: DISPATCHED` unless the customer
  * replied — no provider delivery signal was ingested on either — so a delivered-but-unanswered
  * message was indistinguishable from one that never arrived, and the `Leído` stage in the
  * `Camino` progression was unreachable UI: `contactAxes.ts` rendered it from
@@ -20,7 +20,7 @@ const API = "http://localhost:3000";
  * path; the provider mapping itself is covered by the `record*DeliveryStatus` unit tests.
  * Assumes the dev stack is running.
  */
-test.describe("message delivery — entrega and the Leído stage", () => {
+test.describe("message delivery — delivery and the Leído stage", () => {
   test("a delivered, opened and answered email renders the full progression", async ({ page }) => {
     const owner = newOwner("delivery");
     const stamp = Date.now();
@@ -73,14 +73,14 @@ test.describe("message delivery — entrega and the Leído stage", () => {
 
     // The end state of a full email round trip: Resend confirmed delivery, the open pixel
     // fired, and the customer replied with a commitment. Each stage came from a different
-    // signal. The resultado is what makes this row identifiable in the list — the table
-    // renders debtor, channel, entrega, resultado and date, and no subject.
+    // signal. The outcome is what makes this row identifiable in the list — the table
+    // renders debtor, channel, delivery, outcome and date, and no subject.
     await seed({
       agentType: "EMAIL",
       contactedAt: at(3),
-      entrega: "DELIVERED",
-      camino: "ENGAGED",
-      resultado: "PAYMENT_PROMISE",
+      delivery: "DELIVERED",
+      path: "ENGAGED",
+      outcome: "PAYMENT_PROMISE",
       intentMetadata: { promisedAmount: 500, promisedDate: at(-72) },
       channelData: {
         to: "maria@example.com",
@@ -96,7 +96,7 @@ test.describe("message delivery — entrega and the Leído stage", () => {
     await seed({
       agentType: "EMAIL",
       contactedAt: at(2),
-      entrega: "DELIVERED",
+      delivery: "DELIVERED",
       channelData: {
         to: "maria@example.com",
         subject: "Segundo aviso",
@@ -109,7 +109,7 @@ test.describe("message delivery — entrega and the Leído stage", () => {
     await seed({
       agentType: "EMAIL",
       contactedAt: at(1),
-      entrega: "FAILED",
+      delivery: "FAILED",
       deliveryReason: "INVALID_DESTINATION",
       channelData: { to: "typo@exmaple.com", deliveryStatus: "email.bounced" }
     });
@@ -123,13 +123,13 @@ test.describe("message delivery — entrega and the Leído stage", () => {
     // Nothing is left at Despachado — that was the bug.
     await expect(rowWith("Despachado")).toHaveCount(0);
 
-    const entregaFilter = page.getByRole("combobox").first();
-    await entregaFilter.selectOption("DELIVERED");
+    const deliveryFilter = page.getByRole("combobox").first();
+    await deliveryFilter.selectOption("DELIVERED");
     await expect(rowWith("Entregado")).toHaveCount(2);
-    await entregaFilter.selectOption("");
+    await deliveryFilter.selectOption("");
 
-    // The list renders debtor, channel, entrega, resultado and date — no subject — so the two
-    // delivered emails are told apart by their resultado, the only column that differs.
+    // The list renders debtor, channel, delivery, outcome and date — no subject — so the two
+    // delivered emails are told apart by their outcome, the only column that differs.
     const answered = rowWith("Promesa de pago");
     const unopened = page
       .locator("tbody tr", { hasText: "Entregado" })

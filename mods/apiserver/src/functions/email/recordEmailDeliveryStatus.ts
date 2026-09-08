@@ -4,8 +4,8 @@ import {
   withErrorHandlingAndValidation,
   type DeliveryReason,
   type EmailEventCallbackInput,
-  type Entrega,
-  type Resultado
+  type Delivery,
+  type Outcome
 } from "@qcobro/common";
 
 /** Minimal Prisma surface this completion needs. */
@@ -16,25 +16,25 @@ export interface EmailDeliveryStatusClient {
       select: {
         id: true;
         providerRef: true;
-        entrega: true;
+        delivery: true;
         deliveryReason: true;
-        resultado: true;
+        outcome: true;
         channelData: true;
       };
     }): Promise<{
       id: string;
       providerRef: string | null;
-      entrega: Entrega;
+      delivery: Delivery;
       deliveryReason: DeliveryReason | null;
-      resultado: Resultado | null;
+      outcome: Outcome | null;
       channelData: unknown;
     } | null>;
     update(args: {
       where: { id: string };
       data: {
-        entrega?: Entrega;
+        delivery?: Delivery;
         deliveryReason?: DeliveryReason | null;
-        resultado?: Resultado;
+        outcome?: Outcome;
         channelData: Record<string, unknown>;
       };
     }): Promise<unknown>;
@@ -52,7 +52,7 @@ export type RecordEmailDeliveryStatusResult =
        * it, and a row recorded without one is invisible to every fetch.
        */
       providerRef: string | null;
-      entrega: Entrega;
+      delivery: Delivery;
       deliveryReason: DeliveryReason | null;
       openedAt: string | null;
     };
@@ -99,7 +99,7 @@ function deliveryReasonForFailure(input: EmailEventCallbackInput): DeliveryReaso
  *
  * Every event updates `channelData.deliveryStatus` to the raw event type, terminal or not, so
  * an operator can see progress before the gestión finalizes. Only a terminal event
- * (`delivered` / `complained` / `bounced` / `failed`) finalizes `entrega` (+ `deliveryReason`
+ * (`delivered` / `complained` / `bounced` / `failed`) finalizes `delivery` (+ `deliveryReason`
  * on failure); `sent` and `delivery_delayed` update visibility only.
  *
  * `email.opened` writes `channelData.openedAt` and moves no axis. Read-but-unengaged is
@@ -109,13 +109,13 @@ function deliveryReasonForFailure(input: EmailEventCallbackInput): DeliveryReaso
  * re-fetched it.
  *
  * `email.complained` always records `channelData.optOutAt` and additionally sets
- * `resultado: OPT_OUT` when the gestión has no resultado yet, mirroring the WhatsApp 131050
+ * `outcome: OPT_OUT` when the gestión has no outcome yet, mirroring the WhatsApp 131050
  * path. Both are findable markers in the console, not enforced suppression, which belongs to
  * the workspace Do Not Contact list (#101).
  *
- * Idempotent per message id: `entrega` only ever advances. Once it has left the dispatch-time
+ * Idempotent per message id: `delivery` only ever advances. Once it has left the dispatch-time
  * `DISPATCHED` — by a prior event, or by a customer reply, which races these events freely —
- * a repeated or later terminal event preserves the existing `entrega`/`deliveryReason`.
+ * a repeated or later terminal event preserves the existing `delivery`/`deliveryReason`.
  */
 export function createRecordEmailDeliveryStatus(client: EmailDeliveryStatusClient) {
   const fn = async (input: EmailEventCallbackInput): Promise<RecordEmailDeliveryStatusResult> => {
@@ -124,9 +124,9 @@ export function createRecordEmailDeliveryStatus(client: EmailDeliveryStatusClien
       select: {
         id: true,
         providerRef: true,
-        entrega: true,
+        delivery: true,
         deliveryReason: true,
-        resultado: true,
+        outcome: true,
         channelData: true
       }
     });
@@ -139,35 +139,35 @@ export function createRecordEmailDeliveryStatus(client: EmailDeliveryStatusClien
     const alreadyOpened = typeof existing.openedAt === "string" ? existing.openedAt : null;
     if (input.type === "email.opened" && !alreadyOpened) channelData.openedAt = input.at;
 
-    const terminal: Entrega | null = DELIVERED_EVENTS.has(input.type)
+    const terminal: Delivery | null = DELIVERED_EVENTS.has(input.type)
       ? "DELIVERED"
       : FAILED_EVENTS.has(input.type)
         ? "FAILED"
         : null;
 
-    // Never move entrega back off DISPATCHED once it has already left it.
-    const shouldFinalize = terminal !== null && match.entrega === "DISPATCHED";
-    const entrega: Entrega | undefined = shouldFinalize ? terminal : undefined;
+    // Never move delivery back off DISPATCHED once it has already left it.
+    const shouldFinalize = terminal !== null && match.delivery === "DISPATCHED";
+    const delivery: Delivery | undefined = shouldFinalize ? terminal : undefined;
     const deliveryReason: DeliveryReason | undefined =
       shouldFinalize && terminal === "FAILED" ? deliveryReasonForFailure(input) : undefined;
 
     const complained = input.type === "email.complained";
-    // Recorded on every complaint, even when `resultado` is left alone below — this is the
+    // Recorded on every complaint, even when `outcome` is left alone below — this is the
     // durable trace of it, and the axis write is best-effort on top of it.
     if (complained && typeof existing.optOutAt !== "string") channelData.optOutAt = input.at;
-    // `resultado` is single-valued, so a complaint does not overwrite a richer outcome the
+    // `outcome` is single-valued, so a complaint does not overwrite a richer outcome the
     // conversation already produced. The realistic ordering makes this matter: the customer
     // replies (the autopilot writes PAYMENT_PROMISE or DISPUTE_RAISED), then marks the thread
     // as spam days later. `channelData.optOutAt` above is what guarantees the complaint
     // survives that case rather than vanishing.
-    const resultado: Resultado | undefined = complained && !match.resultado ? "OPT_OUT" : undefined;
+    const outcome: Outcome | undefined = complained && !match.outcome ? "OPT_OUT" : undefined;
 
     await client.accountContactLog.update({
       where: { id: match.id },
       data: {
-        ...(entrega ? { entrega } : {}),
+        ...(delivery ? { delivery } : {}),
         ...(deliveryReason ? { deliveryReason } : {}),
-        ...(resultado ? { resultado } : {}),
+        ...(outcome ? { outcome } : {}),
         channelData
       }
     });
@@ -175,8 +175,8 @@ export function createRecordEmailDeliveryStatus(client: EmailDeliveryStatusClien
       matched: true,
       id: match.id,
       providerRef: match.providerRef,
-      entrega: entrega ?? match.entrega,
-      deliveryReason: deliveryReason ?? (entrega ? null : match.deliveryReason),
+      delivery: delivery ?? match.delivery,
+      deliveryReason: deliveryReason ?? (delivery ? null : match.deliveryReason),
       openedAt: typeof channelData.openedAt === "string" ? channelData.openedAt : null
     };
   };

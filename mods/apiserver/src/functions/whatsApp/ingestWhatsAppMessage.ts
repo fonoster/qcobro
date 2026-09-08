@@ -1,11 +1,11 @@
 import { z } from "zod";
 import {
-  resultadoSchema,
+  outcomeSchema,
   withErrorHandlingAndValidation,
   type CreateContactLogInput,
   type EmailAutopilot,
   type EmailAutopilotDecision,
-  type Resultado,
+  type Outcome,
   type WhatsAppClient,
   type WhatsAppThread,
   type WhatsAppThreadMessage
@@ -13,11 +13,11 @@ import {
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
-/** Maps the autopilot's raw decision string onto a valid `Resultado`, or null when absent
+/** Maps the autopilot's raw decision string onto a valid `Outcome`, or null when absent
  *  or unrecognized (e.g. a removed value like `OTHER`/`WRONG_NUMBER` the model hallucinates). */
-function toResultado(raw: string | null | undefined): Resultado | null {
+function toOutcome(raw: string | null | undefined): Outcome | null {
   if (!raw) return null;
-  const parsed = resultadoSchema.safeParse(raw);
+  const parsed = outcomeSchema.safeParse(raw);
   return parsed.success ? parsed.data : null;
 }
 
@@ -97,9 +97,9 @@ function isWindowOpen(lastCustomerMessageAt: string, now: Date): boolean {
  * sender dispatched to that customer). Appends the inbound message to the WhatsApp thread
  * in `channelData.whatsAppThread`, runs the autopilot, and — if in window and under cap —
  * sends a free-form text reply via `WhatsAppClient.sendText`. An inbound message is proof of
- * delivery, so every call records through `recordOutcome` (never downgrades `entrega` off
- * DISPATCHED; idempotent Objective): `entrega: DELIVERED` and `camino: ENGAGED` are always
- * recorded, and `resultado` is set when the decision implies one.
+ * delivery, so every call records through `recordOutcome` (never downgrades `delivery` off
+ * DISPATCHED; idempotent Objective): `delivery: DELIVERED` and `path: ENGAGED` are always
+ * recorded, and `outcome` is set when the decision implies one.
  *
  * 24 h window: if the customer's last message is more than 24 h old, free-form text is
  * forbidden by Meta; the action is escalated rather than sent.
@@ -166,7 +166,7 @@ export function createIngestWhatsAppMessage(deps: IngestWhatsAppMessageDeps) {
 
     const channelData = { ...existing, whatsAppThread: thread };
 
-    const resultado = toResultado(decision.resultado);
+    const outcome = toOutcome(decision.outcome);
     const obj = decision.objective;
 
     // `recordOutcome` correlates only by `providerRef`. A gestión without one (legacy or
@@ -184,9 +184,9 @@ export function createIngestWhatsAppMessage(deps: IngestWhatsAppMessageDeps) {
       campaignId: g.campaignId ?? undefined,
       agentType: "WHATSAPP",
       contactedAt: nowIso,
-      entrega: "DELIVERED",
-      camino: "ENGAGED",
-      resultado: resultado ?? undefined,
+      delivery: "DELIVERED",
+      path: "ENGAGED",
+      outcome: outcome ?? undefined,
       providerRef: g.providerRef ?? undefined,
       debtAmountSnapshot: g.debtAmountSnapshot ?? undefined,
       channelData,

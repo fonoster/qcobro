@@ -29,7 +29,7 @@ describe("ttsProductRefForVoice", () => {
 /**
  * A channel section is all-or-nothing. Omitting it disables the channel, which is fine; what
  * is rejected is the in-between — dispatching with no callback registered, which strands every
- * gestión at `entrega: DISPATCHED` with no way to ever learn what happened to it.
+ * gestión at `delivery: DISPATCHED` with no way to ever learn what happened to it.
  */
 describe("webhookBaseUrl is required within its section", () => {
   const fonoster = {

@@ -266,7 +266,7 @@ async function processEvents(
         // Delivery signals: `sent` / `delivered` / `read` / `failed`, plus the opt-out block
         // that arrives as a `failed` status carrying error code 131050. Every one of these
         // used to be discarded except the opt-out, which is why a delivered-but-unanswered
-        // WhatsApp message sat at `entrega: DISPATCHED` forever (#103).
+        // WhatsApp message sat at `delivery: DISPATCHED` forever (#103).
         for (const status of value.statuses ?? []) {
           // Isolated per status. The enclosing try/catch is per *change*, and the 200 has
           // already been sent, so an unhandled throw here would drop every later status AND
@@ -302,12 +302,12 @@ async function processEvents(
             }
             logger.verbose(
               `status=${status.status} account=${result.portfolioAccountId} ` +
-                `providerRef=${status.id} entrega=${result.entrega}`
+                `providerRef=${status.id} delivery=${result.delivery}`
             );
             if (result.optOut) {
               // The account-level OPT_OUT flag no longer exists: suppression moved to the
               // workspace Do Not Contact list, which is not built yet (issue #101). The
-              // recorder's `channelData.optOutAt` (and `resultado: OPT_OUT`, when the gestión
+              // recorder's `channelData.optOutAt` (and `outcome: OPT_OUT`, when the gestión
               // had no richer outcome) keeps the signal findable until that lands.
               logger.verbose(`opt-out: account=${result.portfolioAccountId} — NOT enforced (#101)`);
             }

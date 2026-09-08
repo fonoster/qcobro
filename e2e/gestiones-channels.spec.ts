@@ -63,15 +63,15 @@ test.describe("gestiones — channels", () => {
     ];
     const seeds: {
       agentType: string;
-      entrega?: string;
-      camino?: string;
-      resultado?: string;
+      delivery?: string;
+      path?: string;
+      outcome?: string;
       extra?: Record<string, unknown>;
       channelData: Record<string, unknown>;
     }[] = [
       {
         agentType: "SMS",
-        entrega: "DELIVERED",
+        delivery: "DELIVERED",
         extra: {
           aiSummary: "Recordatorio de pago enviado al cliente con enlace de pago en línea."
         },
@@ -79,13 +79,13 @@ test.describe("gestiones — channels", () => {
       },
       {
         agentType: "VOICE_PRERECORDED",
-        entrega: "DELIVERED",
+        delivery: "DELIVERED",
         extra: { durationSeconds: 38 },
         channelData: { to: "+525500000001", messageBody: script }
       },
       {
         agentType: "EMAIL",
-        entrega: "DELIVERED",
+        delivery: "DELIVERED",
         channelData: {
           to: "maria@example.com",
           subject: "Recordatorio de pago",
@@ -94,9 +94,9 @@ test.describe("gestiones — channels", () => {
       },
       {
         agentType: "VOICE_AI",
-        entrega: "DELIVERED",
-        camino: "ENGAGED",
-        resultado: "PAYMENT_PROMISE",
+        delivery: "DELIVERED",
+        path: "ENGAGED",
+        outcome: "PAYMENT_PROMISE",
         extra: {
           intentMetadata: { promisedAmount: 4820, promisedDate: "2026-06-27T00:00:00.000Z" },
           aiSummary: "El cliente reconoce la deuda y se compromete a pagar el saldo el viernes.",
@@ -120,9 +120,9 @@ test.describe("gestiones — channels", () => {
           portfolioAccountId: accountId,
           agentType: s.agentType,
           contactedAt: new Date().toISOString(),
-          entrega: s.entrega ?? "DISPATCHED",
-          ...(s.camino ? { camino: s.camino } : {}),
-          ...(s.resultado ? { resultado: s.resultado } : {}),
+          delivery: s.delivery ?? "DISPATCHED",
+          ...(s.path ? { path: s.path } : {}),
+          ...(s.outcome ? { outcome: s.outcome } : {}),
           notes: "Contacto manual",
           ...(s.extra ?? {}),
           channelData: s.channelData
@@ -159,7 +159,7 @@ test.describe("gestiones — channels", () => {
     await closePanel();
 
     // Pre-grabada — playable script (not a "heard" claim) + delivery progression in the
-    // "Estado de entrega" field + honest insight copy; no transcript
+    // "Estado de delivery" field + honest insight copy; no transcript
     panel = await openPanel("Voz pregrabada");
     await expect(panel.getByText("Guion reproducible")).toBeVisible();
     await expect(panel.getByText(script)).toBeVisible();

@@ -55,16 +55,16 @@ describe("readDtmfMenu", () => {
 });
 
 describe("handlePrerecordedCall", () => {
-  it("no menu: plays the script once and hangs up, camino defaults to ENGAGED", async () => {
+  it("no menu: plays the script once and hangs up, path defaults to ENGAGED", async () => {
     const { verbs, calls } = makeVerbs([]);
 
     const result = await handlePrerecordedCall("Su saldo es...", null, verbs);
 
     assert.deepEqual(calls, ["answer", "say:Su saldo es...", "hangup"]);
-    assert.deepEqual(result, { camino: "ENGAGED", resultado: undefined, repeatCount: 0 });
+    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 0 });
   });
 
-  it("menu configured but the caller presses nothing (timeout): hangs up, camino still ENGAGED, no resultado", async () => {
+  it("menu configured but the caller presses nothing (timeout): hangs up, path still ENGAGED, no outcome", async () => {
     const { verbs, calls } = makeVerbs([undefined]);
     const menu = { repeatDigit: "1", repeatMessage: "Presione 1.", maxRepeats: 2 };
 
@@ -77,19 +77,19 @@ describe("handlePrerecordedCall", () => {
       "gather",
       "hangup"
     ]);
-    assert.deepEqual(result, { camino: "ENGAGED", resultado: undefined, repeatCount: 0 });
+    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 0 });
   });
 
-  it("an unrecognized digit hangs up, camino still ENGAGED, no resultado", async () => {
+  it("an unrecognized digit hangs up, path still ENGAGED, no outcome", async () => {
     const { verbs } = makeVerbs(["5"]);
     const menu = { repeatDigit: "1", optOutDigit: "9", maxRepeats: 2 };
 
     const result = await handlePrerecordedCall("Su saldo es...", menu, verbs);
 
-    assert.deepEqual(result, { camino: "ENGAGED", resultado: undefined, repeatCount: 0 });
+    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 0 });
   });
 
-  it("repeat digit replays the script and gathers again, setting camino ENGAGED", async () => {
+  it("repeat digit replays the script and gathers again, setting path ENGAGED", async () => {
     const { verbs, calls } = makeVerbs(["1", undefined]);
     const menu = { repeatDigit: "1", maxRepeats: 2 };
 
@@ -103,10 +103,10 @@ describe("handlePrerecordedCall", () => {
       "gather",
       "hangup"
     ]);
-    assert.deepEqual(result, { camino: "ENGAGED", resultado: undefined, repeatCount: 1 });
+    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 1 });
   });
 
-  it("repeating past the cap hangs up without a further replay, camino still ENGAGED", async () => {
+  it("repeating past the cap hangs up without a further replay, path still ENGAGED", async () => {
     const { verbs, calls } = makeVerbs(["1", "1", "1"]);
     const menu = { repeatDigit: "1", maxRepeats: 2 };
 
@@ -124,7 +124,7 @@ describe("handlePrerecordedCall", () => {
       "gather",
       "hangup"
     ]);
-    assert.deepEqual(result, { camino: "ENGAGED", resultado: undefined, repeatCount: 2 });
+    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 2 });
   });
 
   it("opt-out digit ends the call immediately with no further gather", async () => {
@@ -134,7 +134,7 @@ describe("handlePrerecordedCall", () => {
     const result = await handlePrerecordedCall("Script", menu, verbs);
 
     assert.deepEqual(calls, ["answer", "say:Script", "gather", "hangup"]);
-    assert.deepEqual(result, { camino: "ENGAGED", resultado: "OPT_OUT", repeatCount: 0 });
+    assert.deepEqual(result, { path: "ENGAGED", outcome: "OPT_OUT", repeatCount: 0 });
   });
 
   it("opt-out plays the confirmation message before hanging up, when configured", async () => {
@@ -155,7 +155,7 @@ describe("handlePrerecordedCall", () => {
       "say:Hemos registrado su solicitud.",
       "hangup"
     ]);
-    assert.deepEqual(result, { camino: "ENGAGED", resultado: "OPT_OUT", repeatCount: 0 });
+    assert.deepEqual(result, { path: "ENGAGED", outcome: "OPT_OUT", repeatCount: 0 });
   });
 
   it("opt-out with no confirmation message configured hangs up straight away (unchanged)", async () => {
@@ -202,8 +202,8 @@ describe("runPrerecordedCall", () => {
     const result = await resultPromise;
 
     assert.deepEqual(result, {
-      camino: "ENGAGED",
-      resultado: undefined,
+      path: "ENGAGED",
+      outcome: undefined,
       repeatCount: 0,
       answeredSeconds: 4,
       scriptCompleted: true
@@ -244,8 +244,8 @@ describe("runPrerecordedCall", () => {
       answeredSeconds: 12,
       scriptCompleted: false
     });
-    assert.equal(result.camino, undefined);
-    assert.equal(result.resultado, undefined);
+    assert.equal(result.path, undefined);
+    assert.equal(result.outcome, undefined);
   });
 
   it("a verb that rejects because the session died reports scriptCompleted false with real elapsed time", async () => {

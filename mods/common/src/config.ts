@@ -111,12 +111,12 @@ export const fonosterConfigSchema = z
      * **Required whenever a `fonoster` section is present.** The section itself stays
      * optional — omitting it disables the voice channels entirely. What is not allowed is
      * the in-between: dispatching calls with no callback registered, which strands every
-     * gestión at `entrega: DISPATCHED` forever with no way to learn what happened.
+     * gestión at `delivery: DISPATCHED` forever with no way to learn what happened.
      */
     webhookBaseUrl: z.string().url({
       message:
         "fonoster.webhookBaseUrl is required. Voice dispatch without a callback URL strands " +
-        "every gestión at entrega=DISPATCHED with no way to learn the call result. Set it to " +
+        "every gestión at delivery=DISPATCHED with no way to learn the call result. Set it to " +
         "the apiserver's externally reachable base URL, or remove the whole `fonoster` " +
         "section to disable the voice channels."
     }),
@@ -266,13 +266,13 @@ export const twilioConfigSchema = z
      * **Required whenever a `twilio` section is present.** The section itself stays
      * optional — omitting it disables SMS entirely. Fire-and-forget SMS is no longer a
      * supported configuration: without the callback every SMS gestión sits at
-     * `entrega: DISPATCHED` permanently, which is indistinguishable from a message still
+     * `delivery: DISPATCHED` permanently, which is indistinguishable from a message still
      * in flight and makes delivery rate uncomputable.
      */
     webhookBaseUrl: z.string().url({
       message:
         "twilio.webhookBaseUrl is required. SMS dispatch without a status callback strands " +
-        "every gestión at entrega=DISPATCHED, which is indistinguishable from a message still " +
+        "every gestión at delivery=DISPATCHED, which is indistinguishable from a message still " +
         "in flight. Set it to the apiserver's externally reachable base URL, or remove the " +
         "whole `twilio` section to disable SMS."
     })
@@ -657,17 +657,57 @@ export const qcobroConfigSchema = z.object({
        * any success or `DELIVERY_REJECTED` failure. Sized to ride out a short blip without
        * silently burning through every account's attempt cap during a real outage.
        */
-      consecutiveSystemErrorPauseThreshold: z.number().int().positive().default(10),
+      consecutiveSystemErrorPauseThreshold: z.number().int().positive().default(10)
+    })
+    .prefault({}),
+  /**
+   * Voice completion sweep. Finalizes a VOICE_AI/VOICE_PRERECORDED gestión stuck at
+   * `delivery: DISPATCHED` once its own completion signal (autopilot conversation.ended
+   * webhook / pre-recorded VoiceServer onCompleted) never arrives, by classifying it from
+   * Fonoster's call detail record (CDR) instead of guessing. Runs on its own interval,
+   * independent of `engine.enabled` — manual/ad-hoc voice dispatch needs this finalization
+   * too, and must not depend on the campaigns engine happening to be running.
+   */
+  voiceCompletionSweep: z
+    .object({
       /**
-       * Minutes a VOICE_AI/VOICE_PRERECORDED gestión may sit at entrega=DISPATCHED with no
-       * completion signal (autopilot conversation.ended webhook / pre-recorded VoiceServer
-       * onCompleted) before the timeout sweep finalizes it FAILED (deliveryReason:
-       * PROVIDER_ERROR) — the replacement for the old Fonoster-CDR polling recovery path.
-       * A single shared value across both channels, not per-channel, to keep this simple.
+       * Minutes a VOICE_AI/VOICE_PRERECORDED gestión may sit at `delivery: DISPATCHED`
+       * before the sweep starts consulting the CDR for it. Short on purpose: a CDR lookup
+       * is cheap, and the point is closing out a call that has genuinely ended, not
+       * waiting out a grace period — see `graceSeconds` below for that.
        */
-      voiceCompletionTimeoutMinutes: z.number().int().positive().default(10),
-      /** How often the timeout sweep itself runs, piggybacked on the engine tick loop. */
-      voiceCompletionSweepIntervalSeconds: z.number().int().positive().default(120)
+      floorMinutes: z.number().int().positive().default(2),
+      /**
+       * Seconds a terminal CDR must have been ended for before the sweep will finalize the
+       * gestión from it. The CDR write and the channel's own live completion signal (the
+       * autopilot webhook, the co-located VoiceServer) fire off the same event and race; the
+       * sweep's DB-guarded write is final for whichever side reaches it first, so without
+       * this grace a sweep pass that lands in that race window can permanently discard a
+       * real answered outcome. Measured from the CDR's own `endedAt`, not from dispatch or
+       * from when the sweep happens to poll.
+       */
+      graceSeconds: z.number().int().nonnegative().default(60),
+      /**
+       * Minutes past dispatch before a gestión with no CDR at all (Fonoster's `NOT_FOUND`)
+       * is finalized `deliveryReason: NOT_ORIGINATED`. Deliberately longer than
+       * `floorMinutes`: that write is irreversible, and while there's no live signal to
+       * race against here, the CDR's start record can lag dispatch (Influx read lag, a
+       * queueing hiccup) — finalizing too early risks recording a call that is still just
+       * about to exist as one that never happened.
+       */
+      notOriginatedMinutes: z.number().int().positive().default(5),
+      /**
+       * Minutes past which a gestión whose CDR still carries no status (the provider lost
+       * the end-of-call record, or never writes one) is finalized anyway — `deliveryReason:
+       * OUTCOME_UNKNOWN`, or the CDR's own mapped reason if it has a terminal status but an
+       * unparseable `endedAt` — rather than polled forever. 70 is not a round default: the
+       * platform's dialplan sets `TIMEOUT(absolute)=3600`, so no channel survives past 60
+       * minutes — past that plus a margin, an uncleared CDR has genuinely lost its end
+       * record rather than still being a live call.
+       */
+      backstopMinutes: z.number().int().positive().default(70),
+      /** How often the sweep itself runs. */
+      intervalSeconds: z.number().int().positive().default(120)
     })
     .prefault({})
 });

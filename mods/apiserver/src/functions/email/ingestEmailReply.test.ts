@@ -71,7 +71,7 @@ const inbound = (over: Record<string, unknown> = {}) => ({
 });
 
 describe("ingestEmailReply", () => {
-  it("correlates, threads the reply, sends an autopilot reply under the cap, and records entrega/camino", async () => {
+  it("correlates, threads the reply, sends an autopilot reply under the cap, and records delivery/path", async () => {
     const { deps, outcomes, sends, decideReqs } = harness(gestion(), {
       action: "reply",
       replyBody: "Gracias, coordinamos el pago."
@@ -84,9 +84,9 @@ describe("ingestEmailReply", () => {
     // The autopilot gets today's date so it can resolve relative promises ("el viernes").
     assert.equal(decideReqs[0].referenceDate, "2026-06-26");
     assert.equal(outcomes.length, 1);
-    assert.equal(outcomes[0].entrega, "DELIVERED");
-    assert.equal(outcomes[0].camino, "ENGAGED");
-    assert.equal(outcomes[0].resultado, undefined);
+    assert.equal(outcomes[0].delivery, "DELIVERED");
+    assert.equal(outcomes[0].path, "ENGAGED");
+    assert.equal(outcomes[0].outcome, undefined);
     const channelData = outcomes[0].channelData as Record<string, unknown>;
     const thread = channelData.emailThread as { messages: unknown[]; agentReplyCount: number };
     assert.equal(thread.messages.length, 2, "inbound + agent reply threaded");
@@ -105,19 +105,19 @@ describe("ingestEmailReply", () => {
     assert.equal(sends.length, 0, "no reply sent past the cap");
   });
 
-  it("captures a resultado + objective via recordOutcome", async () => {
+  it("captures an outcome + objective via recordOutcome", async () => {
     const { deps, outcomes } = harness(gestion(), {
       action: "reply",
       replyBody: "Registramos su compromiso.",
-      resultado: "PAYMENT_PROMISE",
+      outcome: "PAYMENT_PROMISE",
       objective: { amount: 500, dueDate: "2026-07-01" }
     });
     await createIngestEmailReply(deps as never)(inbound());
 
     assert.equal(outcomes.length, 1);
-    assert.equal(outcomes[0].resultado, "PAYMENT_PROMISE");
-    assert.equal(outcomes[0].entrega, "DELIVERED");
-    assert.equal(outcomes[0].camino, "ENGAGED");
+    assert.equal(outcomes[0].outcome, "PAYMENT_PROMISE");
+    assert.equal(outcomes[0].delivery, "DELIVERED");
+    assert.equal(outcomes[0].path, "ENGAGED");
     assert.equal(outcomes[0].providerRef, TOKEN);
     assert.deepEqual(outcomes[0].intentMetadata, {
       promisedAmount: 500,
@@ -125,17 +125,17 @@ describe("ingestEmailReply", () => {
     });
   });
 
-  it("collapses an unrecognized resultado string (e.g. a removed OTHER/WRONG_NUMBER) to null", async () => {
+  it("collapses an unrecognized outcome string (e.g. a removed OTHER/WRONG_NUMBER) to null", async () => {
     const { deps, outcomes } = harness(gestion(), {
       action: "resolve",
-      resultado: "OTHER"
+      outcome: "OTHER"
     });
     await createIngestEmailReply(deps as never)(inbound());
 
     assert.equal(outcomes.length, 1);
-    assert.equal(outcomes[0].resultado, undefined);
-    assert.equal(outcomes[0].entrega, "DELIVERED");
-    assert.equal(outcomes[0].camino, "ENGAGED");
+    assert.equal(outcomes[0].outcome, undefined);
+    assert.equal(outcomes[0].delivery, "DELIVERED");
+    assert.equal(outcomes[0].path, "ENGAGED");
   });
 
   it("ignores auto-replies without counting against the cap", async () => {

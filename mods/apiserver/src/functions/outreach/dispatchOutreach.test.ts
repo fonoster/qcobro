@@ -21,7 +21,8 @@ function makeDeps(overrides: Partial<DispatchDeps> = {}) {
       createCall: async (input) => {
         calls.voice.push(input);
         return { ref: "call-1" };
-      }
+      },
+      getCall: async () => ({ found: false })
     },
     emailClient: {
       sendEmail: async (input) => {

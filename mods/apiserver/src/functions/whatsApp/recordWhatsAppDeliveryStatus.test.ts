@@ -9,9 +9,9 @@ import {
 interface Row {
   id: string;
   portfolioAccountId: string;
-  entrega: string;
+  delivery: string;
   deliveryReason: string | null;
-  resultado: string | null;
+  outcome: string | null;
   channelData: Record<string, unknown> | null;
 }
 
@@ -20,9 +20,9 @@ function dispatched(overrides: Partial<Row> = {}): Row {
   return {
     id: "log-1",
     portfolioAccountId: "acct-1",
-    entrega: "DISPATCHED",
+    delivery: "DISPATCHED",
     deliveryReason: null,
-    resultado: null,
+    outcome: null,
     channelData: null,
     ...overrides
   };
@@ -57,14 +57,14 @@ function status(value: string, ...errorCodes: number[]) {
 }
 
 describe("recordWhatsAppDeliveryStatus — delivery axis", () => {
-  it("advances entrega to DELIVERED on a delivered status", async () => {
+  it("advances delivery to DELIVERED on a delivered status", async () => {
     const { client, row } = makeClient(dispatched());
     const record = createRecordWhatsAppDeliveryStatus(client);
 
     const result = await record(status("delivered"));
 
     assert.equal(result.matched, true);
-    assert.equal(row!.entrega, "DELIVERED");
+    assert.equal(row!.delivery, "DELIVERED");
     assert.equal(row!.deliveryReason, null);
     assert.equal(row!.channelData?.deliveryStatus, "delivered");
   });
@@ -75,7 +75,7 @@ describe("recordWhatsAppDeliveryStatus — delivery axis", () => {
 
     await record(status("sent"));
 
-    assert.equal(row!.entrega, "DISPATCHED");
+    assert.equal(row!.delivery, "DISPATCHED");
     assert.equal(row!.channelData?.deliveryStatus, "sent");
   });
 
@@ -85,7 +85,7 @@ describe("recordWhatsAppDeliveryStatus — delivery axis", () => {
 
     await record(status("failed", 131026));
 
-    assert.equal(row!.entrega, "FAILED");
+    assert.equal(row!.delivery, "FAILED");
     assert.equal(row!.deliveryReason, "INVALID_DESTINATION");
   });
 
@@ -98,7 +98,7 @@ describe("recordWhatsAppDeliveryStatus — delivery axis", () => {
 
       assert.equal(row!.deliveryReason, "REJECTED", `code ${code}`);
       // These are blocks, not opt-outs — only 131050 carries that meaning.
-      assert.equal(row!.resultado, null, `code ${code}`);
+      assert.equal(row!.outcome, null, `code ${code}`);
     }
   });
 
@@ -117,27 +117,27 @@ describe("recordWhatsAppDeliveryStatus — delivery axis", () => {
 
     await record(status("failed"));
 
-    assert.equal(row!.entrega, "FAILED");
+    assert.equal(row!.delivery, "FAILED");
     assert.equal(row!.deliveryReason, "PROVIDER_ERROR");
   });
 });
 
 describe("recordWhatsAppDeliveryStatus — read receipts", () => {
   it("records openedAt without moving any axis", async () => {
-    const { client, row } = makeClient(dispatched({ entrega: "DELIVERED" }));
+    const { client, row } = makeClient(dispatched({ delivery: "DELIVERED" }));
     const record = createRecordWhatsAppDeliveryStatus(client);
 
     await record(status("read"));
 
     assert.equal(row!.channelData?.openedAt, AT);
-    assert.equal(row!.entrega, "DELIVERED");
-    assert.equal(row!.resultado, null);
+    assert.equal(row!.delivery, "DELIVERED");
+    assert.equal(row!.outcome, null);
   });
 
   it("keeps the first read timestamp", async () => {
     const first = "2026-08-19T09:00:00.000Z";
     const { client, row } = makeClient(
-      dispatched({ entrega: "DELIVERED", channelData: { openedAt: first } })
+      dispatched({ delivery: "DELIVERED", channelData: { openedAt: first } })
     );
     const record = createRecordWhatsAppDeliveryStatus(client);
 
@@ -155,19 +155,19 @@ describe("recordWhatsAppDeliveryStatus — opt-out", () => {
     const result = await record(status("failed", 131050));
 
     assert.equal(result.matched && result.optOut, true);
-    assert.equal(row!.entrega, "FAILED");
+    assert.equal(row!.delivery, "FAILED");
     assert.equal(row!.deliveryReason, "REJECTED");
-    assert.equal(row!.resultado, "OPT_OUT");
+    assert.equal(row!.outcome, "OPT_OUT");
   });
 
-  it("does not overwrite a resultado the conversation already produced", async () => {
-    const { client, row } = makeClient(dispatched({ resultado: "PAYMENT_PROMISE" }));
+  it("does not overwrite an outcome the conversation already produced", async () => {
+    const { client, row } = makeClient(dispatched({ outcome: "PAYMENT_PROMISE" }));
     const record = createRecordWhatsAppDeliveryStatus(client);
 
     await record(status("failed", 131050));
 
-    assert.equal(row!.resultado, "PAYMENT_PROMISE");
-    // ...but the block is still recorded, so it is not lost to the preserved resultado.
+    assert.equal(row!.outcome, "PAYMENT_PROMISE");
+    // ...but the block is still recorded, so it is not lost to the preserved outcome.
     assert.equal(row!.channelData?.optOutAt, AT);
   });
 
@@ -181,7 +181,7 @@ describe("recordWhatsAppDeliveryStatus — opt-out", () => {
     // Reading only the first code would have bucketed this as a vague PROVIDER_ERROR and
     // missed the opt-out entirely.
     assert.equal(row!.deliveryReason, "REJECTED");
-    assert.equal(row!.resultado, "OPT_OUT");
+    assert.equal(row!.outcome, "OPT_OUT");
   });
 
   it("ignores 131050 riding on a status that did not fail", async () => {
@@ -192,32 +192,32 @@ describe("recordWhatsAppDeliveryStatus — opt-out", () => {
 
     // The message reached the recipient, so this is not a suppression signal.
     assert.equal(result.matched && result.optOut, false);
-    assert.equal(row!.resultado, null);
+    assert.equal(row!.outcome, null);
     assert.equal(row!.channelData?.optOutAt, undefined);
-    assert.equal(row!.entrega, "DELIVERED");
+    assert.equal(row!.delivery, "DELIVERED");
   });
 });
 
 describe("recordWhatsAppDeliveryStatus — idempotency and correlation", () => {
-  it("never moves entrega back off a finalized value", async () => {
+  it("never moves delivery back off a finalized value", async () => {
     const { client, row } = makeClient(
-      dispatched({ entrega: "FAILED", deliveryReason: "INVALID_DESTINATION" })
+      dispatched({ delivery: "FAILED", deliveryReason: "INVALID_DESTINATION" })
     );
     const record = createRecordWhatsAppDeliveryStatus(client);
 
     await record(status("delivered"));
 
-    assert.equal(row!.entrega, "FAILED");
+    assert.equal(row!.delivery, "FAILED");
     assert.equal(row!.deliveryReason, "INVALID_DESTINATION");
   });
 
   it("leaves a reply-set DELIVERED alone when a failure arrives afterwards", async () => {
-    const { client, row } = makeClient(dispatched({ entrega: "DELIVERED" }));
+    const { client, row } = makeClient(dispatched({ delivery: "DELIVERED" }));
     const record = createRecordWhatsAppDeliveryStatus(client);
 
     await record(status("failed", 131026));
 
-    assert.equal(row!.entrega, "DELIVERED");
+    assert.equal(row!.delivery, "DELIVERED");
     assert.equal(row!.deliveryReason, null);
   });
 
@@ -238,6 +238,6 @@ describe("recordWhatsAppDeliveryStatus — idempotency and correlation", () => {
       () => record({ providerRef: "", status: "delivered", at: AT }),
       ValidationError
     );
-    assert.equal(row!.entrega, "DISPATCHED");
+    assert.equal(row!.delivery, "DISPATCHED");
   });
 });

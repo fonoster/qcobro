@@ -8,73 +8,73 @@ const base = {
   contactedAt: "2026-08-21T10:00:00.000Z"
 };
 
-describe("createContactLogSchema — VOICE_PRERECORDED camino/resultado carve-out", () => {
-  it("accepts entrega only, with no camino/resultado (the default, no-menu case)", () => {
-    const result = createContactLogSchema.safeParse({ ...base, entrega: "DELIVERED" });
+describe("createContactLogSchema — VOICE_PRERECORDED path/outcome carve-out", () => {
+  it("accepts delivery only, with no path/outcome (the default, no-menu case)", () => {
+    const result = createContactLogSchema.safeParse({ ...base, delivery: "DELIVERED" });
     assert.equal(result.success, true);
   });
 
-  it("accepts camino ENGAGED (a repeat press)", () => {
+  it("accepts path ENGAGED (a repeat press)", () => {
     const result = createContactLogSchema.safeParse({
       ...base,
-      entrega: "DELIVERED",
-      camino: "ENGAGED"
+      delivery: "DELIVERED",
+      path: "ENGAGED"
     });
     assert.equal(result.success, true);
   });
 
-  it("accepts camino ENGAGED + resultado OPT_OUT together (an opt-out press)", () => {
+  it("accepts path ENGAGED + outcome OPT_OUT together (an opt-out press)", () => {
     const result = createContactLogSchema.safeParse({
       ...base,
-      entrega: "DELIVERED",
-      camino: "ENGAGED",
-      resultado: "OPT_OUT"
+      delivery: "DELIVERED",
+      path: "ENGAGED",
+      outcome: "OPT_OUT"
     });
     assert.equal(result.success, true);
   });
 
-  it("rejects camino ABANDONED — unreachable on this channel even with the carve-out", () => {
+  it("rejects path ABANDONED — unreachable on this channel even with the carve-out", () => {
     const result = createContactLogSchema.safeParse({
       ...base,
-      entrega: "DELIVERED",
-      camino: "ABANDONED"
+      delivery: "DELIVERED",
+      path: "ABANDONED"
     });
     assert.equal(result.success, false);
   });
 
-  it("rejects camino VOICEMAIL — unreachable on this channel even with the carve-out", () => {
+  it("rejects path VOICEMAIL — unreachable on this channel even with the carve-out", () => {
     const result = createContactLogSchema.safeParse({
       ...base,
-      entrega: "DELIVERED",
-      camino: "VOICEMAIL"
+      delivery: "DELIVERED",
+      path: "VOICEMAIL"
     });
     assert.equal(result.success, false);
   });
 
-  it("rejects any resultado other than OPT_OUT — e.g. PAYMENT_PROMISE stays unreachable", () => {
+  it("rejects any outcome other than OPT_OUT — e.g. PAYMENT_PROMISE stays unreachable", () => {
     const result = createContactLogSchema.safeParse({
       ...base,
-      entrega: "DELIVERED",
-      resultado: "PAYMENT_PROMISE"
+      delivery: "DELIVERED",
+      outcome: "PAYMENT_PROMISE"
     });
     assert.equal(result.success, false);
   });
 
-  it("resultado OPT_OUT is accepted without camino — the two fields stay independent", () => {
+  it("outcome OPT_OUT is accepted without path — the two fields stay independent", () => {
     const result = createContactLogSchema.safeParse({
       ...base,
-      entrega: "DELIVERED",
-      resultado: "OPT_OUT"
+      delivery: "DELIVERED",
+      outcome: "OPT_OUT"
     });
     assert.equal(result.success, true);
   });
 
-  it("SMS still rejects camino/resultado entirely — the carve-out is VOICE_PRERECORDED-only", () => {
+  it("SMS still rejects path/outcome entirely — the carve-out is VOICE_PRERECORDED-only", () => {
     const result = createContactLogSchema.safeParse({
       ...base,
       agentType: "SMS",
-      entrega: "DELIVERED",
-      camino: "ENGAGED"
+      delivery: "DELIVERED",
+      path: "ENGAGED"
     });
     assert.equal(result.success, false);
   });

@@ -3,7 +3,7 @@ import { KeyRound } from "lucide-react";
 import { contactStatsPeriodSchema, type ContactStatsPeriod } from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
-import { entregaLabel, resultadoLabel } from "../lib/contactAxes.js";
+import { deliveryLabel, outcomeLabel } from "../lib/contactAxes.js";
 import { useI18n, type Language, type MessageId } from "../lib/i18n.js";
 import { useMoney } from "../lib/useWorkspaceCurrency.js";
 import { Card } from "../components/ui/card.js";
@@ -18,9 +18,9 @@ const CONTACT_STATS_PERIODS = contactStatsPeriodSchema.options;
 type RecentGestion = {
   id: string;
   agentType: string;
-  entrega: string;
+  delivery: string;
   deliveryReason: string | null;
-  resultado: string | null;
+  outcome: string | null;
   contactedAt: string | Date;
   portfolioAccount: { fullName: string } | null;
 };
@@ -184,8 +184,8 @@ export function Home() {
                         {a.portfolioAccount?.fullName ?? "—"}
                       </p>
                       <p className="text-xs text-slate-500">
-                        {resultadoLabel(t, a.resultado) ??
-                          entregaLabel(t, a.entrega, a.deliveryReason, a.agentType)}
+                        {outcomeLabel(t, a.outcome) ??
+                          deliveryLabel(t, a.delivery, a.deliveryReason, a.agentType)}
                       </p>
                     </div>
                     <span className="text-xs text-slate-400">

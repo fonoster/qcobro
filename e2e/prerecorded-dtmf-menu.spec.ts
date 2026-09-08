@@ -10,14 +10,14 @@ const API = "http://localhost:3000";
  * Golden path for the pre-recorded DTMF menu (issue #88): configure a template with both
  * digits through the console, confirm client-side validation rejects a half-configured
  * digit, confirm the config round-trips through Editar, then verify the gestión-side
- * effect — a DTMF press is the one way `VOICE_PRERECORDED` can produce `camino`/`resultado`
+ * effect — a DTMF press is the one way `VOICE_PRERECORDED` can produce `path`/`outcome`
  * at all, so the detail panel and list have to render them exactly like every other
  * channel once non-null, and the API has to keep rejecting every value except the two
  * this menu can actually produce. Live dispatch is not exercised (see prerecorded-audio's
  * unit tests for the VoiceServer branch logic). Assumes the dev stack is running.
  */
 test.describe("pre-recorded DTMF menu", () => {
-  test("configure both digits, validation, persistence, and the resultado/camino it produces", async ({
+  test("configure both digits, validation, persistence, and the outcome/path it produces", async ({
     page
   }) => {
     const owner = newOwner("prerecorded-dtmf");
@@ -139,24 +139,24 @@ test.describe("pre-recorded DTMF menu", () => {
 
     // No menu configured / caller pressed nothing: the pre-existing baseline behavior.
     const baseline = await seed({
-      entrega: "DELIVERED",
+      delivery: "DELIVERED",
       channelData: { to: "+525500000010" }
     });
     expect(baseline.ok(), JSON.stringify(await baseline.json())).toBeTruthy();
 
-    // Caller pressed the opt-out digit: entrega DELIVERED, camino ENGAGED, resultado OPT_OUT —
+    // Caller pressed the opt-out digit: delivery DELIVERED, path ENGAGED, outcome OPT_OUT —
     // pre-recorded's first-ever inbound signal.
     const optOut = await seed({
-      entrega: "DELIVERED",
-      camino: "ENGAGED",
-      resultado: "OPT_OUT",
+      delivery: "DELIVERED",
+      path: "ENGAGED",
+      outcome: "OPT_OUT",
       channelData: { to: "+525500000011" }
     });
     expect(optOut.ok(), JSON.stringify(await optOut.json())).toBeTruthy();
 
     // The carve-out is value-scoped, not a blanket "this channel can engage": every other
-    // camino/resultado value stays rejected for VOICE_PRERECORDED.
-    const disallowed = await seed({ entrega: "DELIVERED", camino: "ABANDONED" });
+    // path/outcome value stays rejected for VOICE_PRERECORDED.
+    const disallowed = await seed({ delivery: "DELIVERED", path: "ABANDONED" });
     expect(disallowed.status(), "ABANDONED is unreachable on this channel").toBe(400);
 
     // --- List: the opt-out row shows Baja, the baseline row shows an em dash -
@@ -181,7 +181,8 @@ test.describe("pre-recorded DTMF menu", () => {
     panel = page.getByRole("dialog");
     await expect(panel).toBeVisible();
     await expect(panel.getByText("Camino", { exact: true })).toBeVisible();
-    await expect(panel.getByText("Despachado → Conversación")).toBeVisible();
+    // VOICE_PRERECORDED has no conversation: ENGAGED reads "Recibido" here, not "Conversación".
+    await expect(panel.getByText("Despachado → Recibido")).toBeVisible();
     await expect(panel.getByText("Resultado", { exact: true })).toBeVisible();
     await expect(panel.getByText("Baja").first()).toBeVisible();
   });

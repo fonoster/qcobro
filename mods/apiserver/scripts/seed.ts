@@ -263,8 +263,8 @@ function renderTemplate(tpl: string, acc: SeedAccount): string {
 /**
  * Voz IA conversation scenarios (mirrors scripts/seed-voz-gestiones.ts).
  *
- * `axes` carries the three independent fields a gestión records — `entrega` (did it reach the
- * device), `camino` (what path the interaction took) and `resultado` (what came of it). These
+ * `axes` carries the three independent fields a gestión records — `delivery` (did it reach the
+ * device), `path` (what path the interaction took) and `outcome` (what came of it). These
  * replaced the single flat `outcome` enum; passing the old field here silently produced
  * delivery-less demo data, because the create schema strips unknown keys rather than rejecting
  * them, so the seed reported success while writing rows that were all `DISPATCHED`.
@@ -273,9 +273,9 @@ const VOZ_SCENARIOS = [
   {
     hoursAgo: 2,
     axes: {
-      entrega: "DELIVERED" as const,
-      camino: "ENGAGED" as const,
-      resultado: "PAYMENT_PROMISE" as const
+      delivery: "DELIVERED" as const,
+      path: "ENGAGED" as const,
+      outcome: "PAYMENT_PROMISE" as const
     },
     intentMetadata: { promisedAmount: 4820, promisedDate: daysFromNow(4) },
     ai: {
@@ -298,8 +298,8 @@ const VOZ_SCENARIOS = [
   {
     hoursAgo: 26,
     // Rang out. A delivery failure with a stated, retryable reason — and no interaction to
-    // describe, so `camino` and `resultado` stay null.
-    axes: { entrega: "FAILED" as const, deliveryReason: "NO_ANSWER" as const },
+    // describe, so `path` and `outcome` stay null.
+    axes: { delivery: "FAILED" as const, deliveryReason: "NO_ANSWER" as const },
     ai: {
       aiSummary:
         "No hubo respuesta del cliente; la llamada entró a buzón. Se recomienda reintentar.",
@@ -315,9 +315,9 @@ const VOZ_SCENARIOS = [
   {
     hoursAgo: 72,
     axes: {
-      entrega: "DELIVERED" as const,
-      camino: "ENGAGED" as const,
-      resultado: "PAID" as const
+      delivery: "DELIVERED" as const,
+      path: "ENGAGED" as const,
+      outcome: "PAID" as const
     },
     ai: {
       aiSummary: "El cliente confirma que ya realizó el pago en línea esta mañana. Caso resuelto.",
@@ -386,7 +386,7 @@ async function seedGestiones(
       durationSeconds: s.durationSeconds
     });
     log(
-      `Voz IA · ${s.axes.entrega}${"resultado" in s.axes ? ` · ${s.axes.resultado}` : ""} ` +
+      `Voz IA · ${s.axes.delivery}${"outcome" in s.axes ? ` · ${s.axes.outcome}` : ""} ` +
         `(${vozAccount.fullName})`
     );
   }
@@ -398,9 +398,9 @@ async function seedGestiones(
     campaignId: campaigns.sms,
     agentType: "SMS",
     contactedAt: hoursAgo(5),
-    // SMS has no inbound path, so `entrega` is the only axis it can carry — `camino` and
-    // `resultado` are rejected outright on a one-way channel.
-    entrega: "DELIVERED",
+    // SMS has no inbound path, so `delivery` is the only axis it can carry — `path` and
+    // `outcome` are rejected outright on a one-way channel.
+    delivery: "DELIVERED",
     notes: "Seed SMS",
     debtAmountSnapshot: smsAccount.outstandingBalance,
     aiSummary:
@@ -422,7 +422,7 @@ async function seedGestiones(
     contactedAt: hoursAgo(48),
     // Unanswered, so no answered duration to report: the spec forbids recording `DELIVERED`
     // with a fabricated or zero duration, and a failure needs a reason to be actionable.
-    entrega: "FAILED",
+    delivery: "FAILED",
     deliveryReason: "NO_ANSWER",
     notes: "Seed Voz pregrabada",
     debtAmountSnapshot: preAccount.outstandingBalance,

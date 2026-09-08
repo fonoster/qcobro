@@ -3,9 +3,9 @@ import type { GatherSource, ServerConfig, VoiceRequest, VoiceResponse } from "@f
 import { getLogger } from "@fonoster/logger";
 import {
   recordingFileNameForCall,
-  type Camino,
+  type Path,
   type PrerecordedCompletionInput,
-  type Resultado
+  type Outcome
 } from "@qcobro/common";
 import { config } from "../config.js";
 
@@ -20,9 +20,9 @@ const DEFAULT_MAX_REPEATS = 2;
 export interface PrerecordedCallCompletion extends PrerecordedCompletionInput {
   /** Always `ENGAGED`: reaching completion means the script played to the end without the
    *  caller hanging up early (see `handlePrerecordedCall`). */
-  camino?: Camino;
+  path?: Path;
   /** Set when the caller pressed the opt-out digit specifically. */
-  resultado?: Resultado;
+  outcome?: Outcome;
   /** How many times the caller replayed the script via the DTMF menu. */
   repeatCount?: number;
 }
@@ -101,10 +101,10 @@ export interface PrerecordedCallVerbs {
  * the caller (the VoiceServer's real Fonoster callback, or a test) attaches itself — kept
  * out of this function so it stays a pure driver over the verb interface, not a clock.
  *
- * `camino` is always `ENGAGED` on a normal return: mirrors `decideCamino` on the Voz IA
+ * `path` is always `ENGAGED` on a normal return: mirrors `decidePath` on the Voz IA
  * side (`decideVoiceOutcome.ts`) — reaching this function's return means the script played
  * to the end (an early hangup mid-`say`/`gather` throws and never reaches it), so the
- * recipient heard the whole message, menu or no menu, press or no press. Only `resultado`
+ * recipient heard the whole message, menu or no menu, press or no press. Only `outcome`
  * stays conditional on an explicit opt-out digit — it is a claim about what the caller did,
  * not just that they listened.
  */
@@ -112,12 +112,12 @@ export async function handlePrerecordedCall(
   message: string,
   menu: DtmfMenu | null,
   res: PrerecordedCallVerbs
-): Promise<{ camino?: Camino; resultado?: Resultado; repeatCount: number }> {
+): Promise<{ path?: Path; outcome?: Outcome; repeatCount: number }> {
   await res.answer();
   await res.say(message);
 
-  let camino: Camino | undefined;
-  let resultado: Resultado | undefined;
+  let path: Path | undefined;
+  let outcome: Outcome | undefined;
   let repeatCount = 0;
 
   if (menu) {
@@ -135,13 +135,13 @@ export async function handlePrerecordedCall(
       });
 
       if (menu.optOutDigit && digits === menu.optOutDigit) {
-        camino = "ENGAGED";
-        resultado = "OPT_OUT";
+        path = "ENGAGED";
+        outcome = "OPT_OUT";
         if (menu.optOutConfirmationMessage) await res.say(menu.optOutConfirmationMessage);
         break;
       }
       if (menu.repeatDigit && digits === menu.repeatDigit) {
-        camino = "ENGAGED";
+        path = "ENGAGED";
         if (repeatCount >= menu.maxRepeats) break; // cap reached — hang up like an unrecognized digit
         repeatCount += 1;
         await res.say(message);
@@ -153,7 +153,7 @@ export async function handlePrerecordedCall(
   }
 
   await res.hangup();
-  return { camino: camino ?? "ENGAGED", resultado, repeatCount };
+  return { path: path ?? "ENGAGED", outcome, repeatCount };
 }
 
 /**
@@ -167,8 +167,8 @@ export async function handlePrerecordedCall(
  * Catching here reports the outcome immediately, and reports it honestly:
  * `scriptCompleted` is `true` only on a clean return, so a call that connected but played
  * nothing is not recorded as a delivery. Picking up is not the same as being told
- * anything — see `recordPrerecordedOutcome` for how the pair maps to `entrega`. The catch
- * path also records no `camino`/`resultado`, since the caller did not necessarily hear the
+ * anything — see `recordPrerecordedOutcome` for how the pair maps to `delivery`. The catch
+ * path also records no `path`/`outcome`, since the caller did not necessarily hear the
  * script.
  *
  * `answeredSeconds` is the real elapsed time either way. A call stranded in silence for
@@ -180,18 +180,18 @@ export async function runPrerecordedCall(
   res: PrerecordedCallVerbs,
   now: () => number = Date.now
 ): Promise<{
-  camino?: Camino;
-  resultado?: Resultado;
+  path?: Path;
+  outcome?: Outcome;
   repeatCount: number;
   answeredSeconds: number;
   scriptCompleted: boolean;
 }> {
   const answeredAt = now();
   try {
-    const { camino, resultado, repeatCount } = await handlePrerecordedCall(message, menu, res);
+    const { path, outcome, repeatCount } = await handlePrerecordedCall(message, menu, res);
     return {
-      camino,
-      resultado,
+      path,
+      outcome,
       repeatCount,
       answeredSeconds: Math.max(0, Math.round((now() - answeredAt) / 1000)),
       scriptCompleted: true
@@ -230,7 +230,7 @@ export function startVoiceServer(deps: VoiceServerDeps = {}): void {
         message
       );
 
-      const { camino, resultado, repeatCount, answeredSeconds, scriptCompleted } =
+      const { path, outcome, repeatCount, answeredSeconds, scriptCompleted } =
         await runPrerecordedCall(message, menu, res);
 
       // Fonoster records the call from its dialplan, under a name built from this same
@@ -251,8 +251,8 @@ export function startVoiceServer(deps: VoiceServerDeps = {}): void {
           answeredSeconds,
           at: new Date().toISOString(),
           ...(recordingFile ? { recordingFile } : {}),
-          ...(camino ? { camino } : {}),
-          ...(resultado ? { resultado } : {}),
+          ...(path ? { path } : {}),
+          ...(outcome ? { outcome } : {}),
           ...(repeatCount > 0 ? { repeatCount } : {})
         });
       } catch (err) {

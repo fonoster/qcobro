@@ -37,11 +37,11 @@ export interface VoiceEventsDeps {
    */
   decideOutcome: (id: string) => Promise<DecideVoiceOutcomeResult>;
   /**
-   * Finalizes entrega DISPATCHED -> DELIVERED for a VOICE_AI gestión once the autopilot
+   * Finalizes delivery DISPATCHED -> DELIVERED for a VOICE_AI gestión once the autopilot
    * reports the conversation ended. Fonoster's conversation.ended payload carries no
    * duration, so the answered duration is derived here from the gestión's own dispatch
    * timestamp (`contactedAt`, returned by `ingest`) to now — a best-effort local measure
-   * until Fonoster's webhook carries real timing. Idempotent (entrega only ever
+   * until Fonoster's webhook carries real timing. Idempotent (delivery only ever
    * advances) — safe on webhook replay. Optional only so tests that don't exercise this
    * path can omit it, same as settleUsage.
    */
@@ -132,7 +132,7 @@ export function createVoiceEventsHandler(
         }
       }
 
-      // entrega finalization: DISPATCHED -> DELIVERED. conversation.ended only ever
+      // delivery finalization: DISPATCHED -> DELIVERED. conversation.ended only ever
       // fires for a call that was actually routed into the autopilot (i.e. answered),
       // so `answered` is always true here — a call that never connects never reaches
       // this webhook at all and is instead closed out by the timeout sweep. Duration is
@@ -157,7 +157,7 @@ export function createVoiceEventsHandler(
           })
           .catch((err: unknown) =>
             logger.error(
-              `entrega finalize failed for callRef=${req.body?.callRef}: ${err instanceof Error ? err.message : err}`
+              `delivery finalize failed for callRef=${req.body?.callRef}: ${err instanceof Error ? err.message : err}`
             )
           );
       }

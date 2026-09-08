@@ -56,7 +56,7 @@ describe("recordOutcome", () => {
     const { client, cap } = makeClient({ existing: null });
     await createRecordOutcome(client as never)({
       ...BASE,
-      entrega: "FAILED",
+      delivery: "FAILED",
       deliveryReason: "NO_ANSWER"
     });
     assert.ok(cap.created, "should create");
@@ -67,28 +67,28 @@ describe("recordOutcome", () => {
     const { client, cap } = makeClient({
       existing: {
         id: "log-1",
-        entrega: "DISPATCHED",
+        delivery: "DISPATCHED",
         deliveryReason: null,
-        camino: null,
-        resultado: null,
+        path: null,
+        outcome: null,
         providerRef: "ref-1",
         channelData: { from: "x" }
       }
     });
     await createRecordOutcome(client as never)({
       ...BASE,
-      resultado: "PAYMENT_PROMISE",
+      outcome: "PAYMENT_PROMISE",
       providerRef: "ref-1",
       intentMetadata: { promisedAmount: 500, promisedDate: "2026-07-01T00:00:00.000Z" }
     });
     assert.equal(cap.created, undefined, "should not create a duplicate");
     assert.equal(cap.updated?.id, "log-1");
-    assert.equal(cap.updated?.data.resultado, "PAYMENT_PROMISE");
-    // The axes are independent: recording a resultado does not itself advance entrega. Proof
+    assert.equal(cap.updated?.data.outcome, "PAYMENT_PROMISE");
+    // The axes are independent: recording an outcome does not itself advance delivery. Proof
     // of delivery comes from the channel (a status callback, or an inbound reply in
     // ingestEmailReply / ingestWhatsAppMessage), never inferred from the outcome — a FAILED
-    // delivery can legitimately carry a resultado when someone answers and hangs up.
-    assert.equal(cap.updated?.data.entrega, "DISPATCHED", "entrega untouched by a resultado");
+    // delivery can legitimately carry an outcome when someone answers and hangs up.
+    assert.equal(cap.updated?.data.delivery, "DISPATCHED", "delivery untouched by an outcome");
     // Merges channel data from the dispatch-time row.
     assert.deepEqual(cap.updated?.data.channelData, { from: "x" });
     // PaymentPromise created for the payment outcome with amount + dueDate.
@@ -101,10 +101,10 @@ describe("recordOutcome", () => {
     const { client, cap } = makeClient({
       existing: {
         id: "log-1",
-        entrega: "DISPATCHED",
+        delivery: "DISPATCHED",
         deliveryReason: null,
-        camino: null,
-        resultado: null,
+        path: null,
+        outcome: null,
         providerRef: "token-1",
         providerMessageId: "resend-1",
         channelData: null
@@ -116,8 +116,8 @@ describe("recordOutcome", () => {
     await createRecordOutcome(client as never)({
       ...BASE,
       agentType: "EMAIL",
-      entrega: "DELIVERED",
-      camino: "ENGAGED",
+      delivery: "DELIVERED",
+      path: "ENGAGED",
       providerRef: "token-1"
     });
     assert.equal(cap.updated?.data.providerMessageId, "resend-1");
@@ -128,7 +128,7 @@ describe("recordOutcome", () => {
     const { client, cap } = makeClient({ existing: null });
     await createRecordOutcome(client as never)({
       ...BASE,
-      resultado: "PAYMENT_PROMISE",
+      outcome: "PAYMENT_PROMISE",
       intentMetadata: { promisedAmount: 9500, promisedDate: "mañana" }
     });
     const dueDate = cap.promiseCreated?.dueDate as Date;
@@ -138,46 +138,46 @@ describe("recordOutcome", () => {
 
   it("creates no PaymentPromise for a non-payment outcome", async () => {
     const { client, cap } = makeClient({ existing: null });
-    await createRecordOutcome(client as never)({ ...BASE, resultado: "NEW_TERMS" });
+    await createRecordOutcome(client as never)({ ...BASE, outcome: "NEW_TERMS" });
     assert.equal(cap.promiseCreated, undefined, "non-payment outcome creates no promise");
   });
 
-  it("never downgrades a recorded resultado with a later signal that carries none", async () => {
+  it("never downgrades a recorded outcome with a later signal that carries none", async () => {
     const { client, cap } = makeClient({
       existing: {
         id: "log-1",
-        entrega: "DELIVERED",
+        delivery: "DELIVERED",
         deliveryReason: null,
-        camino: "ENGAGED",
-        resultado: "PAYMENT_PROMISE",
+        path: "ENGAGED",
+        outcome: "PAYMENT_PROMISE",
         providerRef: "ref-1",
         channelData: {}
       }
     });
     await createRecordOutcome(client as never)({ ...BASE, providerRef: "ref-1" });
-    assert.equal(cap.updated?.data.resultado, "PAYMENT_PROMISE", "kept the real resultado");
-    assert.equal(cap.updated?.data.camino, "ENGAGED", "kept the recorded camino");
+    assert.equal(cap.updated?.data.outcome, "PAYMENT_PROMISE", "kept the real outcome");
+    assert.equal(cap.updated?.data.path, "ENGAGED", "kept the recorded path");
   });
 
-  /** entrega only ever advances: once it has left DISPATCHED it is never rewritten. */
-  it("never returns a finalized entrega to DISPATCHED", async () => {
+  /** delivery only ever advances: once it has left DISPATCHED it is never rewritten. */
+  it("never returns a finalized delivery to DISPATCHED", async () => {
     const { client, cap } = makeClient({
       existing: {
         id: "log-1",
-        entrega: "FAILED",
+        delivery: "FAILED",
         deliveryReason: "NO_ANSWER",
-        camino: null,
-        resultado: null,
+        path: null,
+        outcome: null,
         providerRef: "ref-1",
         channelData: {}
       }
     });
     await createRecordOutcome(client as never)({
       ...BASE,
-      entrega: "DISPATCHED",
+      delivery: "DISPATCHED",
       providerRef: "ref-1"
     });
-    assert.equal(cap.updated?.data.entrega, "FAILED");
+    assert.equal(cap.updated?.data.delivery, "FAILED");
     assert.equal(cap.updated?.data.deliveryReason, "NO_ANSWER");
   });
 
@@ -186,7 +186,7 @@ describe("recordOutcome", () => {
    * the gestión and nothing else. Only a settled debt sets a global flag.
    */
   it("sets no global intentStatus for WRONG_PARTY or OPT_OUT", async () => {
-    for (const resultado of ["WRONG_PARTY", "OPT_OUT"] as const) {
+    for (const outcome of ["WRONG_PARTY", "OPT_OUT"] as const) {
       const intentUpdates: unknown[] = [];
       const { client } = makeClient({ existing: null });
       (client.portfolioAccount as { update: unknown }).update = async (args: {
@@ -195,8 +195,8 @@ describe("recordOutcome", () => {
         intentUpdates.push(args.data);
         return {} as never;
       };
-      await createRecordOutcome(client as never)({ ...BASE, resultado });
-      assert.deepEqual(intentUpdates, [], `${resultado} must not flag the account`);
+      await createRecordOutcome(client as never)({ ...BASE, outcome });
+      assert.deepEqual(intentUpdates, [], `${outcome} must not flag the account`);
     }
   });
 
@@ -211,10 +211,10 @@ describe("recordOutcome", () => {
     const { client, cap } = makeClient({
       existing: {
         id: "log-1",
-        entrega: "DELIVERED",
+        delivery: "DELIVERED",
         deliveryReason: null,
-        camino: "ENGAGED",
-        resultado: null,
+        path: "ENGAGED",
+        outcome: null,
         providerRef: "ref-1",
         channelData: { callSid: "call-1" },
         durationSeconds: 134,
@@ -226,15 +226,15 @@ describe("recordOutcome", () => {
       }
     });
 
-    // A later signal that knows only the resultado.
+    // A later signal that knows only the outcome.
     await createRecordOutcome(client as never)({
       ...BASE,
       providerRef: "ref-1",
-      resultado: "CALLBACK_REQUESTED"
+      outcome: "CALLBACK_REQUESTED"
     });
 
     const d = cap.updated?.data ?? {};
-    assert.equal(d.resultado, "CALLBACK_REQUESTED", "the new value is applied");
+    assert.equal(d.outcome, "CALLBACK_REQUESTED", "the new value is applied");
     assert.equal(d.durationSeconds, 134, "duration survives");
     assert.equal(d.aiSummary, "El cliente reconoce la deuda.", "AI summary survives");
     assert.equal(d.aiSentiment, "POSITIVE", "sentiment survives");
@@ -248,10 +248,10 @@ describe("recordOutcome", () => {
     const { client, cap } = makeClient({
       existing: {
         id: "log-1",
-        entrega: "DELIVERED",
+        delivery: "DELIVERED",
         deliveryReason: null,
-        camino: "ENGAGED",
-        resultado: "PAYMENT_PROMISE",
+        path: "ENGAGED",
+        outcome: "PAYMENT_PROMISE",
         providerRef: "ref-1",
         channelData: {}
       },
@@ -259,7 +259,7 @@ describe("recordOutcome", () => {
     });
     await createRecordOutcome(client as never)({
       ...BASE,
-      resultado: "PAYMENT_PROMISE",
+      outcome: "PAYMENT_PROMISE",
       providerRef: "ref-1",
       intentMetadata: { promisedAmount: 500 }
     });

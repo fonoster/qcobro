@@ -10,15 +10,15 @@ const API = "http://localhost:3000";
  * Golden path for the three contact-log axes: a gestión records up to three independent
  * things, and the console has to keep them apart.
  *
- *   entrega    did it reach the device or inbox (never null)
- *   camino     what path the interaction took (null when none was observed)
- *   resultado  what came of it (null in the common case)
+ *   delivery    did it reach the device or inbox (never null)
+ *   path     what path the interaction took (null when none was observed)
+ *   outcome  what came of it (null in the common case)
  *
  * Covers the cases that were impossible to express before the split: a delivery that failed
  * for a stated reason, a delivered attempt that produced nothing, and a wrong-party finding
  * that is a delivery *success*. Assumes the dev stack is running.
  */
-test.describe("contact log — entrega / camino / resultado", () => {
+test.describe("contact log — delivery / path / outcome", () => {
   test("detail panel shows the three axes, and the list filters them independently", async ({
     page
   }) => {
@@ -69,7 +69,7 @@ test.describe("contact log — entrega / camino / resultado", () => {
     // A call that rang out: a failure that says why.
     await seed({
       agentType: "VOICE_AI",
-      entrega: "FAILED",
+      delivery: "FAILED",
       deliveryReason: "NO_ANSWER",
       channelData: { to: "+525500000001" }
     });
@@ -77,16 +77,16 @@ test.describe("contact log — entrega / camino / resultado", () => {
     // mislabelled as a "Resultado".
     await seed({
       agentType: "SMS",
-      entrega: "DELIVERED",
+      delivery: "DELIVERED",
       channelData: { to: "+525500000002", messageBody: "Recordatorio de pago." }
     });
     // Answered, and the person said they are not the account holder. A delivery SUCCESS
     // carrying a valuable finding — previously indistinguishable from a dead number.
     await seed({
       agentType: "VOICE_AI",
-      entrega: "DELIVERED",
-      camino: "ENGAGED",
-      resultado: "WRONG_PARTY",
+      delivery: "DELIVERED",
+      path: "ENGAGED",
+      outcome: "WRONG_PARTY",
       channelData: { to: "+525500000003" }
     });
 
@@ -96,18 +96,18 @@ test.describe("contact log — entrega / camino / resultado", () => {
         portfolioAccountId: accountId,
         agentType: "SMS",
         contactedAt: new Date().toISOString(),
-        entrega: "DELIVERED",
-        resultado: "PAYMENT_PROMISE"
+        delivery: "DELIVERED",
+        outcome: "PAYMENT_PROMISE"
       }
     });
-    expect(rejected.status(), "SMS has no inbound path, so resultado is not accepted").toBe(400);
+    expect(rejected.status(), "SMS has no inbound path, so outcome is not accepted").toBe(400);
 
     // --- List: the two axes are separate columns ----------------------------
     await page.getByRole("link", { name: "Gestiones" }).click();
     await expect(page.getByRole("columnheader", { name: "Entrega" })).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Resultado" })).toBeVisible();
 
-    // Assertions are scoped to table rows throughout: the resultado filter is a <select>
+    // Assertions are scoped to table rows throughout: the outcome filter is a <select>
     // whose <option> labels carry the same strings, so an unscoped getByText matches twice.
     const rowWith = (text: string) => page.locator("tbody tr", { hasText: text });
 
@@ -118,17 +118,17 @@ test.describe("contact log — entrega / camino / resultado", () => {
     await expect(rowWith("Persona equivocada")).toHaveCount(1);
 
     // --- Filters are independent -------------------------------------------
-    const entregaFilter = page.getByRole("combobox").first();
-    await entregaFilter.selectOption("FAILED");
+    const deliveryFilter = page.getByRole("combobox").first();
+    await deliveryFilter.selectOption("FAILED");
     await expect(rowWith("Fallido · Sin respuesta")).toHaveCount(1);
     await expect(rowWith("Persona equivocada")).toHaveCount(0);
-    await entregaFilter.selectOption("");
+    await deliveryFilter.selectOption("");
 
-    const resultadoFilter = page.getByRole("combobox").nth(1);
-    await resultadoFilter.selectOption("WRONG_PARTY");
+    const outcomeFilter = page.getByRole("combobox").nth(1);
+    await outcomeFilter.selectOption("WRONG_PARTY");
     await expect(rowWith("Persona equivocada")).toHaveCount(1);
     await expect(rowWith("Fallido · Sin respuesta")).toHaveCount(0);
-    await resultadoFilter.selectOption("");
+    await outcomeFilter.selectOption("");
 
     // --- Detail: a wrong-party call is a delivery success -------------------
     await rowWith("Persona equivocada").first().click();
@@ -140,7 +140,7 @@ test.describe("contact log — entrega / camino / resultado", () => {
     await expect(panel.getByText("Persona equivocada")).toBeVisible();
     await page.getByRole("button", { name: "Volver a gestiones" }).click();
 
-    // --- Detail: a one-way channel shows entrega only -----------------------
+    // --- Detail: a one-way channel shows delivery only -----------------------
     await rowWith("SMS").first().click();
     const smsPanel = page.getByRole("dialog");
     await expect(smsPanel).toBeVisible();

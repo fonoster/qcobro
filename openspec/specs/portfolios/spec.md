@@ -85,7 +85,7 @@ Within the window `[now - period, now)`, measured against each gestión's `conta
 
 - the **denominator** SHALL be the number of **distinct** accounts having at least one gestión;
 - the **numerator** SHALL be the number of **distinct** accounts having at least one gestión with
-  `entrega` of `DELIVERED`;
+  `delivery` of `DELIVERED`;
 - the system SHALL additionally return the total gestión count in the window, which is reporting
   volume and SHALL NOT participate in the ratio.
 
@@ -94,7 +94,7 @@ Consequently, retrying an account that was not reached SHALL NOT lower the rate,
 reached on any attempt within the window SHALL count as reached exactly once. The statistic SHALL
 NOT be computed per attempt, and SHALL NOT weight attempts by any configured attempt cap.
 
-Reached SHALL be defined on `entrega` alone, and SHALL NOT depend on `camino` or `resultado`: a
+Reached SHALL be defined on `delivery` alone, and SHALL NOT depend on `path` or `outcome`: a
 delivered message that produced no interaction is still a reached account, and an account whose
 attempts are all `DISPATCHED` or `FAILED` is not reached.
 
@@ -145,29 +145,29 @@ the accounts **under management**, and how many of them have been **reached at l
   control's "Cuentas en gestión" KPI sums `portfolios.list`, which hides archived carteras, so
   counting their accounts here would make two KPIs on the same screen disagree about what is
   under management.
-- **Reached** SHALL count those accounts having at least one gestión with `entrega`
+- **Reached** SHALL count those accounts having at least one gestión with `delivery`
   `DELIVERED`.
 
 An account SHALL be counted at most once in each figure regardless of how many gestións it has.
 
-Reached is defined on `entrega` alone and SHALL NOT be inferred from `camino` or `resultado`:
+Reached is defined on `delivery` alone and SHALL NOT be inferred from `path` or `outcome`:
 delivery is the question being asked, and a delivered message that produced no interaction is
 still a reached account. Equally, an account whose every attempt is `DISPATCHED` or `FAILED`
 SHALL NOT be counted as reached — a message still in flight is not a contact.
 
 #### Scenario: An account whose attempts all failed is not reached
 
-- **WHEN** an account's only gestións have `entrega` `FAILED`
+- **WHEN** an account's only gestións have `delivery` `FAILED`
 - **THEN** it counts toward under-management but not toward reached
 
 #### Scenario: An account still awaiting delivery confirmation is not reached
 
-- **WHEN** an account's only gestión is still at `entrega` `DISPATCHED`
+- **WHEN** an account's only gestión is still at `delivery` `DISPATCHED`
 - **THEN** it counts toward under-management but not toward reached
 
 #### Scenario: A delivered attempt with no interaction still counts as reached
 
-- **WHEN** an account has a gestión with `entrega` `DELIVERED`, `camino` null, and `resultado`
+- **WHEN** an account has a gestión with `delivery` `DELIVERED`, `path` null, and `outcome`
   null
 - **THEN** it counts toward reached
 

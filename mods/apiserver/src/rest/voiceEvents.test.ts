@@ -70,7 +70,7 @@ function makeDeps(
     generation: "onDemand",
     decideOutcome: async (id: string) => {
       decideCalls.push(id);
-      return { decided: true, resultado: null };
+      return { decided: true, outcome: null };
     },
     recordVoiceAiCallStatus: async (input: unknown) => {
       recordCalls.push(input);
@@ -181,7 +181,7 @@ describe("POST /api/voice/events — payment-promise decision wiring", () => {
   });
 });
 
-describe("POST /api/voice/events — entrega finalization", () => {
+describe("POST /api/voice/events — delivery finalization", () => {
   it("finalizes DELIVERED with a duration derived from contactedAt on conversation.ended", async () => {
     const { prisma } = makePrisma({
       "log-1": { id: "log-1", channelData: null, aiSummary: null, contactedAt: CONTACTED_AT }

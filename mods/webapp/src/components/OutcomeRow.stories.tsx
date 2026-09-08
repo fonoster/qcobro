@@ -1,19 +1,19 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { ResultadoRow } from "./ResultadoRow.js";
+import { OutcomeRow } from "./OutcomeRow.js";
 
 const meta = {
-  title: "Components/ResultadoRow",
-  component: ResultadoRow,
+  title: "Components/OutcomeRow",
+  component: OutcomeRow,
   parameters: { layout: "padded" },
   tags: ["autodocs"]
-} satisfies Meta<typeof ResultadoRow>;
+} satisfies Meta<typeof OutcomeRow>;
 
 export default meta;
 
 export const PaymentPromise: StoryObj = {
   render: () => (
     <div className="w-[480px]">
-      <ResultadoRow
+      <OutcomeRow
         label="Resultado"
         value="Promesa de pago"
         promise={{ amount: "RD$4,820", dueDate: "23/6/2026", status: "Pendiente" }}
@@ -26,7 +26,7 @@ export const PaymentPromise: StoryObj = {
 export const PaymentPromiseWithoutAmount: StoryObj = {
   render: () => (
     <div className="w-[480px]">
-      <ResultadoRow
+      <OutcomeRow
         label="Resultado"
         value="Promesa de pago"
         promise={{ amount: null, dueDate: "23/6/2026", status: "Pendiente" }}
@@ -35,10 +35,10 @@ export const PaymentPromiseWithoutAmount: StoryObj = {
   )
 };
 
-export const PlainResultado: StoryObj = {
+export const PlainOutcome: StoryObj = {
   render: () => (
     <div className="w-[480px]">
-      <ResultadoRow label="Resultado" value="Persona equivocada" />
+      <OutcomeRow label="Resultado" value="Persona equivocada" />
     </div>
   )
 };
@@ -50,8 +50,8 @@ export const PlainResultado: StoryObj = {
 export const Empty: StoryObj = {
   render: () => (
     <div className="w-[480px]">
-      <p className="mb-2 text-xs text-slate-400">Renders nothing when resultado is null:</p>
-      <ResultadoRow label="Resultado" value={null} />
+      <p className="mb-2 text-xs text-slate-400">Renders nothing when outcome is null:</p>
+      <OutcomeRow label="Resultado" value={null} />
     </div>
   )
 };
@@ -59,15 +59,15 @@ export const Empty: StoryObj = {
 export const AllVariants: StoryObj = {
   render: () => (
     <div className="flex w-[480px] flex-col gap-2">
-      <ResultadoRow
+      <OutcomeRow
         label="Resultado"
         value="Promesa de pago"
         promise={{ amount: "RD$4,820", dueDate: "23/6/2026", status: "Pendiente" }}
       />
-      <ResultadoRow label="Resultado" value="Disputa" />
-      <ResultadoRow label="Resultado" value="Baja" />
-      <ResultadoRow label="Resultado" value="Pagada" />
-      <ResultadoRow label="Resultado" value="Devolución solicitada" />
+      <OutcomeRow label="Resultado" value="Disputa" />
+      <OutcomeRow label="Resultado" value="Baja" />
+      <OutcomeRow label="Resultado" value="Pagada" />
+      <OutcomeRow label="Resultado" value="Devolución solicitada" />
     </div>
   )
 };

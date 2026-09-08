@@ -293,7 +293,7 @@ export function createEmailWebhookHandler(prisma: PrismaClient, deps: EmailWebho
       return;
     }
     // Fails closed. This endpoint mutates gestiones on both branches — the reply path writes
-    // `entrega`, `camino` and an autopilot `resultado`; the delivery path writes `entrega` and
+    // `delivery`, `path` and an autopilot `outcome`; the delivery path writes `delivery` and
     // `deliveryReason` for any message id the caller supplies — so an unset secret must mean
     // "reject", not "trust anyone". Previously an absent secret skipped verification entirely.
     if (!resend.inboundSigningSecret) {
