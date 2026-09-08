@@ -47,6 +47,13 @@ export interface VoiceCompletionTimeoutSweepDeps {
    */
   floorMinutes: number;
   /**
+   * Seconds a terminal CDR must have been ended for (per the CDR's own `endedAt`) before the
+   * sweep will finalize from it. The CDR write and the channel's own live completion signal
+   * race the same event; this is what keeps the sweep from winning that race and permanently
+   * discarding a real answered outcome. See {@link classify}.
+   */
+  graceSeconds: number;
+  /**
    * Minutes past which a gestión whose CDR still carries no status (the provider lost the
    * end-of-call record, or never writes one) is finalized anyway, `deliveryReason:
    * OUTCOME_UNKNOWN`, rather than polled forever.
@@ -63,14 +70,21 @@ export interface VoiceCompletionTimeoutSweepDeps {
  * resolved (neither has a timeout of its own). Classifies each one from Fonoster's call
  * detail record (CDR, `Calls.getCall`) instead of always guessing `PROVIDER_ERROR`:
  *
- * - The CDR has a terminal status (the call has cleared, one way or another): finalize
- *   `FAILED` with the reason {@link mapVoiceCallStatusToDeliveryReason} maps it to.
+ * - The CDR has a terminal status (the call has cleared, one way or another) AND has been
+ *   ended for at least `graceSeconds`: finalize `FAILED` with the reason
+ *   {@link mapVoiceCallStatusToDeliveryReason} maps it to. The grace matters because the CDR
+ *   write and the channel's own live completion signal (the autopilot webhook, the
+ *   co-located VoiceServer) are triggered by the same event and race — the sweep's DB-guarded
+ *   write is final for whichever side reaches it first, so finalizing the instant the CDR
+ *   clears could permanently discard a real answered outcome that was merely still in
+ *   flight. A terminal CDR still inside its grace window is treated exactly like one with no
+ *   status yet: left alone for a later pass.
  * - The CDR exists but carries no status yet (only the start portion was written — the
  *   call is still in progress): leave the gestión at DISPATCHED. A later sweep pass
  *   decides once the call actually ends, or the backstop below fires. This is not a
  *   failure and must not be treated as one.
  * - No CDR at all (Fonoster's `NOT_FOUND`): the call never originated. Finalize `FAILED` /
- *   `NOT_ORIGINATED`.
+ *   `NOT_ORIGINATED`. No grace applies — there is no live completion signal to race with.
  * - Backstop: a gestión still with no status past `backstopMinutes` is finalized `FAILED` /
  *   `OUTCOME_UNKNOWN` rather than polled forever — the provider can lose the end record.
  *
@@ -143,8 +157,9 @@ export function createVoiceCompletionTimeoutSweep(
 }
 
 /**
- * Looks up one gestión's CDR and decides its `deliveryReason`, or `null` when the call is
- * still in progress and nothing should be written yet.
+ * Looks up one gestión's CDR and decides its `deliveryReason`, or `null` when nothing should
+ * be written yet — either because the call is still in progress, or because it has cleared
+ * too recently to rule out a live completion signal still being in flight for it.
  */
 async function classify(
   deps: VoiceCompletionTimeoutSweepDeps,
@@ -153,10 +168,20 @@ async function classify(
 ): Promise<DeliveryReason | null> {
   const lookup = await deps.outboundCallClient.getCall(row.providerRef);
 
+  // No grace here: with no CDR at all there is no live completion signal in flight to race
+  // — the call never originated — and floorMinutes already covers the gap before Fonoster
+  // writes the start portion of a real one.
   if (!lookup.found) return "NOT_ORIGINATED";
 
   const terminal = mapVoiceCallStatusToDeliveryReason(lookup.status);
-  if (terminal !== null) return terminal;
+  if (terminal !== null) {
+    // The CDR write and the channel's own live completion signal race the same event. Never
+    // guess in the direction that discards a real outcome: a terminal status with no usable
+    // `endedAt` is treated as not yet past the grace, exactly like one that plainly is.
+    if (!lookup.endedAt) return null;
+    const secondsSinceEnded = (nowMs - lookup.endedAt.getTime()) / 1000;
+    return secondsSinceEnded >= deps.graceSeconds ? terminal : null;
+  }
 
   // No terminal status yet (UNKNOWN / not yet cleared). Only the backstop can close this
   // out — otherwise a call still genuinely in progress must be left alone.

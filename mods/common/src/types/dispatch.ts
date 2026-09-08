@@ -73,9 +73,16 @@ export type VoiceCallStatus =
  * including ring time. It is informational only: a gestión's own `durationSeconds` is the
  * answered duration recorded by the channel's live completion signal, and must never be
  * overwritten by this figure.
+ *
+ * `endedAt` is when the CDR itself says the call cleared — `null` when the CDR doesn't carry
+ * one yet (or a valid one at all), which the sweep treats as "not resolved" rather than
+ * guessing. It exists so the sweep can wait out a grace period from the call's real end
+ * rather than from when it happened to poll: the CDR write and the channel's own live
+ * completion signal (the autopilot webhook, the co-located VoiceServer) are triggered by the
+ * same event and race, and only `endedAt` says how far into that race the sweep actually is.
  */
 export type VoiceCallLookupResult =
-  | { found: true; status: VoiceCallStatus; setupToClearSeconds: number }
+  | { found: true; status: VoiceCallStatus; setupToClearSeconds: number; endedAt: Date | null }
   | { found: false };
 
 export interface OutboundCallClient {

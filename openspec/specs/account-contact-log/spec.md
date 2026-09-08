@@ -339,20 +339,27 @@ engine happening to be enabled. It considers every `VOICE_AI`/`VOICE_PRERECORDED
 has sat at `DISPATCHED` for at least `floorMinutes` (default 2), and classifies each one from
 Fonoster's call detail record (CDR, `Calls.getCall`):
 
-- **A CDR with a terminal clearing status** (the call has ended, one way or another) — the
-  gestión is finalized `delivery` `FAILED` with a `deliveryReason` derived from the CDR's
+- **A CDR with a terminal clearing status, ended at least `graceSeconds` ago** (default 60) —
+  the gestión is finalized `delivery` `FAILED` with a `deliveryReason` derived from the CDR's
   clearing status: `NO_ANSWER` when the call rang out or the callee never responded, `BUSY` when
   the line was busy, `REJECTED` when the call was rejected, `INVALID_DESTINATION` when the
   number was unallocated, malformed, or unroutable, `UNREACHABLE` when the network could not
   reach the destination, and `OUTCOME_UNKNOWN` when the CDR shows a normal call clearing — the
   call itself was fine, but QCobro's own completion signal never arrived, so it cannot say what
-  happened during the call.
+  happened during the call. The grace exists because the CDR write and the channel's own live
+  completion signal (the autopilot webhook, the co-located VoiceServer) are triggered by the
+  same event and race; the sweep's guarded write is final for whichever side lands first, so
+  finalizing the instant the CDR clears could permanently discard a real answered outcome that
+  was merely still in flight. A terminal CDR still inside its grace window, or one with no
+  usable end time at all, SHALL be treated exactly like a CDR with no clearing status yet —
+  see below.
 - **A CDR with no clearing status yet** (only the start portion has been written — the call is
-  still in progress) — the gestión SHALL NOT be finalized. It is left at `DISPATCHED` for a
-  later sweep pass to decide, unless the backstop below applies. This is not a failure.
+  still in progress), **or a terminal CDR still inside its `graceSeconds` window** — the
+  gestión SHALL NOT be finalized. It is left at `DISPATCHED` for a later sweep pass to decide,
+  unless the backstop below applies. This is not a failure.
 - **No CDR at all** (the provider has no record of the call — Fonoster's `Calls.getCall` returns
   `NOT_FOUND`) — the gestión is finalized `delivery` `FAILED` with `deliveryReason`
-  `NOT_ORIGINATED`.
+  `NOT_ORIGINATED`. No grace applies: there is no live completion signal in flight to race with.
 - **Backstop** — a gestión that still has no clearing status past `backstopMinutes` (default 30)
   is finalized `delivery` `FAILED` with `deliveryReason` `OUTCOME_UNKNOWN` rather than polled
   forever: the provider can lose the end-of-call record and never produce one.
@@ -403,6 +410,28 @@ later sweep finalization SHALL NOT overwrite it, and SHALL NOT overwrite `durati
   gestión has not yet passed `backstopMinutes`
 - **THEN** the gestión is not finalized from that pass — it stays at `DISPATCHED` for a later
   sweep pass to decide
+
+#### Scenario: A terminal CDR inside its grace window does not finalize the gestión
+
+- **WHEN** the sweep looks up a call's CDR, it carries a terminal clearing status, and the CDR
+  ended less than `graceSeconds` ago
+- **THEN** the gestión is not finalized from that pass — it stays at `DISPATCHED`, giving the
+  channel's own live completion signal, which may still be in flight for the same call, the
+  chance to land first
+
+#### Scenario: The same call is finalized once past its grace window
+
+- **WHEN** a gestión was not finalized because its CDR was inside the grace window, and a later
+  sweep pass finds the same CDR now ended at least `graceSeconds` ago with no completion signal
+  having finalized it in between
+- **THEN** the gestión is finalized `delivery` `FAILED` with the CDR-derived `deliveryReason`
+
+#### Scenario: A terminal CDR with no usable end time is never guessed
+
+- **WHEN** the sweep looks up a call's CDR and it carries a terminal clearing status but no
+  usable end time
+- **THEN** the gestión is not finalized from that pass, exactly as if the CDR had no clearing
+  status yet
 
 #### Scenario: A call with no CDR at all never originated
 

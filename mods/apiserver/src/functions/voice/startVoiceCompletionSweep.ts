@@ -62,6 +62,7 @@ export function startVoiceCompletionSweep(): VoiceCompletionSweepRunner | null {
       createRecordPrerecordedOutcome(prisma as never)
     ),
     floorMinutes: config.voiceCompletionSweep.floorMinutes,
+    graceSeconds: config.voiceCompletionSweep.graceSeconds,
     backstopMinutes: config.voiceCompletionSweep.backstopMinutes,
     now: () => new Date()
   });

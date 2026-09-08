@@ -36,6 +36,18 @@ function isGrpcServiceError(err: unknown): err is GrpcServiceError {
 const GRPC_NOT_FOUND = 5;
 
 /**
+ * `CallDetailRecord.endedAt` is typed as a plain `Date`, but for a call that has not cleared
+ * yet an unset protobuf timestamp deserializes to the epoch (`new Date(0)`), not `undefined`.
+ * Treat anything that isn't a real, positive instant as "not ended yet" — the sweep must
+ * never mistake that for a real end time.
+ */
+function parseEndedAt(value: unknown): Date | null {
+  if (!(value instanceof Date)) return null;
+  const ms = value.getTime();
+  return Number.isFinite(ms) && ms > 0 ? value : null;
+}
+
+/**
  * gRPC status codes that mean the call request was actually evaluated and rejected on the
  * destination/appRef side (INVALID_ARGUMENT, FAILED_PRECONDITION) rather than a transport,
  * auth (UNAUTHENTICATED/PERMISSION_DENIED), or availability failure.
@@ -146,7 +158,8 @@ export class FonosterOutboundCallClient implements OutboundCallClient {
         // The SDK's own CallStatus type omits UNKNOWN (the protobuf zero-value), so an
         // in-progress call's status can arrive as something outside that type at runtime.
         status: (record.status as unknown as VoiceCallStatus) || "UNKNOWN",
-        setupToClearSeconds: record.duration ?? 0
+        setupToClearSeconds: record.duration ?? 0,
+        endedAt: parseEndedAt(record.endedAt)
       };
     } catch (err) {
       if (isGrpcServiceError(err) && err.code === GRPC_NOT_FOUND) {

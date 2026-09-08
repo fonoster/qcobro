@@ -674,9 +674,19 @@ export const qcobroConfigSchema = z.object({
        * Minutes a VOICE_AI/VOICE_PRERECORDED gestión may sit at `delivery: DISPATCHED`
        * before the sweep starts consulting the CDR for it. Short on purpose: a CDR lookup
        * is cheap, and the point is closing out a call that has genuinely ended, not
-       * waiting out a grace period.
+       * waiting out a grace period — see `graceSeconds` below for that.
        */
       floorMinutes: z.number().int().positive().default(2),
+      /**
+       * Seconds a terminal CDR must have been ended for before the sweep will finalize the
+       * gestión from it. The CDR write and the channel's own live completion signal (the
+       * autopilot webhook, the co-located VoiceServer) fire off the same event and race; the
+       * sweep's DB-guarded write is final for whichever side reaches it first, so without
+       * this grace a sweep pass that lands in that race window can permanently discard a
+       * real answered outcome. Measured from the CDR's own `endedAt`, not from dispatch or
+       * from when the sweep happens to poll.
+       */
+      graceSeconds: z.number().int().nonnegative().default(60),
       /**
        * Minutes past which a gestión whose CDR still carries no status (the provider lost
        * the end-of-call record, or never writes one) is finalized anyway — `deliveryReason:
