@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import type { VoiceCallLookupResult } from "@qcobro/common";
 import { createVoiceCompletionTimeoutSweep } from "./voiceCompletionTimeoutSweep.js";
+import { parseEndedAt } from "../../services/fonosterOutboundCallClient.js";
 
 const NOW = new Date("2026-08-24T12:00:00.000Z");
 const FLOOR_MINUTES = 2;
@@ -293,6 +294,35 @@ describe("createVoiceCompletionTimeoutSweep", () => {
 
       assert.equal(count, 0);
       assert.deepEqual(aiCalls, []);
+    });
+
+    it("finalizes end to end when endedAt is derived from a realistic epoch-seconds wire value, not a hand-made Date", async () => {
+      // `parseEndedAt` is what the real FonosterOutboundCallClient runs the CDR's raw
+      // `endedAt` through — on the wire it is an epoch-seconds integer, not a Date. Driving
+      // the sweep through the real parser (rather than a hand-made `new Date(...)` fixture)
+      // is what would have caught parseEndedAt rejecting every real CDR.
+      const endedAtEpochSeconds = Math.floor((NOW.getTime() - 90_000) / 1000);
+      const endedAt = parseEndedAt(endedAtEpochSeconds);
+      assert.ok(endedAt instanceof Date, "parseEndedAt must accept a raw epoch-seconds number");
+
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        { "call-1": { found: true, status: "USER_BUSY", setupToClearSeconds: 12, endedAt } }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 1);
+      assert.deepEqual(aiCalls, [
+        {
+          providerRef: "call-1",
+          answered: false,
+          deliveryReason: "BUSY",
+          answeredSeconds: 0,
+          at: NOW.toISOString()
+        }
+      ]);
     });
   });
 

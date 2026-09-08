@@ -1,3 +1,4 @@
+import { getLogger } from "@fonoster/logger";
 import * as SDK from "@fonoster/sdk";
 import {
   DispatchError,
@@ -7,6 +8,8 @@ import {
   type VoiceCallLookupResult,
   type VoiceCallStatus
 } from "@qcobro/common";
+
+const logger = getLogger({ service: "fonoster-outbound-call-client", filePath: import.meta.url });
 
 type FonosterSettings = NonNullable<FonosterConfig>;
 
@@ -36,15 +39,56 @@ function isGrpcServiceError(err: unknown): err is GrpcServiceError {
 const GRPC_NOT_FOUND = 5;
 
 /**
- * `CallDetailRecord.endedAt` is typed as a plain `Date`, but for a call that has not cleared
- * yet an unset protobuf timestamp deserializes to the epoch (`new Date(0)`), not `undefined`.
- * Treat anything that isn't a real, positive instant as "not ended yet" — the sweep must
- * never mistake that for a real end time.
+ * Below this magnitude a numeric epoch is seconds, not milliseconds. Real epoch-seconds
+ * values are order 1e9 for the foreseeable future (only reaching 1e10 around the year 2286);
+ * real epoch-milliseconds values for any recent or upcoming date are order 1e12+. 1e11 sits
+ * cleanly between the two.
  */
-function parseEndedAt(value: unknown): Date | null {
-  if (!(value instanceof Date)) return null;
-  const ms = value.getTime();
-  return Number.isFinite(ms) && ms > 0 ? value : null;
+const EPOCH_SECONDS_MAGNITUDE_CUTOFF = 1e11;
+
+/**
+ * `@fonoster/types` declares `CallDetailRecord.endedAt` as a `Date`, but the wire disagrees:
+ * the proto field is `int32 ended_at = 6`, an epoch-**seconds** integer written verbatim into
+ * InfluxDB with nothing in Fonoster's apiserver or SDK converting it — so at runtime this is
+ * almost certainly a `number` (and, through some client paths, a numeric `string`), not a
+ * `Date`. Accepts all three shapes rather than trusting the declared type, the same way
+ * `getCall` already treats `status`/`duration` as unreliable. Rejects only genuinely unusable
+ * values: non-finite, `<= 0` (the protobuf zero-value for a call that hasn't cleared), or
+ * unparseable — the sweep must never mistake any of those for a real end time.
+ */
+export function parseEndedAt(value: unknown): Date | null {
+  let ms: number;
+  if (value instanceof Date) {
+    ms = value.getTime();
+  } else if (typeof value === "number") {
+    ms = value;
+  } else if (typeof value === "string" && value.trim() !== "") {
+    ms = Number(value);
+  } else {
+    return null;
+  }
+  if (!Number.isFinite(ms) || ms <= 0) return null;
+  if (ms < EPOCH_SECONDS_MAGNITUDE_CUTOFF) ms *= 1000;
+  return new Date(ms);
+}
+
+let warnedUnparseableEndedAt = false;
+
+/**
+ * Loud, once per process: if a terminal CDR's `endedAt` cannot be parsed, the sweep's grace
+ * period (which depends on it) silently degrades to never finalizing from a terminal status
+ * at all — every call would fall through to `NOT_ORIGINATED`/the 30-minute backstop instead
+ * of its real reason. That must surface immediately, not as a quiet metrics dip.
+ */
+function warnUnparseableEndedAt(rawValue: unknown): void {
+  if (warnedUnparseableEndedAt) return;
+  warnedUnparseableEndedAt = true;
+  logger.warn(
+    `voice completion sweep: a terminal CDR's endedAt could not be parsed ` +
+      `(typeof=${typeof rawValue}, value=${JSON.stringify(rawValue)}). The sweep cannot ` +
+      `finalize from a terminal CDR without it and will fall through to NOT_ORIGINATED/the ` +
+      `backstop instead — this needs investigating.`
+  );
 }
 
 /**
@@ -153,13 +197,20 @@ export class FonosterOutboundCallClient implements OutboundCallClient {
     try {
       const calls = await withTimeout(this.calls(), "login");
       const record = await withTimeout(calls.getCall(ref), "getCall");
+      // The SDK's own CallStatus type omits UNKNOWN (the protobuf zero-value), so an
+      // in-progress call's status can arrive as something outside that type at runtime.
+      const status = (record.status as unknown as VoiceCallStatus) || "UNKNOWN";
+      const endedAt = parseEndedAt(record.endedAt);
+      // A terminal CDR is one that has genuinely cleared, so it should always carry a
+      // parseable endedAt; UNKNOWN legitimately doesn't (the call hasn't cleared yet).
+      if (status !== "UNKNOWN" && endedAt === null) {
+        warnUnparseableEndedAt(record.endedAt);
+      }
       return {
         found: true,
-        // The SDK's own CallStatus type omits UNKNOWN (the protobuf zero-value), so an
-        // in-progress call's status can arrive as something outside that type at runtime.
-        status: (record.status as unknown as VoiceCallStatus) || "UNKNOWN",
+        status,
         setupToClearSeconds: record.duration ?? 0,
-        endedAt: parseEndedAt(record.endedAt)
+        endedAt
       };
     } catch (err) {
       if (isGrpcServiceError(err) && err.code === GRPC_NOT_FOUND) {
