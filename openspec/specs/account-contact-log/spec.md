@@ -350,19 +350,28 @@ Fonoster's call detail record (CDR, `Calls.getCall`):
   completion signal (the autopilot webhook, the co-located VoiceServer) are triggered by the
   same event and race; the sweep's guarded write is final for whichever side lands first, so
   finalizing the instant the CDR clears could permanently discard a real answered outcome that
-  was merely still in flight. A terminal CDR still inside its grace window, or one with no
-  usable end time at all, SHALL be treated exactly like a CDR with no clearing status yet —
-  see below.
+  was merely still in flight. A terminal CDR still inside its grace window SHALL be treated
+  exactly like a CDR with no clearing status yet — see below. A terminal CDR whose end time
+  can't be parsed at all can't be graced either way; it is **not** treated as "no clearing
+  status yet" (that would let it re-poll forever without ever finalizing) — it instead falls
+  through to the backstop below, still with its mapped `deliveryReason` rather than the generic
+  `OUTCOME_UNKNOWN`, since the CDR does say how the call cleared even without a trustworthy
+  timestamp for it.
 - **A CDR with no clearing status yet** (only the start portion has been written — the call is
   still in progress), **or a terminal CDR still inside its `graceSeconds` window** — the
   gestión SHALL NOT be finalized. It is left at `DISPATCHED` for a later sweep pass to decide,
   unless the backstop below applies. This is not a failure.
 - **No CDR at all** (the provider has no record of the call — Fonoster's `Calls.getCall` returns
   `NOT_FOUND`) — the gestión is finalized `delivery` `FAILED` with `deliveryReason`
-  `NOT_ORIGINATED`. No grace applies: there is no live completion signal in flight to race with.
-- **Backstop** — a gestión that still has no clearing status past `backstopMinutes` (default 30)
-  is finalized `delivery` `FAILED` with `deliveryReason` `OUTCOME_UNKNOWN` rather than polled
-  forever: the provider can lose the end-of-call record and never produce one.
+  `NOT_ORIGINATED` once `notOriginatedMinutes` (default 5) have passed since dispatch. No live
+  signal races this write, but it is irreversible and the CDR's start record can lag dispatch
+  (Influx read lag, a queueing hiccup), so it gets its own age gate rather than firing at
+  `floorMinutes`.
+- **Backstop** — a gestión that still has no clearing status past `backstopMinutes` (default 70) is finalized `delivery` `FAILED` with `deliveryReason` `OUTCOME_UNKNOWN` (or, for a
+  terminal CDR with an unparseable end time, its mapped reason — see above) rather than polled
+  forever. 70 is not a round number: the platform's dialplan sets `TIMEOUT(absolute)=3600`, so
+  no channel survives past 60 minutes: past that plus a margin, an uncleared CDR has genuinely
+  lost its end record rather than still being a live call.
 
 The sweep SHALL NOT record `delivery` `DELIVERED`: every path it finalizes is a failure to
 observe an answer, never a confirmed one. It SHALL NOT write the CDR's own duration (measured
@@ -426,16 +435,31 @@ later sweep finalization SHALL NOT overwrite it, and SHALL NOT overwrite `durati
   having finalized it in between
 - **THEN** the gestión is finalized `delivery` `FAILED` with the CDR-derived `deliveryReason`
 
-#### Scenario: A terminal CDR with no usable end time is never guessed
+#### Scenario: A terminal CDR with no usable end time is not finalized before the backstop
 
-- **WHEN** the sweep looks up a call's CDR and it carries a terminal clearing status but no
-  usable end time
-- **THEN** the gestión is not finalized from that pass, exactly as if the CDR had no clearing
-  status yet
+- **WHEN** the sweep looks up a call's CDR, it carries a terminal clearing status but no
+  usable end time, and the gestión has not yet passed `backstopMinutes`
+- **THEN** the gestión is not finalized from that pass
+
+#### Scenario: A terminal CDR with no usable end time is finalized at the backstop, not stalled forever
+
+- **WHEN** a gestión's CDR carries a terminal clearing status with no usable end time, and
+  `backstopMinutes` have passed since it was dispatched
+- **THEN** the gestión is finalized `delivery` `FAILED` with the CDR's mapped `deliveryReason`,
+  not `OUTCOME_UNKNOWN` — the CDR does say how the call cleared, even without a trustworthy
+  timestamp for it
+
+#### Scenario: A call with no CDR at all is not finalized before notOriginatedMinutes
+
+- **WHEN** the sweep looks up a call's CDR, Fonoster reports `NOT_FOUND`, and the gestión has
+  not yet passed `notOriginatedMinutes` since dispatch
+- **THEN** the gestión is not finalized from that pass — the CDR's start record may simply not
+  have landed yet
 
 #### Scenario: A call with no CDR at all never originated
 
-- **WHEN** the sweep looks up a call's CDR and Fonoster reports `NOT_FOUND`
+- **WHEN** the sweep looks up a call's CDR, Fonoster reports `NOT_FOUND`, and `notOriginatedMinutes`
+  have passed since dispatch
 - **THEN** the gestión is finalized `delivery` `FAILED` with `deliveryReason` `NOT_ORIGINATED`
 
 #### Scenario: A gestión with no CDR status past the backstop is finalized anyway
@@ -526,6 +550,14 @@ gated by configuration so it can be disabled in local development.
 The credential storage/derivation mechanism is owned by the engine/integration change;
 this spec fixes only the auth _scope_ (workspace level) and _scheme_ (HTTP Basic).
 
+Unlike the tRPC procedure, the REST endpoint's schema SHALL be **strict**: a payload key that
+is not one of the documented fields SHALL be rejected with `400`, naming the unrecognized
+key(s), rather than silently stripped. This is the one write path a caller outside this
+codebase reaches directly, so a payload still shaped for a field name this API no longer
+accepts — notably the pre-rename `entrega`/`camino`/`resultado` — must fail loudly instead of
+being accepted as a `201` with the fields it did recognize silently defaulted (`delivery:
+DISPATCHED`, no `outcome`).
+
 #### Scenario: Authenticated callback writes a gestión
 
 - **WHEN** the Fonoster service posts a contact-log payload to `POST /api/contact-logs`
@@ -545,6 +577,13 @@ this spec fixes only the auth _scope_ (workspace level) and _scheme_ (HTTP Basic
 - **THEN** the endpoint accepts unauthenticated requests
 - **WHEN** it is true
 - **THEN** requests without valid workspace Basic credentials are rejected with 401
+
+#### Scenario: A payload using the pre-rename field names is rejected, not silently accepted
+
+- **WHEN** a caller posts a payload keyed `entrega`/`camino`/`resultado` instead of
+  `delivery`/`path`/`outcome`
+- **THEN** the request is rejected with `400` naming the unrecognized keys
+- **AND** no gestión is written
 
 ### Requirement: Email thread on the gestión
 

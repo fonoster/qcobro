@@ -7,6 +7,7 @@ import { parseEndedAt } from "../../services/fonosterOutboundCallClient.js";
 const NOW = new Date("2026-08-24T12:00:00.000Z");
 const FLOOR_MINUTES = 2;
 const GRACE_SECONDS = 60;
+const NOT_ORIGINATED_MINUTES = 5;
 const BACKSTOP_MINUTES = 30;
 
 function makeClient(
@@ -66,6 +67,7 @@ function makeDeps(
         }),
       floorMinutes: FLOOR_MINUTES,
       graceSeconds: GRACE_SECONDS,
+      notOriginatedMinutes: NOT_ORIGINATED_MINUTES,
       backstopMinutes: BACKSTOP_MINUTES,
       now: () => NOW
     }
@@ -73,6 +75,7 @@ function makeDeps(
 }
 
 const JUST_PAST_FLOOR = new Date(NOW.getTime() - 3 * 60_000);
+const PAST_NOT_ORIGINATED = new Date(NOW.getTime() - 6 * 60_000);
 const PAST_BACKSTOP = new Date(NOW.getTime() - 31 * 60_000);
 // Well past GRACE_SECONDS (60s), so a terminal CDR using this as its endedAt behaves as it
 // did before the grace period existed — these back the pre-existing branch tests below.
@@ -112,6 +115,7 @@ describe("createVoiceCompletionTimeoutSweep", () => {
       recordPrerecordedOutcome: async () => undefined,
       floorMinutes: FLOOR_MINUTES,
       graceSeconds: GRACE_SECONDS,
+      notOriginatedMinutes: NOT_ORIGINATED_MINUTES,
       backstopMinutes: BACKSTOP_MINUTES,
       now: () => NOW
     });
@@ -343,9 +347,16 @@ describe("createVoiceCompletionTimeoutSweep", () => {
   });
 
   describe("branch: NOT_FOUND — the call never originated", () => {
-    it("finalizes FAILED / NOT_ORIGINATED with no grace applied", async () => {
+    it("finalizes FAILED / NOT_ORIGINATED once notOriginatedMinutes has passed", async () => {
       const { deps, aiCalls } = makeDeps(
-        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        [
+          {
+            id: "g-1",
+            providerRef: "call-1",
+            agentType: "VOICE_AI",
+            contactedAt: PAST_NOT_ORIGINATED
+          }
+        ],
         { "call-1": { found: false } }
       );
       const sweep = createVoiceCompletionTimeoutSweep(deps as never);
@@ -362,6 +373,21 @@ describe("createVoiceCompletionTimeoutSweep", () => {
           at: NOW.toISOString()
         }
       ]);
+    });
+
+    it("does not finalize before notOriginatedMinutes has passed, even though it is past floorMinutes", async () => {
+      // The CDR's start record can lag dispatch; this irreversible write gets a longer,
+      // dedicated age gate than the floor the query itself uses.
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        { "call-1": { found: false } }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 0);
+      assert.deepEqual(aiCalls, []);
     });
   });
 
@@ -398,6 +424,32 @@ describe("createVoiceCompletionTimeoutSweep", () => {
 
       assert.equal(count, 0);
       assert.deepEqual(aiCalls, []);
+    });
+
+    it("finalizes a terminal CDR with an unparseable endedAt once past the backstop, with the mapped reason — not OUTCOME_UNKNOWN, and never stalled forever", async () => {
+      // Regression: a terminal status used to return null unconditionally when endedAt was
+      // unusable, which skipped the backstop check entirely — the gestión would be
+      // re-polled every pass forever and never finalize. Past backstopMinutes it must
+      // finalize with the mapped reason, since the CDR does say how the call cleared even
+      // without a trustworthy end time.
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: PAST_BACKSTOP }],
+        { "call-1": { found: true, status: "USER_BUSY", setupToClearSeconds: 12, endedAt: null } }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 1);
+      assert.deepEqual(aiCalls, [
+        {
+          providerRef: "call-1",
+          answered: false,
+          deliveryReason: "BUSY",
+          answeredSeconds: 0,
+          at: NOW.toISOString()
+        }
+      ]);
     });
   });
 

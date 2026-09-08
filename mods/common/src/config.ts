@@ -688,11 +688,24 @@ export const qcobroConfigSchema = z.object({
        */
       graceSeconds: z.number().int().nonnegative().default(60),
       /**
+       * Minutes past dispatch before a gestión with no CDR at all (Fonoster's `NOT_FOUND`)
+       * is finalized `deliveryReason: NOT_ORIGINATED`. Deliberately longer than
+       * `floorMinutes`: that write is irreversible, and while there's no live signal to
+       * race against here, the CDR's start record can lag dispatch (Influx read lag, a
+       * queueing hiccup) — finalizing too early risks recording a call that is still just
+       * about to exist as one that never happened.
+       */
+      notOriginatedMinutes: z.number().int().positive().default(5),
+      /**
        * Minutes past which a gestión whose CDR still carries no status (the provider lost
        * the end-of-call record, or never writes one) is finalized anyway — `deliveryReason:
-       * OUTCOME_UNKNOWN` — rather than polled forever.
+       * OUTCOME_UNKNOWN`, or the CDR's own mapped reason if it has a terminal status but an
+       * unparseable `endedAt` — rather than polled forever. 70 is not a round default: the
+       * platform's dialplan sets `TIMEOUT(absolute)=3600`, so no channel survives past 60
+       * minutes — past that plus a margin, an uncleared CDR has genuinely lost its end
+       * record rather than still being a live call.
        */
-      backstopMinutes: z.number().int().positive().default(30),
+      backstopMinutes: z.number().int().positive().default(70),
       /** How often the sweep itself runs. */
       intervalSeconds: z.number().int().positive().default(120)
     })

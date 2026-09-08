@@ -54,9 +54,20 @@ export interface VoiceCompletionTimeoutSweepDeps {
    */
   graceSeconds: number;
   /**
+   * Minutes past dispatch before a gestión with no CDR at all is finalized `NOT_ORIGINATED`.
+   * Deliberately its own, longer threshold rather than `floorMinutes`: `NOT_ORIGINATED` is
+   * irreversible and there's no live signal to race, but the CDR's start record can lag
+   * dispatch (Influx read lag, a queueing hiccup) — finalizing too early risks recording a
+   * call that is still just about to exist as one that never happened at all.
+   */
+  notOriginatedMinutes: number;
+  /**
    * Minutes past which a gestión whose CDR still carries no status (the provider lost the
    * end-of-call record, or never writes one) is finalized anyway, `deliveryReason:
-   * OUTCOME_UNKNOWN`, rather than polled forever.
+   * OUTCOME_UNKNOWN`, rather than polled forever. Also the fallback for a terminal CDR whose
+   * `endedAt` can't be parsed — see {@link classify}. Sized well above any call the platform
+   * allows: the dialplan's `TIMEOUT(absolute)` caps every channel at 60 minutes, so a CDR
+   * still showing no status past that has lost its end record, not one still talking.
    */
   backstopMinutes: number;
   now: () => Date;
@@ -78,13 +89,17 @@ export interface VoiceCompletionTimeoutSweepDeps {
  *   write is final for whichever side reaches it first, so finalizing the instant the CDR
  *   clears could permanently discard a real answered outcome that was merely still in
  *   flight. A terminal CDR still inside its grace window is treated exactly like one with no
- *   status yet: left alone for a later pass.
+ *   status yet: left alone for a later pass. A terminal CDR whose `endedAt` can't be parsed
+ *   at all can't be graced either way — it falls through to the backstop below instead of
+ *   stalling forever, still with the mapped reason rather than `OUTCOME_UNKNOWN`, since the
+ *   CDR does say how the call cleared even without a trustworthy timestamp for it.
  * - The CDR exists but carries no status yet (only the start portion was written — the
  *   call is still in progress): leave the gestión at DISPATCHED. A later sweep pass
  *   decides once the call actually ends, or the backstop below fires. This is not a
  *   failure and must not be treated as one.
- * - No CDR at all (Fonoster's `NOT_FOUND`): the call never originated. Finalize `FAILED` /
- *   `NOT_ORIGINATED`. No grace applies — there is no live completion signal to race with.
+ * - No CDR at all (Fonoster's `NOT_FOUND`): finalize `FAILED` / `NOT_ORIGINATED` once
+ *   `notOriginatedMinutes` have passed since dispatch — longer than `floorMinutes`, since
+ *   this write is irreversible and the CDR's start record can lag dispatch.
  * - Backstop: a gestión still with no status past `backstopMinutes` is finalized `FAILED` /
  *   `OUTCOME_UNKNOWN` rather than polled forever — the provider can lose the end record.
  *
@@ -158,33 +173,42 @@ export function createVoiceCompletionTimeoutSweep(
 
 /**
  * Looks up one gestión's CDR and decides its `deliveryReason`, or `null` when nothing should
- * be written yet — either because the call is still in progress, or because it has cleared
- * too recently to rule out a live completion signal still being in flight for it.
+ * be written yet — either because the call is still in progress, because it has cleared too
+ * recently to rule out a live completion signal still being in flight for it, or because
+ * there's no CDR yet and it's too soon to call that irreversible.
  */
 async function classify(
   deps: VoiceCompletionTimeoutSweepDeps,
   row: { contactedAt: Date; providerRef: string },
   nowMs: number
 ): Promise<DeliveryReason | null> {
+  const ageMinutes = (nowMs - row.contactedAt.getTime()) / 60_000;
   const lookup = await deps.outboundCallClient.getCall(row.providerRef);
 
-  // No grace here: with no CDR at all there is no live completion signal in flight to race
-  // — the call never originated — and floorMinutes already covers the gap before Fonoster
-  // writes the start portion of a real one.
-  if (!lookup.found) return "NOT_ORIGINATED";
+  if (!lookup.found) {
+    // No grace against a live signal here — there isn't one to race, the call never
+    // originated. But the write is irreversible, and the CDR's start record can lag
+    // dispatch, so this gets its own (longer) age gate rather than firing at floorMinutes.
+    return ageMinutes >= deps.notOriginatedMinutes ? "NOT_ORIGINATED" : null;
+  }
 
   const terminal = mapVoiceCallStatusToDeliveryReason(lookup.status);
   if (terminal !== null) {
-    // The CDR write and the channel's own live completion signal race the same event. Never
-    // guess in the direction that discards a real outcome: a terminal status with no usable
-    // `endedAt` is treated as not yet past the grace, exactly like one that plainly is.
-    if (!lookup.endedAt) return null;
-    const secondsSinceEnded = (nowMs - lookup.endedAt.getTime()) / 1000;
-    return secondsSinceEnded >= deps.graceSeconds ? terminal : null;
+    if (lookup.endedAt) {
+      // The CDR write and the channel's own live completion signal race the same event —
+      // give the live signal `graceSeconds` to land first before finalizing over it.
+      const secondsSinceEnded = (nowMs - lookup.endedAt.getTime()) / 1000;
+      if (secondsSinceEnded >= deps.graceSeconds) return terminal;
+      return null;
+    }
+    // endedAt is unusable, so the grace can't be evaluated either way — but unlike the "no
+    // status yet" branch below, the CDR does say how this call cleared. Don't stall
+    // forever waiting on a timestamp that will never parse: past the backstop, finalize
+    // with the mapped reason rather than the generic OUTCOME_UNKNOWN.
+    return ageMinutes >= deps.backstopMinutes ? terminal : null;
   }
 
   // No terminal status yet (UNKNOWN / not yet cleared). Only the backstop can close this
   // out — otherwise a call still genuinely in progress must be left alone.
-  const ageMinutes = (nowMs - row.contactedAt.getTime()) / 60_000;
   return ageMinutes >= deps.backstopMinutes ? "OUTCOME_UNKNOWN" : null;
 }

@@ -76,18 +76,19 @@ let warnedUnparseableEndedAt = false;
 
 /**
  * Loud, once per process: if a terminal CDR's `endedAt` cannot be parsed, the sweep's grace
- * period (which depends on it) silently degrades to never finalizing from a terminal status
- * at all — every call would fall through to `NOT_ORIGINATED`/the 30-minute backstop instead
- * of its real reason. That must surface immediately, not as a quiet metrics dip.
+ * period (which depends on it) can't be evaluated, so finalizing that gestión waits on the
+ * backstop instead — minutes later than it should, and with the useful detail of *when* the
+ * call ended lost even though the reason it failed is still known and used. That must
+ * surface immediately, not as a quiet delay.
  */
 function warnUnparseableEndedAt(rawValue: unknown): void {
   if (warnedUnparseableEndedAt) return;
   warnedUnparseableEndedAt = true;
   logger.warn(
     `voice completion sweep: a terminal CDR's endedAt could not be parsed ` +
-      `(typeof=${typeof rawValue}, value=${JSON.stringify(rawValue)}). The sweep cannot ` +
-      `finalize from a terminal CDR without it and will fall through to NOT_ORIGINATED/the ` +
-      `backstop instead — this needs investigating.`
+      `(typeof=${typeof rawValue}, value=${JSON.stringify(rawValue)}). The sweep cannot apply ` +
+      `its grace period without it and will wait for the backstop to finalize this gestión ` +
+      `instead — this needs investigating.`
   );
 }
 
