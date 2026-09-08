@@ -1,0 +1,212 @@
+---
+title: "Anatomía de una gestión"
+description: "Qué campos trae cada gestión, qué caminos puede recorrer según el canal y qué estados de entrega y resultados existen, con la etiqueta que ve en la consola y el valor que devuelve la API."
+---
+
+Una **gestión** es el registro de un intento de contacto contra una cuenta. Cada intento
+produce exactamente una gestión, que se va enriqueciendo a medida que llegan señales del
+canal: la confirmación de entrega, la transcripción de una llamada, una respuesta del
+cliente o el análisis de IA.
+
+Esta página enumera todo lo que una gestión puede contener. Úsela para interpretar una fila
+de **Gestiones** en la consola, o para saber qué valores esperar al leer gestiones por la API.
+
+## Los tres ejes
+
+Cada gestión responde hasta tres preguntas independientes. Que una tenga respuesta no
+implica nada sobre las otras.
+
+<CardGroup cols={3}>
+  <Card title="Entrega" icon="paper-plane">
+    ¿El intento llegó al teléfono o al buzón de la persona? Nunca está vacío. En la API:
+    `delivery`.
+  </Card>
+  <Card title="Camino" icon="route">
+    ¿Qué recorrido tuvo la interacción una vez entregada? Vacío cuando no se observó ninguna.
+    En la API: `path`.
+  </Card>
+  <Card title="Resultado" icon="flag-checkered">
+    ¿Qué salió de la interacción? Vacío en la mayoría de los casos, y eso es una respuesta
+    válida, no un dato faltante. En la API: `outcome`.
+  </Card>
+</CardGroup>
+
+Los ejes son independientes a propósito. Una entrega fallida puede traer un resultado (alguien
+contesta y dice que no es la persona buscada), y una entrega exitosa muy a menudo no trae ni
+camino ni resultado.
+
+## Entrega
+
+| Etiqueta en consola | Valor en la API | Significado |
+| :--- | :--- | :--- |
+| Despachado | `DISPATCHED` | QCobro envió el intento y todavía no sabe cómo terminó. Toda gestión nace aquí. |
+| Entregado | `DELIVERED` | El mensaje llegó al destino. |
+| Conectada | `DELIVERED` | El mismo valor, en los canales de voz: la llamada se contestó y el mensaje se reprodujo. |
+| Fallido | `FAILED` | El intento no llegó. Siempre viene acompañado de una razón. |
+
+<Note>
+En voz, **Conectada** significa que la llamada se contestó y que QCobro reprodujo el mensaje
+completo. No afirma que la persona lo haya escuchado.
+</Note>
+
+La entrega solo avanza. Una vez que una gestión sale de **Despachado**, ninguna señal
+posterior la devuelve a ese estado ni la cambia entre **Entregado** y **Fallido**.
+
+## Razón del fallo
+
+Acompaña a **Fallido** y a ningún otro estado. En la consola se muestra junto a la entrega,
+separada por un punto: `Fallido · Sin respuesta`.
+
+| Etiqueta en consola | Valor en la API | Significado | Canales |
+| :--- | :--- | :--- | :--- |
+| Sin respuesta | `NO_ANSWER` | La llamada sonó sin que nadie contestara. | Voz |
+| Ocupado | `BUSY` | La línea estaba ocupada. | Voz |
+| No se realizó | `NOT_ORIGINATED` | La llamada nunca llegó a realizarse: la red telefónica no tiene registro de ella. | Voz |
+| Resultado desconocido | `OUTCOME_UNKNOWN` | La llamada se conectó y terminó con normalidad, pero QCobro nunca recibió la señal de cierre, así que no puede afirmar qué ocurrió durante la llamada. | Voz |
+| Inalcanzable | `UNREACHABLE` | Fallo transitorio: la llamada se contestó pero el mensaje no llegó a reproducirse, la red no pudo alcanzar el destino, o el proveedor de mensajería reportó un fallo temporal. | Voz, SMS, correo |
+| Destino inválido | `INVALID_DESTINATION` | El número o la dirección no existe o no es enrutable. | Voz, SMS, correo, WhatsApp |
+| Rechazado | `REJECTED` | El operador, la plataforma o la persona rechazó el intento. | Voz, SMS, correo, WhatsApp |
+| Canal no compatible | `CHANNEL_UNSUPPORTED` | El destino no puede recibir por ese canal, por ejemplo un fijo al que se le envía SMS. | SMS |
+| Error del proveedor | `PROVIDER_ERROR` | El proveedor falló sin dar un motivo reconocible. | Todos |
+
+<Note>
+En las llamadas, la razón del fallo viene del registro que la red telefónica guarda de cada
+llamada, así que distingue entre una llamada que sonó sin respuesta, una que encontró la línea
+ocupada y una que nunca llegó a realizarse. **Error del proveedor** queda reservado para fallos
+que el proveedor no explica.
+</Note>
+
+<Note>
+**No se realizó** y **Resultado desconocido** son transitorios: la cuenta sigue siendo elegible
+para un intento posterior según las reglas de reintento de la campaña.
+</Note>
+
+## Camino
+
+En la API este eje es `path`. En la consola se sigue llamando **Camino**.
+
+| Etiqueta en consola | Valor en la API | Significado | ¿Se emite hoy? |
+| :--- | :--- | :--- | :--- |
+| Conversación | `ENGAGED` | En Voz IA: hubo una conversación real. | Sí |
+| Recibido | `ENGAGED` | El mismo valor en voz pregrabada: el guion se reprodujo completo, o la persona pulsó una opción del menú. No hay conversación en este canal. | Sí |
+| Respondió | `ENGAGED` | El mismo valor en los canales de mensajería: la persona contestó el hilo. | Sí |
+| Colgó | `ABANDONED` | La persona cortó antes de que la interacción avanzara. | No |
+| Buzón de voz | `VOICEMAIL` | La llamada cayó en un buzón de voz. | No |
+
+<Note>
+`ABANDONED` y `VOICEMAIL` están definidos pero todavía no se detectan: distinguir un buzón de
+voz de una persona requiere detección automática de contestador, que aún no está disponible.
+</Note>
+
+La consola muestra el camino como una progresión, por ejemplo `Despachado → Recibido`. En los
+canales de mensajería puede aparecer una etapa intermedia **Leído**, tomada del acuse de
+lectura. **Leído** es solo visual: no es un valor de camino y no aparece en la API.
+
+## Resultado
+
+En la API este eje es `outcome`. En la consola se sigue llamando **Resultado**.
+
+| Etiqueta en consola | Valor en la API | Significado | ¿Se emite hoy? |
+| :--- | :--- | :--- | :--- |
+| Promesa de pago | `PAYMENT_PROMISE` | La persona se comprometió a pagar. Es el único resultado que crea una entidad con seguimiento. | Sí |
+| Baja | `OPT_OUT` | La persona pidió no ser contactada. | Sí |
+| Persona equivocada | `WRONG_PARTY` | Quien contestó no es el titular de la cuenta. | Sí |
+| Nuevos términos | `NEW_TERMS` | Se acordó un nuevo plan de pagos. | No |
+| Pagada | `PAID` | La deuda ya estaba pagada. | No |
+| Devolución solicitada | `CALLBACK_REQUESTED` | La persona pidió que se le llame en otro momento. | No |
+| Disputa | `DISPUTE_RAISED` | La persona objeta la deuda. | No |
+| Solicitud de información | `INFORMATION_REQUEST` | La persona pidió información antes de decidir. | No |
+| Rechazada | `REFUSED` | La persona se negó a pagar. | No |
+| Resuelta | `RESOLVED` | El asunto quedó cerrado. | No |
+
+<Note>
+Los siete resultados marcados con **No** forman parte del contrato y la API los acepta, pero
+hoy el análisis automático solo está instruido para reconocer promesas de pago, bajas y
+personas equivocadas. Un pago parcial se registra como **Promesa de pago** con el monto
+acordado.
+</Note>
+
+Una **Promesa de pago** crea una promesa con seguimiento propio, visible en la lista de
+promesas de pago. Ningún otro resultado crea una entidad con seguimiento.
+
+## Qué puede producir cada canal
+
+El canal limita físicamente qué ejes son alcanzables. QCobro rechaza al escribir cualquier
+combinación fuera de esta tabla.
+
+| Canal | Entrega | Camino alcanzable | Resultado alcanzable |
+| :--- | :--- | :--- | :--- |
+| Voz IA | Sí | Conversación | Cualquiera de los que se emiten |
+| Voz pregrabada | Sí | Recibido, y solo ese | Baja, y solo ese |
+| SMS | Sí | Ninguno | Ninguno |
+| Correo | Sí | Respondió | Cualquiera de los que se emiten |
+| WhatsApp | Sí | Respondió | Cualquiera de los que se emiten |
+
+El SMS no tiene canal de entrada, así que nunca produce camino ni resultado. La voz
+pregrabada tampoco tiene canal de entrada propio, salvo el menú de opciones: reproducir el
+guion completo marca **Recibido**, y pulsar la opción de baja marca además **Baja**.
+
+## Campos de la gestión
+
+| Campo | Contenido |
+| :--- | :--- |
+| `agentType` | Canal usado: `VOICE_AI`, `VOICE_PRERECORDED`, `SMS`, `EMAIL`, `WHATSAPP`. |
+| `contactedAt` | Momento en que empezó el intento. |
+| `durationSeconds` | Duración de la llamada contestada, en segundos. Solo en los canales de voz. |
+| `delivery`, `deliveryReason`, `path`, `outcome` | Los tres ejes y la razón del fallo. |
+| `campaignId` | Campaña que originó el contacto. Vacío en gestiones manuales y en seguimientos de una promesa. |
+| `agentTemplateId` | Agente usado, que define el canal y el guion o la plantilla. |
+| `paymentPromiseId` | Presente cuando la gestión es un seguimiento de una promesa concreta. |
+| `debtAmountSnapshot` | Saldo de la cuenta en el momento del contacto. |
+| `notes` | Notas escritas por un operador. |
+| `aiSummary` | Resumen de la interacción generado por IA. |
+| `aiSentiment` | Tono detectado: `POSITIVE` (Positivo), `NEUTRAL` (Neutral), `NEGATIVE` (Negativo), `HOSTILE` (Hostil). |
+| `aiDebtReason` | Motivo del atraso inferido por la IA, en texto libre. |
+| `aiResult` | Clasificación de la interacción en lenguaje natural, complementaria al resultado estructurado. |
+| `aiNextStep` | Siguiente paso sugerido por la IA. |
+| `intentMetadata` | Datos estructurados del resultado. En una promesa de pago: monto y fecha comprometidos. |
+| `channelData` | Datos propios del canal: identificador del mensaje o de la llamada, estado reportado por el proveedor, transcripción, hilo de correo o de WhatsApp, y grabación cuando existe. |
+| `providerRef` | Referencia con la que el proveedor identifica el intento. Es la clave con la que una respuesta o un acuse posterior se asocia a esta gestión. |
+| `providerMessageId` | Identificador propio del mensaje en el proveedor, usado en correo para correlacionar los acuses de entrega y apertura. |
+
+Las gestiones no se editan ni se borran. Se enriquecen con las señales que van llegando del
+canal, y las correcciones se expresan escribiendo una gestión nueva.
+
+<Warning>
+Los tres ejes se llamaban `entrega`, `camino` y `resultado`. Ahora son `delivery`, `path` y
+`outcome`. Si lee gestiones por la API o envía resultados al endpoint de gestiones, actualice
+los nombres de esos campos. Los valores no cambian.
+</Warning>
+
+## Campos que hoy no se completan
+
+Estos campos existen en el modelo pero ningún flujo los escribe todavía. Aparecen siempre
+vacíos.
+
+| Campo | Para qué está previsto |
+| :--- | :--- |
+| `channelData.scriptDurationSeconds` | Duración nominal del guion pregrabado, prevista para compararla con la duración real de la llamada. |
+| `correctedEntryId` | Referencia a una gestión anterior que esta corrige. |
+
+<Note>
+La duración que muestra la consola la mide QCobro durante la llamada. La grabación la produce
+la red telefónica sobre un intervalo distinto, así que su duración y la duración mostrada no
+tienen por qué coincidir.
+</Note>
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Canales" icon="tower-broadcast" href="/concepts/channels">
+    Cómo QCobro contacta a sus cuentas por voz, SMS, correo y WhatsApp.
+  </Card>
+  <Card title="Endpoint de gestiones" icon="code" href="/api/contact-log">
+    Registrar el resultado de una gestión desde un sistema externo.
+  </Card>
+  <Card title="Promesas de pago" icon="handshake" href="/guides/payment-promises">
+    Qué pasa cuando una gestión termina en una promesa de pago.
+  </Card>
+  <Card title="Análisis con IA" icon="wand-magic-sparkles" href="/guides/ai-insights">
+    Cómo se generan el resumen, el sentimiento y el siguiente paso.
+  </Card>
+</CardGroup>

@@ -55,7 +55,12 @@
       },
       {
         "group": "Conceptos",
-        "pages": ["concepts/workspaces", "concepts/channels", "concepts/campaigns-engine"]
+        "pages": [
+          "concepts/workspaces",
+          "concepts/channels",
+          "concepts/gestiones",
+          "concepts/campaigns-engine"
+        ]
       }
     ],
     "global": {
