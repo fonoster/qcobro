@@ -7,6 +7,7 @@ import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
 import { SelectGroup } from "../components/ui/select.js";
 import { useI18n, type MessageId } from "../lib/i18n.js";
+import { isWorkspaceAdmin } from "../lib/workspaceRole.js";
 import { cn } from "@/lib/utils.js";
 
 type Row = {
@@ -50,7 +51,7 @@ function MenuItem({
 
 export function Members() {
   const { t } = useI18n();
-  const { workspace } = useAuth();
+  const { workspace, accessToken } = useAuth();
   const utils = trpc.useUtils();
   const workspaces = trpc.workspaces.list.useQuery();
   const members = trpc.workspaces.listMembers.useQuery();
@@ -73,6 +74,12 @@ export function Members() {
 
   const activeWorkspace = workspaces.data?.items.find((w) => w.accessKeyId === workspace);
   const wsName = activeWorkspace?.name ?? t("members.wsFallback");
+
+  // Any workspace member can view the roster (listMembers is workspaceProcedure), but
+  // invite/resend/remove are all adminProcedure server-side. Gate their affordances so a
+  // non-admin never sees a control that would only be rejected on click. UI-only — the
+  // apiserver still enforces every one of these.
+  const canManage = isWorkspaceAdmin(accessToken, workspace);
 
   // The owner isn't a member row in Identity — build their row from the workspace's own
   // owner record. Whoever is viewing this page isn't necessarily the owner (admins can
@@ -150,12 +157,16 @@ export function Members() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[22px] font-bold text-slate-900">{t("members.title")}</h1>
-          <p className="text-sm text-slate-500">{t("members.subtitle").replace("{ws}", wsName)}</p>
+          <p className="text-sm text-slate-500">
+            {canManage ? t("members.subtitle").replace("{ws}", wsName) : t("members.viewerNotice")}
+          </p>
         </div>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" />
-          {t("members.invite")}
-        </Button>
+        {canManage && (
+          <Button onClick={() => setOpen(true)}>
+            <Plus className="h-4 w-4" />
+            {t("members.invite")}
+          </Button>
+        )}
       </div>
 
       <Card className="rounded-xl border-slate-200 shadow-none">
@@ -192,7 +203,7 @@ export function Members() {
                 />
               </div>
               <div className="relative flex w-10 justify-center">
-                {r.removable && (
+                {canManage && r.removable && (
                   <>
                     <button
                       type="button"
@@ -246,7 +257,7 @@ export function Members() {
         )}
       </Card>
 
-      {open && (
+      {canManage && open && (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/60 p-4">
           <Card className="w-full max-w-[440px] rounded-2xl border-slate-200 shadow-xl">
             <form onSubmit={onInvite} className="flex flex-col gap-5 p-6">
@@ -302,7 +313,7 @@ export function Members() {
         </div>
       )}
 
-      {confirm && (
+      {canManage && confirm && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/60 p-4">
           <Card className="w-full max-w-[440px] rounded-2xl border-slate-200 shadow-xl">
             <div className="flex flex-col gap-5 p-6">
