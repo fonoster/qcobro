@@ -10,7 +10,8 @@ import {
   Mail,
   MessageSquare,
   Copy,
-  Check
+  Check,
+  MicOff
 } from "lucide-react";
 import type { EmailThreadMessage, TranscriptLine, WhatsAppThread } from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
@@ -175,6 +176,8 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
   const durationStr = formatDuration(g?.durationSeconds);
   const oneWay = !!g && ONE_WAY.includes(g.agentType);
   const isVoiceAi = g?.agentType === "VOICE_AI";
+  const isPrerecorded = g?.agentType === "VOICE_PRERECORDED";
+  const isVoiceChannel = isVoiceAi || isPrerecorded;
   const isEmail = g?.agentType === "EMAIL";
   const isWhatsApp = g?.agentType === "WHATSAPP";
   const whatsAppThread = (g?.channelData?.whatsAppThread as WhatsAppThread | undefined) ?? null;
@@ -267,30 +270,41 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
 
       {/* Body */}
       <div className="flex flex-col gap-6 p-6">
-        {/* Voz IA: call player */}
-        {isVoiceAi && (
+        {/* Voz IA + Pre-grabada: call recording player. Always the actual call recording —
+            never a re-synthesized stand-in for what was said. */}
+        {isVoiceChannel && (
           <Section icon={PhoneCall} iconClass="text-emerald-700" title={t("gestiones.detail.call")}>
-            <div className="rounded-xl bg-emerald-700 p-4 text-white">
-              <div className="mb-3 flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
-                  <PhoneCall className="h-4 w-4" />
+            {recordingUrl ? (
+              <div className="rounded-xl bg-emerald-700 p-4 text-white">
+                <div className="mb-3 flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+                    <PhoneCall className="h-4 w-4" />
+                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold">{t("gestiones.detail.call")}</span>
+                    <span className="text-xs text-emerald-100">
+                      {t(`agents.type.${g!.agentType}` as Parameters<typeof t>[0])}
+                      {g?.campaign?.name ? ` · ${g.campaign.name}` : ""}
+                    </span>
+                  </div>
+                </div>
+                <audio controls src={recordingUrl} className="w-full" />
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-500">
+                  <MicOff className="h-4 w-4" />
                 </span>
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold">{t("gestiones.detail.call")}</span>
-                  <span className="text-xs text-emerald-100">
-                    {t("agents.type.VOICE_AI")}
-                    {g?.campaign?.name ? ` · ${g.campaign.name}` : ""}
+                  <span className="text-sm font-semibold text-slate-600">
+                    {t("gestiones.detail.recordingUnavailable")}
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {t("gestiones.detail.recordingUnavailableExplanation")}
                   </span>
                 </div>
               </div>
-              {recordingUrl ? (
-                <audio controls src={recordingUrl} className="w-full" />
-              ) : (
-                <p className="text-xs text-emerald-100">
-                  {t("gestiones.detail.recordingUnavailable")}
-                </p>
-              )}
-            </div>
+            )}
           </Section>
         )}
 
@@ -589,18 +603,11 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                 </div>
               </div>
             ) : g!.agentType === "VOICE_PRERECORDED" ? (
-              <div className="flex flex-col gap-3">
-                <audio
-                  controls
-                  className="w-full"
-                  src={`/api/voice/tts?text=${encodeURIComponent(messageBody ?? "")}`}
-                />
-                <div className="rounded-lg border border-slate-200 px-4 py-3">
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    {t("gestiones.detail.script")}
-                  </p>
-                  <p className="text-sm leading-relaxed text-slate-600">{messageBody}</p>
-                </div>
+              <div className="rounded-lg border border-slate-200 px-4 py-3">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  {t("gestiones.detail.script")}
+                </p>
+                <p className="text-sm leading-relaxed text-slate-600">{messageBody}</p>
               </div>
             ) : (
               <div className="overflow-hidden rounded-lg border border-slate-200">
