@@ -151,11 +151,6 @@
     "maxTokens": 600,
     "generation": "onDemand"
   },
-  "tts": {
-    "provider": "elevenlabs",
-    "apiKey": "CHANGE_ME",
-    "model": "eleven_multilingual_v2"
-  },
   "announcement": {
     "enabled": true,
     "variant": "announcement",

@@ -520,7 +520,7 @@ verification/invite emails, sent via Resend SMTP — see below).
 | `fonoster.numbers`                      | provisioned caller-IDs   | carrier format (no leading `+` for the current pool)         |
 | `twilio.*`                              | from Twilio              | **outbound-only — no Twilio webhook exists**                 |
 | `resend.inboundDomain`                  | `notices.qcobro.com`     | must match the `MX` record                                   |
-| `ai.apiKey` / `tts.apiKey`              | Gemini / ElevenLabs keys | no callbacks                                                 |
+| `ai.apiKey`                             | Gemini key               | no callbacks                                                 |
 | `engine.enabled`                        | `true`                   | the autonomous outreach loop (off by default)                |
 | `apiserver.contactLogAuth.enabled`      | `true`                   | enforces workspace Basic auth on `POST /api/contact-logs`    |
 
@@ -543,7 +543,7 @@ accept-invite bridge (this file is install-once on the droplet, like the keys):
   secret into `resend.inboundSigningSecret`.
 - **Fonoster** — no manual webhook. Set `webhookBaseUrl` + credentials + caller-ID
   numbers; the apiserver registers the Voz IA events-hook when an agent is synced.
-- **Twilio / Gemini / ElevenLabs** — credentials/keys only; no callbacks.
+- **Twilio / Gemini** — credentials/keys only; no callbacks.
 
 **Known limitations** (as of this writing):
 

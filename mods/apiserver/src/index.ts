@@ -32,9 +32,6 @@ import { createWhatsAppWebhookHandlers } from "./rest/whatsAppWebhook.js";
 import { createEngineEventsHandler } from "./rest/engineEvents.js";
 import { resolveWhatsAppClient } from "./services/resolveWhatsAppClient.js";
 import { createInsightGenerator } from "./services/insightGenerator.js";
-import { synthesizeSpeech } from "./services/elevenLabsTts.js";
-import { ttsDefaults } from "@qcobro/common";
-import { TtsCache, ttsCacheKey, isTextWithinLimit } from "./services/ttsCache.js";
 import { startVoiceServer } from "./voice/voiceServer.js";
 import { startEngine } from "./engine/start.js";
 import { startVoiceCompletionSweep } from "./functions/voice/startVoiceCompletionSweep.js";
@@ -170,49 +167,6 @@ app.get(
   "/api/engine/events",
   createEngineEventsHandler(prisma, config, createIdentityClient(config.identity.endpoint))
 );
-
-// Synthesize a pre-recorded agent's script to audio (ElevenLabs) so the Pre-grabada
-// gestión detail can play it. Cached in-memory per voice+text (bounded LRU — see
-// ttsCache.ts and ttsConfigSchema.cache/maxTextLength in @qcobro/common: the cached
-// text is a per-account script, so without bounds this would grow with account
-// count); 503 when TTS isn't configured (the player then has nothing to play).
-// `config.tts` is absent whenever a deployment supplies the ElevenLabs key through
-// ELEVENLABS_API_KEY instead of a `tts` section, so fall back to the schema's own resolved
-// defaults rather than restating the numbers — restating them would pin exactly those
-// deployments to stale bounds the next time a default changes.
-const ttsMaxTextLength = config.tts?.maxTextLength ?? ttsDefaults.maxTextLength;
-const ttsCache = new TtsCache({
-  maxEntries: config.tts?.cache?.maxEntries ?? ttsDefaults.cache.maxEntries,
-  maxBytes: config.tts?.cache?.maxBytes ?? ttsDefaults.cache.maxBytes
-});
-const DEMO_TTS_VOICE = config.fonoster?.voices?.[0]?.id ?? "86V9x9hrQds83qf7zaGn";
-app.get("/api/voice/tts", async (req, res) => {
-  const text = typeof req.query.text === "string" ? req.query.text : "";
-  const voiceId = (typeof req.query.voiceId === "string" && req.query.voiceId) || DEMO_TTS_VOICE;
-  if (!text) {
-    res.status(400).json({ error: "text is required" });
-    return;
-  }
-  if (!isTextWithinLimit(text, ttsMaxTextLength)) {
-    res
-      .status(400)
-      .json({ error: `text exceeds maximum length of ${ttsMaxTextLength} characters` });
-    return;
-  }
-  const key = ttsCacheKey(voiceId, text);
-  try {
-    let audio = ttsCache.get(key);
-    if (!audio) {
-      audio = await synthesizeSpeech(text, voiceId);
-      ttsCache.set(key, audio);
-    }
-    res.setHeader("content-type", "audio/mpeg");
-    res.setHeader("cache-control", "public, max-age=86400");
-    res.send(audio);
-  } catch {
-    res.status(503).json({ error: "TTS unavailable" });
-  }
-});
 
 // Internal API. A future change can mount a public REST/OpenAPI router on a
 // separate path (e.g. /api) alongside this one.
