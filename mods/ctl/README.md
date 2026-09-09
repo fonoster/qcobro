@@ -24,6 +24,7 @@ $ qcobro workspaces:login
 
 <!-- toc -->
 
+- [ctl](#ctl)
 - [Usage](#usage)
 - [Commands](#commands)
 <!-- tocstop -->
@@ -37,7 +38,7 @@ $ npm install -g @qcobro/ctl
 $ qcobro COMMAND
 running command...
 $ qcobro (--version)
-@qcobro/ctl/1.24.1 darwin-arm64 node-v22.17.0
+@qcobro/ctl/1.39.3 darwin-arm64 node-v22.17.0
 $ qcobro --help [COMMAND]
 USAGE
   $ qcobro COMMAND
@@ -51,7 +52,9 @@ USAGE
 <!-- commands -->
 
 - [`qcobro agents:create`](#qcobro-agentscreate)
-- [`qcobro agents:eval TEMPLATEID`](#qcobro-agentseval-templateid)
+- [`qcobro agents:eval`](#qcobro-agentseval)
+- [`qcobro agents:preview`](#qcobro-agentspreview)
+- [`qcobro agents:sync TEMPLATEID`](#qcobro-agentssync-templateid)
 - [`qcobro mcp:configure`](#qcobro-mcpconfigure)
 - [`qcobro portfolios:get ID`](#qcobro-portfoliosget-id)
 - [`qcobro portfolios:list`](#qcobro-portfolioslist)
@@ -98,25 +101,77 @@ EXAMPLES
   $ qcobro agents:create --type SMS --name "Recordatorio" --message-body "Hola {{firstName}}, tienes un saldo pendiente."
 ```
 
-## `qcobro agents:eval TEMPLATEID`
+## `qcobro agents:eval`
 
-re-attempt an agent template's Fonoster sync and report the resulting status. This validates the template's configuration and its sync with Fonoster — QCobro has no conversational-intelligence evaluation feature today, so this does not test conversation behavior. Only VOICE_AI templates sync with Fonoster; other channel types are a no-op that leaves the template unchanged.
+evaluate a VOICE_AI/EMAIL/WHATSAPP agent's conversation logic — either an existing template plus a scenarios file, or a standalone YAML eval template (agent definition plus its own embedded scenarios) that is never created. Streams each turn's result as it happens, then a final pass/fail summary; exits non-zero when the run fails. Pass --json to stream the raw events as JSONL instead. For a static SMS/VOICE_PRERECORDED render (no conversation), use `agents:preview` instead.
 
 ```
 USAGE
-  $ qcobro agents:eval TEMPLATEID
+  $ qcobro agents:eval [--template-id <value>] [--scenarios <value>] [--file <value>] [--json]
+
+FLAGS
+  --file=<value>         path to a standalone YAML eval template (agent definition + embedded scenarios)
+  --json                 emit each evaluation event as a JSON line (JSONL) on stdout instead of human-readable output
+  --scenarios=<value>    path to a YAML file with the scenarios to run (used with --template-id)
+  --template-id=<value>  an existing agent template id
+
+DESCRIPTION
+  evaluate a VOICE_AI/EMAIL/WHATSAPP agent's conversation logic — either an existing template plus a scenarios file, or
+  a standalone YAML eval template (agent definition plus its own embedded scenarios) that is never created. Streams each
+  turn's result as it happens, then a final pass/fail summary; exits non-zero when the run fails. Pass --json to stream
+  the raw events as JSONL instead. For a static SMS/VOICE_PRERECORDED render (no conversation), use `agents:preview`
+  instead.
+
+EXAMPLES
+  $ qcobro agents:eval --template-id <id> --scenarios scenarios.yaml
+
+  $ qcobro agents:eval --file eval-template.yaml
+
+  $ qcobro agents:eval --file eval-template.yaml --json | jq
+```
+
+## `qcobro agents:preview`
+
+render an SMS/VOICE_PRERECORDED agent template's message body or script against a sample account — no conversation, no streaming. Accepts an existing template id or a standalone YAML definition. For VOICE_AI/EMAIL/WHATSAPP, use `agents:eval` instead.
+
+```
+USAGE
+  $ qcobro agents:preview --account <value> [--template-id <value>] [--file <value>]
+
+FLAGS
+  --account=<value>      (required) path to a JSON file with the sample account fields
+  --file=<value>         path to a standalone YAML SMS/VOICE_PRERECORDED definition
+  --template-id=<value>  an existing agent template id
+
+DESCRIPTION
+  render an SMS/VOICE_PRERECORDED agent template's message body or script against a sample account — no conversation, no
+  streaming. Accepts an existing template id or a standalone YAML definition. For VOICE_AI/EMAIL/WHATSAPP, use
+  `agents:eval` instead.
+
+EXAMPLES
+  $ qcobro agents:preview --template-id <id> --account account.json
+
+  $ qcobro agents:preview --file sms-draft.yaml --account account.json
+```
+
+## `qcobro agents:sync TEMPLATEID`
+
+re-attempt an agent template's Fonoster sync and report the resulting status. This validates the template's configuration and its sync with Fonoster — it does not test conversation behavior (see `agents:eval` for that). Only VOICE_AI templates sync with Fonoster; other channel types are a no-op that leaves the template unchanged.
+
+```
+USAGE
+  $ qcobro agents:sync TEMPLATEID
 
 ARGUMENTS
   TEMPLATEID  the agent template id
 
 DESCRIPTION
   re-attempt an agent template's Fonoster sync and report the resulting status. This validates the template's
-  configuration and its sync with Fonoster — QCobro has no conversational-intelligence evaluation feature today, so this
-  does not test conversation behavior. Only VOICE_AI templates sync with Fonoster; other channel types are a no-op that
-  leaves the template unchanged.
+  configuration and its sync with Fonoster — it does not test conversation behavior (see `agents:eval` for that). Only
+  VOICE_AI templates sync with Fonoster; other channel types are a no-op that leaves the template unchanged.
 
 EXAMPLES
-  $ qcobro agents:eval <templateId>
+  $ qcobro agents:sync <templateId>
 ```
 
 ## `qcobro mcp:configure`
