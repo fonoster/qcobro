@@ -116,6 +116,35 @@ describe("runVoiceAiEvaluation", () => {
     assert.ok(events.some((e) => e.type === "error" && e.message === "boom"));
   });
 
+  it("retries once when Fonoster yields an empty stream, then relays the retry's events", async () => {
+    let calls = 0;
+    const client: VoiceApplicationClient = {
+      createApplication: async () => ({ ref: "unused" }),
+      updateApplication: async () => ({ ref: "unused" }),
+      deleteApplication: async () => {},
+      async *evaluate() {
+        calls += 1;
+        if (calls === 1) return; // the transient fault: a clean, empty stream
+        yield { type: "scenarioSummary", scenarioRef: "cooperative-debtor", overallPassed: true };
+      }
+    };
+
+    const events = await collect(runVoiceAiEvaluation(agent, client));
+
+    assert.equal(calls, 2);
+    const summary = events.find((e) => e.type === "summary");
+    assert.ok(summary && summary.type === "summary");
+    assert.equal(summary.verdict, "pass");
+  });
+
+  it("surfaces an error, not a 0/0 fail summary, when the stream is empty twice", async () => {
+    const client = stubVoiceApplications([]); // evaluate() yields nothing on every call
+    const events = await collect(runVoiceAiEvaluation(agent, client));
+
+    assert.ok(events.some((e) => e.type === "error" && /empty evaluation stream/i.test(e.message)));
+    assert.ok(!events.some((e) => e.type === "summary"));
+  });
+
   it("passes the rendered account context and scenario turns to the client unchanged", async () => {
     const inputs: VoiceApplicationEvalInput[] = [];
     const client = stubVoiceApplications(
