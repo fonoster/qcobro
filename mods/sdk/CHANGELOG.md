@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.40.1](https://github.com/fonoster/qcobro/compare/v1.40.0...v1.40.1) (2026-09-09)
+
+**Note:** Version bump only for package @qcobro/sdk
+
 ## [1.39.3](https://github.com/fonoster/qcobro/compare/v1.39.2...v1.39.3) (2026-09-08)
 
 **Note:** Version bump only for package @qcobro/sdk

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.40.1](https://github.com/fonoster/qcobro/compare/v1.40.0...v1.40.1) (2026-09-09)
+
+### Bug Fixes
+
+- **webapp:** play the real call recording on pre-recorded gestiones, and remove TTS playback ([#154](https://github.com/fonoster/qcobro/issues/154)) ([ef4d451](https://github.com/fonoster/qcobro/commit/ef4d451a7f7b050a68e75dd4c1f19d33d9b85ea8))
+
 # [1.40.0](https://github.com/fonoster/qcobro/compare/v1.39.3...v1.40.0) (2026-09-09)
 
 ### Features
