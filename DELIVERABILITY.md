@@ -114,8 +114,9 @@ mistake — call it out in implementation.
   plain-text outcome).
 - **Detail** (`web-console/spec.md:528-544`), channel-aware — three detail shapes, not two:
   - **One-way message (SMS, pre-recorded):** the single sent message + delivery status + AI
-    insight + channel metadata; **no** audio player, **no** transcript. Pre-recorded can replay
-    the TTS-synthesized script.
+    insight + channel metadata; **no** transcript. SMS has **no** audio player. Pre-recorded
+    plays its **actual call recording** (resolved the same way as Voz IA) whenever one exists,
+    regardless of `delivery` — it never synthesizes speech to represent what was said.
   - **Threaded message (email, WhatsApp):** the ordered **conversation thread** — outbound and
     inbound replies with direction, sender, timestamp, body, and message id — plus delivery
     status and AI insight. Still **no** audio player or call transcript, but this is a

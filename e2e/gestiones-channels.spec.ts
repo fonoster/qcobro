@@ -69,6 +69,16 @@ test.describe("gestiones — channels", () => {
       extra?: Record<string, unknown>;
       channelData: Record<string, unknown>;
     }[] = [
+      // Inserted first so it gets the earliest `contactedAt` among the two Pre-grabada
+      // seeds below, and therefore sorts LAST (list is ordered by contactedAt desc) — the
+      // "Voz pregrabada" `.first()` row stays the one with a recording, unchanged from
+      // before this no-recording case was added.
+      {
+        agentType: "VOICE_PRERECORDED",
+        delivery: "DELIVERED",
+        extra: { durationSeconds: 12 },
+        channelData: { to: "+525500000002", messageBody: script }
+      },
       {
         agentType: "SMS",
         delivery: "DELIVERED",
@@ -81,7 +91,11 @@ test.describe("gestiones — channels", () => {
         agentType: "VOICE_PRERECORDED",
         delivery: "DELIVERED",
         extra: { durationSeconds: 38 },
-        channelData: { to: "+525500000001", messageBody: script }
+        channelData: {
+          to: "+525500000001",
+          messageBody: script,
+          recordingUrl: "https://rec.example/prerecorded.wav"
+        }
       },
       {
         agentType: "EMAIL",
@@ -140,8 +154,8 @@ test.describe("gestiones — channels", () => {
     // was empty on most rows while being the widest column in the table.
     await expect(page.getByRole("columnheader", { name: "Resumen IA" })).toHaveCount(0);
 
-    const openPanel = async (channelLabel: string) => {
-      await page.locator("tr", { hasText: channelLabel }).first().click();
+    const openPanel = async (channelLabel: string, index = 0) => {
+      await page.locator("tr", { hasText: channelLabel }).nth(index).click();
       const panel = page.getByRole("dialog");
       await expect(panel).toBeVisible();
       return panel;
@@ -158,10 +172,16 @@ test.describe("gestiones — channels", () => {
     await expect(panel.getByText("Transcripción")).toHaveCount(0);
     await closePanel();
 
-    // Pre-grabada — playable script (not a "heard" claim) + delivery progression in the
-    // "Estado de delivery" field + honest insight copy; no transcript
-    panel = await openPanel("Voz pregrabada");
-    await expect(panel.getByText("Guion reproducible")).toBeVisible();
+    // Pre-grabada — plays the real call recording (not a synthesized re-narration) + the
+    // sent script as a separate, non-playable element + delivery progression in the
+    // "Estado de delivery" field + honest insight copy; no transcript. This is the row
+    // with a recording — it stays `.nth(0)` since the no-recording case below was seeded
+    // first (see the seeds array) and therefore sorts after it (list order is
+    // contactedAt desc).
+    panel = await openPanel("Voz pregrabada", 0);
+    await expect(panel.locator("audio")).toHaveCount(1);
+    await expect(panel.locator("audio")).toHaveAttribute("src", /prerecorded\.wav/);
+    await expect(panel.getByText("Guion reproducido")).toBeVisible();
     await expect(panel.getByText(script)).toBeVisible();
     // Voice renders DELIVERED as "Conectada": a call connects, it is not "delivered".
     await expect(panel.getByText("Conectada").first()).toBeVisible();
@@ -171,6 +191,16 @@ test.describe("gestiones — channels", () => {
     await expect(panel.getByText(/no confirma que el mensaje se haya escuchado/i)).toBeVisible();
     await expect(panel.getByText(/reproducido al cliente/i)).toHaveCount(0);
     await expect(panel.getByText("Transcripción")).toHaveCount(0);
+    await closePanel();
+
+    // Pre-grabada with no captured recording — muted unavailable card, no audio element,
+    // and no synthesized stand-in. This is the older of the two "Voz pregrabada" rows
+    // (seeded first, so it sorts last / `.nth(1)`).
+    panel = await openPanel("Voz pregrabada", 1);
+    await expect(panel.locator("audio")).toHaveCount(0);
+    await expect(panel.getByText("Grabación no disponible")).toBeVisible();
+    await expect(panel.getByText("Guion reproducido")).toBeVisible();
+    await expect(panel.getByText(script)).toBeVisible();
     await closePanel();
 
     // Email — communication card + body; dedicated (not generic) analysis section, empty

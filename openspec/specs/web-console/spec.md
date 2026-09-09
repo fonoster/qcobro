@@ -622,12 +622,14 @@ delivery, the AI insight, and channel metadata. `SMS` SHALL NOT show a conversat
 NOT show a conversation transcript, but SHALL show `Camino` and `Resultado` whenever they are
 non-null (its optional DTMF menu is this channel's one source of either — see
 `account-contact-log`); both stay hidden, exactly as on `SMS`, when null. For pre-recorded it
-SHALL additionally show the **call duration** (`durationSeconds`) and MAY offer the replayable
-synthesized script;
-the replayable script SHALL be presented as a distinct element from the call result, and the
-copy SHALL NOT state or imply that the account holder heard the message (e.g. "Llamada
-entregada · 0:22", never "el cliente escuchó el mensaje"). The AI insight describes what was
-done (e.g. reminder sent) rather than the absence of a response.
+SHALL additionally show the **call duration** (`durationSeconds`) and, whenever a recording
+resolves (see `prerecorded-audio`), the **actual call recording** as an audio player — never a
+synthesized re-narration of the script. The player is shown regardless of `delivery`, and is
+replaced by an explicit unavailable state when no recording resolves. The script that was sent
+SHALL still be shown as a separate, read-only element (it is a text record of what was sent, not
+a claim that it plays back), and the copy SHALL NOT state or imply that the account holder heard
+the message (e.g. "Llamada entregada · 0:22", never "el cliente escuchó el mensaje"). The AI
+insight describes what was done (e.g. reminder sent) rather than the absence of a response.
 
 **Threaded message (`EMAIL`, `WHATSAPP`)** — the ordered conversation thread (each message with
 direction, sender, timestamp, body, and message id), the delivery, the path, the AI insight,
@@ -648,13 +650,15 @@ analysis section SHALL show a pending state and no analysis is requested.
 - **AND** no audio player or conversation transcript is shown
 - **AND** no `Camino` field and no `Resultado` row are shown
 
-#### Scenario: Pre-recorded gestión shows delivery, duration, and a separate replayable script
+#### Scenario: Pre-recorded gestión shows delivery, duration, its call recording, and the sent script
 
-- **WHEN** the operator opens a `VOICE_PRERECORDED` gestión whose call was answered and whose
-  `path`/`outcome` are both null (no DTMF menu configured, or the caller pressed nothing/an
-  unrecognized digit)
+- **WHEN** the operator opens a `VOICE_PRERECORDED` gestión whose call was answered, whose
+  `path`/`outcome` are both null (no DTMF menu configured, or the caller pressed
+  nothing/an unrecognized digit), and whose recording resolves
 - **THEN** the delivery ("Entregado") and the call duration are shown
-- **AND** the replayable synthesized script is shown as a distinct element from the call result
+- **AND** an audio player plays the actual call recording
+- **AND** the script that was sent is shown as a separate, read-only element from the
+  call recording
 - **AND** no copy states or implies the account holder heard the message
 - **AND** no conversation transcript is shown
 - **AND** no `Camino` field and no `Resultado` row are shown
@@ -663,16 +667,16 @@ analysis section SHALL show a pending state and no analysis is requested.
 
 - **WHEN** the operator opens a `VOICE_PRERECORDED` gestión whose `path` is `ENGAGED` and
   `outcome` is null (the caller pressed the repeat digit but not the opt-out digit)
-- **THEN** the delivery, duration, and replayable script render exactly as any other
-  pre-recorded gestión
-- **AND** a `Camino` field is additionally shown, reading `Entregado → Conversación`
+- **THEN** the delivery, duration, recording player, and sent script render exactly as any
+  other pre-recorded gestión
+- **AND** a `Camino` field is additionally shown, reading `Despachado → Recibido`
 - **AND** no `Resultado` row is shown
 
 #### Scenario: Pre-recorded gestión with an opt-out shows Camino and Resultado
 
 - **WHEN** the operator opens a `VOICE_PRERECORDED` gestión whose `outcome` is `OPT_OUT`
-- **THEN** the delivery, duration, and replayable script render exactly as any other
-  pre-recorded gestión
+- **THEN** the delivery, duration, recording player, and sent script render exactly as any
+  other pre-recorded gestión
 - **AND** both a `Camino` field (`ENGAGED`) and a `Resultado` row (the opt-out value) are shown
 
 #### Scenario: Email gestión shows its thread, not a single sent message
