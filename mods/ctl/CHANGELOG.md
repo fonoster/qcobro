@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.41.0](https://github.com/fonoster/qcobro/compare/v1.40.1...v1.41.0) (2026-09-09)
+
+### Features
+
+- **ctl:** replace --json with --format text|json|html|pdf and add --output to agents:eval ([#155](https://github.com/fonoster/qcobro/issues/155)) ([05ca828](https://github.com/fonoster/qcobro/commit/05ca8286e480582e059a1aa16df45f4bebaaed16))
+
 ## [1.40.1](https://github.com/fonoster/qcobro/compare/v1.40.0...v1.40.1) (2026-09-09)
 
 **Note:** Version bump only for package @qcobro/ctl
