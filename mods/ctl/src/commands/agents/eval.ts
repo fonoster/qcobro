@@ -11,7 +11,12 @@ import { resolveInputFile } from "../../resolveInputFile.js";
 type EvalInput = { yaml: string } | { agentTemplateId: string; scenarios: never };
 
 /** One scenario's metadata, harvested locally from the parsed YAML for the report. */
-type ScenarioMeta = { description: string; turnCount: number };
+type ScenarioMeta = {
+  description: string;
+  turnCount: number;
+  /** The scenario's `account` block — the per-call metadata handed to the agent. */
+  account?: Record<string, unknown>;
+};
 
 export default class Eval extends AuthenticatedCommand<typeof Eval> {
   static override readonly description =
@@ -145,17 +150,28 @@ export default class Eval extends AuthenticatedCommand<typeof Eval> {
     return this.error("Provide --file, or both --template-id and --scenarios.", { exit: 1 });
   }
 
-  /** Builds `ref -> { description, turnCount }` from the parsed `scenarios[]` (either input mode). */
+  /** Builds `ref -> { description, turnCount, account }` from the parsed `scenarios[]` (either input mode). */
   private scenarioMeta(raw: unknown): Map<string, ScenarioMeta> {
     const meta = new Map<string, ScenarioMeta>();
     if (!Array.isArray(raw)) return meta;
     for (const entry of raw) {
       if (!entry || typeof entry !== "object") continue;
-      const scenario = entry as { ref?: unknown; description?: unknown; turns?: unknown };
+      const scenario = entry as {
+        ref?: unknown;
+        description?: unknown;
+        turns?: unknown;
+        account?: unknown;
+      };
       if (typeof scenario.ref !== "string") continue;
       meta.set(scenario.ref, {
         description: typeof scenario.description === "string" ? scenario.description : "",
-        turnCount: Array.isArray(scenario.turns) ? scenario.turns.length : 0
+        turnCount: Array.isArray(scenario.turns) ? scenario.turns.length : 0,
+        account:
+          scenario.account &&
+          typeof scenario.account === "object" &&
+          !Array.isArray(scenario.account)
+            ? (scenario.account as Record<string, unknown>)
+            : undefined
       });
     }
     return meta;

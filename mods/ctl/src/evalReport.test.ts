@@ -3,8 +3,18 @@ import assert from "node:assert/strict";
 import type { EvalEvent } from "@qcobro/common";
 import { buildReportModel, renderHtml, renderPdf } from "./evalReport.js";
 
-const meta = new Map<string, { description: string; turnCount: number }>([
-  ["s1", { description: "Primer escenario", turnCount: 3 }],
+const meta = new Map<
+  string,
+  { description: string; turnCount: number; account?: Record<string, unknown> }
+>([
+  [
+    "s1",
+    {
+      description: "Primer escenario",
+      turnCount: 3,
+      account: { fullName: "Ana Pérez", outstandingBalance: 8500, currency: "DOP", phone: null }
+    }
+  ],
   ["s2", { description: "Segundo escenario", turnCount: 2 }]
 ]);
 
@@ -30,7 +40,8 @@ const events: EvalEvent[] = [
       errorMessage: "no ofreció el enlace de pago",
       expectedResponse: "Aquí tienes el enlace",
       aiResponse: "Adiós",
-      evaluationType: "EXACT"
+      evaluationType: "EXACT",
+      toolEvaluations: [{ expectedTool: "hangup", passed: false }]
     }
   },
   { type: "turn", scenarioRef: "s1", result: { turnIndex: 2, input: "Gracias" } },
@@ -67,12 +78,22 @@ test("buildReportModel folds a stream into a render-ready model", () => {
   assert.equal(model.scenarios[0].passed, false);
   assert.equal(model.scenarios[1].passed, true);
 
+  // the scenario's account block is carried through as metadata
+  assert.deepEqual(model.scenarios[0].metadata, {
+    fullName: "Ana Pérez",
+    outstandingBalance: 8500,
+    currency: "DOP",
+    phone: null
+  });
+  assert.equal(model.scenarios[1].metadata, undefined);
+
   const failing = model.scenarios[0].turns.find((t) => t.passed === false);
   assert.ok(failing);
   assert.equal(failing.errorMessage, "no ofreció el enlace de pago");
   assert.equal(failing.expected, "Aquí tienes el enlace");
   assert.equal(failing.actual, "Adiós");
   assert.equal(failing.evaluationType, "EXACT");
+  assert.deepEqual(failing.tools, [{ expected: "hangup", actual: undefined, passed: false }]);
 
   // a turn with no expectation is kept, ungraded, and does not by itself fail the scenario
   const ungraded = model.scenarios[0].turns.find((t) => t.index === 2);
@@ -113,6 +134,20 @@ test("renderHtml returns one self-contained document", () => {
   assert.ok(html.includes("FAILED"));
   assert.ok(html.includes("PASSED"));
   assert.ok(html.includes(model.title));
+  // up-front summary of every scenario
+  assert.ok(html.includes("Resumen"));
+  assert.ok(html.includes("Primer escenario"));
+  // per-call metadata is shown
+  assert.ok(html.includes("Metadata de la llamada"));
+  assert.ok(html.includes("outstandingBalance: 8500"));
+  // a failed function call is spelled out in the failure detail
+  assert.ok(html.includes("llamada a función"));
+  assert.ok(html.includes("hangup"));
+});
+
+test("renderHtml is deterministic for a fixed model", () => {
+  const model = buildReportModel(events, meta);
+  assert.equal(renderHtml(model), renderHtml(model));
 });
 
 test("renderPdf produces a PDF buffer", async () => {
