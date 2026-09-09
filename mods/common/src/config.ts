@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { ratesSchema } from "./billing/rates.js";
-import { PRERECORDED_SCRIPT_MAX_LENGTH } from "./schemas/agentTemplates.js";
 
 /**
  * QCobro service configuration — the shape of `qcobro.json`.
@@ -49,8 +48,11 @@ export const fonosterConfigSchema = z
     /** Optional override for the Fonoster API endpoint (host:port). */
     endpoint: z.string().optional(),
     /** Default products/model used when building the Autopilot application. The
-     * TTS product is NOT set here — it is derived per voice (see `voices`) since
-     * both Voz IA and pre-recorded voice use it. */
+     * TTS product is NOT set here — it is derived per voice (see `voices`) for the
+     * Voz IA AUTOPILOT application's `productRef` (see {@link ttsProductRefForVoice}).
+     * Pre-recorded voice never goes through this: it speaks via the co-located
+     * VoiceServer's `res.say()`, against whatever TTS product the Fonoster-side
+     * EXTERNAL application is configured with. */
     autopilot: z
       .object({
         sttProductRef: z.string().default("stt.deepgram"),
@@ -235,8 +237,11 @@ export function resolveRecordingUrl(
 
 /**
  * Derives the TTS product ref for a voice from its provider (e.g. an `elevenlabs`
- * voice → `tts.elevenlabs`). Used by both Voz IA (Autopilot) and pre-recorded
- * voice. Falls back to `tts.elevenlabs` when the voice isn't in the catalog.
+ * voice → `tts.elevenlabs`), for the Fonoster AUTOPILOT application's `productRef`
+ * (Voz IA calls only — pre-recorded dispatch never calls this: the co-located
+ * VoiceServer speaks via `res.say()` against whatever TTS product the Fonoster-side
+ * EXTERNAL application is configured with). Falls back to `tts.elevenlabs` when the
+ * voice isn't in the catalog.
  */
 export function ttsProductRefForVoice(voiceId: string, voices: VoiceCatalogEntry[]): string {
   const voice = voices.find((v) => v.id === voiceId);
@@ -368,73 +373,6 @@ export const aiConfigSchema = z
   .optional();
 
 export type AiConfig = z.infer<typeof aiConfigSchema>;
-
-/**
- * Text-to-speech for previewing pre-recorded agent scripts in the console (the
- * Pre-grabada gestión detail plays the script as audio). Optional — when absent, the
- * apiKey falls back to `ELEVENLABS_API_KEY`, and if no key resolves the player is simply
- * unavailable. Voices come from `fonoster.voices`.
- */
-const ttsConfigObjectSchema = z.object({
-  provider: z.literal("elevenlabs").default("elevenlabs"),
-  apiKey: z.string().optional(),
-  model: z.string().default("eleven_multilingual_v2"),
-  /**
-   * Maximum accepted length (characters) for the `text` query parameter on
-   * `/api/voice/tts`; over-long requests are rejected with 400 before any provider call.
-   * This bounds the cost and cached size of any ONE synthesis, not how many can be
-   * requested — the endpoint is unauthenticated and does not dedupe in flight, so a
-   * caller sending distinct strings can still drive an unbounded number of billed calls.
-   * Auth or rate limiting on the route is the control for that; this is not it.
-   *
-   * Kept equal to `PRERECORDED_SCRIPT_MAX_LENGTH` so a script the console accepts is
-   * always one the player can speak.
-   */
-  maxTextLength: z.number().int().positive().default(PRERECORDED_SCRIPT_MAX_LENGTH),
-  /**
-   * Bounds for the in-memory cache of synthesized audio (keyed by `voiceId:text`).
-   * Both limits are enforced together as an LRU: entry count alone isn't enough
-   * because a synthesized MP3 can run from tens of KB to a few MB depending on
-   * script length, so a handful of long scripts could exhaust memory well under any
-   * reasonable entry cap.
-   */
-  cache: z
-    .object({
-      /**
-       * Max distinct `voiceId:text` entries retained at once. Sized for a working
-       * set of concurrently-referenced per-account scripts, not the full account
-       * base — least-recently-used entries are evicted first.
-       */
-      maxEntries: z.number().int().positive().default(100),
-      /**
-       * Max total bytes of cached audio. This runs alongside Postgres on a 2 vCPU /
-       * 2 GB VM with no container memory limit, so the cache needs a hard ceiling
-       * rather than growing with account count; 25 MiB keeps resident TTS audio to a
-       * small, fixed slice of that budget while still holding a realistic working
-       * set of scripts.
-       */
-      maxBytes: z
-        .number()
-        .int()
-        .positive()
-        .default(25 * 1024 * 1024)
-    })
-    // `prefault` runs the value through this schema, so the field defaults above stay the
-    // single source of truth — restating them here would drift the moment one changed.
-    .prefault({})
-});
-
-export const ttsConfigSchema = ttsConfigObjectSchema.optional();
-
-/**
- * The TTS settings a deployment gets when `qcobro.json` has no `tts` section at all — which
- * is a real configuration, since the ElevenLabs key can also arrive via `ELEVENLABS_API_KEY`.
- * Callers MUST use this rather than restating the numbers, or those deployments would silently
- * keep the old bounds whenever a default here changes.
- */
-export const ttsDefaults = ttsConfigObjectSchema.parse({});
-
-export type TtsConfig = z.infer<typeof ttsConfigSchema>;
 
 /**
  * A piece of user-facing copy that may be localized. Either a single string
@@ -581,7 +519,6 @@ export const qcobroConfigSchema = z.object({
   twilio: twilioConfigSchema,
   resend: resendConfigSchema,
   ai: aiConfigSchema,
-  tts: ttsConfigSchema,
   announcement: announcementConfigSchema,
   billing: billingConfigSchema,
   /**

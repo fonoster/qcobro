@@ -20,12 +20,6 @@
 export const PROVIDER_TIMEOUT_MS = 15_000;
 
 /**
- * Text-to-speech synthesis. Slower than a plain API call — the provider renders audio before
- * responding, and a long script takes longer — but still bounded well under the LLM budget.
- */
-export const TTS_TIMEOUT_MS = 30_000;
-
-/**
  * LLM generation (autopilot replies, insights, similarity judging). Deliberately the most
  * generous: these routinely take tens of seconds under load, and cutting off a real response
  * is worse than waiting, since the caller has no cheaper way to get the answer. It is a
