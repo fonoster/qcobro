@@ -38,7 +38,7 @@ $ npm install -g @qcobro/ctl
 $ qcobro COMMAND
 running command...
 $ qcobro (--version)
-@qcobro/ctl/1.39.3 darwin-arm64 node-v22.17.0
+@qcobro/ctl/1.40.1 darwin-arm64 node-v22.17.0
 $ qcobro --help [COMMAND]
 USAGE
   $ qcobro COMMAND
@@ -103,31 +103,39 @@ EXAMPLES
 
 ## `qcobro agents:eval`
 
-evaluate a VOICE_AI/EMAIL/WHATSAPP agent's conversation logic — either an existing template plus a scenarios file, or a standalone YAML eval template (agent definition plus its own embedded scenarios) that is never created. Streams each turn's result as it happens, then a final pass/fail summary; exits non-zero when the run fails. Pass --json to stream the raw events as JSONL instead. For a static SMS/VOICE_PRERECORDED render (no conversation), use `agents:preview` instead.
+evaluate a VOICE_AI/EMAIL/WHATSAPP agent's conversation logic — either an existing template plus a scenarios file, or a standalone YAML eval template (agent definition plus its own embedded scenarios) that is never created. Streams each turn's result as it happens, then a final pass/fail summary; exits non-zero when the run fails. Use --format to pick the output (text stream, JSONL, or an html/pdf report) and --output to write it to a file. For a static SMS/VOICE_PRERECORDED render (no conversation), use `agents:preview` instead.
 
 ```
 USAGE
-  $ qcobro agents:eval [--template-id <value>] [--scenarios <value>] [--file <value>] [--json]
+  $ qcobro agents:eval [--template-id <value>] [--scenarios <value>] [--file <value>] [--format
+    text|json|html|pdf] [--output <value>] [--title <value>]
 
 FLAGS
   --file=<value>         path to a standalone YAML eval template (agent definition + embedded scenarios)
-  --json                 emit each evaluation event as a JSON line (JSONL) on stdout instead of human-readable output
+  --format=<option>      [default: text] text = human-readable stream (default); json = JSONL of raw events; html/pdf =
+                         a self-contained evaluation report (requires --output)
+                         <options: text|json|html|pdf>
+  --output=<value>       write output to this file instead of stdout (required for html/pdf)
   --scenarios=<value>    path to a YAML file with the scenarios to run (used with --template-id)
   --template-id=<value>  an existing agent template id
+  --title=<value>        report title for --format html/pdf (default is generic; pass a client name at run time if you
+                         want one)
 
 DESCRIPTION
   evaluate a VOICE_AI/EMAIL/WHATSAPP agent's conversation logic — either an existing template plus a scenarios file, or
   a standalone YAML eval template (agent definition plus its own embedded scenarios) that is never created. Streams each
-  turn's result as it happens, then a final pass/fail summary; exits non-zero when the run fails. Pass --json to stream
-  the raw events as JSONL instead. For a static SMS/VOICE_PRERECORDED render (no conversation), use `agents:preview`
-  instead.
+  turn's result as it happens, then a final pass/fail summary; exits non-zero when the run fails. Use --format to pick
+  the output (text stream, JSONL, or an html/pdf report) and --output to write it to a file. For a static
+  SMS/VOICE_PRERECORDED render (no conversation), use `agents:preview` instead.
 
 EXAMPLES
   $ qcobro agents:eval --template-id <id> --scenarios scenarios.yaml
 
   $ qcobro agents:eval --file eval-template.yaml
 
-  $ qcobro agents:eval --file eval-template.yaml --json | jq
+  $ qcobro agents:eval --file eval-template.yaml --format json --output run.json
+
+  $ qcobro agents:eval --file eval-template.yaml --format pdf --output report.pdf
 ```
 
 ## `qcobro agents:preview`
