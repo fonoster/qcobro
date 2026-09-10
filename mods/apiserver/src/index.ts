@@ -5,6 +5,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { createIdentityClient } from "@fonoster/identity-client";
 import { getLogger } from "@fonoster/logger";
+import { installProcessGuards } from "./processGuards.js";
 import { appRouter } from "./trpc/index.js";
 import { createContext, createWSContext } from "./trpc/context.js";
 import { config } from "./config.js";
@@ -42,6 +43,11 @@ import {
 } from "./engine/eventSink.js";
 
 const logger = getLogger({ service: "server", filePath: import.meta.url });
+
+// Keep a stray rejection from the Fonoster SDK's token-refresh gRPC interceptor
+// from killing the process mid-campaign; anything else still fails fast. See
+// processGuards.ts and issue #142.
+installProcessGuards({ logger });
 
 const app = express();
 const port = config.apiserver.port;
