@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.46.0](https://github.com/fonoster/qcobro/compare/v1.45.2...v1.46.0) (2026-09-10)
+
+### Features
+
+- **agent-templates:** per-template Voz IA idle options ([#169](https://github.com/fonoster/qcobro/issues/169)) ([dafd1da](https://github.com/fonoster/qcobro/commit/dafd1da0055865830d2000ba28ff117ab3b352c5)), closes [#165](https://github.com/fonoster/qcobro/issues/165) [#165](https://github.com/fonoster/qcobro/issues/165)
+
 # [1.45.0](https://github.com/fonoster/qcobro/compare/v1.44.0...v1.45.0) (2026-09-10)
 
 **Note:** Version bump only for package @qcobro/webapp
