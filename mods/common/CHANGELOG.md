@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.43.0](https://github.com/fonoster/qcobro/compare/v1.42.2...v1.43.0) (2026-09-10)
+
+### Features
+
+- dark mode for the operator console ([#163](https://github.com/fonoster/qcobro/issues/163)) ([1a45cb7](https://github.com/fonoster/qcobro/commit/1a45cb7e1b11fb9e1430fb0e5ef851e174f094ea))
+
 ## [1.40.1](https://github.com/fonoster/qcobro/compare/v1.40.0...v1.40.1) (2026-09-09)
 
 ### Bug Fixes
