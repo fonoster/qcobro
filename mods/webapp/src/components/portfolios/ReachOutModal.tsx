@@ -123,6 +123,7 @@ export function ReachOutModal({
       description={t("portfolios.reachOut.subtitle")}
       confirmLabel={dispatch.isPending ? "…" : t("portfolios.reachOut.send")}
       onConfirm={handleConfirm}
+      error={error}
     >
       <div className="mt-4 flex flex-col gap-4">
         <SelectGroup
@@ -212,7 +213,6 @@ export function ReachOutModal({
         )}
 
         <p className="text-xs text-slate-400">{t("portfolios.reachOut.footnote")}</p>
-        {error && <p className="text-xs text-red-600">{error}</p>}
       </div>
     </Dialog>
   );

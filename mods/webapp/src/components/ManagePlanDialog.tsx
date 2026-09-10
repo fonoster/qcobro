@@ -51,7 +51,12 @@ export function ManagePlanDialog({ open, onClose }: ManagePlanDialogProps) {
   }
 
   return (
-    <Dialog open={open} onClose={onClose} title={t("billing.managePlan")}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title={t("billing.managePlan")}
+      error={subscribe.isError || changePlan.isError ? t("billing.changeError") : null}
+    >
       <div className="flex flex-col gap-3">
         {items.map((plan, index) => {
           const isCurrent = plan.key === currentKey;
@@ -98,9 +103,6 @@ export function ManagePlanDialog({ open, onClose }: ManagePlanDialogProps) {
         })}
         {scheduledNote && (
           <p className="text-sm text-slate-500">{t("billing.downgradeScheduled")}</p>
-        )}
-        {(subscribe.isError || changePlan.isError) && (
-          <p className="text-sm text-red-600">{t("billing.changeError")}</p>
         )}
       </div>
     </Dialog>
