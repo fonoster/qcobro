@@ -33,6 +33,22 @@ const DEFAULT_MAX_REPLIES = 3;
 const VARS_DOC_URL = "https://docs.qcobro.com/guides/agent-templates#variables-disponibles";
 const EXAMPLE_VARS = ["{{firstName}}", "{{principalAmount}}", "{{outstandingBalance}}"];
 
+/**
+ * Example text for the non-obvious agent-template fields (issue #118). Defined once and
+ * consumed by both the create and edit modals so the two can't drift. `FIELD_PLACEHOLDER`
+ * is for fixed-shape values (a digit, an ID); `FIELD_HINT` is for explanatory or
+ * `{{variable}}` content — note a `hint` is hidden by the field components while a
+ * validation `error` shows, so anything with an `error` prop uses a placeholder instead.
+ */
+const FIELD_PLACEHOLDER = {
+  repeatDigit: "agents.form.repeatDigitPlaceholder",
+  repeatMessage: "agents.form.repeatMessagePlaceholder",
+  maxRepeats: "agents.form.maxRepeatsPlaceholder",
+  optOutDigit: "agents.form.optOutDigitPlaceholder",
+  optOutMessage: "agents.form.optOutMessagePlaceholder",
+  optOutConfirmationMessage: "agents.form.optOutConfirmationMessagePlaceholder"
+} as const satisfies Record<string, MessageId>;
+
 /** Example template variables + a link to the full reference, under the page header. */
 function VariablesHint() {
   const { t } = useI18n();
@@ -512,6 +528,7 @@ function CreateAgentTemplateModal({
               label={t("agents.form.repeatDigit")}
               id="a-repeat-digit"
               maxLength={1}
+              placeholder={t(FIELD_PLACEHOLDER.repeatDigit)}
               value={fields.repeatDigit ?? ""}
               onChange={(e) => set("repeatDigit", e.target.value)}
               error={createDtmfErrors.repeatDigit}
@@ -519,6 +536,7 @@ function CreateAgentTemplateModal({
             <TextareaGroup
               label={t("agents.form.repeatMessage")}
               id="a-repeat-message"
+              placeholder={t(FIELD_PLACEHOLDER.repeatMessage)}
               value={fields.repeatMessage ?? ""}
               onChange={(e) => set("repeatMessage", e.target.value)}
               error={createDtmfErrors.repeatMessage}
@@ -528,6 +546,7 @@ function CreateAgentTemplateModal({
               id="a-max-repeats"
               type="number"
               min={1}
+              placeholder={t(FIELD_PLACEHOLDER.maxRepeats)}
               value={fields.maxRepeats ?? ""}
               onChange={(e) => set("maxRepeats", e.target.value)}
             />
@@ -535,6 +554,7 @@ function CreateAgentTemplateModal({
               label={t("agents.form.optOutDigit")}
               id="a-optout-digit"
               maxLength={1}
+              placeholder={t(FIELD_PLACEHOLDER.optOutDigit)}
               value={fields.optOutDigit ?? ""}
               onChange={(e) => set("optOutDigit", e.target.value)}
               error={createDtmfErrors.optOutDigit}
@@ -542,6 +562,7 @@ function CreateAgentTemplateModal({
             <TextareaGroup
               label={t("agents.form.optOutMessage")}
               id="a-optout-message"
+              placeholder={t(FIELD_PLACEHOLDER.optOutMessage)}
               value={fields.optOutMessage ?? ""}
               onChange={(e) => set("optOutMessage", e.target.value)}
               error={createDtmfErrors.optOutMessage}
@@ -549,6 +570,7 @@ function CreateAgentTemplateModal({
             <TextareaGroup
               label={t("agents.form.optOutConfirmationMessage")}
               id="a-optout-confirmation"
+              placeholder={t(FIELD_PLACEHOLDER.optOutConfirmationMessage)}
               value={fields.optOutConfirmationMessage ?? ""}
               onChange={(e) => set("optOutConfirmationMessage", e.target.value)}
               error={createDtmfErrors.optOutConfirmationMessage}
@@ -920,6 +942,7 @@ function EditAgentTemplateModal({
                   label={t("agents.form.repeatDigit")}
                   id="e-repeat-digit"
                   maxLength={1}
+                  placeholder={t(FIELD_PLACEHOLDER.repeatDigit)}
                   value={fields.repeatDigit ?? ""}
                   onChange={(e) => set("repeatDigit", e.target.value)}
                   error={editDtmfErrors.repeatDigit}
@@ -927,6 +950,7 @@ function EditAgentTemplateModal({
                 <TextareaGroup
                   label={t("agents.form.repeatMessage")}
                   id="e-repeat-message"
+                  placeholder={t(FIELD_PLACEHOLDER.repeatMessage)}
                   value={fields.repeatMessage ?? ""}
                   onChange={(e) => set("repeatMessage", e.target.value)}
                   error={editDtmfErrors.repeatMessage}
@@ -936,6 +960,7 @@ function EditAgentTemplateModal({
                   id="e-max-repeats"
                   type="number"
                   min={1}
+                  placeholder={t(FIELD_PLACEHOLDER.maxRepeats)}
                   value={fields.maxRepeats ?? ""}
                   onChange={(e) => set("maxRepeats", e.target.value)}
                 />
@@ -943,6 +968,7 @@ function EditAgentTemplateModal({
                   label={t("agents.form.optOutDigit")}
                   id="e-optout-digit"
                   maxLength={1}
+                  placeholder={t(FIELD_PLACEHOLDER.optOutDigit)}
                   value={fields.optOutDigit ?? ""}
                   onChange={(e) => set("optOutDigit", e.target.value)}
                   error={editDtmfErrors.optOutDigit}
@@ -950,6 +976,7 @@ function EditAgentTemplateModal({
                 <TextareaGroup
                   label={t("agents.form.optOutMessage")}
                   id="e-optout-message"
+                  placeholder={t(FIELD_PLACEHOLDER.optOutMessage)}
                   value={fields.optOutMessage ?? ""}
                   onChange={(e) => set("optOutMessage", e.target.value)}
                   error={editDtmfErrors.optOutMessage}
@@ -957,6 +984,7 @@ function EditAgentTemplateModal({
                 <TextareaGroup
                   label={t("agents.form.optOutConfirmationMessage")}
                   id="e-optout-confirmation"
+                  placeholder={t(FIELD_PLACEHOLDER.optOutConfirmationMessage)}
                   value={fields.optOutConfirmationMessage ?? ""}
                   onChange={(e) => set("optOutConfirmationMessage", e.target.value)}
                   error={editDtmfErrors.optOutConfirmationMessage}
