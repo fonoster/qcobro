@@ -66,6 +66,35 @@ describe("generateGestionInsight", () => {
     assert.equal(cap.updated?.aiSentiment, "POSITIVE");
   });
 
+  it("persists a null aiDebtReason (and siblings) when the model can't determine them", async () => {
+    const { prisma, cap } = makeClient({ aiSummary: null, transcript: TRANSCRIPT });
+    const generator: InsightGenerator = {
+      async analyze() {
+        return {
+          aiSummary: "El cliente respondió al contacto sobre su saldo pendiente.",
+          aiSentiment: null,
+          aiDebtReason: null,
+          aiResult: null,
+          aiNextStep: null
+        };
+      }
+    };
+
+    const result = await createGenerateGestionInsight({ prisma: prisma as never, generator })({
+      id: "g-1"
+    });
+
+    assert.equal(result.generated, true);
+    assert.equal(cap.updated?.aiDebtReason, null);
+    assert.equal(cap.updated?.aiSentiment, null);
+    assert.equal(cap.updated?.aiResult, null);
+    assert.equal(cap.updated?.aiNextStep, null);
+    assert.equal(
+      cap.updated?.aiSummary,
+      "El cliente respondió al contacto sobre su saldo pendiente."
+    );
+  });
+
   it("generates analysis for an EMAIL gestión from its notice + reply thread", async () => {
     const { generator, state } = makeGenerator();
     const { prisma, cap } = makeClient({
