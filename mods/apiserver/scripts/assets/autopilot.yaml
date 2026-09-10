@@ -134,6 +134,8 @@ intelligence:
       systemErrorMessage: "Ha ocurrido un error. Por favor contacte directamente a Créditos Demo."
       idleOptions:
         message: "¿Se encuentra en la línea? Necesito que me confirme una fecha de pago para su cuenta en cobranza."
+        timeout: 4500
+        maxTimeoutCount: 3
 
     languageModel:
       provider: "google"
