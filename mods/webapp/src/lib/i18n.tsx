@@ -265,6 +265,8 @@ export const messages = {
     "portfolios.csv.description": "Sync customer accounts from a CSV file.",
     "portfolios.csv.selectFile": "Select file",
     "portfolios.csv.noFile": "No file selected",
+    "portfolios.csv.fileHint":
+      "The CSV needs columns: loan_id, full_name, outstanding_balance (required); phone_number, email, days_past_due (optional).",
     "portfolios.csv.mode.label": "Sync mode",
     "portfolios.csv.mode.APPEND_ONLY.label": "Append only",
     "portfolios.csv.mode.APPEND_ONLY.description":
@@ -944,6 +946,8 @@ export const messages = {
     "portfolios.csv.description": "Sincronizar cuentas de clientes desde un archivo CSV.",
     "portfolios.csv.selectFile": "Seleccionar archivo",
     "portfolios.csv.noFile": "Ningún archivo seleccionado",
+    "portfolios.csv.fileHint":
+      "El CSV necesita las columnas: loan_id, full_name, outstanding_balance (obligatorias); phone_number, email, days_past_due (opcionales).",
     "portfolios.csv.mode.label": "Modo de sincronización",
     "portfolios.csv.mode.APPEND_ONLY.label": "Solo agregar nuevas",
     "portfolios.csv.mode.APPEND_ONLY.description":
