@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.42.0](https://github.com/fonoster/qcobro/compare/v1.41.1...v1.42.0) (2026-09-10)
+
+### Features
+
+- **webapp:** add example placeholder/hint text to console forms ([#118](https://github.com/fonoster/qcobro/issues/118)) ([#157](https://github.com/fonoster/qcobro/issues/157)) ([41ab8c6](https://github.com/fonoster/qcobro/commit/41ab8c696e30d63fb402e4a91dceeecd65807f45)), closes [#117](https://github.com/fonoster/qcobro/issues/117)
+
 ## [1.41.1](https://github.com/fonoster/qcobro/compare/v1.41.0...v1.41.1) (2026-09-10)
 
 ### Bug Fixes
