@@ -18,6 +18,12 @@ Input.displayName = "Input";
 
 export interface InputGroupProps extends InputProps {
   label?: string;
+  /**
+   * Example / guidance line below the field. Give every non-obvious input one
+   * (see CLAUDE.md): a `placeholder` for fixed-shape values, a `hint` for
+   * explanatory or `{{variable}}` text. A `hint` is hidden while `error` is
+   * set, so prefer `placeholder` on any field that also has an `error`.
+   */
   hint?: string;
   error?: string;
 }
