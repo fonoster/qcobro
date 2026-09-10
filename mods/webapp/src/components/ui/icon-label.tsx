@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils.js";
 const iconLabelVariants = cva("inline-flex items-center gap-1.5 text-sm font-medium", {
   variants: {
     variant: {
-      secondary: "text-slate-600",
-      success: "text-emerald-600",
+      secondary: "text-fg-muted",
+      success: "text-primary",
       violet: "text-violet-600",
       orange: "text-orange-600"
     }

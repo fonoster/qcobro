@@ -16,12 +16,12 @@ export function SlideOver({ open, onClose, children, className }: SlideOverProps
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-slate-900/40" aria-hidden onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40" aria-hidden onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
         className={cn(
-          "absolute right-0 top-0 flex h-full w-full max-w-xl flex-col overflow-y-auto bg-white shadow-2xl",
+          "absolute right-0 top-0 flex h-full w-full max-w-xl flex-col overflow-y-auto bg-surface shadow-2xl",
           className
         )}
       >

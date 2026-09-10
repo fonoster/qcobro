@@ -119,7 +119,7 @@ function WabaForm() {
     integration.error?.message.includes("PRECONDITION_FAILED")
   ) {
     return (
-      <p className="text-sm text-amber-700 bg-amber-50 rounded-lg px-4 py-3">
+      <p className="text-sm text-warning bg-warning-soft rounded-lg px-4 py-3">
         {t("integrations.waba.noCloak")}
       </p>
     );
@@ -128,8 +128,8 @@ function WabaForm() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <span className={`h-2 w-2 rounded-full ${connected ? "bg-emerald-500" : "bg-slate-300"}`} />
-        <span className="text-sm text-slate-600">
+        <span className={`h-2 w-2 rounded-full ${connected ? "bg-primary" : "bg-elevated"}`} />
+        <span className="text-sm text-fg-muted">
           {connected ? t("integrations.waba.connected") : t("integrations.waba.notConnected")}
           {connected && integration.data?.wabaId ? ` · ${integration.data.wabaId}` : ""}
         </span>
@@ -174,10 +174,10 @@ function WabaForm() {
           {upsert.isPending ? t("integrations.waba.saving") : t("integrations.waba.save")}
         </Button>
         {status === "ok" && (
-          <span className="text-sm text-emerald-600">{t("integrations.waba.saved")}</span>
+          <span className="text-sm text-primary">{t("integrations.waba.saved")}</span>
         )}
         {status === "error" && (
-          <span className="text-sm text-red-600">{t("integrations.waba.error")}</span>
+          <span className="text-sm text-danger">{t("integrations.waba.error")}</span>
         )}
       </div>
     </div>
@@ -208,38 +208,36 @@ export function Integrations() {
     <div className="flex flex-col gap-6">
       <PageHeader title={t("integrations.title")} description={t("integrations.subtitle")} />
 
-      <Card className="max-w-[720px] rounded-xl border-slate-200 shadow-none">
+      <Card className="max-w-[720px] rounded-xl border-border shadow-none">
         <div className="flex flex-col gap-5 p-6">
-          <h2 className="text-sm font-semibold text-slate-900">{t("integrations.waba.section")}</h2>
+          <h2 className="text-sm font-semibold text-fg">{t("integrations.waba.section")}</h2>
           <WabaForm />
         </div>
       </Card>
 
-      <Card className="max-w-[720px] rounded-xl border-slate-200 shadow-none">
+      <Card className="max-w-[720px] rounded-xl border-border shadow-none">
         <div className="flex flex-col gap-5 p-6">
-          <h2 className="text-sm font-semibold text-slate-900">
-            {t("integrations.senders.section")}
-          </h2>
+          <h2 className="text-sm font-semibold text-fg">{t("integrations.senders.section")}</h2>
 
           {!integration.data?.connected ? (
-            <p className="text-sm text-slate-400">{t("integrations.senders.noIntegration")}</p>
+            <p className="text-sm text-fg-subtle">{t("integrations.senders.noIntegration")}</p>
           ) : (
             <>
               {rows.length === 0 ? (
-                <p className="text-sm text-slate-400">{t("integrations.senders.empty")}</p>
+                <p className="text-sm text-fg-subtle">{t("integrations.senders.empty")}</p>
               ) : (
-                <div className="flex flex-col divide-y divide-slate-100 rounded-lg border border-slate-200">
+                <div className="flex flex-col divide-y divide-border rounded-lg border border-border">
                   {rows.map((s) => (
                     <div key={s.id} className="flex items-center justify-between px-4 py-3">
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-sm font-medium text-slate-800">{s.label}</span>
-                        <span className="text-xs text-slate-400">
+                        <span className="text-sm font-medium text-fg">{s.label}</span>
+                        <span className="text-xs text-fg-subtle">
                           {s.displayNumber} · {s.phoneNumberId}
                         </span>
                       </div>
                       <button
                         type="button"
-                        className="text-xs text-red-600 hover:underline"
+                        className="text-xs text-danger hover:underline"
                         onClick={() => handleRemove(s.phoneNumberId)}
                       >
                         {t("integrations.senders.remove")}
@@ -249,7 +247,7 @@ export function Integrations() {
                 </div>
               )}
 
-              {removeError && <p className="text-xs text-red-600">{removeError}</p>}
+              {removeError && <p className="text-xs text-danger">{removeError}</p>}
 
               <div>
                 <Button onClick={() => setShowAddSender(true)}>

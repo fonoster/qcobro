@@ -20,7 +20,7 @@ export const Simple: StoryObj = {
         <CardDescription>Portafolio de crédito vencido</CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-600">Saldo total: $1,240,000</p>
+        <p className="text-sm text-fg-muted">Saldo total: $1,240,000</p>
       </CardContent>
     </Card>
   )
@@ -34,7 +34,7 @@ export const WithFooter: StoryObj = {
         <CardDescription>Cobranza preventiva</CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-600">Progreso: 68% completado</p>
+        <p className="text-sm text-fg-muted">Progreso: 68% completado</p>
       </CardContent>
       <CardFooter className="gap-2">
         <Button size="sm">Ver detalles</Button>
@@ -57,7 +57,7 @@ export const WithBadge: StoryObj = {
         <CardDescription>Cobrador senior</CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-600">Gestiones hoy: 24 / 30</p>
+        <p className="text-sm text-fg-muted">Gestiones hoy: 24 / 30</p>
       </CardContent>
     </Card>
   )

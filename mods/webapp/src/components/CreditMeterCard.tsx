@@ -33,16 +33,16 @@ export function CreditMeterCard(props: CreditMeterCardProps) {
     : null;
 
   return (
-    <Card className="max-w-[680px] rounded-xl border-slate-200 shadow-none">
+    <Card className="max-w-[680px] rounded-xl border-border shadow-none">
       <div className="flex flex-col gap-4 p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-[15px] font-semibold text-slate-900">{t("billing.cycleCredits")}</h2>
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+          <h2 className="text-[15px] font-semibold text-fg">{t("billing.cycleCredits")}</h2>
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
             {props.planName}
           </span>
         </div>
         <div>
-          <p className="text-[22px] font-bold text-slate-900">
+          <p className="text-[22px] font-bold text-fg">
             {t("billing.remaining")
               .replace("{balance}", props.balance)
               .replace("{allowance}", props.allowance)}
@@ -52,18 +52,18 @@ export function CreditMeterCard(props: CreditMeterCardProps) {
             aria-valuenow={pct}
             aria-valuemin={0}
             aria-valuemax={100}
-            className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100"
+            className="mt-3 h-2 w-full overflow-hidden rounded-full bg-elevated"
           >
             <div
-              className={`h-full rounded-full ${low ? "bg-amber-500" : "bg-emerald-500"}`}
+              className={`h-full rounded-full ${low ? "bg-warning" : "bg-primary"}`}
               style={{ width: `${pct}%` }}
             />
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-fg-subtle">
           {renews && <span>{t("billing.renews").replace("{date}", renews)}</span>}
           {props.projectedDaysRemaining !== null && (
-            <span className="text-slate-400">
+            <span className="text-fg-subtle">
               {t("billing.projectedDays").replace("{days}", String(props.projectedDaysRemaining))}
             </span>
           )}

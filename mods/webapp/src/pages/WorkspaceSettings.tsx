@@ -98,13 +98,13 @@ export function WorkspaceSettings() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-[22px] font-bold text-slate-900">{t("settings.title")}</h1>
-        <p className="text-sm text-slate-500">{t("settings.subtitle")}</p>
+        <h1 className="text-[22px] font-bold text-fg">{t("settings.title")}</h1>
+        <p className="text-sm text-fg-subtle">{t("settings.subtitle")}</p>
       </div>
 
-      <Card className="max-w-[680px] rounded-xl border-slate-200 shadow-none">
+      <Card className="max-w-[680px] rounded-xl border-border shadow-none">
         <form onSubmit={onSave} className="flex flex-col gap-5 p-6">
-          <h2 className="text-[15px] font-semibold text-slate-900">{t("settings.preferences")}</h2>
+          <h2 className="text-[15px] font-semibold text-fg">{t("settings.preferences")}</h2>
           <InputGroup
             label={t("settings.name")}
             required
@@ -137,10 +137,10 @@ export function WorkspaceSettings() {
           </SelectGroup>
           <div className="flex items-center justify-end gap-3">
             {status === "ok" && (
-              <span className="text-[13px] text-emerald-600">{t("settings.saved")}</span>
+              <span className="text-[13px] text-primary">{t("settings.saved")}</span>
             )}
             {status === "error" && (
-              <span className="text-[13px] text-red-600">{t("settings.saveError")}</span>
+              <span className="text-[13px] text-danger">{t("settings.saveError")}</span>
             )}
             <Button type="submit" disabled={!anyDirty || saving}>
               {t("settings.save")}
@@ -150,17 +150,15 @@ export function WorkspaceSettings() {
       </Card>
 
       {isOwner && (
-        <Card className="max-w-[680px] rounded-xl border-red-200 shadow-none">
+        <Card className="max-w-[680px] rounded-xl border-danger/30 shadow-none">
           <div className="flex items-center justify-between gap-6 p-6">
             <div>
-              <h2 className="text-[15px] font-semibold text-slate-900">
-                {t("settings.delete.title")}
-              </h2>
-              <p className="mt-0.5 text-[13px] text-slate-500">{t("settings.delete.desc")}</p>
+              <h2 className="text-[15px] font-semibold text-fg">{t("settings.delete.title")}</h2>
+              <p className="mt-0.5 text-[13px] text-fg-subtle">{t("settings.delete.desc")}</p>
             </div>
             <Button
               variant="outline"
-              className="shrink-0 border-red-200 text-red-600 hover:bg-red-50"
+              className="shrink-0 border-danger/30 text-danger hover:bg-danger-soft"
               onClick={() => setConfirmOpen(true)}
             >
               {t("settings.delete.title")}
@@ -170,12 +168,12 @@ export function WorkspaceSettings() {
       )}
 
       {confirmOpen && active && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/60 p-4">
-          <Card className="w-full max-w-[440px] rounded-2xl border-slate-200 shadow-xl">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+          <Card className="w-full max-w-[440px] rounded-2xl border-border shadow-xl">
             <div className="flex flex-col gap-5 p-6">
               <div>
-                <h2 className="text-lg font-bold text-slate-900">{t("settings.delete.title")}</h2>
-                <p className="mt-1 text-[13px] text-slate-500">{t("settings.delete.desc")}</p>
+                <h2 className="text-lg font-bold text-fg">{t("settings.delete.title")}</h2>
+                <p className="mt-1 text-[13px] text-fg-subtle">{t("settings.delete.desc")}</p>
               </div>
               <InputGroup
                 label={t("settings.delete.confirmLabel")}

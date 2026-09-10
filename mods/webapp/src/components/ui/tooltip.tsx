@@ -28,7 +28,7 @@ export function Tooltip({ content, children, side = "top", className }: TooltipP
       {visible && (
         <span
           className={cn(
-            "pointer-events-none absolute z-50 whitespace-nowrap rounded-md bg-slate-900 px-2.5 py-1.5 text-xs text-white shadow-md",
+            "pointer-events-none absolute z-50 whitespace-nowrap rounded-md bg-fg px-2.5 py-1.5 text-xs text-bg shadow-md",
             positions[side],
             className
           )}

@@ -65,21 +65,21 @@ export function ManagePlanDialog({ open, onClose }: ManagePlanDialogProps) {
             <div
               key={plan.key}
               className={`flex items-center justify-between gap-4 rounded-xl border p-4 ${
-                isCurrent ? "border-emerald-300 bg-emerald-50/50" : "border-slate-200"
+                isCurrent ? "border-primary/40 bg-primary/10/50" : "border-border"
               }`}
             >
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-sm font-semibold text-fg">
                     {resolveLocalizedString(plan.name, language)}
                   </p>
                   {isCurrent && (
-                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
                       {t("billing.currentPlan")}
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-fg-subtle">
                   {t("billing.monthlyPrice").replace("{price}", String(plan.monthlyPrice))} ·{" "}
                   {t("billing.includedCredits").replace("{amount}", String(plan.monthlyAllowance))}
                 </p>
@@ -93,7 +93,7 @@ export function ManagePlanDialog({ open, onClose }: ManagePlanDialogProps) {
                   >
                     {t(isUpgrade ? "billing.upgradeNow" : "billing.downgrade")}
                   </Button>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-fg-subtle">
                     {t(isUpgrade ? "billing.upgradeNote" : "billing.downgradeNote")}
                   </span>
                 </div>
@@ -102,7 +102,7 @@ export function ManagePlanDialog({ open, onClose }: ManagePlanDialogProps) {
           );
         })}
         {scheduledNote && (
-          <p className="text-sm text-slate-500">{t("billing.downgradeScheduled")}</p>
+          <p className="text-sm text-fg-subtle">{t("billing.downgradeScheduled")}</p>
         )}
       </div>
     </Dialog>

@@ -50,7 +50,7 @@ export const PlainOutcome: StoryObj = {
 export const Empty: StoryObj = {
   render: () => (
     <div className="w-[480px]">
-      <p className="mb-2 text-xs text-slate-400">Renders nothing when outcome is null:</p>
+      <p className="mb-2 text-xs text-fg-subtle">Renders nothing when outcome is null:</p>
       <OutcomeRow label="Resultado" value={null} />
     </div>
   )

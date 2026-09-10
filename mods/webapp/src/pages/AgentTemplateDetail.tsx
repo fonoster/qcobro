@@ -11,9 +11,9 @@ import { SectionCard } from "../components/section-card.js";
 function ConfigRow({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null;
   return (
-    <div className="flex flex-col gap-1 border-b border-slate-100 py-2 last:border-0">
-      <span className="text-xs font-medium text-slate-500">{label}</span>
-      <span className="whitespace-pre-wrap text-sm text-slate-900">{value}</span>
+    <div className="flex flex-col gap-1 border-b border-border py-2 last:border-0">
+      <span className="text-xs font-medium text-fg-subtle">{label}</span>
+      <span className="whitespace-pre-wrap text-sm text-fg">{value}</span>
     </div>
   );
 }
@@ -156,10 +156,10 @@ export function AgentTemplateDetail() {
             {tmpl.campaigns.map((c) => (
               <li
                 key={c.id}
-                className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 hover:bg-slate-50"
+                className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 hover:bg-elevated"
                 onClick={() => navigate(`/campaigns/${c.id}`)}
               >
-                <span className="text-sm text-slate-900">{c.name}</span>
+                <span className="text-sm text-fg">{c.name}</span>
                 <Badge variant="secondary">
                   {t(`campaigns.status.${c.status}` as Parameters<typeof t>[0])}
                 </Badge>
@@ -167,7 +167,7 @@ export function AgentTemplateDetail() {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-slate-500">{t("agents.detail.noCampaigns")}</p>
+          <p className="text-sm text-fg-subtle">{t("agents.detail.noCampaigns")}</p>
         )}
       </SectionCard>
     </div>

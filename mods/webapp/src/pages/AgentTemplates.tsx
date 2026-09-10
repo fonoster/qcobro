@@ -64,21 +64,21 @@ function VariablesHint() {
   const { t } = useI18n();
   return (
     <div className="flex flex-wrap items-center gap-2 text-sm">
-      <span className="font-medium text-slate-400">{t("agents.vars.label")}</span>
+      <span className="font-medium text-fg-subtle">{t("agents.vars.label")}</span>
       {EXAMPLE_VARS.map((v) => (
         <code
           key={v}
-          className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-600"
+          className="rounded-md bg-elevated px-2 py-0.5 font-mono text-xs text-fg-muted"
         >
           {v}
         </code>
       ))}
-      <span className="text-slate-300">·</span>
+      <span className="text-fg-subtle">·</span>
       <a
         href={VARS_DOC_URL}
         target="_blank"
         rel="noreferrer"
-        className="font-medium text-emerald-600 underline"
+        className="font-medium text-primary underline"
       >
         {t("agents.vars.link")}
       </a>
@@ -140,10 +140,10 @@ export function AgentTemplates() {
                 </option>
               ))}
             </FilterSelect>
-            <label className="flex items-center gap-2 text-sm text-slate-600">
+            <label className="flex items-center gap-2 text-sm text-fg-muted">
               <input
                 type="checkbox"
-                className="h-4 w-4 rounded border-slate-300"
+                className="h-4 w-4 rounded border-border"
                 checked={includeArchived}
                 onChange={(e) => setIncludeArchived(e.target.checked)}
               />
@@ -533,10 +533,8 @@ function CreateAgentTemplateModal({
               onChange={(e) => set("script", e.target.value)}
             />
             <div className="flex flex-col gap-1 pt-2">
-              <p className="text-sm font-semibold text-slate-900">
-                {t("agents.form.dtmfSectionTitle")}
-              </p>
-              <p className="text-xs text-slate-500">{t("agents.form.dtmfSectionDescription")}</p>
+              <p className="text-sm font-semibold text-fg">{t("agents.form.dtmfSectionTitle")}</p>
+              <p className="text-xs text-fg-subtle">{t("agents.form.dtmfSectionDescription")}</p>
             </div>
             <InputGroup
               label={t("agents.form.repeatDigit")}
@@ -648,7 +646,7 @@ function CreateAgentTemplateModal({
         {type === "WHATSAPP" && (
           <>
             {!integration.data?.connected && !integration.isLoading && (
-              <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+              <p className="rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
                 {t("agents.form.noIntegrationWarning")}
               </p>
             )}
@@ -670,11 +668,11 @@ function CreateAgentTemplateModal({
                     (debouncedTemplateName ? "" : t("agents.form.templatePreviewEmpty")))
               }
               onChange={() => undefined}
-              className="text-slate-500"
+              className="text-fg-subtle"
             />
             {preview.isError && (
               <div className="flex items-center gap-2">
-                <p className="text-xs text-red-600">{t("agents.form.templatePreviewError")}</p>
+                <p className="text-xs text-danger">{t("agents.form.templatePreviewError")}</p>
                 <Button
                   type="button"
                   variant="secondary"
@@ -690,7 +688,7 @@ function CreateAgentTemplateModal({
               preview.isFetched &&
               preview.data === null &&
               integration.data?.connected && (
-                <p className="text-xs text-amber-700">{t("agents.form.templateNotFound")}</p>
+                <p className="text-xs text-warning">{t("agents.form.templateNotFound")}</p>
               )}
             <TextareaGroup
               label={t("agents.form.systemPrompt")}
@@ -878,7 +876,7 @@ function EditAgentTemplateModal({
     >
       <div className="mt-4 flex flex-col gap-3">
         {isLoading ? (
-          <p className="text-sm text-slate-400">…</p>
+          <p className="text-sm text-fg-subtle">…</p>
         ) : (
           <>
             <InputGroup
@@ -888,7 +886,7 @@ function EditAgentTemplateModal({
               onChange={(e) => setName(e.target.value)}
             />
 
-            <div className="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-500">
+            <div className="rounded-md bg-elevated px-3 py-2 text-sm text-fg-subtle">
               <span className="font-medium">{t("agents.form.type")}:</span>{" "}
               {t(`agents.type.${template.type}` as Parameters<typeof t>[0])}
             </div>
@@ -954,10 +952,10 @@ function EditAgentTemplateModal({
                   onChange={(e) => set("script", e.target.value)}
                 />
                 <div className="flex flex-col gap-1 pt-2">
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-sm font-semibold text-fg">
                     {t("agents.form.dtmfSectionTitle")}
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-fg-subtle">
                     {t("agents.form.dtmfSectionDescription")}
                   </p>
                 </div>
@@ -1071,7 +1069,7 @@ function EditAgentTemplateModal({
             {template.type === "WHATSAPP" && (
               <>
                 {!integration.data?.connected && !integration.isLoading && (
-                  <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                  <p className="rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
                     {t("agents.form.noIntegrationWarning")}
                   </p>
                 )}
@@ -1092,11 +1090,11 @@ function EditAgentTemplateModal({
                       : (fields.messageBody ?? "")
                   }
                   onChange={() => undefined}
-                  className="text-slate-500"
+                  className="text-fg-subtle"
                 />
                 {preview.isError && (
                   <div className="flex items-center gap-2">
-                    <p className="text-xs text-red-600">{t("agents.form.templatePreviewError")}</p>
+                    <p className="text-xs text-danger">{t("agents.form.templatePreviewError")}</p>
                     <Button
                       type="button"
                       variant="secondary"
@@ -1112,7 +1110,7 @@ function EditAgentTemplateModal({
                   preview.isFetched &&
                   preview.data === null &&
                   integration.data?.connected && (
-                    <p className="text-xs text-amber-700">{t("agents.form.templateNotFound")}</p>
+                    <p className="text-xs text-warning">{t("agents.form.templateNotFound")}</p>
                   )}
                 <TextareaGroup
                   label={t("agents.form.systemPrompt")}

@@ -35,8 +35,8 @@ export function Billing() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-[22px] font-bold text-slate-900">{t("billing.title")}</h1>
-        <p className="text-sm text-slate-500">{t("billing.subtitle")}</p>
+        <h1 className="text-[22px] font-bold text-fg">{t("billing.title")}</h1>
+        <p className="text-sm text-fg-subtle">{t("billing.subtitle")}</p>
       </div>
 
       {data?.enabled && data.enrolled && data.paused && (
@@ -52,15 +52,15 @@ export function Billing() {
       )}
 
       {data?.enabled === false && (
-        <Card className="max-w-[680px] rounded-xl border-slate-200 p-6 text-sm text-slate-500 shadow-none">
+        <Card className="max-w-[680px] rounded-xl border-border p-6 text-sm text-fg-subtle shadow-none">
           {t("billing.disabled")}
         </Card>
       )}
 
       {data?.enabled && !data.enrolled && (
-        <Card className="max-w-[680px] rounded-xl border-slate-200 shadow-none">
+        <Card className="max-w-[680px] rounded-xl border-border shadow-none">
           <div className="flex items-center justify-between gap-4 p-6">
-            <p className="text-sm text-slate-500">{t("billing.notEnrolled")}</p>
+            <p className="text-sm text-fg-subtle">{t("billing.notEnrolled")}</p>
             {isOwner && (
               <Button onClick={() => setPlanDialogOpen(true)}>{t("billing.choosePlan")}</Button>
             )}
@@ -81,11 +81,9 @@ export function Billing() {
       )}
 
       {isOwner && data?.enabled && data.enrolled && (
-        <Card className="max-w-[680px] rounded-xl border-slate-200 shadow-none">
+        <Card className="max-w-[680px] rounded-xl border-border shadow-none">
           <div className="flex flex-col gap-4 p-6">
-            <h2 className="text-[15px] font-semibold text-slate-900">
-              {t("billing.planAndPayment")}
-            </h2>
+            <h2 className="text-[15px] font-semibold text-fg">{t("billing.planAndPayment")}</h2>
             <div className="flex flex-wrap items-center gap-3">
               <Button onClick={() => setPlanDialogOpen(true)}>{t("billing.managePlan")}</Button>
               <Button
@@ -105,7 +103,7 @@ export function Billing() {
                 <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
               </Button>
             </div>
-            <p className="text-xs text-slate-400">{t("billing.stripeNote")}</p>
+            <p className="text-xs text-fg-subtle">{t("billing.stripeNote")}</p>
           </div>
         </Card>
       )}

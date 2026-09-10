@@ -25,18 +25,18 @@ export function AcceptInvitation() {
     : t("acceptInvitation.subtitle").replace("{role}", role);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <Card className="w-full max-w-[440px] rounded-2xl border-slate-200 p-8 shadow-none">
+    <div className="flex min-h-screen items-center justify-center bg-elevated px-4">
+      <Card className="w-full max-w-[440px] rounded-2xl border-border p-8 shadow-none">
         <div className="flex flex-col gap-7">
           <div className="flex flex-col items-center gap-1.5 text-center">
-            <h1 className="text-[22px] font-bold text-slate-900">
+            <h1 className="text-[22px] font-bold text-fg">
               {t("acceptInvitation.title").replace("{ws}", workspace)}
             </h1>
-            <p className="text-sm text-slate-500">{subtitle}</p>
+            <p className="text-sm text-fg-subtle">{subtitle}</p>
           </div>
 
           {accept.isError && (
-            <p className="text-center text-sm text-red-500">{t("acceptInvitation.error")}</p>
+            <p className="text-center text-sm text-danger">{t("acceptInvitation.error")}</p>
           )}
 
           <div className="flex flex-col gap-2.5">
@@ -53,7 +53,7 @@ export function AcceptInvitation() {
             <Button
               size="lg"
               variant="ghost"
-              className="w-full text-slate-500"
+              className="w-full text-fg-subtle"
               onClick={() => navigate("/")}
             >
               {t("acceptInvitation.reject")}

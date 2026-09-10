@@ -92,7 +92,7 @@ export function CsvSyncModal({
               <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
                 {t("portfolios.csv.selectFile")}
               </Button>
-              <span className="text-sm text-slate-500">
+              <span className="text-sm text-fg-subtle">
                 {fileName || t("portfolios.csv.noFile")}
               </span>
               <input
@@ -104,15 +104,15 @@ export function CsvSyncModal({
               />
             </div>
 
-            <p className="text-xs text-slate-500">{t("portfolios.csv.fileHint")}</p>
+            <p className="text-xs text-fg-subtle">{t("portfolios.csv.fileHint")}</p>
 
             {parseErrors.length > 0 && (
-              <div className="rounded-md border border-red-200 bg-red-50 p-3">
-                <p className="mb-1 text-xs font-medium text-red-700">
+              <div className="rounded-md border border-danger/30 bg-danger-soft p-3">
+                <p className="mb-1 text-xs font-medium text-danger">
                   {t("portfolios.csv.errors.title")}
                 </p>
                 {parseErrors.map((e, i) => (
-                  <p key={i} className="text-xs text-red-600">
+                  <p key={i} className="text-xs text-danger">
                     {e}
                   </p>
                 ))}
@@ -120,20 +120,20 @@ export function CsvSyncModal({
             )}
 
             {rows.length > 0 && parseErrors.length === 0 && (
-              <p className="text-sm text-emerald-700">
+              <p className="text-sm text-primary">
                 {t("portfolios.csv.ready").replace("{n}", String(rows.length))}
               </p>
             )}
 
             <div>
-              <p className="mb-2 text-xs font-medium text-slate-700">
+              <p className="mb-2 text-xs font-medium text-fg-muted">
                 {t("portfolios.csv.mode.label")}
               </p>
               <div className="flex flex-col gap-2">
                 {SYNC_MODES.map((m) => (
                   <label
                     key={m.value}
-                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50"
+                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 hover:bg-elevated has-[:checked]:border-primary has-[:checked]:bg-primary/10"
                   >
                     <input
                       type="radio"
@@ -144,10 +144,10 @@ export function CsvSyncModal({
                       className="mt-0.5 accent-emerald-600"
                     />
                     <div>
-                      <p className="text-sm font-medium text-slate-900">
+                      <p className="text-sm font-medium text-fg">
                         {t(`portfolios.csv.mode.${m.value}.label` as Parameters<typeof t>[0])}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-fg-subtle">
                         {t(`portfolios.csv.mode.${m.value}.description` as Parameters<typeof t>[0])}
                       </p>
                     </div>
@@ -157,10 +157,8 @@ export function CsvSyncModal({
             </div>
           </>
         ) : (
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-            <p className="mb-3 text-sm font-semibold text-emerald-800">
-              {t("portfolios.csv.done")}
-            </p>
+          <div className="rounded-lg border border-primary/30 bg-primary/10 p-4">
+            <p className="mb-3 text-sm font-semibold text-primary">{t("portfolios.csv.done")}</p>
             <div className="grid grid-cols-4 gap-3 text-center">
               {[
                 { label: t("portfolios.csv.created"), value: result.created, color: "emerald" },

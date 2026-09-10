@@ -22,28 +22,28 @@ export function BillingPausedBanner({ variant, isOwner, onAction }: BillingPause
     <div
       role="alert"
       className={`flex items-center gap-4 rounded-xl border p-4 ${
-        exhausted ? "border-amber-200 bg-amber-50" : "border-red-200 bg-red-50"
+        exhausted ? "border-warning/30 bg-warning-soft" : "border-danger/30 bg-danger-soft"
       }`}
     >
       <span
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-          exhausted ? "bg-amber-100 text-amber-600" : "bg-red-100 text-red-600"
+          exhausted ? "bg-warning-soft text-warning" : "bg-danger-soft text-danger"
         }`}
       >
         <Icon className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className={`text-sm font-semibold ${exhausted ? "text-amber-800" : "text-red-800"}`}>
+        <p className={`text-sm font-semibold ${exhausted ? "text-warning" : "text-danger"}`}>
           {t(exhausted ? "billing.paused.exhausted.title" : "billing.paused.paymentFailed.title")}
         </p>
-        <p className={`text-sm ${exhausted ? "text-amber-700" : "text-red-700"}`}>
+        <p className={`text-sm ${exhausted ? "text-warning" : "text-danger"}`}>
           {t(exhausted ? "billing.paused.exhausted.body" : "billing.paused.paymentFailed.body")}
         </p>
       </div>
       {isOwner && onAction && (
         <Button
           onClick={onAction}
-          className={exhausted ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700"}
+          className={exhausted ? "bg-warning hover:opacity-90" : "bg-danger hover:opacity-90"}
         >
           {t(exhausted ? "billing.paused.exhausted.cta" : "billing.paused.paymentFailed.cta")}
         </Button>

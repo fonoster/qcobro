@@ -12,15 +12,15 @@ export function SectionCard({ title, description, action, children, className }:
   return (
     <div
       className={cn(
-        "flex flex-col gap-4 border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]",
+        "flex flex-col gap-4 border border-border bg-surface p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]",
         className
       )}
     >
       {(title || action) && (
         <div className="flex items-center justify-between">
           <div>
-            {title && <h3 className="text-sm font-semibold text-slate-900">{title}</h3>}
-            {description && <p className="text-xs text-slate-500">{description}</p>}
+            {title && <h3 className="text-sm font-semibold text-fg">{title}</h3>}
+            {description && <p className="text-xs text-fg-subtle">{description}</p>}
           </div>
           {action}
         </div>

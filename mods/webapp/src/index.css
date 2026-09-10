@@ -1,40 +1,95 @@
 @import "tailwindcss";
 
+/*
+ * Theme switching. `data-theme` is set on <html> by the pre-hydration script in index.html
+ * and kept in sync by ThemeProvider (src/lib/theme.tsx). It only ever holds a *resolved*
+ * value ("light" or "dark") — never "system".
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/*
+ * Raw palette. These are the values that swap per theme; every semantic token below points
+ * at one of them. Light values are the pre-dark-mode palette (slate / emerald); dark values
+ * come from the approved Pencil "Mode: Dark" set (see openspec/changes/dark-mode).
+ */
+:root {
+  --qc-bg: #f8fafc;
+  --qc-surface: #ffffff;
+  --qc-elevated: #f1f5f9;
+  --qc-border: #e2e8f0;
+  --qc-input: #e2e8f0;
+  --qc-fg: #0f172a;
+  --qc-fg-muted: #475569;
+  --qc-fg-subtle: #64748b;
+  --qc-primary: #10b981;
+  --qc-primary-hover: #059669;
+  --qc-primary-fg: #ffffff;
+  --qc-brand-green: #047857;
+  --qc-success: #10b981;
+  --qc-success-soft: #ecfdf5;
+  --qc-warning: #d97706;
+  --qc-warning-soft: #fffbeb;
+  --qc-danger: #dc2626;
+  --qc-danger-soft: #fef2f2;
+  --qc-info: #2563eb;
+  --qc-info-soft: #eff6ff;
+  --qc-ring: #10b981;
+}
+
+:root[data-theme="dark"] {
+  --qc-bg: #141417;
+  --qc-surface: #1e1e22;
+  --qc-elevated: #26262b;
+  --qc-border: #33333a;
+  --qc-input: #33333a;
+  --qc-fg: #f2f2f4;
+  --qc-fg-muted: #b4b4bc;
+  --qc-fg-subtle: #94949e;
+  --qc-primary: #10b981;
+  --qc-primary-hover: #34d399;
+  --qc-primary-fg: #ffffff;
+  --qc-brand-green: #34d399;
+  --qc-success: #34d399;
+  --qc-success-soft: #16271f;
+  --qc-warning: #fbbf24;
+  --qc-warning-soft: #2e2408;
+  --qc-danger: #f87171;
+  --qc-danger-soft: #2a1416;
+  --qc-info: #60a5fa;
+  --qc-info-soft: #16233a;
+  --qc-ring: #34d399;
+}
+
+/*
+ * Semantic tokens → Tailwind utilities: bg-surface, text-fg, text-fg-muted, border-border,
+ * bg-primary, hover:bg-primary-hover, text-danger, bg-success-soft, ring-ring, etc.
+ * `inline` so opacity modifiers (bg-primary/10) resolve against the live value.
+ */
+@theme inline {
+  --color-bg: var(--qc-bg);
+  --color-surface: var(--qc-surface);
+  --color-elevated: var(--qc-elevated);
+  --color-border: var(--qc-border);
+  --color-input: var(--qc-input);
+  --color-fg: var(--qc-fg);
+  --color-fg-muted: var(--qc-fg-muted);
+  --color-fg-subtle: var(--qc-fg-subtle);
+  --color-primary: var(--qc-primary);
+  --color-primary-hover: var(--qc-primary-hover);
+  --color-primary-fg: var(--qc-primary-fg);
+  --color-brand-green: var(--qc-brand-green);
+  --color-success: var(--qc-success);
+  --color-success-soft: var(--qc-success-soft);
+  --color-warning: var(--qc-warning);
+  --color-warning-soft: var(--qc-warning-soft);
+  --color-danger: var(--qc-danger);
+  --color-danger-soft: var(--qc-danger-soft);
+  --color-info: var(--qc-info);
+  --color-info-soft: var(--qc-info-soft);
+  --color-ring: var(--qc-ring);
+}
+
 @layer base {
-  :root {
-    --color-primary: #10b981;
-    --color-primary-dark: #059669;
-    --color-primary-light: #d1fae5;
-    --color-primary-fg: #ffffff;
-
-    --color-secondary: #f3f4f6;
-    --color-secondary-fg: #374151;
-
-    --color-destructive: #ef4444;
-    --color-destructive-light: #fee2e2;
-    --color-destructive-fg: #ffffff;
-
-    --color-warning: #f59e0b;
-    --color-warning-light: #fef3c7;
-
-    --color-info: #3b82f6;
-    --color-info-light: #dbeafe;
-
-    --color-border: #e5e7eb;
-    --color-input: #e5e7eb;
-    --color-ring: #10b981;
-
-    --color-bg: #ffffff;
-    --color-fg: #111827;
-    --color-muted: #6b7280;
-    --color-muted-bg: #f9fafb;
-
-    --radius: 0.5rem;
-    --radius-sm: 0.25rem;
-    --radius-lg: 0.75rem;
-    --radius-full: 9999px;
-  }
-
   * {
     border-color: var(--color-border);
     box-sizing: border-box;

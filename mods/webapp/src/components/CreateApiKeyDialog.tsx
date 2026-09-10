@@ -59,23 +59,23 @@ export function CreateApiKeyDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/60 p-4">
-      <Card className="w-full max-w-[440px] rounded-2xl border-slate-200 shadow-xl">
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 p-4">
+      <Card className="w-full max-w-[440px] rounded-2xl border-border shadow-xl">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5 p-6">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">{t("apiKeys.create.title")}</h2>
-              <p className="text-[13px] text-slate-500">{t("apiKeys.create.description")}</p>
+              <h2 className="text-lg font-bold text-fg">{t("apiKeys.create.title")}</h2>
+              <p className="text-[13px] text-fg-subtle">{t("apiKeys.create.description")}</p>
             </div>
             <button
               type="button"
               onClick={handleClose}
-              className="text-slate-400 hover:text-slate-600"
+              className="text-fg-subtle hover:text-fg-muted"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
-          <p className="text-[13px] text-slate-500">{t("apiKeys.create.roleNote")}</p>
+          <p className="text-[13px] text-fg-subtle">{t("apiKeys.create.roleNote")}</p>
           <InputGroup
             label={t("apiKeys.create.expiresAtLabel")}
             id="create-api-key-expires-at"
@@ -84,7 +84,7 @@ export function CreateApiKeyDialog({
             onChange={(e) => setExpiresAtDate(e.target.value)}
             error={dateError}
           />
-          {error && <p className="text-[13px] text-red-600">{error}</p>}
+          {error && <p className="text-[13px] text-danger">{error}</p>}
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={handleClose}>
               {t("common.cancel")}

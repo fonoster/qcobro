@@ -107,8 +107,8 @@ export function Gestiones() {
             render: (r) => {
               const Icon = CHANNEL_ICON[r.agentType as string] ?? MessageSquare;
               return (
-                <span className="inline-flex items-center gap-2 text-slate-700">
-                  <Icon className="h-4 w-4 text-slate-400" />
+                <span className="inline-flex items-center gap-2 text-fg-muted">
+                  <Icon className="h-4 w-4 text-fg-subtle" />
                   {t(`agents.type.${r.agentType}` as Parameters<typeof t>[0])}
                 </span>
               );
@@ -118,7 +118,7 @@ export function Gestiones() {
             key: "delivery",
             header: t("gestiones.col.delivery"),
             render: (r) => (
-              <span className="text-slate-700">
+              <span className="text-fg-muted">
                 {deliveryLabel(
                   t,
                   r.delivery as string,
@@ -133,7 +133,7 @@ export function Gestiones() {
             header: t("gestiones.col.result"),
             // Null for most rows — the sparseness is what makes conversion legible at a glance.
             render: (r) => (
-              <span className="text-slate-700">
+              <span className="text-fg-muted">
                 {outcomeLabel(t, r.outcome as string | null) ?? "—"}
               </span>
             )
@@ -143,7 +143,7 @@ export function Gestiones() {
             header: t("gestiones.col.date"),
             render: (r) => (
               <span
-                className="whitespace-nowrap text-slate-600"
+                className="whitespace-nowrap text-fg-muted"
                 title={new Date(r.contactedAt as string).toLocaleString()}
               >
                 {formatRelativeDate(r.contactedAt as string, language)}

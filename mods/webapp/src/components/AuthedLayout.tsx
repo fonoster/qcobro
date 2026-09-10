@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
-import { useI18n, type MessageId, type Language } from "../lib/i18n.js";
+import { useI18n, type MessageId } from "../lib/i18n.js";
+import { usePreferenceSync } from "../lib/preferenceSync.js";
 import { Logo } from "./Logo.js";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher.js";
 import { UserMenu } from "./UserMenu.js";
@@ -28,18 +29,15 @@ const NAV: { icon: LucideIcon; labelKey: MessageId; to?: string; end?: boolean }
 ];
 
 export function AuthedLayout() {
-  const { t, language, setLanguage } = useI18n();
+  const { t } = useI18n();
   const { workspace, setWorkspace, logout } = useAuth();
   const workspaces = trpc.workspaces.list.useQuery();
   const data = workspaces.data;
   const items = data?.items ?? [];
 
-  // The profile is the source of truth for language; reconcile the cached/default choice
-  // with it once it loads (and whenever it changes elsewhere).
-  const profileLanguage = trpc.profile.get.useQuery().data?.language as Language | undefined;
-  useEffect(() => {
-    if (profileLanguage && profileLanguage !== language) setLanguage(profileLanguage);
-  }, [profileLanguage, language, setLanguage]);
+  // The profile is the source of truth for language + appearance; reconcile the
+  // cached/default choices with it once it loads (and whenever it changes elsewhere).
+  usePreferenceSync();
 
   useEffect(() => {
     const list = data?.items;
@@ -58,7 +56,7 @@ export function AuthedLayout() {
   }
   if (workspaces.isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-slate-400">Cargando…</div>
+      <div className="flex min-h-screen items-center justify-center text-fg-subtle">Cargando…</div>
     );
   }
   if (!workspaces.isFetching && workspaces.isSuccess && items.length === 0) {
@@ -66,10 +64,10 @@ export function AuthedLayout() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-slate-50">
+    <div className="flex h-screen flex-col bg-bg">
       <AnnouncementBanner />
       <div className="flex flex-1 overflow-hidden">
-        <aside className="flex w-60 shrink-0 flex-col justify-between overflow-y-auto border-r border-slate-200 bg-white px-4 py-5">
+        <aside className="flex w-60 shrink-0 flex-col justify-between overflow-y-auto border-r border-border bg-surface px-4 py-5">
           <div className="flex flex-col gap-6">
             <Link to="/workspaces" aria-label="Ir a la lista de espacios">
               <Logo />
@@ -86,8 +84,8 @@ export function AuthedLayout() {
                       cn(
                         "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm",
                         isActive
-                          ? "bg-emerald-50 font-semibold text-emerald-700"
-                          : "font-medium text-slate-600 hover:bg-slate-50"
+                          ? "bg-primary/10 font-semibold text-primary"
+                          : "font-medium text-fg-muted hover:bg-elevated"
                       )
                     }
                   >
@@ -96,7 +94,7 @@ export function AuthedLayout() {
                         <Icon
                           className={cn(
                             "h-[18px] w-[18px]",
-                            isActive ? "text-emerald-700" : "text-slate-500"
+                            isActive ? "text-primary" : "text-fg-subtle"
                           )}
                         />
                         {t(labelKey)}
@@ -106,9 +104,9 @@ export function AuthedLayout() {
                 ) : (
                   <button
                     key={labelKey}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 opacity-50 cursor-not-allowed"
+                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-fg-muted opacity-50 cursor-not-allowed"
                   >
-                    <Icon className="h-[18px] w-[18px] text-slate-500" />
+                    <Icon className="h-[18px] w-[18px] text-fg-subtle" />
                     {t(labelKey)}
                   </button>
                 )

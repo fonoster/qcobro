@@ -74,10 +74,10 @@ export function Portfolios() {
         keyField="id"
         searchable={false}
         filterElement={
-          <label className="flex items-center gap-2 text-sm text-slate-600">
+          <label className="flex items-center gap-2 text-sm text-fg-muted">
             <input
               type="checkbox"
-              className="h-4 w-4 rounded border-slate-300"
+              className="h-4 w-4 rounded border-border"
               checked={includeArchived}
               onChange={(e) => setIncludeArchived(e.target.checked)}
             />
@@ -251,7 +251,7 @@ function CreatePortfolioModal({
           onChange={(e) => setClientId(e.target.value)}
           placeholder="ej. bancolombia"
         />
-        <p className="text-xs text-slate-400">{t("portfolios.form.csvNote")}</p>
+        <p className="text-xs text-fg-subtle">{t("portfolios.form.csvNote")}</p>
       </div>
     </Dialog>
   );

@@ -16,7 +16,7 @@ export function MenuPanel({
   return (
     <div
       style={style}
-      className={cn("rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg", className)}
+      className={cn("rounded-xl border border-border bg-surface p-1.5 shadow-lg", className)}
     >
       {children}
     </div>
@@ -35,19 +35,19 @@ export function MenuHeader({
 }) {
   return (
     <div className="flex items-center gap-2.5 px-2.5 py-2">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
         {initials}
       </span>
       <div className="flex min-w-0 flex-col leading-tight">
-        <span className="truncate text-[13px] font-semibold text-slate-900">{name}</span>
-        {email && <span className="truncate text-[11px] text-slate-400">{email}</span>}
+        <span className="truncate text-[13px] font-semibold text-fg">{name}</span>
+        {email && <span className="truncate text-[11px] text-fg-subtle">{email}</span>}
       </div>
     </div>
   );
 }
 
 export function MenuDivider() {
-  return <div className="my-1 h-px bg-slate-100" />;
+  return <div className="my-1 h-px bg-elevated" />;
 }
 
 export function MenuItem({
@@ -66,11 +66,11 @@ export function MenuItem({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium hover:bg-slate-50",
-        danger ? "text-red-600" : "text-slate-900"
+        "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium hover:bg-elevated",
+        danger ? "text-danger" : "text-fg"
       )}
     >
-      <Icon className={cn("h-4 w-4", danger ? "text-red-600" : "text-slate-500")} />
+      <Icon className={cn("h-4 w-4", danger ? "text-danger" : "text-fg-subtle")} />
       {label}
     </button>
   );

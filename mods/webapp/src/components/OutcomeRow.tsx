@@ -28,15 +28,15 @@ export function OutcomeRow({ label, value, promise }: OutcomeRowProps) {
     ? `${promise.amount ? `${promise.amount} · ` : ""}${promise.dueDate}`
     : null;
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2.5">
-      <span className="text-sm text-slate-500">{label}</span>
+    <div className="flex items-center justify-between gap-3 rounded-lg bg-elevated px-3 py-2.5">
+      <span className="text-sm text-fg-subtle">{label}</span>
       <span className="flex items-center gap-2">
-        <span className="text-sm font-medium text-slate-700">
+        <span className="text-sm font-medium text-fg-muted">
           {value}
           {detail ? ` · ${detail}` : ""}
         </span>
         {promise ? (
-          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-600">
+          <span className="rounded-full bg-elevated px-2 py-0.5 text-xs font-semibold text-fg-muted">
             {promise.status}
           </span>
         ) : null}

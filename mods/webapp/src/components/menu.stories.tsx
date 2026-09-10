@@ -20,11 +20,11 @@ export const Default: Story = {
       <MenuDivider />
       <MenuItem icon={User} label="Mi perfil" onClick={() => {}} />
       <div className="flex items-center justify-between gap-2.5 px-2.5 py-2">
-        <span className="flex items-center gap-2.5 text-[13px] font-medium text-slate-900">
-          <Globe className="h-4 w-4 text-slate-500" />
+        <span className="flex items-center gap-2.5 text-[13px] font-medium text-fg">
+          <Globe className="h-4 w-4 text-fg-subtle" />
           Idioma
         </span>
-        <span className="text-[13px] font-medium text-slate-500">Español</span>
+        <span className="text-[13px] font-medium text-fg-subtle">Español</span>
       </div>
       <MenuDivider />
       <MenuItem icon={LogOut} label="Cerrar sesión" danger onClick={() => {}} />

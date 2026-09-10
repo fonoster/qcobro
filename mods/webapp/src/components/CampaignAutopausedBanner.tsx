@@ -14,16 +14,16 @@ export function CampaignAutopausedBanner() {
   return (
     <div
       role="alert"
-      className="flex items-center gap-4 rounded-xl border border-amber-200 bg-amber-50 p-4"
+      className="flex items-center gap-4 rounded-xl border border-warning/30 bg-warning-soft p-4"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning-soft text-warning">
         <CircleAlert className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-amber-800">
+        <p className="text-sm font-semibold text-warning">
           {t("campaigns.detail.autopaused.title")}
         </p>
-        <p className="text-sm text-amber-700">{t("campaigns.detail.autopaused.body")}</p>
+        <p className="text-sm text-warning">{t("campaigns.detail.autopaused.body")}</p>
       </div>
     </div>
   );

@@ -43,7 +43,7 @@ export const Centered: StoryObj = {
           open={open}
           onClose={() => setOpen(false)}
           align="center"
-          icon={<AlertTriangle className="h-10 w-10 text-amber-500" />}
+          icon={<AlertTriangle className="h-10 w-10 text-warning" />}
           title="¿Pausar campaña?"
           description="La campaña se pausará y los agentes no recibirán nuevas asignaciones."
           confirmLabel="Pausar"
@@ -67,7 +67,7 @@ export const Destructive: StoryObj = {
           open={open}
           onClose={() => setOpen(false)}
           align="center"
-          icon={<Trash2 className="h-10 w-10 text-red-500" />}
+          icon={<Trash2 className="h-10 w-10 text-danger" />}
           title="Eliminar cartera"
           description="Esta acción eliminará permanentemente la cartera y todos sus datos asociados."
           confirmLabel="Eliminar"

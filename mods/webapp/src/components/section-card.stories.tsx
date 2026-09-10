@@ -14,7 +14,7 @@ export default meta;
 export const Default: StoryObj = {
   render: () => (
     <SectionCard title="Últimas gestiones">
-      <p className="text-sm text-gray-600">No hay gestiones recientes.</p>
+      <p className="text-sm text-fg-muted">No hay gestiones recientes.</p>
     </SectionCard>
   )
 };
@@ -22,7 +22,7 @@ export const Default: StoryObj = {
 export const WithDescription: StoryObj = {
   render: () => (
     <SectionCard title="Promesas de pago" description="Compromisos vigentes esta semana">
-      <p className="text-sm text-gray-600">3 promesas por vencer hoy.</p>
+      <p className="text-sm text-fg-muted">3 promesas por vencer hoy.</p>
     </SectionCard>
   )
 };
@@ -38,7 +38,7 @@ export const WithAction: StoryObj = {
         </Button>
       }
     >
-      <p className="text-sm text-gray-600">12 de 15 agentes en línea.</p>
+      <p className="text-sm text-fg-muted">12 de 15 agentes en línea.</p>
     </SectionCard>
   )
 };
@@ -46,7 +46,7 @@ export const WithAction: StoryObj = {
 export const NoHeader: StoryObj = {
   render: () => (
     <SectionCard>
-      <p className="text-sm text-gray-600">Contenido sin encabezado.</p>
+      <p className="text-sm text-fg-muted">Contenido sin encabezado.</p>
     </SectionCard>
   )
 };

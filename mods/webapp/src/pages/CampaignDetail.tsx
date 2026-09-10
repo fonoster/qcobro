@@ -31,9 +31,9 @@ const STATUS_ACTION: Record<CampaignStatus, string> = {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between border-b border-slate-100 py-2 text-sm last:border-0">
-      <span className="text-slate-500">{label}</span>
-      <span className="font-medium text-slate-900">{value}</span>
+    <div className="flex justify-between border-b border-border py-2 text-sm last:border-0">
+      <span className="text-fg-subtle">{label}</span>
+      <span className="font-medium text-fg">{value}</span>
     </div>
   );
 }
@@ -142,7 +142,7 @@ export function CampaignDetail() {
           <SectionCard title={t("campaigns.detail.portfolios")}>
             <ul className="flex flex-col gap-1">
               {(c?.portfolios ?? []).map((p) => (
-                <li key={p.portfolio.id} className="text-sm text-slate-700">
+                <li key={p.portfolio.id} className="text-sm text-fg-muted">
                   {p.portfolio.name}
                 </li>
               ))}
@@ -154,13 +154,13 @@ export function CampaignDetail() {
               <ul className="flex flex-col gap-2">
                 {c.triggers.map((trg) => (
                   <li key={trg.id} className="flex items-center justify-between text-sm">
-                    <span className="text-slate-700">{trg.type}</span>
-                    <span className="text-xs text-slate-400">{JSON.stringify(trg.config)}</span>
+                    <span className="text-fg-muted">{trg.type}</span>
+                    <span className="text-xs text-fg-subtle">{JSON.stringify(trg.config)}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-slate-500">{t("campaigns.detail.noTriggers")}</p>
+              <p className="text-sm text-fg-subtle">{t("campaigns.detail.noTriggers")}</p>
             )}
           </SectionCard>
         </div>

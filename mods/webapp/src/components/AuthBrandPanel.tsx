@@ -8,7 +8,7 @@ export function AuthBrandPanel() {
     >
       <Logo variant="white" />
       <div className="flex flex-col gap-5">
-        <p className="text-[11px] font-bold uppercase tracking-[1.5px] text-emerald-300">
+        <p className="text-[11px] font-bold uppercase tracking-[1.5px] text-white/70">
           Cobranza Inteligente
         </p>
         <h2
@@ -19,7 +19,7 @@ export function AuthBrandPanel() {
           <br />
           en un solo lugar.
         </h2>
-        <p className="text-[15px] leading-relaxed text-emerald-200">
+        <p className="text-[15px] leading-relaxed text-white/80">
           Deudores, campañas, agentes IA y resultados — gestionados desde un panel directo y
           operativo.
         </p>
