@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.41.1](https://github.com/fonoster/qcobro/compare/v1.41.0...v1.41.1) (2026-09-10)
+
+### Bug Fixes
+
+- **webapp:** hide admin-only member actions from non-admin viewers ([#156](https://github.com/fonoster/qcobro/issues/156)) ([80c8e98](https://github.com/fonoster/qcobro/commit/80c8e984904b2edd7ba51555b1b5f51255dcc246)), closes [#147](https://github.com/fonoster/qcobro/issues/147)
+
 # [1.41.0](https://github.com/fonoster/qcobro/compare/v1.40.1...v1.41.0) (2026-09-09)
 
 ### Features
