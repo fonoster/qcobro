@@ -121,12 +121,35 @@ the database — persistence is the caller's responsibility — so the same func
 the manual flow and the campaigns engine. Provider clients SHALL be injected so unit tests
 run with stubs and no live calls.
 
+For `VOICE_AI`, the dispatch SHALL additionally forward the rendered account context to the
+provider as string call metadata, restricted to an explicit allow-list of account facts, so
+the agent can answer account questions mid-call. Internal context fields SHALL NOT be
+forwarded, and the system prompt SHALL NOT be resent (it already lives on the synced voice
+application).
+
 #### Scenario: Voice dispatch places a call to the template's voice application
 
 - **WHEN** `dispatchOutreach` runs for a `VOICE_AI` template whose `fonosterAppRef` is set
 - **THEN** the injected `OutboundCallClient` is called with the account's phone as `to`, a
-  selected `from` number, the app ref, and the rendered first message/system prompt
+  selected `from` number, the app ref, the rendered first message, and the rendered account
+  context as string call metadata (see the next scenario)
 - **AND** the returned `DispatchResult` has `channel: VOICE_AI` and the provider call ref
+
+#### Scenario: Voz IA dispatch forwards the account context as call metadata
+
+- **WHEN** `dispatchOutreach` runs for a `VOICE_AI` template
+- **THEN** the rendered account context is passed to the `OutboundCallClient` as string call
+  metadata alongside the first message, limited to an allow-list of account facts —
+  name, outstanding balance, principal amount, term amount/frequency/length, missed
+  installments, days past due, last payment date/amount, and currency — so the agent can
+  answer account questions ("¿cuánto debo?") mid-call
+- **AND** internal context fields — `locale`, `isDue`, `customerSegment`,
+  `negotiationOptions`, `bestTimeToCall`, `preferredLanguage`, the account/portfolio/external
+  ids, phone, and timestamps — SHALL NOT be included
+- **AND** a metadata field whose rendered value is empty SHALL be omitted rather than sent
+  as an empty string
+- **AND** the system prompt is never resent as metadata — it already lives on the synced
+  voice application
 
 #### Scenario: SMS dispatch sends via the SMS client
 

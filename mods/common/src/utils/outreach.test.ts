@@ -4,6 +4,7 @@ import {
   renderTemplate,
   buildOutreachContext,
   buildAutopilotContextLines,
+  toCallMetadata,
   pickRandomNumber,
   snakeToCamel,
   renderWhatsAppTemplate
@@ -370,6 +371,103 @@ describe("buildAutopilotContextLines", () => {
     );
     const lines = buildAutopilotContextLines(ctx);
     assert.ok(lines.every((l) => !l.includes("20%") && !l.includes("descuento")));
+  });
+});
+
+describe("toCallMetadata", () => {
+  it("projects a full context down to the allow-listed account fields as strings", () => {
+    const ctx = buildOutreachContext(
+      makeAccount({
+        fullName: "Juan Pérez",
+        outstandingBalance: 9500,
+        principalAmount: 12000,
+        termsAmount: 1500,
+        termsFrequency: "quincenal",
+        termsLength: 24,
+        missedInstallments: 3,
+        daysPastDue: 18,
+        lastPaymentDate: new Date("2026-06-01T00:00:00Z"),
+        lastPaymentAmount: 2500
+      }),
+      { currency: "DOP", locale: esDO }
+    );
+    assert.deepEqual(toCallMetadata(ctx), {
+      fullName: "Juan Pérez",
+      firstName: "Juan",
+      outstandingBalance: "9,500",
+      principalAmount: "12,000",
+      termsAmount: "1,500",
+      termsFrequency: "quincenal",
+      termsLength: "24",
+      missedInstallments: "3",
+      daysPastDue: "18",
+      lastPaymentDate: "2026-06-01",
+      lastPaymentAmount: "2,500",
+      currency: "DOP"
+    });
+  });
+
+  it("keeps money fields as their locale-formatted strings, not re-parsed numbers", () => {
+    const ctx = buildOutreachContext(makeAccount({ outstandingBalance: 8500 }), {
+      currency: "DOP",
+      locale: esDO
+    });
+    assert.equal(toCallMetadata(ctx).outstandingBalance, "8,500");
+  });
+
+  it("drops keys whose value is null, undefined or empty string", () => {
+    const ctx = buildOutreachContext(
+      makeAccount({
+        fullName: "Ana",
+        termsAmount: 0,
+        termsFrequency: null,
+        lastPaymentDate: null,
+        lastPaymentAmount: null
+      }),
+      { currency: "DOP", locale: esDO }
+    );
+    const meta = toCallMetadata(ctx);
+    assert.equal("termsFrequency" in meta, false);
+    assert.equal("lastPaymentDate" in meta, false);
+    assert.equal("lastPaymentAmount" in meta, false);
+  });
+
+  it("keeps a zero count (0 is a real value, not empty)", () => {
+    const ctx = buildOutreachContext(makeAccount({ daysPastDue: 0, missedInstallments: 0 }), {
+      currency: "DOP",
+      locale: esDO
+    });
+    const meta = toCallMetadata(ctx);
+    assert.equal(meta.daysPastDue, "0");
+    assert.equal(meta.missedInstallments, "0");
+  });
+
+  it("never includes internal context fields", () => {
+    const ctx = buildOutreachContext(
+      makeAccount({
+        negotiationOptions: "20% de descuento si insiste",
+        customerSegment: "variant_A"
+      }),
+      { currency: "DOP", locale: esDO }
+    );
+    const meta = toCallMetadata(ctx);
+    for (const key of [
+      "locale",
+      "isDue",
+      "phone",
+      "id",
+      "portfolioId",
+      "externalId",
+      "negotiationOptions",
+      "customerSegment",
+      "bestTimeToCall",
+      "preferredLanguage",
+      "createdAt",
+      "updatedAt",
+      "archivedAt"
+    ]) {
+      assert.equal(key in meta, false, `expected ${key} to be excluded from call metadata`);
+    }
   });
 });
 

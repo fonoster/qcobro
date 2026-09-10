@@ -1,5 +1,6 @@
 import * as SDK from "@fonoster/sdk";
 import {
+  toCallMetadata,
   ttsProductRefForVoice,
   type FonosterConfig,
   type VoiceApplicationClient,
@@ -158,9 +159,10 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
         callDirection: "TO_PSTN",
         ingressNumber: "+10000000000",
         callerNumber: "+10000000000",
-        metadata: Object.fromEntries(
-          Object.entries(scenario.account).map(([key, value]) => [key, String(value)])
-        )
+        // Same allow-list projection a real Voz IA dispatch uses (`dispatchOutreach`), so
+        // an eval sees exactly the account metadata a production call would — no more
+        // (`isDue`, `locale`, synthetic ids, timestamps) and no less.
+        metadata: toCallMetadata(scenario.account)
       },
       conversation: scenario.turns.map((turn) => {
         if (!turn.expected?.text) {
