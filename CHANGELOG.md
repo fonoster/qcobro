@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.46.1](https://github.com/fonoster/qcobro/compare/v1.46.0...v1.46.1) (2026-09-10)
+
+### Bug Fixes
+
+- **common:** allow null aiDebtReason (and siblings) in gestionInsightSchema ([#172](https://github.com/fonoster/qcobro/issues/172)) ([889893a](https://github.com/fonoster/qcobro/commit/889893ab20daa31b22cb33830920738372d55b43)), closes [#168](https://github.com/fonoster/qcobro/issues/168)
+
 # [1.46.0](https://github.com/fonoster/qcobro/compare/v1.45.2...v1.46.0) (2026-09-10)
 
 ### Features
