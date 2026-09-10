@@ -21,7 +21,8 @@
     "prerecordedAppRef": "CHANGE_ME",
     "webhookBaseUrl": "https://your-tunnel.ngrok-free.dev",
     "autopilot": {
-      "llmModel": "gemini-2.5-flash"
+      "llmModel": "gemini-2.5-flash",
+      "temperature": 0.3
     },
     "voices": [
       {
