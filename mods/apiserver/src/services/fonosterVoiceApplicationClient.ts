@@ -206,16 +206,6 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
         config: {
           conversationSettings: {
             ...autopilotTemplate.conversationSettings,
-            // A graded run has no real caller silence, but each turn (agent LLM + judge
-            // LLM) far outlasts a short idle timeout — so the tightened value the
-            // autopilot template carries for real calls would make Fonoster's harness
-            // inject the idle message every turn and stall the stream. Neutralise it
-            // here; the message text is kept in case a scenario ever needs it.
-            idleOptions: {
-              ...autopilotTemplate.conversationSettings.idleOptions,
-              timeout: 300_000,
-              maxTimeoutCount: 1
-            },
             ...(input.firstMessage ? { firstMessage: input.firstMessage } : {}),
             systemPrompt: input.systemPrompt
           },
