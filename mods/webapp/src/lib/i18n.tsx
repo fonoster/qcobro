@@ -350,6 +350,17 @@ export const messages = {
     "agents.form.subject": "Subject",
     "agents.form.maxReplies": "Max autopilot replies per case",
     "agents.form.templateName": "Template name",
+    "agents.form.firstMessageHint":
+      "E.g. Hi, I'm calling from Créditos Demo about your past-due account.",
+    "agents.form.systemPromptHint":
+      "E.g. You are a collections agent for Créditos Demo. Be courteous and offer payment options. Customer: {{firstName}}, balance {{outstandingBalance}}.",
+    "agents.form.scriptHint":
+      "E.g. Hi {{firstName}}, this is a reminder that your Créditos Demo account has a balance of {{outstandingBalance}}.",
+    "agents.form.messageBodyHint":
+      "E.g. {{firstName}}, your Créditos Demo account has a balance of {{outstandingBalance}}. Reply to arrange a payment.",
+    "agents.form.subjectPlaceholder": "Your Créditos Demo account needs attention",
+    "agents.form.templateNamePlaceholder": "recordatorio_pago_1",
+    "agents.form.senderIdPlaceholder": "CreditosDemo",
     "agents.form.voicePlaceholder": "Select a voice…",
     "agents.form.dtmfSectionTitle": "DTMF menu (optional)",
     "agents.form.dtmfSectionDescription":
@@ -1010,6 +1021,16 @@ export const messages = {
     "agents.form.subject": "Asunto",
     "agents.form.maxReplies": "Máx. respuestas del autopiloto por caso",
     "agents.form.templateName": "Nombre de plantilla",
+    "agents.form.firstMessageHint": "Ej.: Hola, le llamo de Créditos Demo por su cuenta pendiente.",
+    "agents.form.systemPromptHint":
+      "Ej.: Eres un agente de cobranza de Créditos Demo. Sé cortés y ofrece opciones de pago. Cliente: {{firstName}}, saldo {{outstandingBalance}}.",
+    "agents.form.scriptHint":
+      "Ej.: Hola {{firstName}}, le recordamos que su cuenta con Créditos Demo presenta un saldo de {{outstandingBalance}}.",
+    "agents.form.messageBodyHint":
+      "Ej.: {{firstName}}, su cuenta con Créditos Demo tiene un saldo de {{outstandingBalance}}. Responda para acordar un pago.",
+    "agents.form.subjectPlaceholder": "Su cuenta con Créditos Demo requiere atención",
+    "agents.form.templateNamePlaceholder": "recordatorio_pago_1",
+    "agents.form.senderIdPlaceholder": "CreditosDemo",
     "agents.form.voicePlaceholder": "Seleccione una voz…",
     "agents.form.dtmfSectionTitle": "Menú DTMF (opcional)",
     "agents.form.dtmfSectionDescription":

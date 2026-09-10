@@ -46,7 +46,17 @@ const FIELD_PLACEHOLDER = {
   maxRepeats: "agents.form.maxRepeatsPlaceholder",
   optOutDigit: "agents.form.optOutDigitPlaceholder",
   optOutMessage: "agents.form.optOutMessagePlaceholder",
-  optOutConfirmationMessage: "agents.form.optOutConfirmationMessagePlaceholder"
+  optOutConfirmationMessage: "agents.form.optOutConfirmationMessagePlaceholder",
+  subject: "agents.form.subjectPlaceholder",
+  templateName: "agents.form.templateNamePlaceholder",
+  senderId: "agents.form.senderIdPlaceholder"
+} as const satisfies Record<string, MessageId>;
+
+const FIELD_HINT = {
+  firstMessage: "agents.form.firstMessageHint",
+  systemPrompt: "agents.form.systemPromptHint",
+  script: "agents.form.scriptHint",
+  messageBody: "agents.form.messageBodyHint"
 } as const satisfies Record<string, MessageId>;
 
 /** Example template variables + a link to the full reference, under the page header. */
@@ -498,12 +508,14 @@ function CreateAgentTemplateModal({
             <InputGroup
               label={t("agents.form.firstMessage")}
               id="a-first"
+              hint={t(FIELD_HINT.firstMessage)}
               value={fields.firstMessage ?? ""}
               onChange={(e) => set("firstMessage", e.target.value)}
             />
             <TextareaGroup
               label={t("agents.form.systemPrompt")}
               id="a-prompt"
+              hint={t(FIELD_HINT.systemPrompt)}
               value={fields.systemPrompt ?? ""}
               onChange={(e) => set("systemPrompt", e.target.value)}
             />
@@ -515,6 +527,7 @@ function CreateAgentTemplateModal({
             <TextareaGroup
               label={t("agents.form.script")}
               id="a-script"
+              hint={t(FIELD_HINT.script)}
               value={fields.script ?? ""}
               onChange={(e) => set("script", e.target.value)}
             />
@@ -583,12 +596,14 @@ function CreateAgentTemplateModal({
             <TextareaGroup
               label={t("agents.form.messageBody")}
               id="a-sms"
+              hint={t(FIELD_HINT.messageBody)}
               value={fields.messageBody ?? ""}
               onChange={(e) => set("messageBody", e.target.value)}
             />
             <InputGroup
               label={t("agents.form.senderId")}
               id="a-sender"
+              placeholder={t(FIELD_PLACEHOLDER.senderId)}
               value={fields.senderId ?? ""}
               onChange={(e) => set("senderId", e.target.value)}
             />
@@ -600,18 +615,21 @@ function CreateAgentTemplateModal({
             <InputGroup
               label={t("agents.form.subject")}
               id="a-subject"
+              placeholder={t(FIELD_PLACEHOLDER.subject)}
               value={fields.subject ?? ""}
               onChange={(e) => set("subject", e.target.value)}
             />
             <TextareaGroup
               label={t("agents.form.messageBody")}
               id="a-email-body"
+              hint={t(FIELD_HINT.messageBody)}
               value={fields.messageBody ?? ""}
               onChange={(e) => set("messageBody", e.target.value)}
             />
             <TextareaGroup
               label={t("agents.form.systemPrompt")}
               id="a-email-prompt"
+              hint={t(FIELD_HINT.systemPrompt)}
               value={fields.systemPrompt ?? ""}
               onChange={(e) => set("systemPrompt", e.target.value)}
             />
@@ -636,6 +654,7 @@ function CreateAgentTemplateModal({
             <InputGroup
               label={t("agents.form.templateName")}
               id="a-wa-tname"
+              placeholder={t(FIELD_PLACEHOLDER.templateName)}
               value={fields.templateName ?? ""}
               onChange={(e) => set("templateName", e.target.value)}
             />
@@ -675,6 +694,7 @@ function CreateAgentTemplateModal({
             <TextareaGroup
               label={t("agents.form.systemPrompt")}
               id="a-wa-prompt"
+              hint={t(FIELD_HINT.systemPrompt)}
               value={fields.systemPrompt ?? ""}
               onChange={(e) => set("systemPrompt", e.target.value)}
             />
@@ -910,12 +930,14 @@ function EditAgentTemplateModal({
                 <InputGroup
                   label={t("agents.form.firstMessage")}
                   id="e-first"
+                  hint={t(FIELD_HINT.firstMessage)}
                   value={fields.firstMessage ?? ""}
                   onChange={(e) => set("firstMessage", e.target.value)}
                 />
                 <TextareaGroup
                   label={t("agents.form.systemPrompt")}
                   id="e-prompt"
+                  hint={t(FIELD_HINT.systemPrompt)}
                   value={fields.systemPrompt ?? ""}
                   onChange={(e) => set("systemPrompt", e.target.value)}
                 />
@@ -927,6 +949,7 @@ function EditAgentTemplateModal({
                 <TextareaGroup
                   label={t("agents.form.script")}
                   id="e-script"
+                  hint={t(FIELD_HINT.script)}
                   value={fields.script ?? ""}
                   onChange={(e) => set("script", e.target.value)}
                 />
@@ -997,12 +1020,14 @@ function EditAgentTemplateModal({
                 <TextareaGroup
                   label={t("agents.form.messageBody")}
                   id="e-sms"
+                  hint={t(FIELD_HINT.messageBody)}
                   value={fields.messageBody ?? ""}
                   onChange={(e) => set("messageBody", e.target.value)}
                 />
                 <InputGroup
                   label={t("agents.form.senderId")}
                   id="e-sender"
+                  placeholder={t(FIELD_PLACEHOLDER.senderId)}
                   value={fields.senderId ?? ""}
                   onChange={(e) => set("senderId", e.target.value)}
                 />
@@ -1014,18 +1039,21 @@ function EditAgentTemplateModal({
                 <InputGroup
                   label={t("agents.form.subject")}
                   id="e-subject"
+                  placeholder={t(FIELD_PLACEHOLDER.subject)}
                   value={fields.subject ?? ""}
                   onChange={(e) => set("subject", e.target.value)}
                 />
                 <TextareaGroup
                   label={t("agents.form.messageBody")}
                   id="e-email-body"
+                  hint={t(FIELD_HINT.messageBody)}
                   value={fields.messageBody ?? ""}
                   onChange={(e) => set("messageBody", e.target.value)}
                 />
                 <TextareaGroup
                   label={t("agents.form.systemPrompt")}
                   id="e-email-prompt"
+                  hint={t(FIELD_HINT.systemPrompt)}
                   value={fields.systemPrompt ?? ""}
                   onChange={(e) => set("systemPrompt", e.target.value)}
                 />
@@ -1050,6 +1078,7 @@ function EditAgentTemplateModal({
                 <InputGroup
                   label={t("agents.form.templateName")}
                   id="e-wa-tname"
+                  placeholder={t(FIELD_PLACEHOLDER.templateName)}
                   value={fields.templateName ?? ""}
                   onChange={(e) => set("templateName", e.target.value)}
                 />
@@ -1088,6 +1117,7 @@ function EditAgentTemplateModal({
                 <TextareaGroup
                   label={t("agents.form.systemPrompt")}
                   id="e-wa-prompt"
+                  hint={t(FIELD_HINT.systemPrompt)}
                   value={fields.systemPrompt ?? ""}
                   onChange={(e) => set("systemPrompt", e.target.value)}
                 />
