@@ -123,6 +123,9 @@ jobs:
             echo "QCOBRO_VERSION=${VERSION}" >> .env.next
             mv .env.next .env
 
+            # Pull the new image pair. Superseded releases are pruned once the
+            # deploy is confirmed healthy (below) so the droplet disk does not
+            # fill up with old ghcr.io/<owner>/qcobro/* layers over time.
             docker compose pull apiserver webapp
             docker compose up -d
 
@@ -159,6 +162,12 @@ jobs:
             if [ -x scripts/deploy/tls.sh ]; then
               scripts/deploy/tls.sh || echo "WARNING: TLS sync failed — check certs/Envoy."
             fi
+
+            # Reclaim disk: drop images from superseded releases (the running
+            # stack keeps its own). Non-fatal — a prune hiccup must not fail an
+            # otherwise-good deploy.
+            docker image prune -af || true
+            docker builder prune -af || true
 
             echo "Deployed ${VERSION} successfully."
             docker compose ps
