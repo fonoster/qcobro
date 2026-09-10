@@ -108,6 +108,23 @@ export function AgentTemplateDetail() {
               <ConfigRow label={t("agents.form.firstMessage")} value={voiceCfg.firstMessage} />
               <ConfigRow label={t("agents.form.systemPrompt")} value={voiceCfg.systemPrompt} />
               <ConfigRow label={t("agents.form.script")} value={voiceCfg.script} />
+              {tmpl?.type === "VOICE_AI" && (
+                <>
+                  <ConfigRow label={t("agents.form.idleMessage")} value={voiceCfg.idleMessage} />
+                  <ConfigRow
+                    label={t("agents.form.idleTimeout")}
+                    value={voiceCfg.idleTimeout == null ? null : String(voiceCfg.idleTimeout)}
+                  />
+                  <ConfigRow
+                    label={t("agents.form.idleMaxTimeoutCount")}
+                    value={
+                      voiceCfg.idleMaxTimeoutCount == null
+                        ? null
+                        : String(voiceCfg.idleMaxTimeoutCount)
+                    }
+                  />
+                </>
+              )}
             </>
           )}
           {tmpl?.smsConfig && (

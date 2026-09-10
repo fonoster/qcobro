@@ -9,6 +9,26 @@ import { z } from "zod";
  */
 export const PRERECORDED_SCRIPT_MAX_LENGTH = 2000;
 
+/**
+ * Deployment defaults for a VOICE_AI agent's Fonoster AUTOPILOT idle options — the line the
+ * agent speaks when the caller goes silent (`message`), how long it waits for speech before
+ * speaking it (`timeout`, in **milliseconds**), and how many consecutive idle timeouts it
+ * tolerates before hanging up (`maxTimeoutCount`).
+ *
+ * Single source of truth for three consumers: the `.default()` on the schema fields below,
+ * the console create-form pre-fill, and `FonosterVoiceApplicationClient.evaluate()` (the
+ * ephemeral eval path, which has no template row to read). The Prisma migration that adds
+ * the columns backfills existing rows from these same literal values.
+ *
+ * `timeout` was 4500 ms in PR #165; deliberately widened to ~8 s here after field feedback
+ * that the agent still gave up too soon.
+ */
+export const DEFAULT_VOICE_IDLE_OPTIONS = {
+  message: "¿Se encuentra en la línea? Necesito confirmar una fecha de pago para su cuenta.",
+  timeout: 8000,
+  maxTimeoutCount: 3
+} as const;
+
 export const agentTypeSchema = z.enum([
   "SMS",
   "VOICE_PRERECORDED",
@@ -134,7 +154,18 @@ export const createAgentTemplateSchema = z
       // Optional: a VOICE_AI agent may rely on its system prompt with no scripted opening line.
       firstMessage: z.string().optional(),
       language: z.string().min(1),
-      fonosterAppName: z.string().min(1).optional()
+      fonosterAppName: z.string().min(1).optional(),
+      // Fonoster AUTOPILOT idle options, per template. All three `.default()` to
+      // `DEFAULT_VOICE_IDLE_OPTIONS` so `evalTemplateSchema` (which `.extend`s this exact
+      // member) and `agents:create` calls that omit them keep working — "required" is
+      // enforced by the NOT NULL columns and the console form, not by this shape.
+      idleMessage: z.string().min(1).default(DEFAULT_VOICE_IDLE_OPTIONS.message),
+      idleTimeout: z.number().int().min(3000).default(DEFAULT_VOICE_IDLE_OPTIONS.timeout),
+      idleMaxTimeoutCount: z
+        .number()
+        .int()
+        .min(1)
+        .default(DEFAULT_VOICE_IDLE_OPTIONS.maxTimeoutCount)
     }),
     z.object({
       ...baseFields,

@@ -221,36 +221,42 @@ model AgentTemplate {
 }
 
 model VoiceAiConfig {
-  templateId      String        @id
-  fonosterAppName String
-  fonosterAppRef  String?
-  voice           String
-  systemPrompt    String
-  firstMessage    String?
-  language        String
-  template        AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  templateId          String        @id
+  fonosterAppName     String
+  fonosterAppRef      String?
+  voice               String
+  systemPrompt        String
+  firstMessage        String?
+  language            String
+  // Fonoster AUTOPILOT idle options, per template. NOT NULL: every stored template and
+  // every synced Fonoster app carries real values. Defaults live in
+  // `@qcobro/common` `DEFAULT_VOICE_IDLE_OPTIONS`; the console form pre-fills from there.
+  idleMessage         String
+  idleTimeout         Int
+  idleMaxTimeoutCount Int
+  template            AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@map("voice_ai_configs")
 }
 
 model VoicePrerecordedConfig {
-  templateId      String        @id
-  fonosterAppName String
-  fonosterAppRef  String?
-  voice           String
-  script          String
-  language        String
+  templateId                String        @id
+  fonosterAppName           String
+  fonosterAppRef            String?
+  voice                     String
+  script                    String
+  language                  String
   // Optional DTMF menu, offered after the script plays. Unset means no menu at all
   // (the pre-existing behavior). See account-contact-log/prerecorded-audio specs.
-  repeatDigit     String?
-  repeatMessage   String?
-  maxRepeats      Int?
-  optOutDigit     String?
-  optOutMessage   String?
+  repeatDigit               String?
+  repeatMessage             String?
+  maxRepeats                Int?
+  optOutDigit               String?
+  optOutMessage             String?
   // Played once the opt-out digit is detected, before hangup — closes the call out for the
   // caller ("we've stopped calling you") rather than just ending it silently.
   optOutConfirmationMessage String?
-  template        AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  template                  AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@map("voice_prerecorded_configs")
 }

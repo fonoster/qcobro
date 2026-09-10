@@ -21,7 +21,10 @@ export async function syncVoiceAiApplication(
     voice: cfg.voice,
     systemPrompt: cfg.systemPrompt,
     firstMessage: cfg.firstMessage ?? undefined,
-    language: cfg.language
+    language: cfg.language,
+    idleMessage: cfg.idleMessage,
+    idleTimeout: cfg.idleTimeout,
+    idleMaxTimeoutCount: cfg.idleMaxTimeoutCount
   };
 
   const { ref } = cfg.fonosterAppRef

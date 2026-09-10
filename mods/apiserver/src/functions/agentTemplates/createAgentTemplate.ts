@@ -40,7 +40,12 @@ export function createCreateAgentTemplate(
               voice: params.voice,
               systemPrompt: params.systemPrompt,
               firstMessage: params.firstMessage ?? null,
-              language: params.language
+              language: params.language,
+              // Always present after schema parse — the three fields carry `.default()`
+              // pointing at DEFAULT_VOICE_IDLE_OPTIONS.
+              idleMessage: params.idleMessage,
+              idleTimeout: params.idleTimeout,
+              idleMaxTimeoutCount: params.idleMaxTimeoutCount
             }
           });
           break;

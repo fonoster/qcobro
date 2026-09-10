@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { voicePrerecordedDtmfSchema } from "@qcobro/common";
+import { DEFAULT_VOICE_IDLE_OPTIONS, voicePrerecordedDtmfSchema } from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
 import { useI18n, type MessageId } from "../lib/i18n.js";
 import { PageHeader } from "../components/page-header.js";
@@ -49,14 +49,19 @@ const FIELD_PLACEHOLDER = {
   optOutConfirmationMessage: "agents.form.optOutConfirmationMessagePlaceholder",
   subject: "agents.form.subjectPlaceholder",
   templateName: "agents.form.templateNamePlaceholder",
-  senderId: "agents.form.senderIdPlaceholder"
+  senderId: "agents.form.senderIdPlaceholder",
+  idleTimeout: "agents.form.idleTimeoutPlaceholder",
+  idleMaxTimeoutCount: "agents.form.idleMaxTimeoutCountPlaceholder"
 } as const satisfies Record<string, MessageId>;
 
 const FIELD_HINT = {
   firstMessage: "agents.form.firstMessageHint",
   systemPrompt: "agents.form.systemPromptHint",
   script: "agents.form.scriptHint",
-  messageBody: "agents.form.messageBodyHint"
+  messageBody: "agents.form.messageBodyHint",
+  idleMessage: "agents.form.idleMessageHint",
+  idleTimeout: "agents.form.idleTimeoutHint",
+  idleMaxTimeoutCount: "agents.form.idleMaxTimeoutCountHint"
 } as const satisfies Record<string, MessageId>;
 
 /** Example template variables + a link to the full reference, under the page header. */
@@ -313,6 +318,24 @@ function validateVoicePrerecordedDtmf(
   return errors;
 }
 
+/**
+ * VOICE_AI idle options must be a non-empty message, a timeout of at least 3000 ms, and a
+ * max-timeout count of at least 1 — mirrors the `createAgentTemplateSchema` bounds so an
+ * invalid submit is caught before the request. The fields are pre-filled from the
+ * deployment default, so this only fails if the operator clears or lowers a value.
+ */
+function isValidIdleConfig(fields: Record<string, string>): boolean {
+  const timeout = Number(fields.idleTimeout);
+  const maxCount = Number(fields.idleMaxTimeoutCount);
+  return (
+    (fields.idleMessage ?? "").trim().length > 0 &&
+    Number.isInteger(timeout) &&
+    timeout >= 3000 &&
+    Number.isInteger(maxCount) &&
+    maxCount >= 1
+  );
+}
+
 function CreateAgentTemplateModal({
   onClose,
   onSuccess
@@ -323,7 +346,13 @@ function CreateAgentTemplateModal({
   const { t } = useI18n();
   const [name, setName] = useState("");
   const [type, setType] = useState<AgentType>("VOICE_AI");
-  const [fields, setFields] = useState<Record<string, string>>({ language: "es" });
+  const [fields, setFields] = useState<Record<string, string>>({
+    language: "es",
+    // Idle options pre-filled from the deployment default; the operator may override.
+    idleMessage: DEFAULT_VOICE_IDLE_OPTIONS.message,
+    idleTimeout: String(DEFAULT_VOICE_IDLE_OPTIONS.timeout),
+    idleMaxTimeoutCount: String(DEFAULT_VOICE_IDLE_OPTIONS.maxTimeoutCount)
+  });
   const [error, setError] = useState<string | null>(null);
   const createDtmfErrors = validateVoicePrerecordedDtmf(fields, t);
   const templateNameDebounced = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -377,6 +406,10 @@ function CreateAgentTemplateModal({
       // below) — no need to repeat it in the generic banner too.
       return;
     }
+    if (type === "VOICE_AI" && !isValidIdleConfig(fields)) {
+      setError(t("agents.form.idleInvalid"));
+      return;
+    }
     setError(null);
     const base = { name: name.trim() };
     let payload: Record<string, unknown>;
@@ -388,7 +421,10 @@ function CreateAgentTemplateModal({
           voice: fields.voice ?? "",
           systemPrompt: fields.systemPrompt ?? "",
           firstMessage: fields.firstMessage ?? "",
-          language: fields.language ?? "es"
+          language: fields.language ?? "es",
+          idleMessage: fields.idleMessage ?? "",
+          idleTimeout: Number(fields.idleTimeout),
+          idleMaxTimeoutCount: Number(fields.idleMaxTimeoutCount)
         };
         break;
       case "VOICE_PRERECORDED":
@@ -519,6 +555,33 @@ function CreateAgentTemplateModal({
               hint={t(FIELD_HINT.systemPrompt)}
               value={fields.systemPrompt ?? ""}
               onChange={(e) => set("systemPrompt", e.target.value)}
+            />
+            <TextareaGroup
+              label={t("agents.form.idleMessage")}
+              id="a-idle-message"
+              hint={t(FIELD_HINT.idleMessage)}
+              value={fields.idleMessage ?? ""}
+              onChange={(e) => set("idleMessage", e.target.value)}
+            />
+            <InputGroup
+              label={t("agents.form.idleTimeout")}
+              id="a-idle-timeout"
+              type="number"
+              min={3000}
+              hint={t(FIELD_HINT.idleTimeout)}
+              placeholder={t(FIELD_PLACEHOLDER.idleTimeout)}
+              value={fields.idleTimeout ?? ""}
+              onChange={(e) => set("idleTimeout", e.target.value)}
+            />
+            <InputGroup
+              label={t("agents.form.idleMaxTimeoutCount")}
+              id="a-idle-max"
+              type="number"
+              min={1}
+              hint={t(FIELD_HINT.idleMaxTimeoutCount)}
+              placeholder={t(FIELD_PLACEHOLDER.idleMaxTimeoutCount)}
+              value={fields.idleMaxTimeoutCount ?? ""}
+              onChange={(e) => set("idleMaxTimeoutCount", e.target.value)}
             />
           </>
         )}
@@ -807,6 +870,10 @@ function EditAgentTemplateModal({
       // Each error already renders inline next to its field — no need to repeat it below.
       return;
     }
+    if (template.type === "VOICE_AI" && !isValidIdleConfig(fields)) {
+      setError(t("agents.form.idleInvalid"));
+      return;
+    }
     setError(null);
     let config: Record<string, unknown> = {};
     switch (template.type) {
@@ -815,7 +882,10 @@ function EditAgentTemplateModal({
           voice: fields.voice,
           systemPrompt: fields.systemPrompt,
           firstMessage: fields.firstMessage,
-          language: fields.language
+          language: fields.language,
+          idleMessage: fields.idleMessage,
+          idleTimeout: Number(fields.idleTimeout),
+          idleMaxTimeoutCount: Number(fields.idleMaxTimeoutCount)
         };
         break;
       case "VOICE_PRERECORDED":
@@ -938,6 +1008,33 @@ function EditAgentTemplateModal({
                   hint={t(FIELD_HINT.systemPrompt)}
                   value={fields.systemPrompt ?? ""}
                   onChange={(e) => set("systemPrompt", e.target.value)}
+                />
+                <TextareaGroup
+                  label={t("agents.form.idleMessage")}
+                  id="e-idle-message"
+                  hint={t(FIELD_HINT.idleMessage)}
+                  value={fields.idleMessage ?? ""}
+                  onChange={(e) => set("idleMessage", e.target.value)}
+                />
+                <InputGroup
+                  label={t("agents.form.idleTimeout")}
+                  id="e-idle-timeout"
+                  type="number"
+                  min={3000}
+                  hint={t(FIELD_HINT.idleTimeout)}
+                  placeholder={t(FIELD_PLACEHOLDER.idleTimeout)}
+                  value={fields.idleTimeout ?? ""}
+                  onChange={(e) => set("idleTimeout", e.target.value)}
+                />
+                <InputGroup
+                  label={t("agents.form.idleMaxTimeoutCount")}
+                  id="e-idle-max"
+                  type="number"
+                  min={1}
+                  hint={t(FIELD_HINT.idleMaxTimeoutCount)}
+                  placeholder={t(FIELD_PLACEHOLDER.idleMaxTimeoutCount)}
+                  value={fields.idleMaxTimeoutCount ?? ""}
+                  onChange={(e) => set("idleMaxTimeoutCount", e.target.value)}
                 />
               </>
             )}

@@ -1,5 +1,6 @@
 import * as SDK from "@fonoster/sdk";
 import {
+  DEFAULT_VOICE_IDLE_OPTIONS,
   toCallMetadata,
   ttsProductRefForVoice,
   type FonosterConfig,
@@ -98,14 +99,21 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
         config: {
           conversationSettings: {
             // Static conversation defaults (goodbyeMessage, systemErrorMessage,
-            // idleOptions, allowUserBargeIn) come from the autopilot template
-            // (derived from autopilot.yaml; required by Fonoster). Per-agent
-            // firstMessage + systemPrompt override on top.
+            // allowUserBargeIn) come from the autopilot template (derived from
+            // autopilot.yaml; required by Fonoster). Per-agent firstMessage +
+            // systemPrompt + idleOptions override on top.
             ...autopilotTemplate.conversationSettings,
             // Only override the template's default greeting when the agent has a
             // scripted first message; otherwise the autopilot default stands.
             ...(input.firstMessage ? { firstMessage: input.firstMessage } : {}),
-            systemPrompt: input.systemPrompt
+            systemPrompt: input.systemPrompt,
+            // Per-template idle options (the shared block was removed from the
+            // autopilot template — both call paths now set this explicitly).
+            idleOptions: {
+              message: input.idleMessage,
+              timeout: input.idleTimeout,
+              maxTimeoutCount: input.idleMaxTimeoutCount
+            }
           },
           languageModel: {
             provider: autopilot.llmProvider,
@@ -207,7 +215,15 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
           conversationSettings: {
             ...autopilotTemplate.conversationSettings,
             ...(input.firstMessage ? { firstMessage: input.firstMessage } : {}),
-            systemPrompt: input.systemPrompt
+            systemPrompt: input.systemPrompt,
+            // No template row here (ephemeral eval agent) — use the deployment default.
+            // Idle timing is never exercised by evaluateIntelligence, but Fonoster
+            // requires a well-formed idleOptions in conversationSettings.
+            idleOptions: {
+              message: DEFAULT_VOICE_IDLE_OPTIONS.message,
+              timeout: DEFAULT_VOICE_IDLE_OPTIONS.timeout,
+              maxTimeoutCount: DEFAULT_VOICE_IDLE_OPTIONS.maxTimeoutCount
+            }
           },
           languageModel: {
             provider: autopilot.llmProvider,
