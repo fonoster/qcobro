@@ -49,6 +49,6 @@
 
 ## 8. Ship
 
-- [ ] 8.1 Conventional Commits per package, DCO `Signed-off-by`, no Claude attribution anywhere.
-- [ ] 8.2 Open PR against `main`: what changed, the #165 supersession (4500→8000 on backfill), re-sync path for existing agents, and any stage not run live (DB/e2e).
-- [ ] 8.3 `/opsx:archive voice-ai-idle-options` (folds the spec delta into `openspec/specs/agent-templates/spec.md`).
+- [x] 8.1 Conventional Commits per package, DCO `Signed-off-by`, no Claude attribution anywhere.
+- [x] 8.2 Open PR against `main`: what changed, the #165 supersession (4500→8000 on backfill), re-sync path for existing agents, and any stage not run live (DB/e2e).
+- [x] 8.3 `/opsx:archive voice-ai-idle-options` (folds the spec delta into `openspec/specs/agent-templates/spec.md`).
