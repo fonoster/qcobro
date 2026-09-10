@@ -55,12 +55,15 @@ function AddSenderModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
         <InputGroup
           label={t("integrations.senders.phoneNumberId")}
           id="s-pnid"
+          placeholder={t("integrations.senders.phoneNumberIdPlaceholder")}
+          hint={t("integrations.senders.phoneNumberIdHint")}
           value={phoneNumberId}
           onChange={(e) => setPhoneNumberId(e.target.value)}
         />
         <InputGroup
           label={t("integrations.senders.displayNumber")}
           id="s-dn"
+          placeholder={t("integrations.senders.displayNumberPlaceholder")}
           value={displayNumber}
           onChange={(e) => setDisplayNumber(e.target.value)}
         />
@@ -136,7 +139,7 @@ function WabaForm() {
         <InputGroup
           label={t("integrations.waba.wabaId")}
           id="w-wabaid"
-          placeholder={integration.data?.wabaId ?? ""}
+          placeholder={integration.data?.wabaId || t("integrations.waba.wabaIdPlaceholder")}
           value={wabaId}
           onChange={(e) => setWabaId(e.target.value)}
         />
@@ -144,6 +147,7 @@ function WabaForm() {
           label={t("integrations.waba.verifyToken")}
           id="w-verify"
           placeholder={integration.data?.verifyToken ?? ""}
+          hint={t("integrations.waba.verifyTokenHint")}
           value={verifyToken}
           onChange={(e) => setVerifyToken(e.target.value)}
         />
@@ -151,6 +155,7 @@ function WabaForm() {
           label={t("integrations.waba.accessToken")}
           id="w-token"
           type="password"
+          placeholder={t("integrations.waba.accessTokenPlaceholder")}
           value={accessToken}
           onChange={(e) => setAccessToken(e.target.value)}
           hint={connected ? t("integrations.waba.accessTokenHint") : undefined}

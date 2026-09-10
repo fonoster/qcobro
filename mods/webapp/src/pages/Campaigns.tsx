@@ -320,6 +320,7 @@ function EditCampaignModal({
             label={t("campaigns.form.startTime")}
             id="e-startt"
             type="time"
+            hint={t("campaigns.form.timeWindowHint")}
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
           />
@@ -327,6 +328,7 @@ function EditCampaignModal({
             label={t("campaigns.form.endTime")}
             id="e-endt"
             type="time"
+            hint={t("campaigns.form.timeWindowHint")}
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
           />
@@ -334,6 +336,7 @@ function EditCampaignModal({
             label={t("campaigns.form.maxPerAccount")}
             id="e-maxacc"
             type="number"
+            hint={t("campaigns.form.maxPerAccountHint")}
             value={String(maxPerAccount)}
             onChange={(e) => setMaxPerAccount(Number(e.target.value))}
           />
@@ -341,6 +344,7 @@ function EditCampaignModal({
             label={t("campaigns.form.maxPerDay")}
             id="e-maxday"
             type="number"
+            hint={t("campaigns.form.maxPerDayHint")}
             value={String(maxPerDay)}
             onChange={(e) => setMaxPerDay(Number(e.target.value))}
           />
@@ -537,6 +541,7 @@ function CreateCampaignModal({
             label={t("campaigns.form.startTime")}
             id="c-startt"
             type="time"
+            hint={t("campaigns.form.timeWindowHint")}
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
           />
@@ -544,6 +549,7 @@ function CreateCampaignModal({
             label={t("campaigns.form.endTime")}
             id="c-endt"
             type="time"
+            hint={t("campaigns.form.timeWindowHint")}
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
           />
@@ -551,6 +557,7 @@ function CreateCampaignModal({
             label={t("campaigns.form.maxPerAccount")}
             id="c-maxacc"
             type="number"
+            hint={t("campaigns.form.maxPerAccountHint")}
             value={String(maxPerAccount)}
             onChange={(e) => setMaxPerAccount(Number(e.target.value))}
           />
@@ -558,6 +565,7 @@ function CreateCampaignModal({
             label={t("campaigns.form.maxPerDay")}
             id="c-maxday"
             type="number"
+            hint={t("campaigns.form.maxPerDayHint")}
             value={String(maxPerDay)}
             onChange={(e) => setMaxPerDay(Number(e.target.value))}
           />

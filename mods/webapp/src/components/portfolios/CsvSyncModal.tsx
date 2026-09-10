@@ -103,6 +103,8 @@ export function CsvSyncModal({
               />
             </div>
 
+            <p className="text-xs text-slate-500">{t("portfolios.csv.fileHint")}</p>
+
             {parseErrors.length > 0 && (
               <div className="rounded-md border border-red-200 bg-red-50 p-3">
                 <p className="mb-1 text-xs font-medium text-red-700">

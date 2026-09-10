@@ -23,3 +23,27 @@ export const WithLabel: StoryObj = {
     </div>
   )
 };
+export const WithHint: StoryObj = {
+  render: () => (
+    <div className="w-80">
+      <TextareaGroup
+        label="Guion"
+        hint="Ej.: Hola {{firstName}}, le recordamos que su cuenta presenta un saldo pendiente."
+        id="guion"
+      />
+    </div>
+  )
+};
+// A `hint` is suppressed while an `error` is showing — the field renders the error instead.
+export const WithHintAndError: StoryObj = {
+  render: () => (
+    <div className="w-80">
+      <TextareaGroup
+        label="Guion"
+        hint="Ej.: Hola {{firstName}}, le recordamos que su cuenta presenta un saldo pendiente."
+        error="El guion es obligatorio."
+        id="guion-err"
+      />
+    </div>
+  )
+};
