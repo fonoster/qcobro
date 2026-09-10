@@ -5,6 +5,7 @@ import {
   pickRandomNumber,
   renderTemplate,
   renderWhatsAppTemplate,
+  toCallMetadata,
   withErrorHandlingAndValidation,
   type DispatchDeps,
   type DispatchOutreachInput,
@@ -159,7 +160,12 @@ export function createDispatchOutreach(deps: DispatchDeps) {
     // Pre-recorded → EXTERNAL VoiceServer: the spoken script (locuted via TTS) is the
     // only metadata. Voz IA → AUTOPILOT: the system prompt is already stored on the
     // synced Fonoster application, so we never resend it as call metadata — that would
-    // duplicate it and pollute the agent's context. We pass only the opening line.
+    // duplicate it and pollute the agent's context. We pass the opening line plus the
+    // allow-listed account context (`toCallMetadata`) — name, balance, terms, days past
+    // due, last payment — which Fonoster appends to the prompt under
+    // `[Additional Parameters (metadata)]` so the agent can answer account questions
+    // ("¿cuánto debo?") mid-call. Internal context fields (locale, ids, phone,
+    // negotiation options, segment) are excluded by the allow-list.
     let metadata: Record<string, string>;
     let renderedBody: string;
     if (params.channel === "VOICE_PRERECORDED") {
@@ -178,7 +184,7 @@ export function createDispatchOutreach(deps: DispatchDeps) {
       }
     } else {
       renderedBody = renderTemplate(params.firstMessage ?? "", params.context);
-      metadata = { firstMessage: renderedBody };
+      metadata = { ...toCallMetadata(params.context), firstMessage: renderedBody };
     }
 
     let ref: string;

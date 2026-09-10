@@ -272,6 +272,51 @@ export function buildAutopilotContextLines(context: Record<string, unknown> | un
   return lines;
 }
 
+/**
+ * The context keys that MAY travel to a voice provider as call metadata — the account
+ * facts an agent needs to answer "¿cuánto debo?", "¿de cuánto es la cuota?", "¿cuándo
+ * pagué?" mid-call. Everything else a {@link buildOutreachContext} result carries
+ * (`locale`, `isDue`, `phone`, ids, `negotiationOptions`, `customerSegment`,
+ * `bestTimeToCall`, `preferredLanguage`, timestamps) is internal and stays out.
+ *
+ * An explicit allow-list, not a deny-list: a context key added later does not silently
+ * start leaking into call metadata. The names match the vocabulary an autopilot system
+ * prompt already references (see `evals/voice-mora-8-30.yaml`).
+ */
+const CALL_METADATA_KEYS = [
+  "fullName",
+  "firstName",
+  "outstandingBalance",
+  "principalAmount",
+  "termsAmount",
+  "termsFrequency",
+  "termsLength",
+  "missedInstallments",
+  "daysPastDue",
+  "lastPaymentDate",
+  "lastPaymentAmount",
+  "currency"
+] as const;
+
+/**
+ * Projects a {@link buildOutreachContext} result down to the string map a voice provider
+ * appends to the agent's system prompt as call metadata (Fonoster renders it under
+ * `[Additional Parameters (metadata)]`). Only the {@link CALL_METADATA_KEYS} allow-list is
+ * included; a key whose value is `null`, `undefined` or `""` is dropped so the agent never
+ * sees an empty parameter. Money-typed fields are already locale-formatted strings here
+ * (`"8,500"`) and are passed through unchanged; a `Date` (e.g. `lastPaymentDate`) is
+ * rendered as `YYYY-MM-DD`; everything else is `String(v)`.
+ */
+export function toCallMetadata(context: Record<string, unknown>): Record<string, string> {
+  const metadata: Record<string, string> = {};
+  for (const key of CALL_METADATA_KEYS) {
+    const value = context[key];
+    if (value === null || value === undefined || value === "") continue;
+    metadata[key] = value instanceof Date ? value.toISOString().slice(0, 10) : String(value);
+  }
+  return metadata;
+}
+
 /** Default number selector: a uniform random pick from the pool. */
 export const pickRandomNumber: NumberSelector = (numbers) =>
   numbers[Math.floor(Math.random() * numbers.length)];

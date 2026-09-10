@@ -73,23 +73,48 @@ describe("dispatchOutreach", () => {
     assert.equal(result.renderedBody, "Hola Ana, debe 900");
   });
 
-  it("places a voice call to the app ref with only the rendered opening line as metadata", async () => {
+  it("places a voice call to the app ref with the opening line plus the allow-listed account metadata", async () => {
     const { deps, calls } = makeDeps();
     const result = await createDispatchOutreach(deps)({
       channel: "VOICE_AI",
       to: "+50670000000",
-      context: { firstName: "Luis" },
+      // A real dispatch passes a `buildOutreachContext` result here; it carries both the
+      // account facts the agent needs mid-call and internal fields that must not leak.
+      context: {
+        firstName: "Luis",
+        fullName: "Luis Herrera",
+        outstandingBalance: "8,500",
+        missedInstallments: 2,
+        daysPastDue: 11,
+        currency: "DOP",
+        locale: "es-DO",
+        isDue: true,
+        phone: "+50670000000",
+        id: "acc-1",
+        negotiationOptions: "20% off if they insist"
+      },
       appRef: "app-9",
       firstMessage: "Hola {{firstName}}"
     });
 
     assert.equal(calls.voice.length, 1);
-    // The system prompt lives on the synced Fonoster app, so it is never resent here.
+    // The system prompt lives on the synced Fonoster app, so it is never resent here — but
+    // the account context IS forwarded (allow-listed only) so the agent can answer
+    // "¿cuánto debo?" mid-call. Internal fields (locale, isDue, phone, id, negotiation
+    // options) are dropped by the allow-list.
     assert.deepEqual(calls.voice[0], {
       from: "+50611111111",
       to: "+50670000000",
       appRef: "app-9",
-      metadata: { firstMessage: "Hola Luis" }
+      metadata: {
+        firstName: "Luis",
+        fullName: "Luis Herrera",
+        outstandingBalance: "8,500",
+        missedInstallments: "2",
+        daysPastDue: "11",
+        currency: "DOP",
+        firstMessage: "Hola Luis"
+      }
     });
     assert.equal(result.providerRef, "call-1");
     assert.equal(result.renderedBody, "Hola Luis");
