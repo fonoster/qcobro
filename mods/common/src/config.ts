@@ -61,7 +61,10 @@ export const fonosterConfigSchema = z
         llmProvider: z.string().default("google"),
         llmModel: z.string().default("gemini-2.0-flash"),
         maxTokens: z.number().default(300),
-        temperature: z.number().default(0),
+        // Slight warmth so the Voz IA agent varies its phrasing and can react with a
+        // brief human acknowledgement, without drifting from the scripted flows the
+        // eval suite pins. Tune per deployment in `qcobro.json`.
+        temperature: z.number().default(0.3),
         /**
          * Model for Fonoster's `evaluateIntelligence` judge (`testCases.evalsLanguageModel`) —
          * a required field on every VOICE_AI eval request, always `provider: "openai"` (the only
@@ -79,7 +82,7 @@ export const fonosterConfigSchema = z
         llmProvider: "google",
         llmModel: "gemini-2.0-flash",
         maxTokens: 300,
-        temperature: 0,
+        temperature: 0.3,
         evalsModel: "gpt-4o-mini"
       }),
     /**

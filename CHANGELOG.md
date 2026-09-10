@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.45.1](https://github.com/fonoster/qcobro/compare/v1.45.0...v1.45.1) (2026-09-10)
+
+### Bug Fixes
+
+- **agent-evaluations:** keep the tightened idle timeout out of the eval path ([#170](https://github.com/fonoster/qcobro/issues/170)) ([fb26efa](https://github.com/fonoster/qcobro/commit/fb26efa99215aadab6b526a29a7ee1e712ce56b2)), closes [#165](https://github.com/fonoster/qcobro/issues/165) [#165](https://github.com/fonoster/qcobro/issues/165)
+
+# [1.45.0](https://github.com/fonoster/qcobro/compare/v1.44.0...v1.45.0) (2026-09-10)
+
+### Features
+
+- **evals:** warmer, more conversational Voz IA mora 8-30 agent ([#167](https://github.com/fonoster/qcobro/issues/167)) ([2f694aa](https://github.com/fonoster/qcobro/commit/2f694aabc80192264cc6e6a5fb02b28950cf2a18))
+
 # [1.44.0](https://github.com/fonoster/qcobro/compare/v1.43.0...v1.44.0) (2026-09-10)
 
 ### Features
