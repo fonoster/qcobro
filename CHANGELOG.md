@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.42.1](https://github.com/fonoster/qcobro/compare/v1.42.0...v1.42.1) (2026-09-10)
+
+### Bug Fixes
+
+- **webapp:** route dialog errors through the Dialog error prop ([#158](https://github.com/fonoster/qcobro/issues/158)) ([1a97076](https://github.com/fonoster/qcobro/commit/1a97076d05415effae04ff2ddf164afa90cc08f5)), closes [#113](https://github.com/fonoster/qcobro/issues/113) [#115](https://github.com/fonoster/qcobro/issues/115)
+
 # [1.42.0](https://github.com/fonoster/qcobro/compare/v1.41.1...v1.42.0) (2026-09-10)
 
 ### Features
