@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.45.2](https://github.com/fonoster/qcobro/compare/v1.45.1...v1.45.2) (2026-09-10)
+
+### Reverts
+
+- "fix(agent-evaluations): keep the tightened idle timeout out of the eval path" ([#171](https://github.com/fonoster/qcobro/issues/171)) ([06a63b6](https://github.com/fonoster/qcobro/commit/06a63b6ee285b63300b66521939edab87be9a590)), closes [#170](https://github.com/fonoster/qcobro/issues/170) [#165](https://github.com/fonoster/qcobro/issues/165)
+
 ## [1.45.1](https://github.com/fonoster/qcobro/compare/v1.45.0...v1.45.1) (2026-09-10)
 
 ### Bug Fixes
