@@ -5,9 +5,9 @@ export function LanguageSwitcher() {
 
   return (
     <label className="flex items-center gap-2 text-sm">
-      <span className="text-gray-600">{t("language.label")}</span>
+      <span className="text-fg-muted">{t("language.label")}</span>
       <select
-        className="rounded border border-gray-300 px-2 py-1"
+        className="rounded border border-border px-2 py-1"
         value={language}
         onChange={(event) => setLanguage(event.target.value as Language)}
       >

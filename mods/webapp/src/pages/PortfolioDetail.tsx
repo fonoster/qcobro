@@ -138,8 +138,8 @@ export function PortfolioDetail() {
               [t("gestiones.detail.email"), String(viewDetail.email ?? "—")]
             ].map(([label, value]) => (
               <div key={label} className="flex flex-col gap-0.5">
-                <dt className="text-xs text-slate-400">{label}</dt>
-                <dd className="text-sm font-medium text-slate-700">{value}</dd>
+                <dt className="text-xs text-fg-subtle">{label}</dt>
+                <dd className="text-sm font-medium text-fg-muted">{value}</dd>
               </div>
             ))}
           </dl>
@@ -151,7 +151,7 @@ export function PortfolioDetail() {
                 id: "raw",
                 title: t("portfolios.detail.viewMetadata"),
                 content: (
-                  <pre className="overflow-x-auto whitespace-pre-wrap break-words text-xs text-slate-600">
+                  <pre className="overflow-x-auto whitespace-pre-wrap break-words text-xs text-fg-muted">
                     {JSON.stringify(
                       Object.fromEntries(
                         Object.entries(viewDetail).filter(

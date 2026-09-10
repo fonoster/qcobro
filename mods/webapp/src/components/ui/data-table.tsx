@@ -44,8 +44,8 @@ export interface DataTableProps<T> {
 export function TableCellStack({ title, sub }: { title: React.ReactNode; sub?: React.ReactNode }) {
   return (
     <div className="flex flex-col">
-      <span className="text-sm font-medium text-slate-900">{title}</span>
-      {sub != null && sub !== "" && <span className="text-xs text-slate-500">{sub}</span>}
+      <span className="text-sm font-medium text-fg">{title}</span>
+      {sub != null && sub !== "" && <span className="text-xs text-fg-subtle">{sub}</span>}
     </div>
   );
 }
@@ -124,7 +124,7 @@ export function DataTable<T extends Record<string, unknown>>({
   const showSelectionBar = selectable && selected.length > 0;
 
   const checkboxClass =
-    "h-4 w-4 cursor-pointer rounded border-slate-300 text-emerald-500 accent-emerald-500 focus:ring-emerald-500";
+    "h-4 w-4 cursor-pointer rounded border-border text-primary accent-emerald-500 focus:ring-ring";
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
@@ -133,7 +133,7 @@ export function DataTable<T extends Record<string, unknown>>({
           {showSelectionBar ? (
             <>
               <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-slate-700">
+                <span className="text-sm font-medium text-fg-muted">
                   {t("table.selected").replace("{count}", String(selected.length))}
                 </span>
                 {bulkActions}
@@ -141,7 +141,7 @@ export function DataTable<T extends Record<string, unknown>>({
               <button
                 type="button"
                 onClick={() => setSelected([])}
-                className="flex cursor-pointer items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
+                className="flex cursor-pointer items-center gap-1 text-sm text-fg-subtle hover:text-fg-muted"
               >
                 <X className="h-4 w-4" />
                 {t("common.cancel")}
@@ -171,10 +171,10 @@ export function DataTable<T extends Record<string, unknown>>({
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-border bg-surface">
         <table className="w-full">
           <thead>
-            <tr className="h-11 border-b border-slate-200 bg-slate-50">
+            <tr className="h-11 border-b border-border bg-elevated">
               {selectable && (
                 <th className="w-12 px-0 text-center">
                   <input
@@ -193,7 +193,7 @@ export function DataTable<T extends Record<string, unknown>>({
                 <th
                   key={String(col.key)}
                   className={cn(
-                    "px-4 text-left text-[12px] font-semibold tracking-[0.3px] text-slate-500",
+                    "px-4 text-left text-[12px] font-semibold tracking-[0.3px] text-fg-subtle",
                     col.align === "right" && "text-right",
                     col.align === "center" && "text-center",
                     col.className
@@ -207,7 +207,7 @@ export function DataTable<T extends Record<string, unknown>>({
           <tbody>
             {displayData.length === 0 ? (
               <tr>
-                <td colSpan={colSpan} className="px-4 py-10 text-center text-sm text-slate-400">
+                <td colSpan={colSpan} className="px-4 py-10 text-center text-sm text-fg-subtle">
                   {t("table.empty")}
                 </td>
               </tr>
@@ -219,8 +219,8 @@ export function DataTable<T extends Record<string, unknown>>({
                   <tr
                     key={id}
                     className={cn(
-                      "h-[52px] border-b border-slate-100 transition-colors last:border-b-0 hover:bg-slate-50",
-                      isSelected && "bg-emerald-50/40",
+                      "h-[52px] border-b border-border transition-colors last:border-b-0 hover:bg-elevated",
+                      isSelected && "bg-primary/10/40",
                       onRowClick && "cursor-pointer"
                     )}
                     onClick={() => onRowClick?.(row)}
@@ -240,7 +240,7 @@ export function DataTable<T extends Record<string, unknown>>({
                       <td
                         key={String(col.key)}
                         className={cn(
-                          "px-4 text-sm text-slate-900",
+                          "px-4 text-sm text-fg",
                           colIdx === 0 && !selectable && "font-medium",
                           col.align === "right" && "text-right",
                           col.align === "center" && "text-center",
@@ -258,8 +258,8 @@ export function DataTable<T extends Record<string, unknown>>({
         </table>
 
         {(totalPages > 1 || totalRecords !== undefined) && (
-          <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3">
-            <span className="text-[13px] text-slate-500">{rowCountLabel}</span>
+          <div className="flex items-center justify-between border-t border-border px-4 py-3">
+            <span className="text-[13px] text-fg-subtle">{rowCountLabel}</span>
             {totalPages > 1 && onPageChange && (
               <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
             )}

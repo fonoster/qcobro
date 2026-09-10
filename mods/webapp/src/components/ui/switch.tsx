@@ -20,14 +20,14 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(
         />
         <div
           className={cn(
-            "h-5 w-9 rounded-full bg-slate-200 transition-colors peer-checked:bg-emerald-500 peer-focus:ring-2 peer-focus:ring-emerald-500/20",
-            "after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-4",
+            "h-5 w-9 rounded-full bg-elevated transition-colors peer-checked:bg-primary peer-focus:ring-2 peer-focus:ring-ring/20",
+            "after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-surface after:shadow after:transition-transform peer-checked:after:translate-x-4",
             className
           )}
         />
       </label>
       {label && (
-        <label htmlFor={id} className="text-sm font-medium text-slate-700 cursor-pointer">
+        <label htmlFor={id} className="text-sm font-medium text-fg-muted cursor-pointer">
           {label}
         </label>
       )}

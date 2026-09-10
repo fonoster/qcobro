@@ -1,8 +1,9 @@
-import type { Language } from "../schemas/userSettings.js";
+import type { Language, Theme } from "../schemas/userSettings.js";
 
 export interface UserSettingsRecord {
   userRef: string;
   language: Language;
+  theme: Theme;
   createdAt: Date;
   updatedAt: Date;
 }

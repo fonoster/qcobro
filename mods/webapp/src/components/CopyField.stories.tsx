@@ -34,15 +34,15 @@ export const FieldNoLabel: Story = {
 export const Inline: Story = {
   args: {
     variant: "inline",
-    className: "max-w-[160px] rounded-md bg-slate-100 px-2 py-1 hover:bg-slate-200"
+    className: "max-w-[160px] rounded-md bg-elevated px-2 py-1 hover:bg-elevated"
   }
 };
 
 export const InlineInChip: Story = {
   render: (args) => (
-    <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2">
-      <span className="text-[13px] font-medium text-slate-500">Workspace ID</span>
-      <CopyField {...args} variant="inline" className="max-w-[120px] text-slate-900" />
+    <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-2">
+      <span className="text-[13px] font-medium text-fg-subtle">Workspace ID</span>
+      <CopyField {...args} variant="inline" className="max-w-[120px] text-fg" />
     </div>
   )
 };

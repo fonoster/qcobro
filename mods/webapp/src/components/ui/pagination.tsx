@@ -13,7 +13,7 @@ export function Pagination({ page, totalPages, onPageChange, className }: Pagina
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1}
-        className="flex h-10 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-medium text-slate-900 hover:bg-slate-100 disabled:opacity-40"
+        className="flex h-10 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-medium text-fg hover:bg-elevated disabled:opacity-40"
       >
         Previous
       </button>
@@ -21,7 +21,7 @@ export function Pagination({ page, totalPages, onPageChange, className }: Pagina
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={page === totalPages}
-        className="flex h-10 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-medium text-slate-900 hover:bg-slate-100 disabled:opacity-40"
+        className="flex h-10 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-medium text-fg hover:bg-elevated disabled:opacity-40"
       >
         Next
       </button>

@@ -102,7 +102,7 @@ export function ApiKeys() {
       <PageHeader title={t("apiKeys.title")} description={t("apiKeys.description")} />
 
       {!canManage ? (
-        <p className="text-sm text-slate-500">{t("apiKeys.empty")}</p>
+        <p className="text-sm text-fg-subtle">{t("apiKeys.empty")}</p>
       ) : (
         <DataTable
           data={rows}
@@ -115,7 +115,7 @@ export function ApiKeys() {
               key: "accessKeyId",
               header: t("apiKeys.col.accessKeyId"),
               render: (r) => (
-                <code className="font-mono text-[13px] text-slate-700">{r.accessKeyId}</code>
+                <code className="font-mono text-[13px] text-fg-muted">{r.accessKeyId}</code>
               )
             },
             {
@@ -127,14 +127,14 @@ export function ApiKeys() {
               key: "createdAt",
               header: t("apiKeys.col.created"),
               align: "right",
-              className: "text-[13px] text-slate-500",
+              className: "text-[13px] text-fg-subtle",
               render: (r) => fmtDate(r.createdAt) ?? "—"
             },
             {
               key: "expiresAt",
               header: t("apiKeys.col.expires"),
               align: "right",
-              className: "text-[13px] text-slate-500",
+              className: "text-[13px] text-fg-subtle",
               render: (r) => fmtDate(r.expiresAt) ?? t("apiKeys.noExpiry")
             },
             {
@@ -163,7 +163,7 @@ export function ApiKeys() {
       )}
 
       {canManage && rows.length === 0 && !list.isLoading && (
-        <p className="text-sm text-slate-400">{t("apiKeys.empty")}</p>
+        <p className="text-sm text-fg-subtle">{t("apiKeys.empty")}</p>
       )}
 
       <CreateApiKeyDialog

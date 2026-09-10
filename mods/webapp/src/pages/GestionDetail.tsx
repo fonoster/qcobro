@@ -40,7 +40,7 @@ function Section({
     <section className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
         <Icon className={`h-4 w-4 ${iconClass}`} />
-        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        <h3 className="text-sm font-semibold text-fg">{title}</h3>
       </div>
       {children}
     </section>
@@ -50,8 +50,8 @@ function Section({
 function EmailHeaderRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="w-14 shrink-0 text-xs text-slate-400">{label}</span>
-      <span className="text-xs font-medium text-slate-600">{value}</span>
+      <span className="w-14 shrink-0 text-xs text-fg-subtle">{label}</span>
+      <span className="text-xs font-medium text-fg-muted">{value}</span>
     </div>
   );
 }
@@ -60,8 +60,8 @@ function MetaItem({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null;
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-xs text-slate-400">{label}</span>
-      <span className="text-sm font-medium text-slate-700">{value}</span>
+      <span className="text-xs text-fg-subtle">{label}</span>
+      <span className="text-sm font-medium text-fg-muted">{value}</span>
     </div>
   );
 }
@@ -92,17 +92,17 @@ function CopyableMetaItem({ label, value }: { label: string; value: string }) {
 
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-xs text-slate-400">{label}</span>
+      <span className="text-xs text-fg-subtle">{label}</span>
       <div className="flex items-center gap-1.5">
-        <span className="font-mono text-sm font-medium text-slate-700">{displayValue}</span>
+        <span className="font-mono text-sm font-medium text-fg-muted">{displayValue}</span>
         <button
           type="button"
           onClick={onCopy}
           aria-label={copied ? t("gestiones.detail.idCopied") : t("gestiones.detail.copyId")}
-          className="text-slate-400 transition-colors hover:text-slate-600"
+          className="text-fg-subtle transition-colors hover:text-fg-muted"
         >
           {copied ? (
-            <Check className="h-3.5 w-3.5 text-emerald-600" />
+            <Check className="h-3.5 w-3.5 text-primary" />
           ) : (
             <Copy className="h-3.5 w-3.5" />
           )}
@@ -251,10 +251,10 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
   return (
     <>
       {/* Header */}
-      <div className="flex items-start justify-between border-b border-slate-100 p-6">
+      <div className="flex items-start justify-between border-b border-border p-6">
         <div className="flex flex-col gap-1">
-          <h1 className="text-lg font-bold text-slate-900">{t("gestiones.detail.title")}</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-lg font-bold text-fg">{t("gestiones.detail.title")}</h1>
+          <p className="text-sm text-fg-subtle">
             {g ? `${g.portfolioAccount.fullName} · ${g.portfolioAccount.externalId}` : "…"}
           </p>
         </div>
@@ -262,7 +262,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
           type="button"
           aria-label={t("gestiones.detail.back")}
           onClick={onClose}
-          className="text-slate-400 transition-colors hover:text-slate-600"
+          className="text-fg-subtle transition-colors hover:text-fg-muted"
         >
           <X className="h-5 w-5" />
         </button>
@@ -273,16 +273,16 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         {/* Voz IA + Pre-grabada: call recording player. Always the actual call recording —
             never a re-synthesized stand-in for what was said. */}
         {isVoiceChannel && (
-          <Section icon={PhoneCall} iconClass="text-emerald-700" title={t("gestiones.detail.call")}>
+          <Section icon={PhoneCall} iconClass="text-primary" title={t("gestiones.detail.call")}>
             {recordingUrl ? (
-              <div className="rounded-xl bg-emerald-700 p-4 text-white">
+              <div className="rounded-xl bg-brand-green p-4 text-white">
                 <div className="mb-3 flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface/20">
                     <PhoneCall className="h-4 w-4" />
                   </span>
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">{t("gestiones.detail.call")}</span>
-                    <span className="text-xs text-emerald-100">
+                    <span className="text-xs text-white/70">
                       {t(`agents.type.${g!.agentType}` as Parameters<typeof t>[0])}
                       {g?.campaign?.name ? ` · ${g.campaign.name}` : ""}
                     </span>
@@ -291,15 +291,15 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                 <audio controls src={recordingUrl} className="w-full" />
               </div>
             ) : (
-              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-500">
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-elevated p-4">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-elevated text-fg-subtle">
                   <MicOff className="h-4 w-4" />
                 </span>
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-slate-600">
+                  <span className="text-sm font-semibold text-fg-muted">
                     {t("gestiones.detail.recordingUnavailable")}
                   </span>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-fg-subtle">
                     {t("gestiones.detail.recordingUnavailableExplanation")}
                   </span>
                 </div>
@@ -312,27 +312,27 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         {isVoiceAi && transcript.length > 0 && (
           <Section
             icon={MessagesSquare}
-            iconClass="text-emerald-700"
+            iconClass="text-primary"
             title={t("gestiones.detail.transcript")}
           >
             <div className="flex flex-col gap-2">
               {transcript.map((line, i) =>
                 line.role === "agent" ? (
                   <div key={i} className="flex justify-end">
-                    <div className="max-w-[85%] rounded-2xl rounded-br-sm border border-emerald-100 bg-emerald-50 px-3.5 py-2.5">
-                      <span className="text-[11px] font-semibold text-emerald-700">
+                    <div className="max-w-[85%] rounded-2xl rounded-br-sm border border-primary/20 bg-primary/10 px-3.5 py-2.5">
+                      <span className="text-[11px] font-semibold text-primary">
                         {t("gestiones.detail.agentSpeaker")}
                       </span>
-                      <p className="text-sm leading-relaxed text-emerald-900">{line.text}</p>
+                      <p className="text-sm leading-relaxed text-primary">{line.text}</p>
                     </div>
                   </div>
                 ) : (
                   <div key={i} className="flex justify-start">
-                    <div className="max-w-[85%] rounded-2xl rounded-bl-sm border border-slate-200 bg-slate-100 px-3.5 py-2.5">
-                      <span className="text-[11px] font-semibold text-slate-400">
+                    <div className="max-w-[85%] rounded-2xl rounded-bl-sm border border-border bg-elevated px-3.5 py-2.5">
+                      <span className="text-[11px] font-semibold text-fg-subtle">
                         {t("gestiones.detail.customerSpeaker")}
                       </span>
-                      <p className="text-sm leading-relaxed text-slate-700">{line.text}</p>
+                      <p className="text-sm leading-relaxed text-fg-muted">{line.text}</p>
                     </div>
                   </div>
                 )
@@ -343,15 +343,11 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
 
         {/* EMAIL: email-client card — initial notice header/body + reply thread */}
         {isEmail && (
-          <Section
-            icon={Mail}
-            iconClass="text-emerald-700"
-            title={t("gestiones.detail.emailThread")}
-          >
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <Section icon={Mail} iconClass="text-primary" title={t("gestiones.detail.emailThread")}>
+            <div className="overflow-hidden rounded-xl border border-border bg-surface">
               {/* Email header: De / Para / Asunto */}
               {(fromEmail || toNumber || subject) && (
-                <div className="flex flex-col gap-2 border-b border-slate-200 bg-slate-50 px-3.5 py-3">
+                <div className="flex flex-col gap-2 border-b border-border bg-elevated px-3.5 py-3">
                   {fromEmail && (
                     <EmailHeaderRow label={t("gestiones.detail.emailFrom")} value={fromEmail} />
                   )}
@@ -369,14 +365,14 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                   {messageBody.split(/\n{2,}/).map((para, i) => (
                     <p
                       key={i}
-                      className="whitespace-pre-line text-sm leading-relaxed text-slate-600"
+                      className="whitespace-pre-line text-sm leading-relaxed text-fg-muted"
                     >
                       {para.trim()}
                     </p>
                   ))}
                 </div>
               ) : (
-                <p className="px-4 py-4 text-sm text-slate-400">
+                <p className="px-4 py-4 text-sm text-fg-subtle">
                   {t("gestiones.detail.noMessage")}
                 </p>
               )}
@@ -385,13 +381,13 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                 m.direction === "inbound" ? (
                   <div
                     key={i}
-                    className="flex flex-col gap-1.5 border-t border-slate-200 bg-slate-50 px-4 py-3"
+                    className="flex flex-col gap-1.5 border-t border-border bg-elevated px-4 py-3"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-slate-700">
+                      <span className="text-xs font-semibold text-fg-muted">
                         {g?.portfolioAccount.fullName} {t("gestiones.detail.emailReplied")}
                       </span>
-                      <span className="ml-auto text-[11px] text-slate-400">
+                      <span className="ml-auto text-[11px] text-fg-subtle">
                         {new Date(m.at).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit"
@@ -399,11 +395,11 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                       </span>
                     </div>
                     {m.body ? (
-                      <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">
+                      <p className="whitespace-pre-line text-sm leading-relaxed text-fg-muted">
                         {m.body}
                       </p>
                     ) : (
-                      <p className="text-sm italic text-slate-400">
+                      <p className="text-sm italic text-fg-subtle">
                         {t("gestiones.detail.noMessage")}
                       </p>
                     )}
@@ -411,20 +407,20 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                 ) : (
                   <div
                     key={i}
-                    className="flex flex-col gap-1.5 border-t border-slate-200 bg-emerald-50 px-4 py-3"
+                    className="flex flex-col gap-1.5 border-t border-border bg-primary/10 px-4 py-3"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-emerald-700">
+                      <span className="text-xs font-semibold text-primary">
                         {t("gestiones.detail.emailAgentName")}
                       </span>
-                      <span className="ml-auto text-[11px] text-slate-400">
+                      <span className="ml-auto text-[11px] text-fg-subtle">
                         {new Date(m.at).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit"
                         })}
                       </span>
                     </div>
-                    <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">
+                    <p className="whitespace-pre-line text-sm leading-relaxed text-fg-muted">
                       {m.body}
                     </p>
                   </div>
@@ -432,8 +428,8 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
               )}
               {/* Awaiting reply placeholder when no replies yet */}
               {(!emailThread || emailThread.messages.length === 0) && (
-                <div className="border-t border-slate-200 px-4 py-3">
-                  <p className="text-xs text-slate-400">{t("gestiones.detail.emailNoReply")}</p>
+                <div className="border-t border-border px-4 py-3">
+                  <p className="text-xs text-fg-subtle">{t("gestiones.detail.emailNoReply")}</p>
                 </div>
               )}
             </div>
@@ -444,20 +440,20 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         {isWhatsApp && (
           <Section
             icon={MessageSquare}
-            iconClass="text-emerald-700"
+            iconClass="text-primary"
             title={t("gestiones.detail.whatsAppThread")}
           >
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <div className="overflow-hidden rounded-xl border border-border bg-surface">
               {/* Initial template message */}
               {messageBody && (
-                <div className="flex flex-col gap-2.5 bg-emerald-50 px-4 py-4">
-                  <span className="text-[11px] font-semibold text-emerald-700">
+                <div className="flex flex-col gap-2.5 bg-primary/10 px-4 py-4">
+                  <span className="text-[11px] font-semibold text-primary">
                     {t("gestiones.detail.whatsAppAgent")}
                   </span>
                   {messageBody.split(/\n{2,}/).map((para, i) => (
                     <p
                       key={i}
-                      className="whitespace-pre-line text-sm leading-relaxed text-slate-600"
+                      className="whitespace-pre-line text-sm leading-relaxed text-fg-muted"
                     >
                       {para.trim()}
                     </p>
@@ -470,40 +466,40 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                 m.direction === "inbound" ? (
                   <div
                     key={i}
-                    className="flex flex-col gap-1.5 border-t border-slate-200 bg-slate-50 px-4 py-3"
+                    className="flex flex-col gap-1.5 border-t border-border bg-elevated px-4 py-3"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-slate-700">
+                      <span className="text-xs font-semibold text-fg-muted">
                         {g?.portfolioAccount.fullName}
                       </span>
-                      <span className="ml-auto text-[11px] text-slate-400">
+                      <span className="ml-auto text-[11px] text-fg-subtle">
                         {new Date(m.at).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit"
                         })}
                       </span>
                     </div>
-                    <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">
+                    <p className="whitespace-pre-line text-sm leading-relaxed text-fg-muted">
                       {m.body}
                     </p>
                   </div>
                 ) : (
                   <div
                     key={i}
-                    className="flex flex-col gap-1.5 border-t border-slate-200 bg-emerald-50 px-4 py-3"
+                    className="flex flex-col gap-1.5 border-t border-border bg-primary/10 px-4 py-3"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-emerald-700">
+                      <span className="text-xs font-semibold text-primary">
                         {t("gestiones.detail.whatsAppAgent")}
                       </span>
-                      <span className="ml-auto text-[11px] text-slate-400">
+                      <span className="ml-auto text-[11px] text-fg-subtle">
                         {new Date(m.at).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit"
                         })}
                       </span>
                     </div>
-                    <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">
+                    <p className="whitespace-pre-line text-sm leading-relaxed text-fg-muted">
                       {m.body}
                     </p>
                   </div>
@@ -512,8 +508,8 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
 
               {/* No replies placeholder */}
               {(!whatsAppThread || whatsAppThread.messages.length === 0) && (
-                <div className="border-t border-slate-200 px-4 py-3">
-                  <p className="text-xs text-slate-400">{t("gestiones.detail.whatsAppNoReply")}</p>
+                <div className="border-t border-border px-4 py-3">
+                  <p className="text-xs text-fg-subtle">{t("gestiones.detail.whatsAppNoReply")}</p>
                 </div>
               )}
             </div>
@@ -529,9 +525,9 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
           >
             <div className="flex flex-col gap-3">
               {g.aiSummary ? (
-                <p className="text-sm leading-relaxed text-slate-600">{g.aiSummary}</p>
+                <p className="text-sm leading-relaxed text-fg-muted">{g.aiSummary}</p>
               ) : generateInsight.isPending ? (
-                <p className="text-sm text-slate-500">{t("gestiones.detail.analysisGenerating")}</p>
+                <p className="text-sm text-fg-subtle">{t("gestiones.detail.analysisGenerating")}</p>
               ) : null}
             </div>
           </Section>
@@ -546,9 +542,9 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
           >
             <div className="flex flex-col gap-3">
               {g.aiSummary ? (
-                <p className="text-sm leading-relaxed text-slate-600">{g.aiSummary}</p>
+                <p className="text-sm leading-relaxed text-fg-muted">{g.aiSummary}</p>
               ) : generateInsight.isPending ? (
-                <p className="text-sm text-slate-500">{t("gestiones.detail.analysisGenerating")}</p>
+                <p className="text-sm text-fg-subtle">{t("gestiones.detail.analysisGenerating")}</p>
               ) : null}
             </div>
           </Section>
@@ -564,21 +560,21 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
             {hasAnalysis ? (
               <div className="flex flex-col gap-3">
                 {g?.aiSummary && (
-                  <p className="text-sm leading-relaxed text-slate-600">{g.aiSummary}</p>
+                  <p className="text-sm leading-relaxed text-fg-muted">{g.aiSummary}</p>
                 )}
                 {analysisCells.length > 0 && (
                   <div className="grid grid-cols-2 gap-2">
                     {analysisCells.map(([label, value]) => (
-                      <div key={label} className="flex flex-col gap-0.5 rounded-lg bg-slate-50 p-3">
-                        <span className="text-xs text-slate-400">{label}</span>
-                        <span className="text-sm font-medium text-slate-700">{value}</span>
+                      <div key={label} className="flex flex-col gap-0.5 rounded-lg bg-elevated p-3">
+                        <span className="text-xs text-fg-subtle">{label}</span>
+                        <span className="text-sm font-medium text-fg-muted">{value}</span>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
             ) : (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-fg-subtle">
                 {generateInsight.isPending
                   ? t("gestiones.detail.analysisGenerating")
                   : t("gestiones.detail.analysisPending")}
@@ -589,35 +585,35 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
 
         {/* One-way channels: sent content */}
         {oneWay && (
-          <Section icon={ChannelIcon} iconClass="text-emerald-700" title={sentTitle}>
+          <Section icon={ChannelIcon} iconClass="text-primary" title={sentTitle}>
             {!messageBody ? (
-              <p className="text-sm text-slate-500">{t("gestiones.detail.noMessage")}</p>
+              <p className="text-sm text-fg-subtle">{t("gestiones.detail.noMessage")}</p>
             ) : g!.agentType === "SMS" ? (
               <div className="flex justify-end">
-                <div className="max-w-[85%] rounded-2xl rounded-br-sm border border-emerald-100 bg-emerald-50 px-4 py-3">
-                  <p className="text-sm leading-relaxed text-emerald-900">{messageBody}</p>
-                  <div className="mt-1 flex items-center justify-end gap-1 text-emerald-500">
+                <div className="max-w-[85%] rounded-2xl rounded-br-sm border border-primary/20 bg-primary/10 px-4 py-3">
+                  <p className="text-sm leading-relaxed text-primary">{messageBody}</p>
+                  <div className="mt-1 flex items-center justify-end gap-1 text-primary">
                     <span className="text-[11px]">{timeStr}</span>
                     <CheckCheck className="h-3.5 w-3.5" />
                   </div>
                 </div>
               </div>
             ) : g!.agentType === "VOICE_PRERECORDED" ? (
-              <div className="rounded-lg border border-slate-200 px-4 py-3">
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <div className="rounded-lg border border-border px-4 py-3">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                   {t("gestiones.detail.script")}
                 </p>
-                <p className="text-sm leading-relaxed text-slate-600">{messageBody}</p>
+                <p className="text-sm leading-relaxed text-fg-muted">{messageBody}</p>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-lg border border-slate-200">
+              <div className="overflow-hidden rounded-lg border border-border">
                 {subject && (
-                  <div className="border-b border-slate-100 px-4 py-3">
-                    <span className="text-xs text-slate-400">{t("gestiones.detail.subject")}</span>
-                    <p className="text-sm font-medium text-slate-700">{subject}</p>
+                  <div className="border-b border-border px-4 py-3">
+                    <span className="text-xs text-fg-subtle">{t("gestiones.detail.subject")}</span>
+                    <p className="text-sm font-medium text-fg-muted">{subject}</p>
                   </div>
                 )}
-                <p className="whitespace-pre-line px-4 py-3 text-sm leading-relaxed text-slate-600">
+                <p className="whitespace-pre-line px-4 py-3 text-sm leading-relaxed text-fg-muted">
                   {messageBody}
                 </p>
               </div>
@@ -632,7 +628,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
             iconClass="text-violet-600"
             title={t("gestiones.detail.analysis")}
           >
-            <p className="text-sm leading-relaxed text-slate-600">{insight}</p>
+            <p className="text-sm leading-relaxed text-fg-muted">{insight}</p>
           </Section>
         )}
 
@@ -661,8 +657,8 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
 
         {/* Metadata */}
         {g && (
-          <div className="flex flex-col gap-3 border-t border-slate-100 pt-5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <div className="flex flex-col gap-3 border-t border-border pt-5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
               {t("gestiones.detail.metadata")}
             </span>
             <div className="grid grid-cols-2 gap-x-8 gap-y-4">
@@ -702,7 +698,7 @@ export function GestionDetail() {
   const navigate = useNavigate();
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="overflow-hidden rounded-2xl border border-border bg-surface">
         <GestionDetailContent id={id!} onClose={() => navigate("/gestiones")} />
       </div>
     </div>

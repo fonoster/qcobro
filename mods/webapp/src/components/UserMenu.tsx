@@ -90,14 +90,14 @@ export function UserMenu() {
         type="button"
         aria-label={t("userMenu.aria")}
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-slate-50"
+        className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-elevated"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
           {initials}
         </span>
         <div className="flex min-w-0 flex-col leading-tight text-left">
-          <span className="truncate text-[13px] font-semibold text-slate-900">{name}</span>
-          <span className="truncate text-[11px] text-slate-400">{email || "Cuenta"}</span>
+          <span className="truncate text-[13px] font-semibold text-fg">{name}</span>
+          <span className="truncate text-[11px] text-fg-subtle">{email || "Cuenta"}</span>
         </div>
       </button>
     </div>

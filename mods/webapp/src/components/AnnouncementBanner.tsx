@@ -24,10 +24,10 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 const VARIANTS: Record<string, string> = {
-  announcement: "bg-blue-50 text-blue-800",
-  alert: "bg-amber-50 text-amber-800",
-  success: "bg-emerald-50 text-emerald-800",
-  danger: "bg-red-50 text-red-800"
+  announcement: "bg-info-soft text-info",
+  alert: "bg-warning-soft text-warning",
+  success: "bg-primary/10 text-primary",
+  danger: "bg-danger-soft text-danger"
 };
 
 const DISMISS_KEY = "qcobro.announcement.dismissed";

@@ -18,14 +18,11 @@ export function ProgressBarRow({
   const pct = Math.min(100, (value / max) * 100);
   return (
     <div className={cn("flex items-center gap-3", className)}>
-      <span className="w-32 shrink-0 truncate text-sm text-slate-600">{label}</span>
-      <div className="flex-1 overflow-hidden rounded-full bg-slate-100 h-2">
-        <div
-          className="h-2 rounded-full bg-emerald-500 transition-all"
-          style={{ width: `${pct}%` }}
-        />
+      <span className="w-32 shrink-0 truncate text-sm text-fg-muted">{label}</span>
+      <div className="flex-1 overflow-hidden rounded-full bg-elevated h-2">
+        <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
       </div>
-      <span className="w-12 shrink-0 text-right text-sm font-medium text-slate-700">
+      <span className="w-12 shrink-0 text-right text-sm font-medium text-fg-muted">
         {displayValue ?? `${Math.round(pct)}%`}
       </span>
     </div>

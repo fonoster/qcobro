@@ -32,17 +32,17 @@ export const WithContent: StoryObj = {
           {
             id: "resumen",
             label: "Resumen",
-            content: <p className="text-sm text-gray-600">Aquí va el resumen de la cartera.</p>
+            content: <p className="text-sm text-fg-muted">Aquí va el resumen de la cartera.</p>
           },
           {
             id: "gestiones",
             label: "Gestiones",
-            content: <p className="text-sm text-gray-600">Lista de gestiones realizadas.</p>
+            content: <p className="text-sm text-fg-muted">Lista de gestiones realizadas.</p>
           },
           {
             id: "promesas",
             label: "Promesas",
-            content: <p className="text-sm text-gray-600">Promesas de pago registradas.</p>
+            content: <p className="text-sm text-fg-muted">Promesas de pago registradas.</p>
           }
         ]}
         defaultTab="resumen"

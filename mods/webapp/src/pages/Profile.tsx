@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n, languages, languageNames, type Language } from "../lib/i18n.js";
+import { useTheme, themes, type ThemePreference } from "../lib/theme.js";
 import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
@@ -13,11 +14,13 @@ const CONFIRM_WORD = "ELIMINAR";
 export function Profile() {
   const { logout } = useAuth();
   const { t, language, setLanguage } = useI18n();
+  const { preference: theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const utils = trpc.useUtils();
   const profile = trpc.profile.get.useQuery();
   const update = trpc.profile.update.useMutation();
   const setLang = trpc.profile.setLanguage.useMutation();
+  const setThemeMut = trpc.profile.setTheme.useMutation();
   const changePassword = trpc.profile.changePassword.useMutation();
   const remove = trpc.profile.delete.useMutation();
 
@@ -91,6 +94,14 @@ export function Profile() {
     setLang.mutate({ language: next }, { onSettled: () => utils.profile.get.invalidate() });
   }
 
+  // Appearance applies immediately (ThemeProvider + cache) and persists to the profile,
+  // which is the source of truth; the reconcile effect in AuthedLayout keeps them in sync.
+  function onAppearanceChange(next: ThemePreference) {
+    setTheme(next);
+    utils.profile.get.setData(undefined, (prev) => (prev ? { ...prev, theme: next } : prev));
+    setThemeMut.mutate({ theme: next }, { onSettled: () => utils.profile.get.invalidate() });
+  }
+
   function closeConfirm() {
     setConfirmOpen(false);
     setConfirmText("");
@@ -113,15 +124,13 @@ export function Profile() {
   return (
     <div className="flex flex-col gap-6 p-8">
       <div>
-        <h1 className="text-[22px] font-bold text-slate-900">{t("profile.title")}</h1>
-        <p className="text-sm text-slate-500">{t("profile.subtitle")}</p>
+        <h1 className="text-[22px] font-bold text-fg">{t("profile.title")}</h1>
+        <p className="text-sm text-fg-subtle">{t("profile.subtitle")}</p>
       </div>
 
-      <Card className="max-w-[680px] rounded-xl border-slate-200 shadow-none">
+      <Card className="max-w-[680px] rounded-xl border-border shadow-none">
         <form onSubmit={onSubmit} className="flex flex-col gap-5 p-6">
-          <h2 className="text-[15px] font-semibold text-slate-900">
-            {t("profile.section.general")}
-          </h2>
+          <h2 className="text-[15px] font-semibold text-fg">{t("profile.section.general")}</h2>
           <InputGroup
             id="profile-name"
             label={t("profile.field.name")}
@@ -157,12 +166,24 @@ export function Profile() {
               </option>
             ))}
           </SelectGroup>
+          <SelectGroup
+            id="profile-appearance"
+            label={t("profile.field.appearance")}
+            value={theme}
+            onChange={(e) => onAppearanceChange(e.target.value as ThemePreference)}
+          >
+            {themes.map((opt) => (
+              <option key={opt} value={opt}>
+                {t(`profile.appearance.${opt}` as const)}
+              </option>
+            ))}
+          </SelectGroup>
           <div className="flex items-center justify-end gap-3">
             {status === "ok" && (
-              <span className="text-[13px] text-emerald-600">{t("profile.saved")}</span>
+              <span className="text-[13px] text-primary">{t("profile.saved")}</span>
             )}
             {status === "error" && (
-              <span className="text-[13px] text-red-600">{t("profile.saveError")}</span>
+              <span className="text-[13px] text-danger">{t("profile.saveError")}</span>
             )}
             <Button type="submit" disabled={!dirty || update.isPending}>
               {t("profile.save")}
@@ -171,13 +192,11 @@ export function Profile() {
         </form>
       </Card>
 
-      <Card className="max-w-[680px] rounded-xl border-slate-200 shadow-none">
+      <Card className="max-w-[680px] rounded-xl border-border shadow-none">
         <form onSubmit={onChangePassword} className="flex flex-col gap-5 p-6">
           <div>
-            <h2 className="text-[15px] font-semibold text-slate-900">
-              {t("profile.password.title")}
-            </h2>
-            <p className="mt-0.5 text-[13px] text-slate-500">{t("profile.password.subtitle")}</p>
+            <h2 className="text-[15px] font-semibold text-fg">{t("profile.password.title")}</h2>
+            <p className="mt-0.5 text-[13px] text-fg-subtle">{t("profile.password.subtitle")}</p>
           </div>
           <InputGroup
             id="profile-new-password"
@@ -200,10 +219,10 @@ export function Profile() {
           />
           <div className="flex items-center justify-end gap-3">
             {passwordStatus === "ok" && (
-              <span className="text-[13px] text-emerald-600">{t("profile.password.saved")}</span>
+              <span className="text-[13px] text-primary">{t("profile.password.saved")}</span>
             )}
             {passwordStatus === "error" && (
-              <span className="text-[13px] text-red-600">{t("profile.password.saveError")}</span>
+              <span className="text-[13px] text-danger">{t("profile.password.saveError")}</span>
             )}
             <Button
               type="submit"
@@ -215,17 +234,15 @@ export function Profile() {
         </form>
       </Card>
 
-      <Card className="max-w-[680px] rounded-xl border-red-200 shadow-none">
+      <Card className="max-w-[680px] rounded-xl border-danger/30 shadow-none">
         <div className="flex items-center justify-between gap-6 p-6">
           <div>
-            <h2 className="text-[15px] font-semibold text-slate-900">
-              {t("profile.danger.title")}
-            </h2>
-            <p className="mt-0.5 text-[13px] text-slate-500">{t("profile.danger.desc")}</p>
+            <h2 className="text-[15px] font-semibold text-fg">{t("profile.danger.title")}</h2>
+            <p className="mt-0.5 text-[13px] text-fg-subtle">{t("profile.danger.desc")}</p>
           </div>
           <Button
             variant="outline"
-            className="shrink-0 border-red-200 text-red-600 hover:bg-red-50"
+            className="shrink-0 border-danger/30 text-danger hover:bg-danger-soft"
             onClick={() => setConfirmOpen(true)}
           >
             {t("profile.danger.action")}
@@ -234,12 +251,12 @@ export function Profile() {
       </Card>
 
       {confirmOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/60 p-4">
-          <Card className="w-full max-w-[440px] rounded-2xl border-slate-200 shadow-xl">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+          <Card className="w-full max-w-[440px] rounded-2xl border-border shadow-xl">
             <div className="flex flex-col gap-5 p-6">
               <div>
-                <h2 className="text-lg font-bold text-slate-900">{t("profile.danger.title")}</h2>
-                <p className="mt-1 text-[13px] text-slate-500">{t("profile.danger.desc")}</p>
+                <h2 className="text-lg font-bold text-fg">{t("profile.danger.title")}</h2>
+                <p className="mt-1 text-[13px] text-fg-subtle">{t("profile.danger.desc")}</p>
               </div>
               <InputGroup
                 label={t("profile.delete.confirmLabel")}

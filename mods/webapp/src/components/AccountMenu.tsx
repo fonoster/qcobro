@@ -56,15 +56,15 @@ export function AccountMenu() {
             <MenuDivider />
             <MenuItem icon={User} label={t("profile.title")} onClick={() => go("/profile")} />
             <div className="flex items-center justify-between gap-2.5 px-2.5 py-2">
-              <span className="flex items-center gap-2.5 text-[13px] font-medium text-slate-900">
-                <Globe className="h-4 w-4 text-slate-500" />
+              <span className="flex items-center gap-2.5 text-[13px] font-medium text-fg">
+                <Globe className="h-4 w-4 text-fg-subtle" />
                 {t("language.label")}
               </span>
               <select
                 aria-label={t("language.label")}
                 value={language}
                 onChange={(e) => onLanguageChange(e.target.value as Language)}
-                className="cursor-pointer rounded-md border-none bg-transparent text-[13px] font-medium text-slate-500 focus:outline-none"
+                className="cursor-pointer rounded-md border-none bg-transparent text-[13px] font-medium text-fg-subtle focus:outline-none"
               >
                 {languages.map((l) => (
                   <option key={l} value={l}>
@@ -99,9 +99,9 @@ export function AccountMenu() {
         type="button"
         aria-label={t("userMenu.aria")}
         onClick={() => setOpen((o) => !o)}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 transition hover:bg-slate-300"
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-elevated transition hover:bg-elevated"
       >
-        <span className="text-[13px] font-bold text-slate-600">{initials}</span>
+        <span className="text-[13px] font-bold text-fg-muted">{initials}</span>
       </button>
     </div>
   );

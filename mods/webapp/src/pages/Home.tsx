@@ -127,18 +127,18 @@ export function Home() {
     <div className="flex flex-col gap-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-[22px] font-bold text-slate-900">{t("home.title")}</h1>
-          <p className="text-sm text-slate-500">{t("home.subtitle").replace("{name}", wsName)}</p>
+          <h1 className="text-[22px] font-bold text-fg">{t("home.title")}</h1>
+          <p className="text-sm text-fg-subtle">{t("home.subtitle").replace("{name}", wsName)}</p>
         </div>
         {wsAccessKeyId && (
-          <div className="flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2">
-            <KeyRound className="h-[15px] w-[15px] shrink-0 text-slate-500" />
-            <span className="text-[13px] font-medium text-slate-500">{t("home.workspaceId")}</span>
+          <div className="flex shrink-0 items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-2">
+            <KeyRound className="h-[15px] w-[15px] shrink-0 text-fg-subtle" />
+            <span className="text-[13px] font-medium text-fg-subtle">{t("home.workspaceId")}</span>
             <CopyField
               variant="inline"
               value={wsAccessKeyId}
               copyAriaLabel={t("home.workspaceIdAria")}
-              className="max-w-[160px] text-slate-900"
+              className="max-w-[160px] text-fg"
             />
           </div>
         )}
@@ -158,12 +158,10 @@ export function Home() {
       </div>
 
       <div className="grid grid-cols-[1fr_360px] gap-6">
-        <Card className="rounded-xl border-slate-200 p-5 shadow-none">
-          <h2 className="mb-2 text-[15px] font-semibold text-slate-900">
-            {t("home.recentActivity")}
-          </h2>
+        <Card className="rounded-xl border-border p-5 shadow-none">
+          <h2 className="mb-2 text-[15px] font-semibold text-fg">{t("home.recentActivity")}</h2>
           {activity.length === 0 ? (
-            <p className="py-6 text-sm text-slate-400">{t("gestiones.empty")}</p>
+            <p className="py-6 text-sm text-fg-subtle">{t("gestiones.empty")}</p>
           ) : (
             <div className="flex flex-col">
               {activity.map((a, i) => {
@@ -173,22 +171,22 @@ export function Home() {
                     key={a.id}
                     className={cn(
                       "flex items-center gap-3 py-3",
-                      i < activity.length - 1 && "border-b border-slate-100"
+                      i < activity.length - 1 && "border-b border-border"
                     )}
                   >
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
-                      <Icon className="h-[18px] w-[18px] text-slate-500" />
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-elevated">
+                      <Icon className="h-[18px] w-[18px] text-fg-subtle" />
                     </span>
                     <div className="flex-1">
-                      <p className="text-[13px] font-semibold text-slate-900">
+                      <p className="text-[13px] font-semibold text-fg">
                         {a.portfolioAccount?.fullName ?? "—"}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-fg-subtle">
                         {outcomeLabel(t, a.outcome) ??
                           deliveryLabel(t, a.delivery, a.deliveryReason, a.agentType)}
                       </p>
                     </div>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-fg-subtle">
                       {formatRelative(a.contactedAt, language)}
                     </span>
                   </div>
@@ -198,12 +196,12 @@ export function Home() {
           )}
         </Card>
 
-        <Card className="rounded-xl border-slate-200 p-5 shadow-none">
-          <h2 className="mb-4 text-[15px] font-semibold text-slate-900">
+        <Card className="rounded-xl border-border p-5 shadow-none">
+          <h2 className="mb-4 text-[15px] font-semibold text-fg">
             {t("home.progressByPortfolio")}
           </h2>
           {carteras.length === 0 ? (
-            <p className="py-6 text-sm text-slate-400">{t("home.noPortfolios")}</p>
+            <p className="py-6 text-sm text-fg-subtle">{t("home.noPortfolios")}</p>
           ) : (
             <div className="flex flex-col gap-4">
               {carteras.map((p) => {
@@ -211,14 +209,11 @@ export function Home() {
                 return (
                   <div key={p.id} className="flex flex-col gap-1.5">
                     <div className="flex justify-between text-[13px]">
-                      <span className="text-slate-600">{p.name}</span>
-                      <span className="font-semibold text-slate-700">{pct}%</span>
+                      <span className="text-fg-muted">{p.name}</span>
+                      <span className="font-semibold text-fg-muted">{pct}%</span>
                     </div>
-                    <div className="h-2 w-full rounded-full bg-slate-100">
-                      <div
-                        className="h-2 rounded-full bg-emerald-500"
-                        style={{ width: `${pct}%` }}
-                      />
+                    <div className="h-2 w-full rounded-full bg-elevated">
+                      <div className="h-2 rounded-full bg-primary" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 );

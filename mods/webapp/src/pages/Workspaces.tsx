@@ -57,10 +57,8 @@ export function Workspaces() {
     <>
       <div className="flex flex-1 flex-col items-center justify-center gap-8 px-10 py-12">
         <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-[28px] font-bold text-slate-900">
-            {t("createWorkspace.welcome.title")}
-          </h1>
-          <p className="text-base text-slate-500">{t("createWorkspace.welcome.subtitle")}</p>
+          <h1 className="text-[28px] font-bold text-fg">{t("createWorkspace.welcome.title")}</h1>
+          <p className="text-base text-fg-subtle">{t("createWorkspace.welcome.subtitle")}</p>
         </div>
 
         <div className="flex flex-wrap justify-center gap-6">
@@ -68,11 +66,11 @@ export function Workspaces() {
             <div
               key={ws.accessKeyId}
               onClick={() => onSelect(ws.accessKeyId)}
-              className="relative flex h-[200px] w-[280px] cursor-pointer flex-col justify-between rounded-[10px] border border-slate-200 bg-white p-6 text-left transition hover:border-emerald-300 hover:shadow-sm"
+              className="relative flex h-[200px] w-[280px] cursor-pointer flex-col justify-between rounded-[10px] border border-border bg-surface p-6 text-left transition hover:border-primary/40 hover:shadow-sm"
             >
               <div className="flex flex-col gap-1">
-                <p className="text-[17px] font-bold text-slate-900">{ws.name}</p>
-                <p className="text-[13px] text-slate-400">
+                <p className="text-[17px] font-bold text-fg">{ws.name}</p>
+                <p className="text-[13px] text-fg-subtle">
                   {ws.portfolioCount}{" "}
                   {t(
                     ws.portfolioCount === 1
@@ -92,7 +90,7 @@ export function Workspaces() {
                   variant="inline"
                   value={ws.accessKeyId}
                   copyAriaLabel={t("createWorkspace.card.accessKeyIdAria")}
-                  className="max-w-[150px] rounded-md bg-slate-100 px-2 py-1 text-slate-600 hover:bg-slate-200"
+                  className="max-w-[150px] rounded-md bg-elevated px-2 py-1 text-fg-muted hover:bg-elevated"
                 />
                 <button
                   type="button"
@@ -102,7 +100,7 @@ export function Workspaces() {
                     setWorkspace(ws.accessKeyId);
                     navigate("/settings");
                   }}
-                  className="shrink-0 text-slate-400 transition hover:text-slate-700"
+                  className="shrink-0 text-fg-subtle transition hover:text-fg-muted"
                 >
                   <Settings className="h-[18px] w-[18px]" />
                 </button>
@@ -112,7 +110,7 @@ export function Workspaces() {
 
           <button
             onClick={() => setOpen(true)}
-            className="flex h-[200px] w-[280px] cursor-pointer flex-col items-center justify-center gap-3 rounded-[10px] border border-dashed border-slate-300 bg-white text-slate-400 transition hover:border-emerald-400 hover:text-emerald-600"
+            className="flex h-[200px] w-[280px] cursor-pointer flex-col items-center justify-center gap-3 rounded-[10px] border border-dashed border-border bg-surface text-fg-subtle transition hover:border-primary hover:text-primary"
           >
             <Plus className="h-7 w-7" />
             <span className="text-[15px] font-semibold">{t("createWorkspace.new")}</span>
@@ -121,22 +119,22 @@ export function Workspaces() {
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/60 p-4">
-          <Card className="w-full max-w-[480px] rounded-2xl border-slate-200 shadow-xl">
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 p-4">
+          <Card className="w-full max-w-[480px] rounded-2xl border-border shadow-xl">
             <form onSubmit={onCreate} className="flex flex-col gap-5 p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-[18px] font-bold text-slate-900">
+                  <h2 className="text-[18px] font-bold text-fg">
                     {t("createWorkspace.modal.title")}
                   </h2>
-                  <p className="text-[13px] text-slate-500">
+                  <p className="text-[13px] text-fg-subtle">
                     {t("createWorkspace.modal.subtitle")}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="cursor-pointer text-slate-400 hover:text-slate-600"
+                  className="cursor-pointer text-fg-subtle hover:text-fg-muted"
                 >
                   <X className="h-5 w-5" />
                 </button>

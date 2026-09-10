@@ -3,15 +3,15 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils.js";
 
 const buttonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-emerald-500 text-white hover:bg-emerald-600",
-        secondary: "bg-slate-100 text-slate-700 hover:bg-slate-200",
-        outline: "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
-        ghost: "text-slate-700 hover:bg-slate-100",
-        destructive: "bg-red-500 text-white hover:bg-red-600"
+        default: "bg-primary text-white hover:bg-primary-hover",
+        secondary: "bg-elevated text-fg-muted hover:bg-border",
+        outline: "border border-border bg-surface text-fg-muted hover:bg-elevated",
+        ghost: "text-fg-muted hover:bg-elevated",
+        destructive: "bg-danger text-white hover:opacity-90"
       },
       size: {
         sm: "h-7 px-3 text-xs",
@@ -34,15 +34,15 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";
 
 const iconButtonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex cursor-pointer items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-emerald-500 text-white hover:bg-emerald-600",
-        secondary: "bg-slate-100 text-slate-700 hover:bg-slate-200",
-        outline: "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
-        ghost: "text-slate-700 hover:bg-slate-100",
-        destructive: "bg-red-500 text-white hover:bg-red-600"
+        default: "bg-primary text-white hover:bg-primary-hover",
+        secondary: "bg-elevated text-fg-muted hover:bg-border",
+        outline: "border border-border bg-surface text-fg-muted hover:bg-elevated",
+        ghost: "text-fg-muted hover:bg-elevated",
+        destructive: "bg-danger text-white hover:opacity-90"
       },
       size: {
         default: "h-9 w-9",

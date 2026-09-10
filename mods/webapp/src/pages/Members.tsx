@@ -22,7 +22,7 @@ type Row = {
 function StatusBadge({ status, label }: { status: string; label: string }) {
   const active = status === "ACTIVE";
   return (
-    <span className={cn("text-[13px] font-medium", active ? "text-slate-600" : "text-slate-400")}>
+    <span className={cn("text-[13px] font-medium", active ? "text-fg-muted" : "text-fg-subtle")}>
       {label}
     </span>
   );
@@ -41,9 +41,9 @@ function MenuItem({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium text-slate-700 hover:bg-slate-50"
+      className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium text-fg-muted hover:bg-elevated"
     >
-      <Icon className="h-4 w-4 text-slate-500" />
+      <Icon className="h-4 w-4 text-fg-subtle" />
       {label}
     </button>
   );
@@ -156,8 +156,8 @@ export function Members() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-bold text-slate-900">{t("members.title")}</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-[22px] font-bold text-fg">{t("members.title")}</h1>
+          <p className="text-sm text-fg-subtle">
             {canManage ? t("members.subtitle").replace("{ws}", wsName) : t("members.viewerNotice")}
           </p>
         </div>
@@ -169,30 +169,30 @@ export function Members() {
         )}
       </div>
 
-      <Card className="rounded-xl border-slate-200 shadow-none">
-        <div className="flex items-center rounded-t-xl border-b border-slate-200 bg-slate-50 px-5 py-3 text-[11px] font-semibold tracking-wide text-slate-400">
+      <Card className="rounded-xl border-border shadow-none">
+        <div className="flex items-center rounded-t-xl border-b border-border bg-elevated px-5 py-3 text-[11px] font-semibold tracking-wide text-fg-subtle">
           <span className="flex-1">{t("members.col.member")}</span>
           <span className="w-40">{t("members.col.role")}</span>
           <span className="w-32">{t("members.col.status")}</span>
           <span className="w-10" />
         </div>
         {members.isLoading ? (
-          <p className="px-5 py-6 text-sm text-slate-400">{t("common.loading")}</p>
+          <p className="px-5 py-6 text-sm text-fg-subtle">{t("common.loading")}</p>
         ) : (
           rows.map((r, i) => (
             <div
               key={r.ref}
               className={cn(
                 "flex items-center px-5 py-3.5",
-                i < rows.length - 1 && "border-b border-slate-100"
+                i < rows.length - 1 && "border-b border-border"
               )}
             >
               <div className="flex-1">
-                <p className="text-sm font-semibold text-slate-900">{r.name}</p>
-                <p className="text-xs text-slate-400">{r.email}</p>
+                <p className="text-sm font-semibold text-fg">{r.name}</p>
+                <p className="text-xs text-fg-subtle">{r.email}</p>
               </div>
               <div className="w-40">
-                <span className="text-sm font-medium text-slate-600">
+                <span className="text-sm font-medium text-fg-muted">
                   {t(`members.role.${r.role}` as MessageId)}
                 </span>
               </div>
@@ -208,7 +208,7 @@ export function Members() {
                     <button
                       type="button"
                       onClick={() => setOpenMenu(openMenu === r.ref ? null : r.ref)}
-                      className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                      className="rounded-md p-1 text-fg-subtle hover:bg-elevated hover:text-fg-muted"
                       title={t("members.actions")}
                     >
                       <MoreHorizontal className="h-[18px] w-[18px]" />
@@ -216,7 +216,7 @@ export function Members() {
                     {openMenu === r.ref && (
                       <>
                         <div className="fixed inset-0 z-10" onClick={() => setOpenMenu(null)} />
-                        <div className="absolute right-0 top-9 z-20 w-52 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
+                        <div className="absolute right-0 top-9 z-20 w-52 rounded-xl border border-border bg-surface p-1.5 shadow-lg">
                           {r.status === "PENDING" ? (
                             <>
                               <MenuItem
@@ -258,20 +258,20 @@ export function Members() {
       </Card>
 
       {canManage && open && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/60 p-4">
-          <Card className="w-full max-w-[440px] rounded-2xl border-slate-200 shadow-xl">
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 p-4">
+          <Card className="w-full max-w-[440px] rounded-2xl border-border shadow-xl">
             <form onSubmit={onInvite} className="flex flex-col gap-5 p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900">{t("members.invite")}</h2>
-                  <p className="text-[13px] text-slate-500">
+                  <h2 className="text-lg font-bold text-fg">{t("members.invite")}</h2>
+                  <p className="text-[13px] text-fg-subtle">
                     {t("members.inviteModal.desc").replace("{ws}", wsName)}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="text-slate-400 hover:text-slate-600"
+                  className="text-fg-subtle hover:text-fg-muted"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -314,12 +314,12 @@ export function Members() {
       )}
 
       {canManage && confirm && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/60 p-4">
-          <Card className="w-full max-w-[440px] rounded-2xl border-slate-200 shadow-xl">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+          <Card className="w-full max-w-[440px] rounded-2xl border-border shadow-xl">
             <div className="flex flex-col gap-5 p-6">
               <div>
-                <h2 className="text-lg font-bold text-slate-900">{confirm.title}</h2>
-                <p className="mt-1 text-[13px] text-slate-500">{confirm.message}</p>
+                <h2 className="text-lg font-bold text-fg">{confirm.title}</h2>
+                <p className="mt-1 text-[13px] text-fg-subtle">{confirm.message}</p>
               </div>
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => setConfirm(null)}>

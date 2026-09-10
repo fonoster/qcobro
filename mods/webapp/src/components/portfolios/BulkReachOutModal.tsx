@@ -81,13 +81,13 @@ export function BulkReachOutModal({
         </SelectGroup>
 
         {selected && (
-          <div className="flex items-center gap-2.5 rounded-lg bg-slate-100 px-3 py-2.5">
-            <Bot className="h-4 w-4 shrink-0 text-slate-600" />
-            <span className="text-sm text-slate-700">{selected.name}</span>
+          <div className="flex items-center gap-2.5 rounded-lg bg-elevated px-3 py-2.5">
+            <Bot className="h-4 w-4 shrink-0 text-fg-muted" />
+            <span className="text-sm text-fg-muted">{selected.name}</span>
           </div>
         )}
 
-        <p className="text-xs text-slate-400">{t("portfolios.reachOut.footnote")}</p>
+        <p className="text-xs text-fg-subtle">{t("portfolios.reachOut.footnote")}</p>
       </div>
     </Dialog>
   );

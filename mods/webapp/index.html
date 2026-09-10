@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>QCobro</title>
+    <script>
+      // Set the resolved theme before first paint so there's no flash of the wrong one.
+      // Kept intentionally tiny; ThemeProvider re-asserts the same value on mount.
+      (function () {
+        try {
+          var pref = localStorage.getItem("qcobro.theme");
+          var dark =
+            pref === "dark" ||
+            ((pref === "system" || pref === null) &&
+              window.matchMedia &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+        } catch (e) {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

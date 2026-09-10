@@ -118,7 +118,7 @@ export function Campaigns() {
                   {t(`campaigns.status.${r.status}` as Parameters<typeof t>[0])}
                 </Badge>
                 {r.pauseReason === "AUTO_ERROR_THRESHOLD" && (
-                  <span className="text-xs text-amber-700">
+                  <span className="text-xs text-warning">
                     {t("campaigns.list.autopausedReason")}
                   </span>
                 )}
@@ -279,7 +279,7 @@ function EditCampaignModal({
         />
 
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-slate-700">{t("campaigns.form.days")}</span>
+          <span className="text-sm font-medium text-fg-muted">{t("campaigns.form.days")}</span>
           <div className="flex gap-1.5">
             {ALL_DAYS.map((d) => {
               const selected = daysOfWeek.includes(d);
@@ -290,8 +290,8 @@ function EditCampaignModal({
                   onClick={() => toggleDay(d)}
                   className={
                     selected
-                      ? "flex-1 rounded-md bg-emerald-600 py-2 text-sm font-semibold text-white"
-                      : "flex-1 rounded-md border border-slate-200 py-2 text-sm font-semibold text-slate-500"
+                      ? "flex-1 rounded-md bg-primary-hover py-2 text-sm font-semibold text-white"
+                      : "flex-1 rounded-md border border-border py-2 text-sm font-semibold text-fg-subtle"
                   }
                 >
                   {t(`campaigns.days.${d}` as Parameters<typeof t>[0])}
@@ -444,12 +444,12 @@ function CreateCampaignModal({
         />
 
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm font-medium text-fg-muted">
             {t("campaigns.form.portfolios")}
           </span>
-          <div className="flex max-h-32 flex-col gap-1 overflow-y-auto rounded-lg border border-slate-200 p-2">
+          <div className="flex max-h-32 flex-col gap-1 overflow-y-auto rounded-lg border border-border p-2">
             {(portfolios.data ?? []).map((p) => (
-              <label key={p.id} className="flex items-center gap-2 text-sm text-slate-700">
+              <label key={p.id} className="flex items-center gap-2 text-sm text-fg-muted">
                 <input
                   type="checkbox"
                   checked={portfolioIds.includes(p.id)}
@@ -496,11 +496,11 @@ function CreateCampaignModal({
           </SelectGroup>
         )}
         {isWhatsApp && !senders.isLoading && (senders.data ?? []).length === 0 && (
-          <p className="text-xs text-amber-700">{t("campaigns.form.noWhatsAppSender")}</p>
+          <p className="text-xs text-warning">{t("campaigns.form.noWhatsAppSender")}</p>
         )}
 
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-slate-700">{t("campaigns.form.days")}</span>
+          <span className="text-sm font-medium text-fg-muted">{t("campaigns.form.days")}</span>
           <div className="flex gap-1.5">
             {ALL_DAYS.map((d) => {
               const selected = daysOfWeek.includes(d);
@@ -511,8 +511,8 @@ function CreateCampaignModal({
                   onClick={() => toggleDay(d)}
                   className={
                     selected
-                      ? "flex-1 rounded-md bg-emerald-600 py-2 text-sm font-semibold text-white"
-                      : "flex-1 rounded-md border border-slate-200 py-2 text-sm font-semibold text-slate-500"
+                      ? "flex-1 rounded-md bg-primary-hover py-2 text-sm font-semibold text-white"
+                      : "flex-1 rounded-md border border-border py-2 text-sm font-semibold text-fg-subtle"
                   }
                 >
                   {t(`campaigns.days.${d}` as Parameters<typeof t>[0])}

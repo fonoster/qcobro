@@ -41,25 +41,25 @@ export function ConfirmDeleteDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/30" onClick={handleClose} />
-      <div className="relative z-10 w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+      <div className="relative z-10 w-full max-w-md rounded-xl bg-surface p-6 shadow-xl">
         <button
           onClick={handleClose}
-          className="absolute right-4 top-4 rounded-md p-1 text-slate-400 hover:text-slate-600"
+          className="absolute right-4 top-4 rounded-md p-1 text-fg-subtle hover:text-fg-muted"
         >
           <X className="h-4 w-4" />
         </button>
 
-        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
-          <AlertTriangle className="h-5 w-5 text-red-600" />
+        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-danger-soft">
+          <AlertTriangle className="h-5 w-5 text-danger" />
         </div>
 
-        <h2 className="text-base font-semibold text-slate-900">{title}</h2>
-        <p className="mt-1 text-sm text-slate-500">{description}</p>
+        <h2 className="text-base font-semibold text-fg">{title}</h2>
+        <p className="mt-1 text-sm text-fg-subtle">{description}</p>
 
         <div className="mt-4">
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-fg-muted">
             {t("confirmDialog.labelPre")}
-            <span className="font-mono font-bold text-slate-900">CONFIRMAR</span>
+            <span className="font-mono font-bold text-fg">CONFIRMAR</span>
             {t("confirmDialog.labelPost")}
           </label>
           <input
@@ -68,7 +68,7 @@ export function ConfirmDeleteDialog({
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
             placeholder="CONFIRMAR"
-            className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
+            className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-danger focus:ring-2 focus:ring-danger/20"
             autoFocus
           />
         </div>

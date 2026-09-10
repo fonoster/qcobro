@@ -56,15 +56,15 @@ export function CopyField({
           void copy(value);
         }}
         className={cn(
-          "group flex min-w-0 items-center gap-1.5 font-mono text-[13px] text-slate-600 transition",
+          "group flex min-w-0 items-center gap-1.5 font-mono text-[13px] text-fg-muted transition",
           className
         )}
       >
         <span className="truncate">{value}</span>
         {copied ? (
-          <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+          <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
         ) : (
-          <Copy className="h-3.5 w-3.5 shrink-0 text-slate-500 transition group-hover:text-slate-700" />
+          <Copy className="h-3.5 w-3.5 shrink-0 text-fg-subtle transition group-hover:text-fg-muted" />
         )}
       </button>
     );
@@ -72,9 +72,9 @@ export function CopyField({
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      {label && <span className="text-sm font-medium text-slate-700">{label}</span>}
+      {label && <span className="text-sm font-medium text-fg-muted">{label}</span>}
       <div className="flex items-center gap-2">
-        <code className="flex-1 truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-[13px] text-slate-800">
+        <code className="flex-1 truncate rounded-lg border border-border bg-elevated px-3 py-2 font-mono text-[13px] text-fg">
           {value}
         </code>
         <Button

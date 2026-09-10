@@ -58,26 +58,24 @@ export function ResetPassword() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <header className="flex h-[72px] w-full items-center justify-between border-b border-slate-200 bg-white px-10">
+    <div className="flex min-h-screen flex-col bg-elevated">
+      <header className="flex h-[72px] w-full items-center justify-between border-b border-border bg-surface px-10">
         <Logo />
-        <Link to="/login" className="text-[13px] font-semibold text-emerald-700 hover:underline">
+        <Link to="/login" className="text-[13px] font-semibold text-primary hover:underline">
           {t("resetPassword.backToLogin")}
         </Link>
       </header>
       <div className="flex flex-1 items-center justify-center px-4 py-10">
-        <Card className="w-full max-w-[400px] rounded-2xl border-slate-200 p-8 shadow-none">
+        <Card className="w-full max-w-[400px] rounded-2xl border-border p-8 shadow-none">
           {!username || !verificationCode ? (
             <div className="flex flex-col items-center gap-4 text-center">
               <div className="flex flex-col gap-1.5">
-                <h1 className="text-2xl font-bold text-slate-900">
-                  {t("resetPassword.invalidTitle")}
-                </h1>
-                <p className="text-sm text-slate-500">{t("resetPassword.invalidSubtitle")}</p>
+                <h1 className="text-2xl font-bold text-fg">{t("resetPassword.invalidTitle")}</h1>
+                <p className="text-sm text-fg-subtle">{t("resetPassword.invalidSubtitle")}</p>
               </div>
               <Link
                 to="/forgot-password"
-                className="text-[13px] font-semibold text-emerald-700 hover:underline"
+                className="text-[13px] font-semibold text-primary hover:underline"
               >
                 {t("resetPassword.invalidCta")}
               </Link>
@@ -85,8 +83,8 @@ export function ResetPassword() {
           ) : (
             <form onSubmit={onSubmit} className="flex flex-col gap-7">
               <div className="flex flex-col gap-1.5">
-                <h1 className="text-2xl font-bold text-slate-900">{t("resetPassword.title")}</h1>
-                <p className="text-sm text-slate-500">{t("resetPassword.subtitle")}</p>
+                <h1 className="text-2xl font-bold text-fg">{t("resetPassword.title")}</h1>
+                <p className="text-sm text-fg-subtle">{t("resetPassword.subtitle")}</p>
               </div>
 
               <div className="flex flex-col gap-4">
