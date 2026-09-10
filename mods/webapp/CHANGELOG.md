@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.44.0](https://github.com/fonoster/qcobro/compare/v1.43.0...v1.44.0) (2026-09-10)
+
+**Note:** Version bump only for package @qcobro/webapp
+
 # [1.43.0](https://github.com/fonoster/qcobro/compare/v1.42.2...v1.43.0) (2026-09-10)
 
 ### Features

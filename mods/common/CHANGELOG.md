@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.44.0](https://github.com/fonoster/qcobro/compare/v1.43.0...v1.44.0) (2026-09-10)
+
+### Features
+
+- **apiserver:** pass account context as Voz IA call metadata ([#166](https://github.com/fonoster/qcobro/issues/166)) ([bf6c30f](https://github.com/fonoster/qcobro/commit/bf6c30fa32571b3f880d3be8c60af0c2f4bcd88e))
+
 # [1.43.0](https://github.com/fonoster/qcobro/compare/v1.42.2...v1.43.0) (2026-09-10)
 
 ### Features
