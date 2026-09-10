@@ -50,6 +50,7 @@ function AddSenderModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
       }
       cancelLabel={t("common.cancel")}
       onConfirm={handleAdd}
+      error={error}
     >
       <div className="mt-4 flex flex-col gap-3">
         <InputGroup
@@ -73,7 +74,6 @@ function AddSenderModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
           value={label}
           onChange={(e) => setLabel(e.target.value)}
         />
-        {error && <p className="text-xs text-red-600">{error}</p>}
       </div>
     </Dialog>
   );

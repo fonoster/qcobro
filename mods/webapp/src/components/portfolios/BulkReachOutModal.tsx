@@ -63,6 +63,7 @@ export function BulkReachOutModal({
           : t("portfolios.bulk.send").replace("{count}", String(count))
       }
       onConfirm={handleConfirm}
+      error={error}
     >
       <div className="mt-4 flex flex-col gap-3">
         <SelectGroup
@@ -87,7 +88,6 @@ export function BulkReachOutModal({
         )}
 
         <p className="text-xs text-slate-400">{t("portfolios.reachOut.footnote")}</p>
-        {error && <p className="text-xs text-red-600">{error}</p>}
       </div>
     </Dialog>
   );

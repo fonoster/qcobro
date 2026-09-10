@@ -234,6 +234,7 @@ function CreatePortfolioModal({
       title={t("portfolios.new")}
       confirmLabel={create.isPending ? "Creando…" : t("portfolios.form.create")}
       onConfirm={handleCreate}
+      error={error}
     >
       <div className="mt-4 flex flex-col gap-3">
         <InputGroup
@@ -250,7 +251,6 @@ function CreatePortfolioModal({
           onChange={(e) => setClientId(e.target.value)}
           placeholder="ej. bancolombia"
         />
-        {error && <p className="text-xs text-red-600">{error}</p>}
         <p className="text-xs text-slate-400">{t("portfolios.form.csvNote")}</p>
       </div>
     </Dialog>

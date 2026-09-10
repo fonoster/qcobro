@@ -83,6 +83,7 @@ export function CsvSyncModal({
             : undefined
       }
       className="max-w-lg"
+      error={syncError}
     >
       <div className="mt-4 flex flex-col gap-4">
         {!result ? (
@@ -115,15 +116,6 @@ export function CsvSyncModal({
                     {e}
                   </p>
                 ))}
-              </div>
-            )}
-
-            {syncError && (
-              <div className="rounded-md border border-red-200 bg-red-50 p-3">
-                <p className="mb-1 text-xs font-medium text-red-700">
-                  {t("portfolios.csv.error.title")}
-                </p>
-                <p className="text-xs text-red-600">{syncError}</p>
               </div>
             )}
 

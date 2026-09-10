@@ -450,6 +450,7 @@ function CreateAgentTemplateModal({
       confirmLabel={create.isPending ? "…" : t("agents.form.create")}
       cancelLabel={t("common.cancel")}
       onConfirm={handleCreate}
+      error={error}
     >
       <div className="mt-4 flex flex-col gap-3">
         <InputGroup
@@ -708,8 +709,6 @@ function CreateAgentTemplateModal({
             />
           </>
         )}
-
-        {error && <p className="text-xs text-red-600">{error}</p>}
       </div>
     </Dialog>
   );
@@ -875,6 +874,7 @@ function EditAgentTemplateModal({
       confirmLabel={update.isPending ? "…" : t("agents.form.save")}
       cancelLabel={t("common.cancel")}
       onConfirm={handleSave}
+      error={error}
     >
       <div className="mt-4 flex flex-col gap-3">
         {isLoading ? (
@@ -1131,8 +1131,6 @@ function EditAgentTemplateModal({
                 />
               </>
             )}
-
-            {error && <p className="text-xs text-red-600">{error}</p>}
           </>
         )}
       </div>
