@@ -28,7 +28,8 @@ function buildPrompt(req: InsightRequest): string {
   return [
     "Analyze the following debt-collection conversation (it may be a call, SMS, or email).",
     "Return ONLY a JSON object with the keys: aiSummary, aiSentiment, aiDebtReason, aiResult, aiNextStep.",
-    "aiSentiment must be one of: POSITIVE, NEUTRAL, NEGATIVE, HOSTILE.",
+    "aiSummary must be a non-empty string. Set aiSentiment, aiDebtReason, aiResult, or aiNextStep to null when the conversation does not establish it — do not invent a value.",
+    "aiSentiment, when set, must be one of: POSITIVE, NEUTRAL, NEGATIVE, HOSTILE.",
     `Write every text field in the same language the customer used in the conversation below.${fallback}`,
     ctx.length ? `Context — ${ctx.join(" · ")}` : "",
     "Conversation:",
