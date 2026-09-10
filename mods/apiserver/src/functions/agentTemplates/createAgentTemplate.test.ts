@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { createCreateAgentTemplate } from "./createAgentTemplate.js";
-import { ValidationError } from "@qcobro/common";
+import { DEFAULT_VOICE_IDLE_OPTIONS, ValidationError } from "@qcobro/common";
 
 interface Created {
   base?: Record<string, unknown>;
@@ -157,9 +157,51 @@ describe("createAgentTemplate", () => {
       voice: "voice-x",
       systemPrompt: "Be polite",
       firstMessage: "Hola",
-      language: "es"
+      language: "es",
+      // Idle options flow from the persisted VoiceAiConfig row; the create above
+      // omitted them so they carry the DEFAULT_VOICE_IDLE_OPTIONS values.
+      idleMessage: DEFAULT_VOICE_IDLE_OPTIONS.message,
+      idleTimeout: DEFAULT_VOICE_IDLE_OPTIONS.timeout,
+      idleMaxTimeoutCount: DEFAULT_VOICE_IDLE_OPTIONS.maxTimeoutCount
     });
     assert.deepEqual(updates.voiceAi, { fonosterAppRef: "app-1" });
+  });
+
+  it("persists idle options, defaulting them when the input omits them", async () => {
+    const { client, created } = makeClient();
+    const fn = createCreateAgentTemplate(client as never, "ws-1");
+
+    await fn({
+      name: "Sin idle",
+      type: "VOICE_AI",
+      voice: "voice-x",
+      systemPrompt: "Be polite",
+      language: "es"
+    });
+
+    assert.equal(created.voiceAi?.idleMessage, DEFAULT_VOICE_IDLE_OPTIONS.message);
+    assert.equal(created.voiceAi?.idleTimeout, DEFAULT_VOICE_IDLE_OPTIONS.timeout);
+    assert.equal(created.voiceAi?.idleMaxTimeoutCount, DEFAULT_VOICE_IDLE_OPTIONS.maxTimeoutCount);
+  });
+
+  it("persists explicit idle options as given", async () => {
+    const { client, created } = makeClient();
+    const fn = createCreateAgentTemplate(client as never, "ws-1");
+
+    await fn({
+      name: "Con idle",
+      type: "VOICE_AI",
+      voice: "voice-x",
+      systemPrompt: "Be polite",
+      language: "es",
+      idleMessage: "¿Sigue ahí?",
+      idleTimeout: 5000,
+      idleMaxTimeoutCount: 2
+    });
+
+    assert.equal(created.voiceAi?.idleMessage, "¿Sigue ahí?");
+    assert.equal(created.voiceAi?.idleTimeout, 5000);
+    assert.equal(created.voiceAi?.idleMaxTimeoutCount, 2);
   });
 
   it("saves locally when the Fonoster sync fails (no throw, ref unset)", async () => {

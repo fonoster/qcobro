@@ -38,6 +38,11 @@ test.describe("campaigns core", () => {
     await page.getByLabel("Voz").selectOption({ label: "Sofía (es, femenina)" });
     await page.getByLabel("Primer mensaje").fill("Hola, le llamo de QCobro.");
     await page.getByLabel("Prompt del sistema").fill("Sé cordial y claro.");
+    // Idle options are pre-filled from the deployment default (8000 ms / 3); the operator
+    // can override but does not have to.
+    await expect(page.getByLabel("Tiempo de inactividad (ms)")).toHaveValue("8000");
+    await expect(page.getByLabel("Máximo de reintentos por inactividad")).toHaveValue("3");
+    await expect(page.getByLabel("Mensaje de inactividad")).not.toHaveValue("");
     await page.getByRole("button", { name: "Crear agente" }).click();
     // VOICE_AI create runs a best-effort Fonoster sync inline (≤15s timeout), so
     // give the row a wide window to appear.

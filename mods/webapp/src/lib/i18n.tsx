@@ -386,6 +386,18 @@ export const messages = {
     "agents.form.optOutDigitPlaceholder": "9",
     "agents.form.optOutMessagePlaceholder": "To stop receiving these calls, press 9.",
     "agents.form.optOutConfirmationMessagePlaceholder": "Done. We won't call you again. Thank you.",
+    "agents.form.idleMessage": "Idle prompt",
+    "agents.form.idleTimeout": "Idle timeout (ms)",
+    "agents.form.idleMaxTimeoutCount": "Max idle timeouts",
+    "agents.form.idleMessageHint":
+      "Spoken when the caller goes quiet. E.g. Are you still there, {{firstName}}? I need to confirm a payment date.",
+    "agents.form.idleTimeoutHint": "In milliseconds. 8000 = 8 seconds. Minimum 3000.",
+    "agents.form.idleMaxTimeoutCountHint":
+      "How many times the agent re-prompts before ending the call.",
+    "agents.form.idleTimeoutPlaceholder": "8000",
+    "agents.form.idleMaxTimeoutCountPlaceholder": "3",
+    "agents.form.idleInvalid":
+      "Enter an idle prompt, a timeout of at least 3000 ms, and at least 1 idle timeout.",
     "agents.lang.es": "Spanish",
     "agents.lang.en": "English",
     "agents.gender.female": "female",
@@ -1070,6 +1082,18 @@ export const messages = {
     "agents.form.optOutDigitPlaceholder": "9",
     "agents.form.optOutMessagePlaceholder": "Para no volver a recibir estas llamadas, presione 9.",
     "agents.form.optOutConfirmationMessagePlaceholder": "Listo, no volveremos a llamarle. Gracias.",
+    "agents.form.idleMessage": "Mensaje de inactividad",
+    "agents.form.idleTimeout": "Tiempo de inactividad (ms)",
+    "agents.form.idleMaxTimeoutCount": "Máximo de reintentos por inactividad",
+    "agents.form.idleMessageHint":
+      "Se dice cuando la persona deja de hablar. Ej.: ¿Sigue en la línea, {{firstName}}? Necesito confirmar una fecha de pago.",
+    "agents.form.idleTimeoutHint": "En milisegundos. 8000 = 8 segundos. Mínimo 3000.",
+    "agents.form.idleMaxTimeoutCountHint":
+      "Cuántas veces el agente vuelve a preguntar antes de finalizar la llamada.",
+    "agents.form.idleTimeoutPlaceholder": "8000",
+    "agents.form.idleMaxTimeoutCountPlaceholder": "3",
+    "agents.form.idleInvalid":
+      "Ingrese un mensaje de inactividad, un tiempo de al menos 3000 ms y al menos 1 reintento.",
     "agents.lang.es": "Español",
     "agents.lang.en": "Inglés",
     "agents.gender.female": "femenina",

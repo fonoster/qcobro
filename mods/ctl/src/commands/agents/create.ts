@@ -1,6 +1,13 @@
 import { Flags, Interfaces } from "@oclif/core";
-import type { CreateAgentTemplateInput } from "@qcobro/common";
+import { z } from "zod";
+import { createAgentTemplateSchema } from "@qcobro/common";
 import { AuthenticatedCommand } from "../../AuthenticatedCommand.js";
+
+/**
+ * The pre-validation payload shape — `z.input`, not `z.infer` — so schema fields that carry
+ * a `.default()` (the VOICE_AI idle options) may be omitted here; the server applies them.
+ */
+type CreateAgentTemplatePayload = z.input<typeof createAgentTemplateSchema>;
 
 export default class Create extends AuthenticatedCommand<typeof Create> {
   static override readonly description = "create an agent template in the active workspace";
@@ -44,7 +51,7 @@ export default class Create extends AuthenticatedCommand<typeof Create> {
 
   private buildPayload(
     flags: Interfaces.InferredFlags<typeof Create.flags>
-  ): CreateAgentTemplateInput {
+  ): CreateAgentTemplatePayload {
     const base = { name: flags.name };
 
     switch (flags.type) {

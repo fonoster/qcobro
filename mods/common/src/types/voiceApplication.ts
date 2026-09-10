@@ -17,6 +17,12 @@ export interface VoiceApplicationInput {
   firstMessage?: string;
   /** Language code (e.g. `es`, `en`). */
   language: string;
+  /** Idle prompt spoken when the caller goes silent (maps to VoiceAiConfig.idleMessage). */
+  idleMessage: string;
+  /** Milliseconds of silence tolerated before the idle prompt is spoken; ≥ 3000. */
+  idleTimeout: number;
+  /** Consecutive idle timeouts tolerated before the call ends; ≥ 1. */
+  idleMaxTimeoutCount: number;
 }
 
 /** One scripted turn within a VOICE_AI eval scenario, translated into Fonoster's

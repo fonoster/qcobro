@@ -79,6 +79,19 @@ their respective child tables:
 - `firstMessage String?` — the opening line spoken to the contact; optional, an agent may
   rely on the system prompt alone with no scripted opening line
 - `language String` — default language code (e.g. `es`, `en`)
+- `idleMessage String` — the line the agent speaks when the caller has gone silent,
+  prompting them to re-engage; non-empty
+- `idleTimeout Int` — how long, in **milliseconds**, the agent waits for caller speech
+  before speaking `idleMessage`; an integer of at least `3000`, with no upper bound
+- `idleMaxTimeoutCount Int` — how many consecutive idle timeouts the agent tolerates
+  before ending the call; an integer of at least `1`, with no upper bound
+
+The three idle fields are conceptually required — the database columns are NOT NULL, the
+console form rejects an empty value, and every synced Fonoster application always carries
+them — but a template saved without them explicitly set SHALL be stored with the
+deployment's idle-option defaults rather than rejected. The defaults are a single value
+shared by the migration backfill, the console create form's pre-fill, and the ephemeral
+evaluation path.
 
 **VoicePrerecordedConfig** (for `VOICE_PRERECORDED`):
 
@@ -120,6 +133,32 @@ capability existed.
 - **WHEN** an operator saves a VOICE_AI template leaving the first message empty
 - **THEN** the template is saved with no first message
 - **AND** the agent relies on its system prompt for the opening of the conversation
+
+#### Scenario: VOICE_AI template carries per-template idle options to Fonoster
+
+- **WHEN** an operator saves a VOICE_AI template with `idleMessage`, `idleTimeout`, and
+  `idleMaxTimeoutCount` set
+- **THEN** the values are persisted on the `VoiceAiConfig` row
+- **AND** the synced Fonoster application's `conversationSettings.idleOptions` carries
+  `message`, `timeout`, and `maxTimeoutCount` equal to those three values, overriding any
+  deployment-wide default
+
+#### Scenario: VOICE_AI template saved without explicit idle options gets the deployment defaults
+
+- **WHEN** a VOICE_AI template is created without `idleMessage`, `idleTimeout`, or
+  `idleMaxTimeoutCount` supplied (for example an `agents:create` call or an eval template
+  that omits them)
+- **THEN** the template is stored with the deployment's default idle message, default idle
+  timeout in milliseconds, and default max timeout count
+- **AND** those same default values are what the synced Fonoster application's
+  `conversationSettings.idleOptions` carries
+
+#### Scenario: Idle timeout below the minimum is rejected
+
+- **WHEN** an operator saves a VOICE_AI template with `idleTimeout` less than `3000`
+  milliseconds, or `idleMaxTimeoutCount` less than `1`, or an empty `idleMessage`
+- **THEN** the save is rejected with a structured validation error naming the offending
+  field
 
 #### Scenario: Template saves locally even if Fonoster sync fails
 

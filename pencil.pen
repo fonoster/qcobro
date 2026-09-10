@@ -30901,6 +30901,54 @@
                               "content": "## Rol\n\nEres un asistente virtual de cobranza para Mikro Créditos..."
                             }
                           }
+                        },
+                        {
+                          "id": "MYZJm",
+                          "type": "ref",
+                          "ref": "uJnVk",
+                          "name": "Mensaje de inactividad",
+                          "width": "fill_container",
+                          "descendants": {
+                            "MV9CA": {
+                              "content": "Mensaje de inactividad"
+                            },
+                            "GsIQy": {
+                              "content": "¿Se encuentra en la línea? Necesito confirmar una fecha de pago para su cuenta.",
+                              "fill": "$--foreground"
+                            }
+                          }
+                        },
+                        {
+                          "id": "U68Iz",
+                          "type": "ref",
+                          "ref": "BoM07",
+                          "name": "Tiempo de inactividad (ms)",
+                          "width": "fill_container",
+                          "descendants": {
+                            "hTkn4": {
+                              "content": "Tiempo de inactividad (ms)"
+                            },
+                            "KmeTM": {
+                              "content": "8000",
+                              "fill": "$--foreground"
+                            }
+                          }
+                        },
+                        {
+                          "id": "E6P21",
+                          "type": "ref",
+                          "ref": "BoM07",
+                          "name": "Máximo de reintentos",
+                          "width": "fill_container",
+                          "descendants": {
+                            "hTkn4": {
+                              "content": "Máximo de reintentos"
+                            },
+                            "KmeTM": {
+                              "content": "3",
+                              "fill": "$--foreground"
+                            }
+                          }
                         }
                       ]
                     },
@@ -31248,6 +31296,54 @@
                             },
                             "GsIQy": {
                               "content": "## Rol\n\nEres un asistente virtual de cobranza para Mikro Créditos."
+                            }
+                          }
+                        },
+                        {
+                          "id": "qYUQf",
+                          "type": "ref",
+                          "ref": "uJnVk",
+                          "name": "Mensaje de inactividad",
+                          "width": "fill_container",
+                          "descendants": {
+                            "MV9CA": {
+                              "content": "Mensaje de inactividad"
+                            },
+                            "GsIQy": {
+                              "content": "¿Se encuentra en la línea? Necesito confirmar una fecha de pago para su cuenta.",
+                              "fill": "$--foreground"
+                            }
+                          }
+                        },
+                        {
+                          "id": "Rh5V0",
+                          "type": "ref",
+                          "ref": "BoM07",
+                          "name": "Tiempo de inactividad (ms)",
+                          "width": "fill_container",
+                          "descendants": {
+                            "hTkn4": {
+                              "content": "Tiempo de inactividad (ms)"
+                            },
+                            "KmeTM": {
+                              "content": "8000",
+                              "fill": "$--foreground"
+                            }
+                          }
+                        },
+                        {
+                          "id": "axwHK",
+                          "type": "ref",
+                          "ref": "BoM07",
+                          "name": "Máximo de reintentos",
+                          "width": "fill_container",
+                          "descendants": {
+                            "hTkn4": {
+                              "content": "Máximo de reintentos"
+                            },
+                            "KmeTM": {
+                              "content": "3",
+                              "fill": "$--foreground"
                             }
                           }
                         }

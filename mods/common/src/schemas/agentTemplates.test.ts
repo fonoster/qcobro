@@ -1,6 +1,10 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { voicePrerecordedDtmfSchema } from "./agentTemplates.js";
+import {
+  DEFAULT_VOICE_IDLE_OPTIONS,
+  createAgentTemplateSchema,
+  voicePrerecordedDtmfSchema
+} from "./agentTemplates.js";
 
 describe("voicePrerecordedDtmfSchema", () => {
   it("accepts an empty config (no menu)", () => {
@@ -79,6 +83,78 @@ describe("voicePrerecordedDtmfSchema", () => {
     const result = voicePrerecordedDtmfSchema.safeParse({
       repeatDigit: "#",
       repeatMessage: "Presione #."
+    });
+    assert.equal(result.success, false);
+  });
+});
+
+describe("createAgentTemplateSchema — VOICE_AI idle options", () => {
+  const base = {
+    name: "Cobrador AI",
+    type: "VOICE_AI" as const,
+    voice: "voice-x",
+    systemPrompt: "Be polite",
+    language: "es"
+  };
+
+  it("defaults all three idle fields to DEFAULT_VOICE_IDLE_OPTIONS when omitted", () => {
+    const result = createAgentTemplateSchema.safeParse(base);
+    assert.equal(result.success, true);
+    assert.equal(
+      (result as { data: Record<string, unknown> }).data.idleMessage,
+      DEFAULT_VOICE_IDLE_OPTIONS.message
+    );
+    assert.equal(
+      (result as { data: Record<string, unknown> }).data.idleTimeout,
+      DEFAULT_VOICE_IDLE_OPTIONS.timeout
+    );
+    assert.equal(
+      (result as { data: Record<string, unknown> }).data.idleMaxTimeoutCount,
+      DEFAULT_VOICE_IDLE_OPTIONS.maxTimeoutCount
+    );
+  });
+
+  it("keeps the deployment default at 8000 ms / 3 (supersedes PR #165's 4500)", () => {
+    assert.equal(DEFAULT_VOICE_IDLE_OPTIONS.timeout, 8000);
+    assert.equal(DEFAULT_VOICE_IDLE_OPTIONS.maxTimeoutCount, 3);
+    assert.equal(DEFAULT_VOICE_IDLE_OPTIONS.message.length > 0, true);
+  });
+
+  it("accepts explicit idle values at the boundaries", () => {
+    const result = createAgentTemplateSchema.safeParse({
+      ...base,
+      idleMessage: "¿Sigue ahí?",
+      idleTimeout: 3000,
+      idleMaxTimeoutCount: 1
+    });
+    assert.equal(result.success, true);
+  });
+
+  it("rejects an idleTimeout below 3000 ms", () => {
+    const result = createAgentTemplateSchema.safeParse({
+      ...base,
+      idleTimeout: 2999
+    });
+    assert.equal(result.success, false);
+  });
+
+  it("rejects an idleMaxTimeoutCount below 1", () => {
+    const result = createAgentTemplateSchema.safeParse({
+      ...base,
+      idleMaxTimeoutCount: 0
+    });
+    assert.equal(result.success, false);
+  });
+
+  it("rejects an empty idleMessage", () => {
+    const result = createAgentTemplateSchema.safeParse({ ...base, idleMessage: "" });
+    assert.equal(result.success, false);
+  });
+
+  it("rejects a non-integer idleTimeout", () => {
+    const result = createAgentTemplateSchema.safeParse({
+      ...base,
+      idleTimeout: 5000.5
     });
     assert.equal(result.success, false);
   });

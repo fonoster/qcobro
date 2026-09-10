@@ -23,6 +23,12 @@ export interface VoiceAiConfigRecord {
   systemPrompt: string;
   firstMessage: string | null;
   language: string;
+  /** Line spoken when the caller goes silent. */
+  idleMessage: string;
+  /** Milliseconds to wait for caller speech before speaking `idleMessage`; ≥ 3000. */
+  idleTimeout: number;
+  /** Consecutive idle timeouts tolerated before the call ends; ≥ 1. */
+  idleMaxTimeoutCount: number;
 }
 
 export interface VoicePrerecordedConfigRecord {
