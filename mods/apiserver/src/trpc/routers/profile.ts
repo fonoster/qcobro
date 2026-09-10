@@ -1,21 +1,24 @@
 import {
   updateProfileSchema,
   updateUserLanguageSchema,
+  updateUserThemeSchema,
   changePasswordSchema
 } from "@qcobro/common";
 import { router, protectedProcedure } from "../trpc.js";
 import { identityCall } from "../identityCall.js";
 import { createGetUserSettings } from "../../functions/userSettings/getUserSettings.js";
 import { createUpdateUserLanguage } from "../../functions/userSettings/updateUserLanguage.js";
+import { createUpdateUserTheme } from "../../functions/userSettings/updateUserTheme.js";
 
 export const profileRouter = router({
-  // Identity profile (name/email/phone) enriched with the app-owned language preference.
+  // Identity profile (name/email/phone) enriched with the app-owned language and appearance
+  // preferences.
   get: protectedProcedure.query(async ({ ctx }) => {
     const [user, settings] = await Promise.all([
       identityCall(() => ctx.identity.getUser(ctx.user.ref, ctx.token)),
       createGetUserSettings(ctx.prisma as never)(ctx.user.ref)
     ]);
-    return { ...user, language: settings.language };
+    return { ...user, language: settings.language, theme: settings.theme };
   }),
 
   update: protectedProcedure
@@ -49,6 +52,11 @@ export const profileRouter = router({
     .mutation(({ ctx, input }) =>
       createUpdateUserLanguage(ctx.prisma as never, ctx.user.ref)(input)
     ),
+
+  // App-owned appearance preference (system | light | dark).
+  setTheme: protectedProcedure
+    .input(updateUserThemeSchema)
+    .mutation(({ ctx, input }) => createUpdateUserTheme(ctx.prisma as never, ctx.user.ref)(input)),
 
   delete: protectedProcedure.mutation(({ ctx }) =>
     identityCall(() => ctx.identity.deleteUser(ctx.user.ref, ctx.token))

@@ -36,10 +36,13 @@ model WorkspaceSettings {
 }
 
 // Per-user settings owned by the app (keyed by the Identity userRef); the Identity
-// service is never modified. Holds the user's console language preference.
+// service is never modified. Holds the user's console language and appearance preferences.
 model UserSettings {
   userRef   String   @id
   language  String   @default("es")
+  // Console appearance: "system" (follow the OS), "light", or "dark". Validated as an enum
+  // in @qcobro/common (themeSchema) at the edge; stored as a plain string like `language`.
+  theme     String   @default("system")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
