@@ -40,7 +40,7 @@ test.describe("campaigns core", () => {
     await page.getByLabel("Prompt del sistema").fill("Sé cordial y claro.");
     // Idle options are pre-filled from the deployment default (8000 ms / 3); the operator
     // can override but does not have to.
-    await expect(page.getByLabel("Tiempo de inactividad (ms)")).toHaveValue("8000");
+    await expect(page.getByLabel("Tiempo de inactividad (ms, mín. 3000)")).toHaveValue("8000");
     await expect(page.getByLabel("Máximo de reintentos por inactividad")).toHaveValue("3");
     await expect(page.getByLabel("Mensaje de inactividad")).not.toHaveValue("");
     await page.getByRole("button", { name: "Crear agente" }).click();

@@ -156,8 +156,7 @@ export const messages = {
     "profile.section.general": "General",
     "profile.field.name": "Name",
     "profile.field.namePlaceholder": "Your name",
-    "profile.field.email": "Email",
-    "profile.field.emailHint": "Email can't be changed.",
+    "profile.field.email": "Email · not editable",
     "profile.field.phone": "Phone",
     "profile.field.phonePlaceholder": "Optional",
     "profile.field.language": "Language",
@@ -355,14 +354,14 @@ export const messages = {
     "agents.form.subject": "Subject",
     "agents.form.maxReplies": "Max autopilot replies per case",
     "agents.form.templateName": "Template name",
-    "agents.form.firstMessageHint":
-      "E.g. Hi, I'm calling from Créditos Demo about your past-due account.",
-    "agents.form.systemPromptHint":
-      "E.g. You are a collections agent for Créditos Demo. Be courteous and offer payment options. Customer: {{firstName}}, balance {{outstandingBalance}}.",
-    "agents.form.scriptHint":
-      "E.g. Hi {{firstName}}, this is a reminder that your Créditos Demo account has a balance of {{outstandingBalance}}.",
-    "agents.form.messageBodyHint":
-      "E.g. {{firstName}}, your Créditos Demo account has a balance of {{outstandingBalance}}. Reply to arrange a payment.",
+    "agents.form.firstMessagePlaceholder":
+      "Hi, I'm calling from Créditos Demo about your past-due account.",
+    "agents.form.systemPromptPlaceholder":
+      "You are a collections agent for Créditos Demo. Be courteous and offer payment options. Customer: {{firstName}}, balance {{outstandingBalance}}.",
+    "agents.form.scriptPlaceholder":
+      "Hi {{firstName}}, this is a reminder that your Créditos Demo account has a balance of {{outstandingBalance}}.",
+    "agents.form.messageBodyPlaceholder":
+      "{{firstName}}, your Créditos Demo account has a balance of {{outstandingBalance}}. Reply to arrange a payment.",
     "agents.form.smsSegmentOne": "≈ 1 segment · {characters} characters",
     "agents.form.smsSegments": "≈ {segments} segments · {characters} characters",
     "agents.form.smsCostlyChars": "{characters} raises the cost",
@@ -391,13 +390,10 @@ export const messages = {
     "agents.form.optOutMessagePlaceholder": "To stop receiving these calls, press 9.",
     "agents.form.optOutConfirmationMessagePlaceholder": "Done. We won't call you again. Thank you.",
     "agents.form.idleMessage": "Idle prompt",
-    "agents.form.idleTimeout": "Idle timeout (ms)",
+    "agents.form.idleTimeout": "Idle timeout (ms, min. 3000)",
     "agents.form.idleMaxTimeoutCount": "Max idle timeouts",
-    "agents.form.idleMessageHint":
-      "Spoken when the caller goes quiet. E.g. Are you still there, {{firstName}}? I need to confirm a payment date.",
-    "agents.form.idleTimeoutHint": "In milliseconds. 8000 = 8 seconds. Minimum 3000.",
-    "agents.form.idleMaxTimeoutCountHint":
-      "How many times the agent re-prompts before ending the call.",
+    "agents.form.idleMessagePlaceholder":
+      "Are you still there, {{firstName}}? I need to confirm a payment date.",
     "agents.form.idleTimeoutPlaceholder": "8000",
     "agents.form.idleMaxTimeoutCountPlaceholder": "3",
     "agents.form.idleInvalid":
@@ -467,11 +463,8 @@ export const messages = {
     "campaigns.form.days": "Days of operation",
     "campaigns.form.startTime": "Start time",
     "campaigns.form.endTime": "End time",
-    "campaigns.form.timeWindowHint": "Local time in the workspace timezone.",
     "campaigns.form.maxPerAccount": "Max attempts per account",
-    "campaigns.form.maxPerAccountHint": "Total attempts per account over the entire campaign.",
     "campaigns.form.maxPerDay": "Max attempts per day",
-    "campaigns.form.maxPerDayHint": "Maximum attempts per account on any single day.",
     "campaigns.form.noPortfolios": "Select at least one portfolio.",
     "campaigns.form.noDays": "Select at least one day.",
     "campaigns.form.noName": "Give the campaign a name.",
@@ -662,10 +655,10 @@ export const messages = {
     "integrations.waba.wabaId": "WABA ID",
     "integrations.waba.wabaIdPlaceholder": "123456789012345",
     "integrations.waba.accessToken": "Access token",
-    "integrations.waba.accessTokenHint": "Leave blank to keep the current token.",
+    "integrations.waba.accessTokenConnectedPlaceholder": "Leave blank to keep the current token",
     "integrations.waba.accessTokenPlaceholder": "EAAG…",
     "integrations.waba.verifyToken": "Webhook verify token",
-    "integrations.waba.verifyTokenHint": "Must match the token you configured in Meta exactly.",
+    "integrations.waba.verifyTokenPlaceholder": "qcobro_webhook_8f3a",
     "integrations.waba.defaultLanguage": "Default template language (e.g. es_DO)",
     "integrations.waba.save": "Save",
     "integrations.waba.saving": "Saving…",
@@ -679,7 +672,6 @@ export const messages = {
       "Link a sending number to your connected WhatsApp Business Account.",
     "integrations.senders.phoneNumberId": "Phone number ID",
     "integrations.senders.phoneNumberIdPlaceholder": "109876543210987",
-    "integrations.senders.phoneNumberIdHint": "Meta's numeric ID, not the phone number.",
     "integrations.senders.displayNumber": "Display number (E.164)",
     "integrations.senders.displayNumberPlaceholder": "+18095551234",
     "integrations.senders.label": "Label",
@@ -856,8 +848,7 @@ export const messages = {
     "profile.section.general": "General",
     "profile.field.name": "Nombre",
     "profile.field.namePlaceholder": "Tu nombre",
-    "profile.field.email": "Correo",
-    "profile.field.emailHint": "El correo no se puede cambiar.",
+    "profile.field.email": "Correo · no editable",
     "profile.field.phone": "Teléfono",
     "profile.field.phonePlaceholder": "Opcional",
     "profile.field.language": "Idioma",
@@ -1056,13 +1047,14 @@ export const messages = {
     "agents.form.subject": "Asunto",
     "agents.form.maxReplies": "Máx. respuestas del autopiloto por caso",
     "agents.form.templateName": "Nombre de plantilla",
-    "agents.form.firstMessageHint": "Ej.: Hola, le llamo de Créditos Demo por su cuenta pendiente.",
-    "agents.form.systemPromptHint":
-      "Ej.: Eres un agente de cobranza de Créditos Demo. Sé cortés y ofrece opciones de pago. Cliente: {{firstName}}, saldo {{outstandingBalance}}.",
-    "agents.form.scriptHint":
-      "Ej.: Hola {{firstName}}, le recordamos que su cuenta con Créditos Demo presenta un saldo de {{outstandingBalance}}.",
-    "agents.form.messageBodyHint":
-      "Ej.: {{firstName}}, su cuenta con Créditos Demo tiene un saldo de {{outstandingBalance}}. Responda para acordar un pago.",
+    "agents.form.firstMessagePlaceholder":
+      "Hola, le llamo de Créditos Demo por su cuenta pendiente.",
+    "agents.form.systemPromptPlaceholder":
+      "Eres un agente de cobranza de Créditos Demo. Sé cortés y ofrece opciones de pago. Cliente: {{firstName}}, saldo {{outstandingBalance}}.",
+    "agents.form.scriptPlaceholder":
+      "Hola {{firstName}}, le recordamos que su cuenta con Créditos Demo presenta un saldo de {{outstandingBalance}}.",
+    "agents.form.messageBodyPlaceholder":
+      "{{firstName}}, su cuenta con Créditos Demo tiene un saldo de {{outstandingBalance}}. Responda para acordar un pago.",
     "agents.form.smsSegmentOne": "≈ 1 segmento · {characters} caracteres",
     "agents.form.smsSegments": "≈ {segments} segmentos · {characters} caracteres",
     "agents.form.smsCostlyChars": "{characters} encarece el envío",
@@ -1091,13 +1083,10 @@ export const messages = {
     "agents.form.optOutMessagePlaceholder": "Para no volver a recibir estas llamadas, presione 9.",
     "agents.form.optOutConfirmationMessagePlaceholder": "Listo, no volveremos a llamarle. Gracias.",
     "agents.form.idleMessage": "Mensaje de inactividad",
-    "agents.form.idleTimeout": "Tiempo de inactividad (ms)",
+    "agents.form.idleTimeout": "Tiempo de inactividad (ms, mín. 3000)",
     "agents.form.idleMaxTimeoutCount": "Máximo de reintentos por inactividad",
-    "agents.form.idleMessageHint":
-      "Se dice cuando la persona deja de hablar. Ej.: ¿Sigue en la línea, {{firstName}}? Necesito confirmar una fecha de pago.",
-    "agents.form.idleTimeoutHint": "En milisegundos. 8000 = 8 segundos. Mínimo 3000.",
-    "agents.form.idleMaxTimeoutCountHint":
-      "Cuántas veces el agente vuelve a preguntar antes de finalizar la llamada.",
+    "agents.form.idleMessagePlaceholder":
+      "¿Sigue en la línea, {{firstName}}? Necesito confirmar una fecha de pago.",
     "agents.form.idleTimeoutPlaceholder": "8000",
     "agents.form.idleMaxTimeoutCountPlaceholder": "3",
     "agents.form.idleInvalid":
@@ -1167,11 +1156,8 @@ export const messages = {
     "campaigns.form.days": "Días de operación",
     "campaigns.form.startTime": "Hora de inicio",
     "campaigns.form.endTime": "Hora de fin",
-    "campaigns.form.timeWindowHint": "Hora local de la zona horaria del espacio de trabajo.",
     "campaigns.form.maxPerAccount": "Máx. intentos por cuenta",
-    "campaigns.form.maxPerAccountHint": "Total de intentos por cuenta durante toda la campaña.",
     "campaigns.form.maxPerDay": "Máx. intentos por día",
-    "campaigns.form.maxPerDayHint": "Máximo de intentos por cuenta en un mismo día.",
     "campaigns.form.noPortfolios": "Selecciona al menos una cartera.",
     "campaigns.form.noDays": "Selecciona al menos un día.",
     "campaigns.form.noName": "Ponle un nombre a la campaña.",
@@ -1363,11 +1349,11 @@ export const messages = {
     "integrations.waba.wabaId": "WABA ID",
     "integrations.waba.wabaIdPlaceholder": "123456789012345",
     "integrations.waba.accessToken": "Token de acceso",
-    "integrations.waba.accessTokenHint": "Deja en blanco para conservar el token actual.",
+    "integrations.waba.accessTokenConnectedPlaceholder":
+      "Déjalo en blanco para conservar el token actual",
     "integrations.waba.accessTokenPlaceholder": "EAAG…",
     "integrations.waba.verifyToken": "Token de verificación del webhook",
-    "integrations.waba.verifyTokenHint":
-      "Debe coincidir exactamente con el token configurado en Meta.",
+    "integrations.waba.verifyTokenPlaceholder": "qcobro_webhook_8f3a",
     "integrations.waba.defaultLanguage": "Idioma de plantilla por defecto (p. ej. es_DO)",
     "integrations.waba.save": "Guardar",
     "integrations.waba.saving": "Guardando…",
@@ -1381,7 +1367,6 @@ export const messages = {
       "Vincula un número de envío a tu cuenta de WhatsApp Business conectada.",
     "integrations.senders.phoneNumberId": "ID de número de teléfono",
     "integrations.senders.phoneNumberIdPlaceholder": "109876543210987",
-    "integrations.senders.phoneNumberIdHint": "El ID numérico de Meta, no el número de teléfono.",
     "integrations.senders.displayNumber": "Número visible (E.164)",
     "integrations.senders.displayNumberPlaceholder": "+18095551234",
     "integrations.senders.label": "Etiqueta",

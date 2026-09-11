@@ -42,11 +42,13 @@ Full guide, rationale, and scaffolding: `/ps:create-validated-function`
 - Share contracts via `@qcobro/common`; don't duplicate types between apiserver and webapp.
 - All user-facing console text goes through the i18n layer (`mods/webapp/src/lib/i18n.tsx`),
   never hardcoded literals. The product is multilingual; assume no single default language.
-- Form fields: give every non-obvious input an example. Short fixed-format values (IDs, digits,
-  E.164, email, times) get a `placeholder` with a realistic example; explanatory or multi-item
-  guidance gets a `hint`. Prefer `placeholder` on any field that also has an `error` (the `hint`
-  is hidden while an error shows). Example text for content fields starts `Ej.: ` / `E.g. ` and
-  shows a `{{variable}}`. Don't restate the label or hide a validation rule only in the example.
+- Form fields: give every non-obvious input an example, and put it **inside** the field as its
+  `placeholder`. A field is a label, the control, and — only while something is wrong — an
+  error; the design system draws no explanatory line underneath one, so the field components
+  have no `hint` prop. Example text for content fields shows a `{{variable}}` and carries no
+  `Ej.: ` / `E.g. ` prefix. Don't restate the label, and never leave a validation rule visible
+  only in an example — a rule the reader can't infer goes in the label, the way the design
+  qualifies labels (`Tiempo de inactividad (ms, mín. 3000)`, `Correo · no editable`).
 - Reach services through the tRPC context, not via ad-hoc imports inside procedures.
 
 ## Commits

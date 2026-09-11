@@ -36,35 +36,6 @@ export const WithError: StoryObj = {
   )
 };
 
-export const WithHint: StoryObj = {
-  render: () => (
-    <div className="w-72">
-      <InputGroup
-        label="Username"
-        placeholder="johndoe"
-        hint="Only letters, numbers, and underscores"
-        id="username"
-      />
-    </div>
-  )
-};
-
-// The `hint` gives way to the `error` while one is set — prefer `placeholder` on any
-// field that also carries an `error`.
-export const WithHintAndError: StoryObj = {
-  render: () => (
-    <div className="w-72">
-      <InputGroup
-        label="Username"
-        placeholder="johndoe"
-        hint="Only letters, numbers, and underscores"
-        error="That username is taken"
-        id="username-err"
-      />
-    </div>
-  )
-};
-
 export const Search: StoryObj = {
   render: () => (
     <div className="w-72">

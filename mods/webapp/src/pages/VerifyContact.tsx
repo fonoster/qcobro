@@ -91,7 +91,6 @@ export function VerifyContact() {
               onChange={(e) => setCode(e.target.value)}
               placeholder="••••••"
               error={error ?? undefined}
-              hint={sent ? t("verify.sent") : undefined}
             />
 
             <Button
@@ -104,14 +103,19 @@ export function VerifyContact() {
             </Button>
 
             <div className="flex items-center justify-between text-[13px]">
-              <button
-                type="button"
-                onClick={onResend}
-                disabled={resending}
-                className="font-semibold text-primary hover:underline disabled:opacity-50"
-              >
-                {t("verify.resend")}
-              </button>
+              {/* `sent` is only set by a resend, so the confirmation belongs beside that
+                  button — it says nothing about the field above it. */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onResend}
+                  disabled={resending}
+                  className="font-semibold text-primary hover:underline disabled:opacity-50"
+                >
+                  {t("verify.resend")}
+                </button>
+                {sent && <span className="text-fg-subtle">{t("verify.sent")}</span>}
+              </div>
               <button
                 type="button"
                 onClick={() => navigate("/workspaces")}

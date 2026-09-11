@@ -45,10 +45,10 @@ export const WithError: StoryObj = {
   )
 };
 
-export const WithHint: StoryObj = {
+export const Timezone: StoryObj = {
   render: () => (
     <div className="w-56">
-      <SelectGroup label="Zona horaria" hint="Usada para todas las campañas del espacio." id="tz">
+      <SelectGroup label="Zona horaria" id="tz">
         <option value="">Seleccionar</option>
         <option value="america/santo_domingo">America/Santo_Domingo</option>
       </SelectGroup>

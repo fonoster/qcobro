@@ -46,19 +46,10 @@ Select.displayName = "Select";
 
 export interface SelectGroupProps extends SelectProps {
   label?: string;
-  hint?: string;
   error?: string;
 }
 
-export function SelectGroup({
-  label,
-  hint,
-  error,
-  className,
-  id,
-  children,
-  ...props
-}: SelectGroupProps) {
+export function SelectGroup({ label, error, className, id, children, ...props }: SelectGroupProps) {
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       {label && (
@@ -70,7 +61,6 @@ export function SelectGroup({
         {children}
       </Select>
       {error && <p className="text-xs text-danger">{error}</p>}
-      {hint && !error && <p className="text-xs text-fg-subtle">{hint}</p>}
     </div>
   );
 }
