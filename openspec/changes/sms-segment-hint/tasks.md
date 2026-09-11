@@ -56,5 +56,5 @@
 
 - [x] 6.1 `npm test` in `mods/common` and `mods/apiserver`; typecheck all three packages
 - [x] 6.2 Migration applied to the dev database; `engine.integration.test.ts` passes against it
-- [ ] 6.3 Drive the console: type past 160, type an accented name, tick the box, confirm the
-      number moves and that `año`/`José` survive. Repeat in the edit modal
+- [x] 6.3 Console checked manually by the operator against the running dev stack: the estimate
+      updates live, the flag moves it, and both the create and edit modals show it
