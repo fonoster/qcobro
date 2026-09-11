@@ -509,7 +509,14 @@ export function createEngine(deps: EngineDeps) {
         providerRef: result.providerRef,
         // EMAIL only — the key its outbound delivery/open events correlate on.
         providerMessageId: result.providerMessageId,
-        channelData: { from: result.from, to: result.to, messageBody: result.renderedBody }
+        channelData: {
+          from: result.from,
+          to: result.to,
+          messageBody: result.renderedBody,
+          // EMAIL only. The manual dispatch path has always kept this; the engine dropped it,
+          // leaving campaign-sent gestiones with no record of the subject the customer saw.
+          ...(result.renderedSubject != null && { subject: result.renderedSubject })
+        }
       },
       metered
         ? {

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  buildThreadWithOpener,
   outcomeSchema,
   withErrorHandlingAndValidation,
   type CreateContactLogInput,
@@ -137,12 +138,17 @@ export function createIngestWhatsAppMessage(deps: IngestWhatsAppMessageDeps) {
 
     const decision: EmailAutopilotDecision = await deps.autopilot.decide({
       systemPrompt: g.agentSystemPrompt,
-      thread: thread.messages,
+      // Led by the templated opener we dispatched, which lives outside the reply thread —
+      // without it the agent's whole view of the conversation starts at the customer's reply.
+      thread: buildThreadWithOpener(existing, thread.messages),
       context: g.accountContext,
       language:
         typeof g.accountContext.preferredLanguage === "string"
           ? g.accountContext.preferredLanguage
-          : undefined
+          : undefined,
+      // Lets the model resolve "el viernes" into an absolute `objective.dueDate`, as EMAIL
+      // has always done. Without it a relative promise can't become a PaymentPromise date.
+      referenceDate: nowIso.slice(0, 10)
     });
 
     let action = decision.action;

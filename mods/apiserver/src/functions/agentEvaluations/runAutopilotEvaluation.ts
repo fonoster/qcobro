@@ -1,9 +1,11 @@
-import type {
-  EmailAutopilot,
-  EmailThreadMessage,
-  EvalEvent,
-  EvalScenarioSummary,
-  TextSimilarityJudge
+import {
+  buildThreadWithOpener,
+  renderTemplate,
+  type EmailAutopilot,
+  type EmailThreadMessage,
+  type EvalEvent,
+  type EvalScenarioSummary,
+  type TextSimilarityJudge
 } from "@qcobro/common";
 import { buildSyntheticAccountContext } from "./buildSyntheticAccount.js";
 import type { ResolvedEvalAgent } from "./resolveEvalTarget.js";
@@ -33,7 +35,20 @@ export async function* runAutopilotEvaluation(
 
   for (const scenario of agent.scenarios) {
     const accountContext = buildSyntheticAccountContext(scenario.account);
-    const thread: EmailThreadMessage[] = [];
+    // Lead with the agent's own outbound notice, rendered against this scenario's account,
+    // so an eval turn sees the conversation production sees. `buildThreadWithOpener` is the
+    // same helper `ingestEmailReply`/`ingestWhatsAppMessage` use, fed the `channelData` shape
+    // a real dispatch writes — without it a scenario's first customer line arrives with no
+    // indication of what it is replying to.
+    const thread: EmailThreadMessage[] = buildThreadWithOpener(
+      {
+        messageBody: agent.openerBody ? renderTemplate(agent.openerBody, accountContext) : "",
+        subject: agent.openerSubject
+          ? renderTemplate(agent.openerSubject, accountContext)
+          : undefined
+      },
+      []
+    );
     let agentReplyCount = 0;
     let scenarioPassed = true;
 

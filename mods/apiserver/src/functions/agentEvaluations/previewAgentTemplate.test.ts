@@ -81,7 +81,7 @@ script: "Hola {{firstName}}, tiene un saldo de {{outstandingBalance}}."
   it("rejects an existing EMAIL template — preview only supports SMS/VOICE_PRERECORDED", async () => {
     const row = baseRow({
       type: "EMAIL",
-      emailConfig: { systemPrompt: "x", messageBody: "y", maxReplies: null }
+      emailConfig: { systemPrompt: "x", subject: "s", messageBody: "y", maxReplies: null }
     });
     const preview = createPreviewAgentTemplate(client(row), "ws_1");
     await assert.rejects(() => preview({ agentTemplateId: "at_1", account }), ValidationError);

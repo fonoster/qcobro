@@ -1,4 +1,5 @@
 import {
+  buildThreadWithOpener,
   generateInsightInputSchema,
   withErrorHandlingAndValidation,
   type EmailThreadMessage,
@@ -26,14 +27,13 @@ export function buildTranscript(channelData: unknown): TranscriptLine[] {
 
   const thread = cd.emailThread?.messages ?? cd.whatsAppThread?.messages;
   if (thread && thread.length > 0) {
-    const lines: TranscriptLine[] = [];
-    // The initial notice lives outside the reply thread; lead with it as the first
-    // agent turn so the analysis sees the full exchange.
-    if (cd.messageBody) lines.push({ role: "agent", text: cd.messageBody });
-    for (const m of thread) {
-      lines.push({ role: m.direction === "inbound" ? "customer" : "agent", text: m.body });
-    }
-    return lines;
+    // The initial notice lives outside the reply thread; `buildThreadWithOpener` leads with
+    // it so the analysis sees the full exchange — the same helper the autopilot decides on,
+    // so an insight and a reply are never built from different views of a conversation.
+    return buildThreadWithOpener(cd, thread).map((m) => ({
+      role: m.direction === "inbound" ? ("customer" as const) : ("agent" as const),
+      text: m.body
+    }));
   }
   return [];
 }

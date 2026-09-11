@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import type { EmailAutopilotDecision } from "@qcobro/common";
+import type { EmailAutopilotDecision, EmailAutopilotRequest } from "@qcobro/common";
 import {
   createIngestWhatsAppMessage,
   type IngestWhatsAppMessageDeps,
@@ -331,5 +331,63 @@ describe("ingestWhatsAppMessage — validation", () => {
     const deps = makeDeps();
     const ingest = createIngestWhatsAppMessage(deps);
     await assert.rejects(() => ingest({ ...BASE_MSG, from: "" }));
+  });
+});
+
+// ── The dispatched opener ─────────────────────────────────────────────────────
+
+/** `makeDeps`'s decider discards the request; this one keeps it so the thread can be read. */
+function capturingDeps(
+  gestion: WhatsAppGestionView = BASE_GESTION,
+  decision: EmailAutopilotDecision = { action: "ignore" }
+) {
+  const reqs: EmailAutopilotRequest[] = [];
+  const deps = makeDeps(gestion, decision);
+  deps.autopilot = {
+    decide: async (req) => {
+      reqs.push(req);
+      return decision;
+    }
+  };
+  return { deps, reqs };
+}
+
+describe("ingestWhatsAppMessage — the dispatched opener in the autopilot's view", () => {
+  it("leads the thread with the templated opener we sent", async () => {
+    const { deps, reqs } = capturingDeps();
+    await createIngestWhatsAppMessage(deps)(BASE_MSG);
+
+    assert.equal(reqs[0].thread.length, 2);
+    assert.equal(reqs[0].thread[0].direction, "outbound");
+    assert.equal(reqs[0].thread[0].body, "Estimado cliente…");
+    assert.equal(reqs[0].thread[1].body, BASE_MSG.text);
+  });
+
+  it("passes today's date so a relative promise can resolve to a due date", async () => {
+    const { deps, reqs } = capturingDeps();
+    await createIngestWhatsAppMessage(deps)(BASE_MSG);
+
+    assert.equal(reqs[0].referenceDate, "2026-06-30");
+  });
+
+  it("keeps the opener out of the persisted thread", async () => {
+    const { deps } = capturingDeps();
+    await createIngestWhatsAppMessage(deps)(BASE_MSG);
+
+    const recorded = deps.outcomes[0] as { channelData: Record<string, unknown> };
+    const thread = recorded.channelData.whatsAppThread as { messages: unknown[] };
+    assert.equal(thread.messages.length, 1, "only the inbound message is stored");
+    assert.equal(recorded.channelData.messageBody, "Estimado cliente…");
+  });
+
+  it("is inert for a gestión with no stored opener", async () => {
+    const { deps, reqs } = capturingDeps({
+      ...BASE_GESTION,
+      channelData: { from: "+15559990001", to: "+18091230001" }
+    });
+    await createIngestWhatsAppMessage(deps)(BASE_MSG);
+
+    assert.equal(reqs[0].thread.length, 1);
+    assert.equal(reqs[0].thread[0].direction, "inbound");
   });
 });

@@ -18,6 +18,7 @@ export {
   isWithinScheduleWindow,
   type ScheduleWindow
 } from "./time.js";
+export { buildThreadWithOpener } from "./threads.js";
 export { formatMoney, formatWorkspaceMoney, createMoneyFormatters, toNumber } from "./money.js";
 export { bucketOf, perTickCapacity, type PacingBucket } from "./pacing.js";
 export { normalizePhoneE164 } from "./normalizePhone.js";

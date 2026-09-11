@@ -11,7 +11,12 @@ import { LLM_TIMEOUT_MS } from "./httpTimeouts.js";
 /** Render the thread + light context + the agent's system prompt into the user prompt. */
 function buildPrompt(req: EmailAutopilotRequest): string {
   const lines = req.thread
-    .map((m) => `${m.direction === "outbound" ? "Agente" : "Cliente"}: ${m.body}`)
+    .map((m) => {
+      const who = m.direction === "outbound" ? "Agente" : "Cliente";
+      // The subject carries real content on the dispatched notice ("Recordatorio de pago
+      // — préstamo 4471"), which is often what a short reply is actually responding to.
+      return m.subject ? `${who} (asunto: ${m.subject}): ${m.body}` : `${who}: ${m.body}`;
+    })
     .join("\n");
   const ctx = buildAutopilotContextLines(req.context);
   const language = req.language || "es";

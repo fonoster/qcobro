@@ -1,4 +1,5 @@
 import {
+  buildThreadWithOpener,
   inboundEmailSchema,
   outcomeSchema,
   withErrorHandlingAndValidation,
@@ -101,6 +102,8 @@ export function createIngestEmailReply(deps: IngestEmailReplyDeps) {
 
     const nowIso = deps.now().toISOString();
     const existing = g.channelData ?? {};
+    /** Subject of the notice we dispatched, stored flat on `channelData` at dispatch time. */
+    const noticeSubject = typeof existing.subject === "string" ? existing.subject : undefined;
     const thread: EmailThread = (existing.emailThread as EmailThread | undefined) ?? {
       token,
       messages: [],
@@ -123,7 +126,9 @@ export function createIngestEmailReply(deps: IngestEmailReplyDeps) {
       ? { action: "ignore" }
       : await deps.autopilot.decide({
           systemPrompt: g.agentSystemPrompt,
-          thread: thread.messages,
+          // Led by the notice we dispatched, which lives outside the reply thread — without
+          // it the agent's whole view of the conversation starts at the customer's reply.
+          thread: buildThreadWithOpener(existing, thread.messages),
           context: g.accountContext,
           language:
             typeof g.accountContext.preferredLanguage === "string"
@@ -141,7 +146,10 @@ export function createIngestEmailReply(deps: IngestEmailReplyDeps) {
         from: deps.emailFrom.email,
         fromName: deps.emailFrom.name,
         to: g.customerEmail,
-        subject: `Re: ${inbound.subject ?? thread.messages[0]?.subject ?? ""}`.trim(),
+        // Prefer what the customer replied under, then the subject we sent. The old
+        // `thread.messages[0]` fallback resolved to the first *inbound* message, never ours.
+        subject:
+          `Re: ${inbound.subject ?? noticeSubject ?? thread.messages[0]?.subject ?? ""}`.trim(),
         body: decision.replyBody,
         replyTo: `reply+${token}@${deps.emailFrom.inboundDomain}`,
         inReplyTo: inbound.messageId
