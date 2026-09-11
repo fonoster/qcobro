@@ -23,24 +23,25 @@ export const WithLabel: StoryObj = {
     </div>
   )
 };
-export const WithHint: StoryObj = {
+// Guidance lives inside the field. The example carries a `{{variable}}` so the operator
+// can see that templating is available.
+export const WithExample: StoryObj = {
   render: () => (
     <div className="w-80">
       <TextareaGroup
         label="Guion"
-        hint="Ej.: Hola {{firstName}}, le recordamos que su cuenta presenta un saldo pendiente."
+        placeholder="Hola {{firstName}}, le recordamos que su cuenta presenta un saldo pendiente."
         id="guion"
       />
     </div>
   )
 };
-// A `hint` is suppressed while an `error` is showing — the field renders the error instead.
-export const WithHintAndError: StoryObj = {
+export const WithError: StoryObj = {
   render: () => (
     <div className="w-80">
       <TextareaGroup
         label="Guion"
-        hint="Ej.: Hola {{firstName}}, le recordamos que su cuenta presenta un saldo pendiente."
+        placeholder="Hola {{firstName}}, le recordamos que su cuenta presenta un saldo pendiente."
         error="El guion es obligatorio."
         id="guion-err"
       />

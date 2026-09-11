@@ -19,11 +19,10 @@ Textarea.displayName = "Textarea";
 
 export interface TextareaGroupProps extends TextareaProps {
   label?: string;
-  hint?: string;
   error?: string;
 }
 
-export function TextareaGroup({ label, hint, error, className, id, ...props }: TextareaGroupProps) {
+export function TextareaGroup({ label, error, className, id, ...props }: TextareaGroupProps) {
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       {label && (
@@ -33,7 +32,6 @@ export function TextareaGroup({ label, hint, error, className, id, ...props }: T
       )}
       <Textarea id={id} {...props} />
       {error && <p className="text-xs text-danger">{error}</p>}
-      {hint && !error && <p className="text-xs text-fg-subtle">{hint}</p>}
     </div>
   );
 }

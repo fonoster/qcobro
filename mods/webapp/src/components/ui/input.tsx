@@ -16,19 +16,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({ className, ...p
 ));
 Input.displayName = "Input";
 
+/**
+ * A label, the field, and — only while something is wrong — an error. Guidance for the
+ * operator lives inside the field as its `placeholder`, the way the design system draws it;
+ * there is deliberately no explanatory line below the field.
+ */
 export interface InputGroupProps extends InputProps {
   label?: string;
-  /**
-   * Example / guidance line below the field. Give every non-obvious input one
-   * (see CLAUDE.md): a `placeholder` for fixed-shape values, a `hint` for
-   * explanatory or `{{variable}}` text. A `hint` is hidden while `error` is
-   * set, so prefer `placeholder` on any field that also has an `error`.
-   */
-  hint?: string;
   error?: string;
 }
 
-export function InputGroup({ label, hint, error, className, id, ...props }: InputGroupProps) {
+export function InputGroup({ label, error, className, id, ...props }: InputGroupProps) {
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       {label && (
@@ -38,7 +36,6 @@ export function InputGroup({ label, hint, error, className, id, ...props }: Inpu
       )}
       <Input id={id} className={error ? "border-danger focus:ring-danger/20" : ""} {...props} />
       {error && <p className="text-xs text-danger">{error}</p>}
-      {hint && !error && <p className="text-xs text-fg-subtle">{hint}</p>}
     </div>
   );
 }

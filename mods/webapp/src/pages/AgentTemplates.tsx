@@ -44,12 +44,15 @@ const EXAMPLE_VARS = ["{{firstName}}", "{{principalAmount}}", "{{outstandingBala
 
 /**
  * Example text for the non-obvious agent-template fields (issue #118). Defined once and
- * consumed by both the create and edit modals so the two can't drift. `FIELD_PLACEHOLDER`
- * is for fixed-shape values (a digit, an ID); `FIELD_HINT` is for explanatory or
- * `{{variable}}` content — note a `hint` is hidden by the field components while a
- * validation `error` shows, so anything with an `error` prop uses a placeholder instead.
+ * consumed by both the create and edit modals so the two can't drift. Every example is
+ * shown inside its own field as the placeholder, the way the design system draws it.
  */
 const FIELD_PLACEHOLDER = {
+  firstMessage: "agents.form.firstMessagePlaceholder",
+  systemPrompt: "agents.form.systemPromptPlaceholder",
+  script: "agents.form.scriptPlaceholder",
+  messageBody: "agents.form.messageBodyPlaceholder",
+  idleMessage: "agents.form.idleMessagePlaceholder",
   repeatDigit: "agents.form.repeatDigitPlaceholder",
   repeatMessage: "agents.form.repeatMessagePlaceholder",
   maxRepeats: "agents.form.maxRepeatsPlaceholder",
@@ -61,16 +64,6 @@ const FIELD_PLACEHOLDER = {
   senderId: "agents.form.senderIdPlaceholder",
   idleTimeout: "agents.form.idleTimeoutPlaceholder",
   idleMaxTimeoutCount: "agents.form.idleMaxTimeoutCountPlaceholder"
-} as const satisfies Record<string, MessageId>;
-
-const FIELD_HINT = {
-  firstMessage: "agents.form.firstMessageHint",
-  systemPrompt: "agents.form.systemPromptHint",
-  script: "agents.form.scriptHint",
-  messageBody: "agents.form.messageBodyHint",
-  idleMessage: "agents.form.idleMessageHint",
-  idleTimeout: "agents.form.idleTimeoutHint",
-  idleMaxTimeoutCount: "agents.form.idleMaxTimeoutCountHint"
 } as const satisfies Record<string, MessageId>;
 
 /** Example template variables + a link to the full reference, under the page header. */
@@ -112,9 +105,8 @@ function VariablesHint() {
  * that is both wrong and blind to the case worth warning about. It is an estimate, because a
  * real account's name and balance differ from the sample's, hence the `≈`.
  *
- * The count is rendered as a sibling of the field rather than through `TextareaGroup`'s
- * `hint`, which is suppressed whenever an `error` shows and would displace the
- * `{{variable}}` example.
+ * The count is rendered as a sibling of the field: the field itself already carries the
+ * `{{variable}}` example as its placeholder.
  */
 function SmsFields({
   idPrefix,
@@ -151,7 +143,7 @@ function SmsFields({
         <TextareaGroup
           label={t("agents.form.messageBody")}
           id={`${idPrefix}-sms`}
-          hint={t(FIELD_HINT.messageBody)}
+          placeholder={t(FIELD_PLACEHOLDER.messageBody)}
           value={messageBody}
           onChange={(e) => onChange("messageBody", e.target.value)}
         />
@@ -646,21 +638,21 @@ function CreateAgentTemplateModal({
             <InputGroup
               label={t("agents.form.firstMessage")}
               id="a-first"
-              hint={t(FIELD_HINT.firstMessage)}
+              placeholder={t(FIELD_PLACEHOLDER.firstMessage)}
               value={fields.firstMessage ?? ""}
               onChange={(e) => set("firstMessage", e.target.value)}
             />
             <TextareaGroup
               label={t("agents.form.systemPrompt")}
               id="a-prompt"
-              hint={t(FIELD_HINT.systemPrompt)}
+              placeholder={t(FIELD_PLACEHOLDER.systemPrompt)}
               value={fields.systemPrompt ?? ""}
               onChange={(e) => set("systemPrompt", e.target.value)}
             />
             <TextareaGroup
               label={t("agents.form.idleMessage")}
               id="a-idle-message"
-              hint={t(FIELD_HINT.idleMessage)}
+              placeholder={t(FIELD_PLACEHOLDER.idleMessage)}
               value={fields.idleMessage ?? ""}
               onChange={(e) => set("idleMessage", e.target.value)}
             />
@@ -669,7 +661,6 @@ function CreateAgentTemplateModal({
               id="a-idle-timeout"
               type="number"
               min={3000}
-              hint={t(FIELD_HINT.idleTimeout)}
               placeholder={t(FIELD_PLACEHOLDER.idleTimeout)}
               value={fields.idleTimeout ?? ""}
               onChange={(e) => set("idleTimeout", e.target.value)}
@@ -679,7 +670,6 @@ function CreateAgentTemplateModal({
               id="a-idle-max"
               type="number"
               min={1}
-              hint={t(FIELD_HINT.idleMaxTimeoutCount)}
               placeholder={t(FIELD_PLACEHOLDER.idleMaxTimeoutCount)}
               value={fields.idleMaxTimeoutCount ?? ""}
               onChange={(e) => set("idleMaxTimeoutCount", e.target.value)}
@@ -692,7 +682,7 @@ function CreateAgentTemplateModal({
             <TextareaGroup
               label={t("agents.form.script")}
               id="a-script"
-              hint={t(FIELD_HINT.script)}
+              placeholder={t(FIELD_PLACEHOLDER.script)}
               value={fields.script ?? ""}
               onChange={(e) => set("script", e.target.value)}
             />
@@ -777,14 +767,14 @@ function CreateAgentTemplateModal({
             <TextareaGroup
               label={t("agents.form.messageBody")}
               id="a-email-body"
-              hint={t(FIELD_HINT.messageBody)}
+              placeholder={t(FIELD_PLACEHOLDER.messageBody)}
               value={fields.messageBody ?? ""}
               onChange={(e) => set("messageBody", e.target.value)}
             />
             <TextareaGroup
               label={t("agents.form.systemPrompt")}
               id="a-email-prompt"
-              hint={t(FIELD_HINT.systemPrompt)}
+              placeholder={t(FIELD_PLACEHOLDER.systemPrompt)}
               value={fields.systemPrompt ?? ""}
               onChange={(e) => set("systemPrompt", e.target.value)}
             />
@@ -849,7 +839,7 @@ function CreateAgentTemplateModal({
             <TextareaGroup
               label={t("agents.form.systemPrompt")}
               id="a-wa-prompt"
-              hint={t(FIELD_HINT.systemPrompt)}
+              placeholder={t(FIELD_PLACEHOLDER.systemPrompt)}
               value={fields.systemPrompt ?? ""}
               onChange={(e) => set("systemPrompt", e.target.value)}
             />
@@ -1096,21 +1086,21 @@ function EditAgentTemplateModal({
                 <InputGroup
                   label={t("agents.form.firstMessage")}
                   id="e-first"
-                  hint={t(FIELD_HINT.firstMessage)}
+                  placeholder={t(FIELD_PLACEHOLDER.firstMessage)}
                   value={fields.firstMessage ?? ""}
                   onChange={(e) => set("firstMessage", e.target.value)}
                 />
                 <TextareaGroup
                   label={t("agents.form.systemPrompt")}
                   id="e-prompt"
-                  hint={t(FIELD_HINT.systemPrompt)}
+                  placeholder={t(FIELD_PLACEHOLDER.systemPrompt)}
                   value={fields.systemPrompt ?? ""}
                   onChange={(e) => set("systemPrompt", e.target.value)}
                 />
                 <TextareaGroup
                   label={t("agents.form.idleMessage")}
                   id="e-idle-message"
-                  hint={t(FIELD_HINT.idleMessage)}
+                  placeholder={t(FIELD_PLACEHOLDER.idleMessage)}
                   value={fields.idleMessage ?? ""}
                   onChange={(e) => set("idleMessage", e.target.value)}
                 />
@@ -1119,7 +1109,6 @@ function EditAgentTemplateModal({
                   id="e-idle-timeout"
                   type="number"
                   min={3000}
-                  hint={t(FIELD_HINT.idleTimeout)}
                   placeholder={t(FIELD_PLACEHOLDER.idleTimeout)}
                   value={fields.idleTimeout ?? ""}
                   onChange={(e) => set("idleTimeout", e.target.value)}
@@ -1129,7 +1118,6 @@ function EditAgentTemplateModal({
                   id="e-idle-max"
                   type="number"
                   min={1}
-                  hint={t(FIELD_HINT.idleMaxTimeoutCount)}
                   placeholder={t(FIELD_PLACEHOLDER.idleMaxTimeoutCount)}
                   value={fields.idleMaxTimeoutCount ?? ""}
                   onChange={(e) => set("idleMaxTimeoutCount", e.target.value)}
@@ -1142,7 +1130,7 @@ function EditAgentTemplateModal({
                 <TextareaGroup
                   label={t("agents.form.script")}
                   id="e-script"
-                  hint={t(FIELD_HINT.script)}
+                  placeholder={t(FIELD_PLACEHOLDER.script)}
                   value={fields.script ?? ""}
                   onChange={(e) => set("script", e.target.value)}
                 />
@@ -1231,14 +1219,14 @@ function EditAgentTemplateModal({
                 <TextareaGroup
                   label={t("agents.form.messageBody")}
                   id="e-email-body"
-                  hint={t(FIELD_HINT.messageBody)}
+                  placeholder={t(FIELD_PLACEHOLDER.messageBody)}
                   value={fields.messageBody ?? ""}
                   onChange={(e) => set("messageBody", e.target.value)}
                 />
                 <TextareaGroup
                   label={t("agents.form.systemPrompt")}
                   id="e-email-prompt"
-                  hint={t(FIELD_HINT.systemPrompt)}
+                  placeholder={t(FIELD_PLACEHOLDER.systemPrompt)}
                   value={fields.systemPrompt ?? ""}
                   onChange={(e) => set("systemPrompt", e.target.value)}
                 />
@@ -1302,7 +1290,7 @@ function EditAgentTemplateModal({
                 <TextareaGroup
                   label={t("agents.form.systemPrompt")}
                   id="e-wa-prompt"
-                  hint={t(FIELD_HINT.systemPrompt)}
+                  placeholder={t(FIELD_PLACEHOLDER.systemPrompt)}
                   value={fields.systemPrompt ?? ""}
                   onChange={(e) => set("systemPrompt", e.target.value)}
                 />

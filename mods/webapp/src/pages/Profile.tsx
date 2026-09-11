@@ -145,7 +145,6 @@ export function Profile() {
             value={email}
             readOnly
             disabled
-            hint={t("profile.field.emailHint")}
           />
           <InputGroup
             id="profile-phone"
