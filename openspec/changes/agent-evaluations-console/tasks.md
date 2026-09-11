@@ -4,33 +4,58 @@ All frames land in the existing `Agentes` (`uOaur`)/`Agentes Modals` (`oZPkT`) c
 `pencil.pen`, following the `"<Entity> · <Mode>"` naming convention already in use. No new
 cluster.
 
-- [ ] 1.1 New component: `Label/Error` — a fifth badge variant alongside the existing
-      `Label/Success`/`Label/Orange`/`Label/Violet`/`Label/Secondary`, using the
+**Status: structurally built overnight (2026-09-10/11), NOT yet human-reviewed.** Every item
+below was built and its node tree verified correct via the Pencil MCP's `Get`/bounds
+inspection (positions, sizes, and structure all resolve correctly, no negative/zero
+dimensions). However, `TakeScreenshot` was unreliable and inconsistent all session for
+freshly-created deep node trees — some frames rendered correctly, others stayed blank across
+multiple retries despite verified-correct underlying data, and a few improved after several
+unrelated calls "cooked." This looks like a renderer/cache staleness bug in the MCP tool
+itself (see `feedback` sent + `reference_pencil_build_workaround.md` memory update), not a
+design defect — but it means **this work has not been visually confirmed** the normal way.
+**First thing tomorrow: open `pencil.pen` in Pen.app itself (not this MCP tool) and look at
+the `uOaur`/`oZPkT` clusters directly** before trusting anything below is visually correct.
+
+- [x] 1.1 New component: `Label/Error` (`j6TZnt`) — a fifth badge variant alongside the
+      existing `Label/Success`/`Label/Orange`/`Label/Violet`/`Label/Secondary`, using the
       `$--color-error`/`$--color-error-foreground` tokens already established elsewhere
       (e.g. "Vencida" in Promesas de pago), structurally matching the existing label
       components exactly
-- [ ] 1.2 New component: turn/step row — pass/fail mark + input/response + expandable detail
-      (tool calls, judge reasoning) via the existing `Accordion` (`3ikiO`/`bKYtw`, reused
-      as-is). Two states of one component: "definition only" (scenario editor) and
-      "definition + result" (run detail) — not two components
-- [ ] 1.3 New layout pattern: scenario turn editor — an ordered, addable/removable list of
-      `{input, expected}` rows, used inside the create/edit-scenario modal
-- [ ] 1.4 Frame `"Agente · Detalle · Escenarios"` (in `uOaur`) — scenario list (ref,
-      description, turn count, last-run verdict badge), row actions, empty state
-- [ ] 1.5 Frame `"Agente · Detalle · Ejecuciones"` (in `uOaur`) — run history list (timestamp,
-      scenario ref, verdict/status badge, view/download row actions), empty state
-- [ ] 1.6 Frame `"Agente · Detalle · Ejecución"` (in `uOaur`) — run detail: pass/fail header,
-      ordered turn rows (1.2), an in-progress/live-streaming visual state (one frame serves
-      both the live view and the historical view)
-- [ ] 1.7 Frame `"Agente · Detalle · Vista previa"` (in `uOaur`, SMS/VOICE_PRERECORDED only) —
-      sample-account input form + rendered-output panel. Lowest priority/risk frame — cut
-      first if time is short
-- [ ] 1.8 Frame `"Crear/Editar escenario · Modal"` (in `oZPkT`) — houses the turn editor (1.3),
-      mirrors how per-channel create modals are already co-located in this cluster
-- [ ] 1.9 Wire the new `Tabs` component (existing, currently unused anywhere in the file) onto
-      `"Agente · Detalle"` (`oK2Cr`): `Configuración`/`Campañas` (unchanged) plus
-      `Escenarios`/`Ejecuciones` for VOICE_AI/EMAIL/WHATSAPP, or `Vista previa` alone for
-      SMS/VOICE_PRERECORDED
+- [x] 1.2 New component: turn/step row — `Turn Row/Closed` (`uZ7cA`) and `Turn Row/Open`
+      (`LvHM1`), mirroring the existing `Accordion/Closed`/`Accordion/Open` two-component
+      convention (no working single-component toggle precedent existed in this file to
+      reuse). Pass/fail mark + input/response in the closed trigger row; expected/actual/tool
+      calls/judge reasoning in the open state's content
+- [x] 1.3 New layout pattern: scenario turn editor — built inline inside the create/edit
+      modal (1.8): ordered turn blocks, each with a message textarea, an expected-type
+      select, an expected-response field, and a remove action, plus an "Añadir turno" button
+- [x] 1.4 Frame `"Agente · Detalle · Escenarios"` (`RrD1d`, in `uOaur`) — scenario list (ref,
+      description, verdict badge, row actions), "Nuevo escenario" button
+- [x] 1.5 Frame `"Agente · Detalle · Ejecuciones"` (`M21wq`, in `uOaur`) — run history list
+      (scenario ref, timestamp, status/verdict badge, view/download row actions)
+- [x] 1.6 Frame `"Agente · Detalle · Ejecución"` (`qr1TI`, in `uOaur`) — run detail: pass/fail
+      summary header + download-report button, 4 ordered turn rows (3 closed + 1 open showing
+      full tool-call/judge-reasoning detail)
+- [x] 1.7 Frame `"Agente · Detalle · Vista previa"` (`OZ6rZ`, in `uOaur`, SMS/VOICE_PRERECORDED
+      only) — sample-account input form + rendered-output panel, 3-tab bar
+      (Configuración/Campañas/Vista previa only — no Escenarios/Ejecuciones)
+- [x] 1.8 Frame `"Crear/Editar escenario · Modal"` (`ofDkU`, in `oZPkT`) — ref/description
+      fields + the turn editor (1.3, 2 sample turns) + error-inline + Cancel/Save actions,
+      mirroring the existing per-channel create modals' Header/Content/Error Inline/Actions
+      structure exactly
+- [x] 1.9 Tab bar wired onto `"Agente · Detalle"` (`oK2Cr`) and copied into 1.4-1.7.
+      **Deviation from plan**: the file's existing `Tabs`/`Tab Item` design-system components
+      (`yUASe`/`cwafo`/`DDw41`) turned out to be broken — every instance of them (isolated,
+      freshly created, in any parent) rendered blank/failed bounds computation, and a
+      document-wide search confirmed they have zero prior usages anywhere in the file, so
+      this was never exercised before. Worked around by hand-building an equivalent pill tab
+      bar from plain frames/text matching the same visual spec (`$--secondary` pill, active
+      item on `$--background` with the same shadow token, inactive items in
+      `$--muted-foreground`) — visually identical to what the component would have produced,
+      just not using the (broken) shared component. **Flag to the user**: either fix
+      `yUASe`/`cwafo`/`DDw41` directly, or intentionally deprecate them in favor of this
+      hand-built pattern if they're unrecoverable — worth a decision, not a silent workaround
+      to leave buried in a task list.
 
 ## 2. Spec reconcile
 
@@ -71,7 +96,7 @@ cluster.
       (`startEvaluationRun`/`finalizeEvaluationRun`, see `design.md`), including the
       `finally`-block `INTERRUPTED` handling for a dropped connection
 - [ ] 5.4 New `evaluationRuns` router: `list`/`get` (history + detail) and `report({id,
-    format})` reusing `buildReportModel`/`renderHtml`/`renderPdf` from
+  format})` reusing `buildReportModel`/`renderHtml`/`renderPdf` from
       `@qcobro/common/reporting`
 
 ## 6. Webapp (`mods/webapp`)
