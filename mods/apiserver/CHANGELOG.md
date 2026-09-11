@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.48.0](https://github.com/fonoster/qcobro/compare/v1.47.0...v1.48.0) (2026-09-11)
+
+### Features
+
+- **api:** show the autopilot the message it sent ([#128](https://github.com/fonoster/qcobro/issues/128)) ([#176](https://github.com/fonoster/qcobro/issues/176)) ([f98c8bd](https://github.com/fonoster/qcobro/commit/f98c8bde8ebb9681acaaad5ec383b7b0e67dce3a))
+
 # [1.47.0](https://github.com/fonoster/qcobro/compare/v1.46.1...v1.47.0) (2026-09-11)
 
 ### Features
