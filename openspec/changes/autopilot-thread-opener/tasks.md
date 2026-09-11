@@ -33,6 +33,10 @@
 
 - [x] 5.1 Pass `referenceDate` to `decide` in `ingestWhatsAppMessage.ts` — EMAIL always has; without
       it a relative promise cannot resolve to a dated `PaymentPromise`
+- [x] 5.2 Read it in `services/whatsAppAutopilot.ts`'s `buildPrompt`, with the same two date lines
+      EMAIL carries. 5.1 alone was inert: the field reached `decide` and the prompt builder never
+      looked at it, so "el viernes" still had no anchor and `dueDate` (a bare `z.string()`) would
+      have persisted the raw phrase onto a `PaymentPromise`
 
 ## 6. Make evals faithful
 
@@ -54,6 +58,10 @@
       stays first across turns
 - [x] 7.6 `resolveEvalTarget.test.ts` — the opener fields are carried off a stored row
 - [x] 7.7 `email.integration.test.ts` — the rendered subject and body are recorded at dispatch
+- [x] 7.8 `whatsAppAutopilot.test.ts` — assert on the **prompt text sent to the model**, for both
+      channels, not on the request handed to `decide`. Asserting the request is what let 5.1 ship
+      inert: it passed while the prompt builder ignored the field. Verified by reverting the fix
+      and watching the new test fail
 
 ## 8. Verify
 
