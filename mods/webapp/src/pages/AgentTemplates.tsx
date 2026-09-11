@@ -1,8 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DEFAULT_VOICE_IDLE_OPTIONS, voicePrerecordedDtmfSchema } from "@qcobro/common";
+import {
+  buildOutreachContext,
+  calculateSmsSegments,
+  DEFAULT_VOICE_IDLE_OPTIONS,
+  normalizeForGsm7,
+  renderTemplate,
+  voicePrerecordedDtmfSchema
+} from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
 import { useI18n, type MessageId } from "../lib/i18n.js";
+import { SAMPLE_ACCOUNT } from "../lib/sampleAccount.js";
+import { useWorkspaceCurrency, useWorkspaceLocale } from "../lib/useWorkspaceCurrency.js";
 import { PageHeader } from "../components/page-header.js";
 import { DataTable } from "../components/ui/data-table.js";
 import { Dialog } from "../components/ui/dialog.js";
@@ -88,6 +97,95 @@ function VariablesHint() {
         {t("agents.vars.link")}
       </a>
     </div>
+  );
+}
+
+/**
+ * The SMS-specific fields: the message body, a live estimate of what it will cost to send,
+ * and the opt-in that brings that cost down. Defined once and used by both the create and
+ * edit modals, which are otherwise duplicated JSX.
+ *
+ * The estimate counts **sample-rendered** text, not the raw template. `{{outstandingBalance}}`
+ * is 21 characters where `9,500` is five, and — more importantly — it is usually a
+ * substituted value, not the template's own words, that pushes a message out of the GSM 7-bit
+ * alphabet and halves the per-segment budget. Counting the raw template would report a number
+ * that is both wrong and blind to the case worth warning about. It is an estimate, because a
+ * real account's name and balance differ from the sample's, hence the `≈`.
+ *
+ * The count is rendered as a sibling of the field rather than through `TextareaGroup`'s
+ * `hint`, which is suppressed whenever an `error` shows and would displace the
+ * `{{variable}}` example.
+ */
+function SmsFields({
+  idPrefix,
+  messageBody,
+  senderId,
+  normalizeGsm7,
+  onChange,
+  onNormalizeChange
+}: {
+  idPrefix: string;
+  messageBody: string;
+  senderId: string;
+  normalizeGsm7: boolean;
+  onChange: (key: string, value: string) => void;
+  onNormalizeChange: (value: boolean) => void;
+}) {
+  const { t } = useI18n();
+  const locale = useWorkspaceLocale();
+  const currency = useWorkspaceCurrency();
+
+  const rendered = messageBody
+    ? renderTemplate(messageBody, buildOutreachContext(SAMPLE_ACCOUNT, { currency, locale }))
+    : "";
+  // A malformed template renders as a visible `[Error de plantilla: …]` marker rather than
+  // throwing. That marker is not message content, so it must not be counted.
+  const countable = rendered.startsWith("[") ? "" : rendered;
+  const seg = countable
+    ? calculateSmsSegments(normalizeGsm7 ? normalizeForGsm7(countable) : countable)
+    : null;
+
+  return (
+    <>
+      <div className="flex flex-col gap-1.5">
+        <TextareaGroup
+          label={t("agents.form.messageBody")}
+          id={`${idPrefix}-sms`}
+          hint={t(FIELD_HINT.messageBody)}
+          value={messageBody}
+          onChange={(e) => onChange("messageBody", e.target.value)}
+        />
+        {seg && (
+          <p className="text-xs text-fg-subtle">
+            {t(seg.segmentCount === 1 ? "agents.form.smsSegmentOne" : "agents.form.smsSegments")
+              .replace("{segments}", String(seg.segmentCount))
+              .replace("{characters}", String(seg.characterCount))}
+            {seg.nonGsmCharacters.length > 0 &&
+              ` · ${t("agents.form.smsCostlyChars").replace(
+                "{characters}",
+                seg.nonGsmCharacters.join(" ")
+              )}`}
+          </p>
+        )}
+      </div>
+      <label className="flex items-center gap-2 text-sm text-fg-muted">
+        <input
+          type="checkbox"
+          id={`${idPrefix}-gsm7`}
+          checked={normalizeGsm7}
+          onChange={(e) => onNormalizeChange(e.target.checked)}
+          className="size-4 accent-primary"
+        />
+        {t("agents.form.normalizeGsm7")}
+      </label>
+      <InputGroup
+        label={t("agents.form.senderId")}
+        id={`${idPrefix}-sender`}
+        placeholder={t(FIELD_PLACEHOLDER.senderId)}
+        value={senderId}
+        onChange={(e) => onChange("senderId", e.target.value)}
+      />
+    </>
   );
 }
 
@@ -346,6 +444,8 @@ function CreateAgentTemplateModal({
   const { t } = useI18n();
   const [name, setName] = useState("");
   const [type, setType] = useState<AgentType>("VOICE_AI");
+  // Boolean, so it lives beside `name`/`type` rather than in the string-valued `fields` bag.
+  const [normalizeGsm7, setNormalizeGsm7] = useState(false);
   const [fields, setFields] = useState<Record<string, string>>({
     language: "es",
     // Idle options pre-filled from the deployment default; the operator may override.
@@ -449,7 +549,8 @@ function CreateAgentTemplateModal({
           ...base,
           type,
           messageBody: fields.messageBody ?? "",
-          ...(fields.senderId ? { senderId: fields.senderId } : {})
+          ...(fields.senderId ? { senderId: fields.senderId } : {}),
+          ...(normalizeGsm7 ? { normalizeGsm7: true } : {})
         };
         break;
       case "EMAIL":
@@ -654,22 +755,14 @@ function CreateAgentTemplateModal({
         )}
 
         {type === "SMS" && (
-          <>
-            <TextareaGroup
-              label={t("agents.form.messageBody")}
-              id="a-sms"
-              hint={t(FIELD_HINT.messageBody)}
-              value={fields.messageBody ?? ""}
-              onChange={(e) => set("messageBody", e.target.value)}
-            />
-            <InputGroup
-              label={t("agents.form.senderId")}
-              id="a-sender"
-              placeholder={t(FIELD_PLACEHOLDER.senderId)}
-              value={fields.senderId ?? ""}
-              onChange={(e) => set("senderId", e.target.value)}
-            />
-          </>
+          <SmsFields
+            idPrefix="a"
+            messageBody={fields.messageBody ?? ""}
+            senderId={fields.senderId ?? ""}
+            normalizeGsm7={normalizeGsm7}
+            onChange={set}
+            onNormalizeChange={setNormalizeGsm7}
+          />
         )}
 
         {type === "EMAIL" && (
@@ -781,7 +874,7 @@ type FullTemplate = {
   type: AgentType;
   voiceAiConfig: Record<string, unknown> | null;
   voicePrerecordedConfig: Record<string, unknown> | null;
-  smsConfig: Record<string, unknown> | null;
+  smsConfig: (Record<string, unknown> & { normalizeGsm7?: boolean }) | null;
   emailConfig: Record<string, unknown> | null;
   whatsAppConfig: Record<string, unknown> | null;
 };
@@ -802,6 +895,8 @@ function EditAgentTemplateModal({
   const { data: voices } = trpc.config.voices.useQuery();
   const [name, setName] = useState(template.name);
   const [fields, setFields] = useState<Record<string, string>>({});
+  // Boolean, so it can't ride along in the string-valued `fields` bag.
+  const [normalizeGsm7, setNormalizeGsm7] = useState(false);
   const [seeded, setSeeded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const editDtmfErrors = validateVoicePrerecordedDtmf(fields, t);
@@ -845,6 +940,7 @@ function EditAgentTemplateModal({
       if (v != null && k !== "fonosterAppRef" && k !== "templateId") f[k] = String(v);
     }
     setFields(f);
+    setNormalizeGsm7(full.smsConfig?.normalizeGsm7 ?? false);
     setSeeded(true);
   }, [full, seeded]);
 
@@ -908,7 +1004,9 @@ function EditAgentTemplateModal({
       case "SMS":
         config = {
           messageBody: fields.messageBody,
-          ...(fields.senderId ? { senderId: fields.senderId } : {})
+          ...(fields.senderId ? { senderId: fields.senderId } : {}),
+          // Always sent, not omitted-when-false, so an operator can actually turn it off.
+          normalizeGsm7
         };
         break;
       case "EMAIL":
@@ -1111,22 +1209,14 @@ function EditAgentTemplateModal({
             )}
 
             {template.type === "SMS" && (
-              <>
-                <TextareaGroup
-                  label={t("agents.form.messageBody")}
-                  id="e-sms"
-                  hint={t(FIELD_HINT.messageBody)}
-                  value={fields.messageBody ?? ""}
-                  onChange={(e) => set("messageBody", e.target.value)}
-                />
-                <InputGroup
-                  label={t("agents.form.senderId")}
-                  id="e-sender"
-                  placeholder={t(FIELD_PLACEHOLDER.senderId)}
-                  value={fields.senderId ?? ""}
-                  onChange={(e) => set("senderId", e.target.value)}
-                />
-              </>
+              <SmsFields
+                idPrefix="e"
+                messageBody={fields.messageBody ?? ""}
+                senderId={fields.senderId ?? ""}
+                normalizeGsm7={normalizeGsm7}
+                onChange={set}
+                onNormalizeChange={setNormalizeGsm7}
+              />
             )}
 
             {template.type === "EMAIL" && (

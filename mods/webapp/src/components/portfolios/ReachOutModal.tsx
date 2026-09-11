@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Bot } from "lucide-react";
 import {
+  normalizeForGsm7,
   renderTemplate,
   renderWhatsAppTemplate,
   buildOutreachContext,
@@ -75,8 +76,11 @@ export function ReachOutModal({
       setEditSubject(ec?.subject ? renderTemplate(ec.subject, ctx) : "");
       setEditBody(ec?.messageBody ? renderTemplate(ec.messageBody, ctx) : "");
     } else if (agentType === "SMS") {
-      const sc = tmpl.smsConfig as { messageBody?: string } | undefined;
-      setEditBody(sc?.messageBody ? renderTemplate(sc.messageBody, ctx) : "");
+      const sc = tmpl.smsConfig as { messageBody?: string; normalizeGsm7?: boolean } | undefined;
+      // Apply the template's GSM-7 substitution here too, or the preview shows text that
+      // differs from what the customer will actually receive.
+      const body = sc?.messageBody ? renderTemplate(sc.messageBody, ctx) : "";
+      setEditBody(sc?.normalizeGsm7 ? normalizeForGsm7(body) : body);
     } else if (agentType === "VOICE_AI") {
       const vc = tmpl.voiceAiConfig as { firstMessage?: string | null } | undefined;
       setEditFirstMessage(vc?.firstMessage ? renderTemplate(vc.firstMessage, ctx) : "");

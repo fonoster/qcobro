@@ -39,7 +39,7 @@ type TemplateWithConfigs = {
     optOutMessage: string | null;
     optOutConfirmationMessage: string | null;
   } | null;
-  smsConfig: { messageBody: string } | null;
+  smsConfig: { messageBody: string; normalizeGsm7: boolean } | null;
   emailConfig: { subject: string; messageBody: string; systemPrompt: string } | null;
   whatsAppConfig: { templateName: string; messageBody: string } | null;
 };
@@ -60,7 +60,13 @@ function buildDispatchRequest(
     case "SMS":
       if (!template.smsConfig)
         throw new TRPCError({ code: "BAD_REQUEST", message: "SMS config missing" });
-      return { channel: "SMS", to, context, body: template.smsConfig.messageBody };
+      return {
+        channel: "SMS",
+        to,
+        context,
+        body: template.smsConfig.messageBody,
+        normalizeGsm7: template.smsConfig.normalizeGsm7
+      };
     case "VOICE_AI":
       if (!template.voiceAiConfig)
         throw new TRPCError({ code: "BAD_REQUEST", message: "Voice config missing" });

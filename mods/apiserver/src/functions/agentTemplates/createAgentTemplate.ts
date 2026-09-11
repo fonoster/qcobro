@@ -71,7 +71,8 @@ export function createCreateAgentTemplate(
             data: {
               templateId: base.id,
               messageBody: params.messageBody,
-              senderId: params.senderId ?? null
+              senderId: params.senderId ?? null,
+              normalizeGsm7: params.normalizeGsm7 ?? false
             }
           });
           break;
