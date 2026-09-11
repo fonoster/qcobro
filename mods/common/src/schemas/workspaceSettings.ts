@@ -19,6 +19,13 @@ export type Locale = z.infer<typeof localeSchema>;
 export const DEFAULT_LOCALE: Locale = "es-DO";
 
 /**
+ * The timezone a workspace gets when none was chosen. Mirrors the Prisma column default on
+ * `WorkspaceSettings.timezone`. Used at read boundaries where the settings row may not exist
+ * yet — it is seeded lazily — so a missing row cannot silently shift a calendar date to UTC.
+ */
+export const DEFAULT_TIMEZONE = "America/Santo_Domingo";
+
+/**
  * Narrows a persisted locale to a supported one at the read boundary. The column is a plain
  * `String`, so a row written outside the app (a manual migration, a restored dump) could hold
  * a tag this deployment has never been checked against — that must not take down an inbound

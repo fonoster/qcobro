@@ -1,5 +1,7 @@
 import { z } from "zod";
 import {
+  buildThreadWithOpener,
+  localDateString,
   outcomeSchema,
   withErrorHandlingAndValidation,
   type CreateContactLogInput,
@@ -37,6 +39,8 @@ export interface WhatsAppGestionView {
   agentSystemPrompt: string;
   agentMaxReplies: number | null;
   accountContext: Record<string, unknown>;
+  /** The workspace's IANA timezone, so "today" is the operator's calendar day, not UTC's. */
+  workspaceTimezone: string;
 }
 
 /** The DB surface ingestion needs — a small port so tests inject a fake. */
@@ -137,12 +141,17 @@ export function createIngestWhatsAppMessage(deps: IngestWhatsAppMessageDeps) {
 
     const decision: EmailAutopilotDecision = await deps.autopilot.decide({
       systemPrompt: g.agentSystemPrompt,
-      thread: thread.messages,
+      // Led by the templated opener we dispatched, which lives outside the reply thread —
+      // without it the agent's whole view of the conversation starts at the customer's reply.
+      thread: buildThreadWithOpener(existing, thread.messages),
       context: g.accountContext,
       language:
         typeof g.accountContext.preferredLanguage === "string"
           ? g.accountContext.preferredLanguage
-          : undefined
+          : undefined,
+      // Lets the model resolve "el viernes" into an absolute `objective.dueDate`, as EMAIL
+      // has always done. Without it a relative promise can't become a PaymentPromise date.
+      referenceDate: localDateString(now, g.workspaceTimezone)
     });
 
     let action = decision.action;

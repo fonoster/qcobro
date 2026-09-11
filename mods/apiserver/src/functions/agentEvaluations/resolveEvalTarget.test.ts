@@ -97,14 +97,25 @@ describe("resolveEvalTarget — existing template", () => {
   it("resolves an EMAIL row into a ResolvedEvalAgent", async () => {
     const row = baseRow({
       type: "EMAIL",
-      emailConfig: { systemPrompt: "Autopilot prompt", messageBody: "Hola", maxReplies: 2 }
+      emailConfig: {
+        systemPrompt: "Autopilot prompt",
+        subject: "Recordatorio",
+        messageBody: "Hola",
+        maxReplies: 2
+      }
     });
     const agent = await resolveEvalTarget(client(row), "ws_1", {
       agentTemplateId: "at_1",
       scenarios: [{ ref: "s1", account: FULL_ACCOUNT, turns: [{ input: "hola" }] }]
     });
     assert.equal(agent.type, "EMAIL");
-    if (agent.type === "EMAIL" || agent.type === "WHATSAPP") assert.equal(agent.maxReplies, 2);
+    if (agent.type === "EMAIL" || agent.type === "WHATSAPP") {
+      assert.equal(agent.maxReplies, 2);
+      // The notice the scenario's customer is replying to, carried through so the runner can
+      // seed it as the thread's first turn.
+      assert.equal(agent.openerBody, "Hola");
+      assert.equal(agent.openerSubject, "Recordatorio");
+    }
   });
 
   it("rejects an SMS template with a structured ValidationError", async () => {

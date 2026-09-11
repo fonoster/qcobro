@@ -4,6 +4,7 @@ import type { PrismaClient } from "@prisma/client";
 import { getLogger } from "@fonoster/logger";
 import {
   buildOutreachContext,
+  DEFAULT_TIMEZONE,
   parseLocale,
   normalizePhoneE164,
   whatsAppWebhookSchema,
@@ -207,7 +208,8 @@ export function createPrismaWhatsAppInboundClient(prisma: PrismaClient): WhatsAp
         accountContext: buildOutreachContext(
           log.portfolioAccount as unknown as PortfolioAccountRecord,
           { currency: settings?.currency ?? "USD", locale: parseLocale(settings?.locale) }
-        )
+        ),
+        workspaceTimezone: settings?.timezone ?? DEFAULT_TIMEZONE
       };
     },
 

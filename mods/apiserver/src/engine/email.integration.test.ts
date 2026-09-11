@@ -121,6 +121,11 @@ describe("email channel (integration)", { skip: !RUN ? "no DATABASE_URL" : false
       where: { campaignId, portfolioAccountId: withEmailId }
     });
     assert.ok(log?.providerRef, "gestión correlated by the reply-to token");
+    // The rendered subject is stored alongside the body, so the autopilot and the console
+    // can both see what the customer actually received.
+    const cd = log!.channelData as { subject?: string; messageBody?: string };
+    assert.equal(cd.subject, "Saldo Ana");
+    assert.equal(cd.messageBody, "Hola Ana, regularice su saldo.");
   });
 
   it("inbound reply runs the capped autopilot and captures the outcome", async () => {

@@ -46,7 +46,12 @@ export interface EvalAgentTemplateRow {
   voiceAiConfig: { systemPrompt: string; firstMessage: string | null; language: string } | null;
   voicePrerecordedConfig: { script: string; language: string } | null;
   smsConfig: { messageBody: string } | null;
-  emailConfig: { systemPrompt: string; messageBody: string; maxReplies: number | null } | null;
+  emailConfig: {
+    systemPrompt: string;
+    subject: string;
+    messageBody: string;
+    maxReplies: number | null;
+  } | null;
   whatsAppConfig: { systemPrompt: string; messageBody: string; maxReplies: number | null } | null;
 }
 

@@ -25,6 +25,12 @@ export type ResolvedEvalAgent =
       type: "EMAIL" | "WHATSAPP";
       systemPrompt: string;
       maxReplies?: number;
+      /** The agent's outbound notice template — the message a scenario's customer is
+       *  replying to. Seeded as the thread's first turn so an eval sees what production
+       *  sees; still a Handlebars template here, rendered per scenario account. */
+      openerBody?: string;
+      /** EMAIL only; WhatsApp openers have no subject. */
+      openerSubject?: string;
       scenarios: EvalScenario[];
     };
 
@@ -102,6 +108,8 @@ function normalizeRow(
     type: row.type,
     systemPrompt: config.systemPrompt,
     maxReplies: config.maxReplies ?? undefined,
+    openerBody: config.messageBody,
+    openerSubject: row.type === "EMAIL" ? row.emailConfig?.subject : undefined,
     scenarios
   };
 }
@@ -122,6 +130,8 @@ function normalizeTemplate(template: EvalTemplateInput): ResolvedEvalAgent {
     type: template.type,
     systemPrompt: template.systemPrompt,
     maxReplies: template.maxReplies,
+    openerBody: template.messageBody,
+    openerSubject: template.type === "EMAIL" ? template.subject : undefined,
     scenarios: template.scenarios
   };
 }

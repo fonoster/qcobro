@@ -1,6 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { ValidationError, type EmailAutopilot, type EmailAutopilotDecision } from "@qcobro/common";
+import {
+  ValidationError,
+  type EmailAutopilot,
+  type EmailAutopilotDecision,
+  type EmailThreadMessage
+} from "@qcobro/common";
 import {
   createIngestEmailReply,
   type EmailGestionView,
@@ -21,6 +26,7 @@ function gestion(over: Partial<EmailGestionView> = {}): EmailGestionView {
     agentSystemPrompt: "Eres un agente de cobranza.",
     agentMaxReplies: null,
     accountContext: { customerName: "Ana", outstandingBalance: 5000 },
+    workspaceTimezone: "America/Santo_Domingo",
     ...over
   };
 }
@@ -164,5 +170,115 @@ describe("ingestEmailReply", () => {
       (err) => err instanceof ValidationError
     );
     assert.equal(sends.length, 0, "side effect never fired on invalid input");
+  });
+});
+
+// ── The dispatched notice ─────────────────────────────────────────────────────
+//
+// A real gestión carries the notice as flat `channelData` fields written at dispatch; the
+// `emailThread` key only appears once a reply arrives. These use that dispatch-shaped
+// fixture rather than the pre-seeded empty thread above.
+
+const NOTICE = "Estimada Ana, su saldo es 5,000. Escríbanos por WhatsApp: wa.me/18095550000";
+
+const dispatched = (over: Partial<EmailGestionView> = {}) =>
+  gestion({
+    channelData: {
+      from: "cobranza@demo.do",
+      to: "cliente@example.com",
+      subject: "Recordatorio de pago",
+      messageBody: NOTICE
+    },
+    ...over
+  });
+
+describe("ingestEmailReply — the dispatched notice in the autopilot's view", () => {
+  it("leads the thread with the notice, so the agent sees what the customer is replying to", async () => {
+    const { deps, decideReqs } = harness(dispatched(), { action: "ignore" });
+    await createIngestEmailReply(deps as never)(inbound({ text: "¿De qué trata esto?" }));
+
+    const thread = decideReqs[0].thread as EmailThreadMessage[];
+    assert.equal(thread.length, 2);
+    assert.equal(thread[0].direction, "outbound");
+    assert.equal(thread[0].body, NOTICE);
+    assert.equal(thread[0].subject, "Recordatorio de pago");
+    assert.equal(thread[1].body, "¿De qué trata esto?");
+  });
+
+  it("keeps the notice out of the persisted thread — channelData.messageBody stays its only home", async () => {
+    const { deps, outcomes } = harness(dispatched(), { action: "ignore" });
+    await createIngestEmailReply(deps as never)(inbound());
+
+    const channelData = outcomes[0].channelData as Record<string, unknown>;
+    const thread = channelData.emailThread as { messages: EmailThreadMessage[] };
+    assert.equal(thread.messages.length, 1, "only the inbound reply is stored");
+    assert.equal(thread.messages[0].direction, "inbound");
+    assert.equal(channelData.messageBody, NOTICE);
+  });
+
+  it("replies under the subject we sent when the customer's reply carries none", async () => {
+    const { deps, sends } = harness(dispatched(), { action: "reply", replyBody: "Con gusto." });
+    await createIngestEmailReply(deps as never)(inbound({ subject: undefined }));
+
+    assert.equal(sends[0].subject, "Re: Recordatorio de pago");
+  });
+
+  it("treats an empty inbound subject as absent, not as a subject", async () => {
+    // `inboundEmailSchema` types subject as optional, so a reply carrying `Subject:` with an
+    // empty value parses as "" — which `??` would keep, sending a bare "Re:".
+    const { deps, sends } = harness(dispatched(), { action: "reply", replyBody: "Con gusto." });
+    await createIngestEmailReply(deps as never)(inbound({ subject: "" }));
+
+    assert.equal(sends[0].subject, "Re: Recordatorio de pago");
+  });
+
+  it("dates the conversation by the workspace's calendar day, not UTC's", async () => {
+    // 00:30 UTC on the 27th is still 20:30 on the 26th in Santo Domingo (UTC−4). Taking the
+    // UTC date would resolve "mañana" a day early and mis-date the PaymentPromise.
+    const { deps, decideReqs } = harness(dispatched(), { action: "ignore" });
+    deps.now = () => new Date("2026-06-27T00:30:00Z");
+    await createIngestEmailReply(deps as never)(inbound());
+
+    assert.equal(decideReqs[0].referenceDate, "2026-06-26");
+  });
+
+  it("presents the whole conversation on every turn, with the notice always first", async () => {
+    // One gestión carried across three inbound replies, exactly as production does: each
+    // call persists the thread, and the next reply loads it back.
+    const g = dispatched();
+    const seen: EmailThreadMessage[][] = [];
+
+    for (const [i, text] of ["¿De qué trata?", "¿Cuánto debo?", "Pago el viernes."].entries()) {
+      const { deps, outcomes, decideReqs } = harness(g, {
+        action: "reply",
+        replyBody: `respuesta ${i + 1}`
+      });
+      await createIngestEmailReply(deps as never)(inbound({ text, subject: undefined }));
+      seen.push(decideReqs[0].thread as EmailThreadMessage[]);
+      g.channelData = outcomes[0].channelData as Record<string, unknown>;
+    }
+
+    // Turn 1 sees notice + 1 reply; turn 2 adds that agent reply + the 2nd; and so on.
+    assert.deepEqual(
+      seen.map((t) => t.length),
+      [2, 4, 6]
+    );
+    for (const thread of seen) {
+      assert.equal(thread[0].body, NOTICE, "notice stays at index 0");
+    }
+    // Nothing from an earlier turn is dropped as the thread grows.
+    assert.deepEqual(
+      seen[2].map((m) => m.body),
+      [NOTICE, "¿De qué trata?", "respuesta 1", "¿Cuánto debo?", "respuesta 2", "Pago el viernes."]
+    );
+  });
+
+  it("is inert for a gestión with no stored notice", async () => {
+    const { deps, decideReqs } = harness(gestion(), { action: "ignore" });
+    await createIngestEmailReply(deps as never)(inbound());
+
+    const thread = decideReqs[0].thread as EmailThreadMessage[];
+    assert.equal(thread.length, 1);
+    assert.equal(thread[0].direction, "inbound");
   });
 });

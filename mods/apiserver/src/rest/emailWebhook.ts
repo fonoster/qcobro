@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import type { PrismaClient } from "@prisma/client";
 import {
   buildOutreachContext,
+  DEFAULT_TIMEZONE,
   parseLocale,
   ValidationError,
   type AiConfig,
@@ -57,7 +58,8 @@ export function createPrismaEmailInboundClient(prisma: PrismaClient): EmailInbou
         accountContext: buildOutreachContext(
           log.portfolioAccount as unknown as PortfolioAccountRecord,
           { currency: settings?.currency ?? "USD", locale: parseLocale(settings?.locale) }
-        )
+        ),
+        workspaceTimezone: settings?.timezone ?? DEFAULT_TIMEZONE
       };
     },
     async updateChannelData(id: string, channelData: Record<string, unknown>): Promise<void> {

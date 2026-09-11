@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import type {
   EmailAutopilot,
   EmailAutopilotDecision,
+  EmailAutopilotRequest,
   EvalAccountInput,
   EvalEvent,
   TextSimilarityJudge,
@@ -329,5 +330,90 @@ describe("runAutopilotEvaluation", () => {
     ]);
     const events = await collect(runAutopilotEvaluation(agent(), autopilot, 3, stubJudge()));
     assert.ok(events.some((e) => e.type === "turn" && e.result.outcome === "PAYMENT_PROMISE"));
+  });
+});
+
+describe("runAutopilotEvaluation — the agent's own notice seeds the thread", () => {
+  /** Captures every request the runner hands the autopilot. */
+  function capturing(decision: EmailAutopilotDecision) {
+    const reqs: EmailAutopilotRequest[] = [];
+    const autopilot: EmailAutopilot = {
+      decide: async (req) => {
+        // The runner mutates one array across turns, so snapshot it per call.
+        reqs.push({ ...req, thread: [...req.thread] });
+        return decision;
+      }
+    };
+    return { autopilot, reqs };
+  }
+
+  it("leads with the notice, rendered against the scenario's account", async () => {
+    const a = agent({
+      openerSubject: "Recordatorio de pago",
+      openerBody: "Hola {{firstName}}, su saldo es {{outstandingBalance}}."
+    });
+    const { autopilot, reqs } = capturing({ action: "ignore" });
+
+    await collect(runAutopilotEvaluation(a, autopilot, 3, stubJudge()));
+
+    assert.equal(reqs[0].thread[0].direction, "outbound");
+    assert.equal(reqs[0].thread[0].body, "Hola María, su saldo es 4,200.");
+    assert.equal(reqs[0].thread[0].subject, "Recordatorio de pago");
+    assert.equal(reqs[0].thread[1].body, "Sí puedo pagar el viernes");
+  });
+
+  it("keeps the notice first as the scenario's turns accumulate", async () => {
+    const a = agent({
+      openerBody: "Su saldo es {{outstandingBalance}}.",
+      scenarios: [
+        {
+          ref: "multi-turn",
+          account: account(),
+          turns: [{ input: "¿De qué trata?" }, { input: "¿Cuánto debo?" }]
+        }
+      ]
+    });
+    const { autopilot, reqs } = capturing({ action: "reply", replyBody: "Su saldo es 4,200." });
+
+    await collect(runAutopilotEvaluation(a, autopilot, 3, stubJudge()));
+
+    assert.deepEqual(
+      reqs.map((r) => r.thread.length),
+      [2, 4]
+    );
+    for (const req of reqs) assert.equal(req.thread[0].body, "Su saldo es 4,200.");
+  });
+
+  it("renders a WHATSAPP opener through the Meta snake_case mapping, not plain Handlebars", async () => {
+    // A stored whatsAppConfig.messageBody is an approved Meta template whose named params are
+    // lowercase snake_case; the account context is camelCase. Plain Handlebars finds no
+    // `first_name` key and resolves it to "", seeding "Estimado , su saldo es .".
+    const a = agent({
+      type: "WHATSAPP",
+      openerBody: "Estimado {{first_name}}, su saldo es {{outstanding_balance}}."
+    });
+    const { autopilot, reqs } = capturing({ action: "ignore" });
+
+    await collect(runAutopilotEvaluation(a, autopilot, 3, stubJudge()));
+
+    assert.equal(reqs[0].thread[0].body, "Estimado María, su saldo es 4,200.");
+  });
+
+  it("still renders an EMAIL opener with plain Handlebars", async () => {
+    const a = agent({ openerBody: "Hola {{firstName}}, su saldo es {{outstandingBalance}}." });
+    const { autopilot, reqs } = capturing({ action: "ignore" });
+
+    await collect(runAutopilotEvaluation(a, autopilot, 3, stubJudge()));
+
+    assert.equal(reqs[0].thread[0].body, "Hola María, su saldo es 4,200.");
+  });
+
+  it("starts from an empty thread when the agent has no notice template", async () => {
+    const { autopilot, reqs } = capturing({ action: "ignore" });
+
+    await collect(runAutopilotEvaluation(agent(), autopilot, 3, stubJudge()));
+
+    assert.equal(reqs[0].thread.length, 1);
+    assert.equal(reqs[0].thread[0].direction, "inbound");
   });
 });

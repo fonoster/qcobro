@@ -23,6 +23,10 @@ function buildPrompt(req: EmailAutopilotRequest): string {
     "action ∈ reply | ignore | resolve | escalate.",
     "Cuando action = reply, replyBody es el cuerpo del mensaje de texto libre (en el idioma del cliente).",
     "Si el cliente promete pagar, usa outcome = PAYMENT_PROMISE y objective { amount, dueDate }.",
+    req.referenceDate ? `Hoy es ${req.referenceDate} (formato YYYY-MM-DD).` : "",
+    "objective.dueDate DEBE ser una fecha absoluta en formato YYYY-MM-DD. Convierte expresiones " +
+      'relativas ("mañana", "el viernes", "la próxima semana") a esa fecha usando la fecha de hoy. ' +
+      "Si el cliente no indica una fecha concreta, omite dueDate.",
     "Si el cliente pide que no le contacten (opt-out), usa outcome = OPT_OUT y action = resolve.",
     "Si el asunto no corresponde / está resuelto, usa resolve. Si requiere intervención humana, escalate.",
     "Usa el Contexto para responder preguntas básicas del cliente sobre su préstamo (saldo, cuota, " +

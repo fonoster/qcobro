@@ -1,14 +1,36 @@
-import type {
-  EmailAutopilot,
-  EmailThreadMessage,
-  EvalEvent,
-  EvalScenarioSummary,
-  TextSimilarityJudge
+import {
+  buildThreadWithOpener,
+  renderTemplate,
+  renderWhatsAppTemplate,
+  type EmailAutopilot,
+  type EmailThreadMessage,
+  type EvalEvent,
+  type EvalScenarioSummary,
+  type TextSimilarityJudge
 } from "@qcobro/common";
 import { buildSyntheticAccountContext } from "./buildSyntheticAccount.js";
 import type { ResolvedEvalAgent } from "./resolveEvalTarget.js";
 
 type ResolvedAutopilotAgent = Extract<ResolvedEvalAgent, { type: "EMAIL" | "WHATSAPP" }>;
+
+/**
+ * Renders an agent's outbound notice the way its own channel dispatches it.
+ *
+ * These are not interchangeable. A WHATSAPP `messageBody` is a Meta-approved template whose
+ * named parameters are lowercase snake_case (`{{first_name}}`), while the account context is
+ * camelCase — `renderWhatsAppTemplate` maps between them, and plain Handlebars does not. Using
+ * `renderTemplate` for WhatsApp resolves every placeholder to the empty string, seeding
+ * "Estimado , su saldo es ." and grading the agent against a notice production never sends.
+ */
+function renderOpener(
+  type: "EMAIL" | "WHATSAPP",
+  body: string,
+  context: Record<string, unknown>
+): string {
+  return type === "WHATSAPP"
+    ? renderWhatsAppTemplate(body, context).renderedBody
+    : renderTemplate(body, context);
+}
 
 /**
  * Drives the existing EMAIL/WHATSAPP autopilot decision loop (`EmailAutopilot.decide`,
@@ -33,7 +55,22 @@ export async function* runAutopilotEvaluation(
 
   for (const scenario of agent.scenarios) {
     const accountContext = buildSyntheticAccountContext(scenario.account);
-    const thread: EmailThreadMessage[] = [];
+    // Lead with the agent's own outbound notice, rendered against this scenario's account,
+    // so an eval turn sees the conversation production sees. `buildThreadWithOpener` is the
+    // same helper `ingestEmailReply`/`ingestWhatsAppMessage` use, fed the `channelData` shape
+    // a real dispatch writes — without it a scenario's first customer line arrives with no
+    // indication of what it is replying to.
+    const thread: EmailThreadMessage[] = buildThreadWithOpener(
+      {
+        messageBody: agent.openerBody
+          ? renderOpener(agent.type, agent.openerBody, accountContext)
+          : "",
+        subject: agent.openerSubject
+          ? renderTemplate(agent.openerSubject, accountContext)
+          : undefined
+      },
+      []
+    );
     let agentReplyCount = 0;
     let scenarioPassed = true;
 

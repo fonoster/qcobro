@@ -18,6 +18,7 @@ export {
   isWithinScheduleWindow,
   type ScheduleWindow
 } from "./time.js";
+export { buildThreadWithOpener } from "./threads.js";
 export {
   calculateSmsSegments,
   normalizeForGsm7,

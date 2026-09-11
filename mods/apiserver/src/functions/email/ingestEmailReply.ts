@@ -1,5 +1,7 @@
 import {
+  buildThreadWithOpener,
   inboundEmailSchema,
+  localDateString,
   outcomeSchema,
   withErrorHandlingAndValidation,
   type CreateContactLogInput,
@@ -34,6 +36,10 @@ export interface EmailGestionView {
   agentMaxReplies: number | null;
   /** Render context (account fields) for the autopilot. */
   accountContext: Record<string, unknown>;
+  /** The workspace's IANA timezone. "Today" must be the operator's calendar day, not UTC's:
+   *  a reply at 21:30 in UTC−4 is already tomorrow in UTC, which would date a promise a day
+   *  late. */
+  workspaceTimezone: string;
 }
 
 /** The DB surface ingestion needs — a small port so tests inject a fake. */
@@ -101,6 +107,8 @@ export function createIngestEmailReply(deps: IngestEmailReplyDeps) {
 
     const nowIso = deps.now().toISOString();
     const existing = g.channelData ?? {};
+    /** Subject of the notice we dispatched, stored flat on `channelData` at dispatch time. */
+    const noticeSubject = typeof existing.subject === "string" ? existing.subject : undefined;
     const thread: EmailThread = (existing.emailThread as EmailThread | undefined) ?? {
       token,
       messages: [],
@@ -123,13 +131,16 @@ export function createIngestEmailReply(deps: IngestEmailReplyDeps) {
       ? { action: "ignore" }
       : await deps.autopilot.decide({
           systemPrompt: g.agentSystemPrompt,
-          thread: thread.messages,
+          // Led by the notice we dispatched, which lives outside the reply thread — without
+          // it the agent's whole view of the conversation starts at the customer's reply.
+          thread: buildThreadWithOpener(existing, thread.messages),
           context: g.accountContext,
           language:
             typeof g.accountContext.preferredLanguage === "string"
               ? g.accountContext.preferredLanguage
               : undefined,
-          referenceDate: nowIso.slice(0, 10)
+          // The workspace's calendar day, not UTC's — see `workspaceTimezone`.
+          referenceDate: localDateString(deps.now(), g.workspaceTimezone)
         });
 
     // Cap reached → never auto-reply; surface for an operator instead.
@@ -141,7 +152,13 @@ export function createIngestEmailReply(deps: IngestEmailReplyDeps) {
         from: deps.emailFrom.email,
         fromName: deps.emailFrom.name,
         to: g.customerEmail,
-        subject: `Re: ${inbound.subject ?? thread.messages[0]?.subject ?? ""}`.trim(),
+        // Prefer what the customer replied under, then the subject we sent. The old
+        // `thread.messages[0]` fallback resolved to the first *inbound* message, never ours.
+        // `||`, not `??`: `inboundEmailSchema` types `subject` as optional, so a reply with
+        // an empty `Subject:` header parses as `""` — which `??` would keep, sending a bare
+        // "Re:" and skipping the very fallback this exists for.
+        subject:
+          `Re: ${inbound.subject || noticeSubject || thread.messages[0]?.subject || ""}`.trim(),
         body: decision.replyBody,
         replyTo: `reply+${token}@${deps.emailFrom.inboundDomain}`,
         inReplyTo: inbound.messageId
