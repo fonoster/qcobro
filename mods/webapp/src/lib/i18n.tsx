@@ -363,8 +363,8 @@ export const messages = {
       "E.g. Hi {{firstName}}, this is a reminder that your Créditos Demo account has a balance of {{outstandingBalance}}.",
     "agents.form.messageBodyHint":
       "E.g. {{firstName}}, your Créditos Demo account has a balance of {{outstandingBalance}}. Reply to arrange a payment.",
-    "agents.form.smsSegmentOne": "≈ 1 message · {characters} characters",
-    "agents.form.smsSegments": "≈ {segments} messages · {characters} characters",
+    "agents.form.smsSegmentOne": "≈ 1 segment · {characters} characters",
+    "agents.form.smsSegments": "≈ {segments} segments · {characters} characters",
     "agents.form.smsCostlyChars": "{characters} raises the cost",
     "agents.form.normalizeGsm7": "Avoid characters that raise the sending cost",
     "agents.form.subjectPlaceholder": "Your Créditos Demo account needs attention",
@@ -1063,8 +1063,8 @@ export const messages = {
       "Ej.: Hola {{firstName}}, le recordamos que su cuenta con Créditos Demo presenta un saldo de {{outstandingBalance}}.",
     "agents.form.messageBodyHint":
       "Ej.: {{firstName}}, su cuenta con Créditos Demo tiene un saldo de {{outstandingBalance}}. Responda para acordar un pago.",
-    "agents.form.smsSegmentOne": "≈ 1 mensaje · {characters} caracteres",
-    "agents.form.smsSegments": "≈ {segments} mensajes · {characters} caracteres",
+    "agents.form.smsSegmentOne": "≈ 1 segmento · {characters} caracteres",
+    "agents.form.smsSegments": "≈ {segments} segmentos · {characters} caracteres",
     "agents.form.smsCostlyChars": "{characters} encarece el envío",
     "agents.form.normalizeGsm7": "Evitar caracteres que encarecen el envío",
     "agents.form.subjectPlaceholder": "Su cuenta con Créditos Demo requiere atención",

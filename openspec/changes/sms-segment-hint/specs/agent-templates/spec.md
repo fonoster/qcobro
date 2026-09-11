@@ -61,14 +61,20 @@ workspace's WhatsApp integration (`WhatsAppIntegration.defaultLanguage`; see
 ### Requirement: SMS sending-cost estimate while authoring
 
 While an operator is authoring or editing an SMS template, the console SHALL show a live
-estimate of how many messages the body will be sent as, alongside its character count. The
-estimate SHALL update as the body is typed and SHALL appear in both the create and the edit
-form.
+estimate of how many **segments** the body will be billed as, alongside its character count.
+The estimate SHALL update as the body is typed and SHALL appear in both the create and the
+edit form.
 
-This exists because an SMS is split into billable parts by a rule an operator cannot apply by
-eye: it depends on which characters the text contains, not only how many. A single character
+"Segment" is the term used deliberately, in preference to "message". The operator is looking
+at a single message they authored; telling them it is "2 messages" contradicts what is on
+screen. A segment is the unit the carrier actually bills, and the word an operator will
+recognise from an invoice.
+
+This exists because an SMS is split into segments by a rule an operator cannot apply by eye:
+it depends on which characters the text contains, not only how many. A single character
 outside the GSM 7-bit alphabet forces the whole message into 16-bit encoding and cuts the
-per-part budget from 160 characters to 70. Operators today discover this only from the bill.
+per-segment budget from 160 characters to 70. Operators today discover this only from the
+bill.
 
 The estimate SHALL be computed from **rendered** text — the body with its `{{placeholders}}`
 substituted from representative sample values — not from the raw template. A substituted value
@@ -82,8 +88,8 @@ SHALL remain a single line — not a panel, breakdown, or separate view.
 
 #### Scenario: Operator sees the cost of a long message
 
-- **WHEN** an operator types an SMS body past the single-message budget
-- **THEN** the estimate updates to show more than one message
+- **WHEN** an operator types an SMS body past the single-segment budget
+- **THEN** the estimate updates to show more than one segment
 
 #### Scenario: A substituted value changes the estimate
 
