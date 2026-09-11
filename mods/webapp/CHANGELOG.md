@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.48.1](https://github.com/fonoster/qcobro/compare/v1.48.0...v1.48.1) (2026-09-11)
+
+### Bug Fixes
+
+- **webapp:** put field guidance inside the field, as the design draws it ([#178](https://github.com/fonoster/qcobro/issues/178)) ([13db6cf](https://github.com/fonoster/qcobro/commit/13db6cfe50905aa3cdb1b83b450220ab3a636dbc))
+
 # [1.48.0](https://github.com/fonoster/qcobro/compare/v1.47.0...v1.48.0) (2026-09-11)
 
 **Note:** Version bump only for package @qcobro/webapp
