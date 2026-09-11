@@ -384,6 +384,30 @@ describe("runAutopilotEvaluation — the agent's own notice seeds the thread", (
     for (const req of reqs) assert.equal(req.thread[0].body, "Su saldo es 4,200.");
   });
 
+  it("renders a WHATSAPP opener through the Meta snake_case mapping, not plain Handlebars", async () => {
+    // A stored whatsAppConfig.messageBody is an approved Meta template whose named params are
+    // lowercase snake_case; the account context is camelCase. Plain Handlebars finds no
+    // `first_name` key and resolves it to "", seeding "Estimado , su saldo es .".
+    const a = agent({
+      type: "WHATSAPP",
+      openerBody: "Estimado {{first_name}}, su saldo es {{outstanding_balance}}."
+    });
+    const { autopilot, reqs } = capturing({ action: "ignore" });
+
+    await collect(runAutopilotEvaluation(a, autopilot, 3, stubJudge()));
+
+    assert.equal(reqs[0].thread[0].body, "Estimado María, su saldo es 4,200.");
+  });
+
+  it("still renders an EMAIL opener with plain Handlebars", async () => {
+    const a = agent({ openerBody: "Hola {{firstName}}, su saldo es {{outstandingBalance}}." });
+    const { autopilot, reqs } = capturing({ action: "ignore" });
+
+    await collect(runAutopilotEvaluation(a, autopilot, 3, stubJudge()));
+
+    assert.equal(reqs[0].thread[0].body, "Hola María, su saldo es 4,200.");
+  });
+
   it("starts from an empty thread when the agent has no notice template", async () => {
     const { autopilot, reqs } = capturing({ action: "ignore" });
 

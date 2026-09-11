@@ -26,6 +26,7 @@ function gestion(over: Partial<EmailGestionView> = {}): EmailGestionView {
     agentSystemPrompt: "Eres un agente de cobranza.",
     agentMaxReplies: null,
     accountContext: { customerName: "Ana", outstandingBalance: 5000 },
+    workspaceTimezone: "America/Santo_Domingo",
     ...over
   };
 }
@@ -220,6 +221,25 @@ describe("ingestEmailReply — the dispatched notice in the autopilot's view", (
     await createIngestEmailReply(deps as never)(inbound({ subject: undefined }));
 
     assert.equal(sends[0].subject, "Re: Recordatorio de pago");
+  });
+
+  it("treats an empty inbound subject as absent, not as a subject", async () => {
+    // `inboundEmailSchema` types subject as optional, so a reply carrying `Subject:` with an
+    // empty value parses as "" — which `??` would keep, sending a bare "Re:".
+    const { deps, sends } = harness(dispatched(), { action: "reply", replyBody: "Con gusto." });
+    await createIngestEmailReply(deps as never)(inbound({ subject: "" }));
+
+    assert.equal(sends[0].subject, "Re: Recordatorio de pago");
+  });
+
+  it("dates the conversation by the workspace's calendar day, not UTC's", async () => {
+    // 00:30 UTC on the 27th is still 20:30 on the 26th in Santo Domingo (UTC−4). Taking the
+    // UTC date would resolve "mañana" a day early and mis-date the PaymentPromise.
+    const { deps, decideReqs } = harness(dispatched(), { action: "ignore" });
+    deps.now = () => new Date("2026-06-27T00:30:00Z");
+    await createIngestEmailReply(deps as never)(inbound());
+
+    assert.equal(decideReqs[0].referenceDate, "2026-06-26");
   });
 
   it("presents the whole conversation on every turn, with the notice always first", async () => {

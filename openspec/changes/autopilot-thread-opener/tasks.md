@@ -44,6 +44,23 @@
       `ResolvedEvalAgent`, from both the stored-row and YAML-template paths
 - [x] 6.2 `runAutopilotEvaluation.ts` — seed the thread with that opener rendered against the
       scenario's synthetic account, via the same shared helper
+- [x] 6.3 Render a WHATSAPP opener with `renderWhatsAppTemplate`, not `renderTemplate`. A Meta
+      template's named params are lowercase snake_case while the context is camelCase, so plain
+      Handlebars resolved every placeholder to `""` and seeded "Estimado , su saldo es ." —
+      grading the agent against a notice production never sends
+
+## 9. Review follow-ups
+
+- [x] 9.1 `whatsAppAutopilot.ts` — read `referenceDate` in `buildPrompt` (see 5.2); the field was
+      reaching `decide` and being dropped
+- [x] 9.2 `ingestEmailReply.ts` — `||` not `??` on the reply subject. `subject` is optional in
+      `inboundEmailSchema`, so an empty `Subject:` parses as `""`, which `??` keeps — sending a
+      bare "Re:" and skipping the notice fallback this change adds
+- [x] 9.3 Date the conversation by the workspace timezone, not UTC. `nowIso.slice(0, 10)` took the
+      UTC calendar day; at 21:30 in UTC−4 that is already tomorrow, dating a promise a day early.
+      `workspaceTimezone` now rides on both gestión views (both Prisma loaders already read the
+      settings row for currency/locale), with `DEFAULT_TIMEZONE` in `@qcobro/common` mirroring the
+      Prisma column default
 
 ## 7. Tests
 

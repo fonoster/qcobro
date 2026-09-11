@@ -1,6 +1,7 @@
 import {
   buildThreadWithOpener,
   renderTemplate,
+  renderWhatsAppTemplate,
   type EmailAutopilot,
   type EmailThreadMessage,
   type EvalEvent,
@@ -11,6 +12,25 @@ import { buildSyntheticAccountContext } from "./buildSyntheticAccount.js";
 import type { ResolvedEvalAgent } from "./resolveEvalTarget.js";
 
 type ResolvedAutopilotAgent = Extract<ResolvedEvalAgent, { type: "EMAIL" | "WHATSAPP" }>;
+
+/**
+ * Renders an agent's outbound notice the way its own channel dispatches it.
+ *
+ * These are not interchangeable. A WHATSAPP `messageBody` is a Meta-approved template whose
+ * named parameters are lowercase snake_case (`{{first_name}}`), while the account context is
+ * camelCase — `renderWhatsAppTemplate` maps between them, and plain Handlebars does not. Using
+ * `renderTemplate` for WhatsApp resolves every placeholder to the empty string, seeding
+ * "Estimado , su saldo es ." and grading the agent against a notice production never sends.
+ */
+function renderOpener(
+  type: "EMAIL" | "WHATSAPP",
+  body: string,
+  context: Record<string, unknown>
+): string {
+  return type === "WHATSAPP"
+    ? renderWhatsAppTemplate(body, context).renderedBody
+    : renderTemplate(body, context);
+}
 
 /**
  * Drives the existing EMAIL/WHATSAPP autopilot decision loop (`EmailAutopilot.decide`,
@@ -42,7 +62,9 @@ export async function* runAutopilotEvaluation(
     // indication of what it is replying to.
     const thread: EmailThreadMessage[] = buildThreadWithOpener(
       {
-        messageBody: agent.openerBody ? renderTemplate(agent.openerBody, accountContext) : "",
+        messageBody: agent.openerBody
+          ? renderOpener(agent.type, agent.openerBody, accountContext)
+          : "",
         subject: agent.openerSubject
           ? renderTemplate(agent.openerSubject, accountContext)
           : undefined
