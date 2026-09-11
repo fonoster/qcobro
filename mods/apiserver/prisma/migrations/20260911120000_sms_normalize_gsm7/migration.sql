@@ -1,0 +1,11 @@
+-- Opt-in GSM-7 normalization for SMS templates.
+--
+-- A message containing any character outside the GSM 7-bit alphabet is sent as UCS-2, which
+-- cuts the per-segment budget from 160 characters to 70 — so one accented name can double
+-- what a campaign is billed. In Spanish the culprits are specifically á í ó ú and lowercase
+-- ç; é, ñ, ü, ¿ and ¡ are already in the 7-bit set and cost nothing.
+--
+-- When enabled, dispatch substitutes just those characters for their ASCII equivalents
+-- before sending. Additive and non-breaking: every existing template backfills to false, so
+-- no message in flight changes text.
+ALTER TABLE "sms_configs" ADD COLUMN "normalizeGsm7" BOOLEAN NOT NULL DEFAULT false;

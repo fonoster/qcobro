@@ -180,7 +180,11 @@ export const createAgentTemplateSchema = z
       ...baseFields,
       type: z.literal("SMS"),
       messageBody: z.string().min(1),
-      senderId: z.string().min(1).optional()
+      senderId: z.string().min(1).optional(),
+      /** Substitute the characters that cost a message its 7-bit encoding (`á í ó ú ç`) for
+       *  ASCII before sending, halving the segment count of an otherwise-fine message.
+       *  Defaults off: it changes what the customer reads. */
+      normalizeGsm7: z.boolean().optional()
     }),
     z.object({
       ...baseFields,

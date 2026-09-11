@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   DispatchError,
   dispatchOutreachSchema,
+  normalizeForGsm7,
   pickRandomNumber,
   renderTemplate,
   renderWhatsAppTemplate,
@@ -55,7 +56,10 @@ export function createDispatchOutreach(deps: DispatchDeps) {
         throw new DispatchError("SYSTEM_ERROR", "SMS dispatch has no configured sender numbers");
       }
       const from = params.from ?? pick(deps.twilioFromNumbers);
-      const renderedBody = renderTemplate(params.body ?? "", params.context);
+      // Normalize after rendering, not before: it is the substituted values (an accented
+      // customer name) that usually push a message out of GSM-7, not the template's own text.
+      const rendered = renderTemplate(params.body ?? "", params.context);
+      const renderedBody = params.normalizeGsm7 ? normalizeForGsm7(rendered) : rendered;
       let sid: string;
       try {
         ({ sid } = await deps.smsClient.sendMessage({ from, to: params.to, body: renderedBody }));

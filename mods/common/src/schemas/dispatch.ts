@@ -47,6 +47,9 @@ export const dispatchOutreachSchema = z
     body: z.string().optional(),
     /** EMAIL: subject line template. */
     subject: z.string().optional(),
+    /** SMS: substitute the characters that cost a message its 7-bit encoding for ASCII
+     * before sending, so an accented name doesn't double the segment count. */
+    normalizeGsm7: z.boolean().optional(),
     /** WHATSAPP: Meta-approved template name to send. */
     templateName: z.string().optional(),
     /** WHATSAPP: Meta template-send language code (sourced from the workspace, e.g. `es_DO`). */

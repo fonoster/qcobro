@@ -63,7 +63,10 @@ export function createPrismaEngineClient(prisma: PrismaClient): EngineClient {
                   }
                 : null,
               smsConfig: c.agentTemplate.smsConfig
-                ? { messageBody: c.agentTemplate.smsConfig.messageBody }
+                ? {
+                    messageBody: c.agentTemplate.smsConfig.messageBody,
+                    normalizeGsm7: c.agentTemplate.smsConfig.normalizeGsm7
+                  }
                 : null,
               emailConfig: c.agentTemplate.emailConfig
                 ? {

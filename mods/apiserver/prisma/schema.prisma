@@ -262,10 +262,15 @@ model VoicePrerecordedConfig {
 }
 
 model SmsConfig {
-  templateId  String        @id
+  templateId  String  @id
   messageBody String
   senderId    String?
-  template    AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  /// Substitute the few characters that cost a message its 7-bit encoding (á í ó ú ç) for
+  /// ASCII before sending, so an accented name doesn't double the message's segment count.
+  /// Off by default: it changes what the customer reads, so it stays an explicit choice.
+  normalizeGsm7 Boolean @default(false)
+
+  template AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@map("sms_configs")
 }
