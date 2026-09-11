@@ -73,6 +73,37 @@ describe("dispatchOutreach", () => {
     assert.equal(result.renderedBody, "Hola Ana, debe 900");
   });
 
+  it("leaves the SMS body byte-identical when normalizeGsm7 is off", async () => {
+    const { deps, calls } = makeDeps();
+    const result = await createDispatchOutreach(deps)({
+      channel: "SMS",
+      to: "+50670000000",
+      context: { firstName: "María" },
+      body: "Hola {{firstName}}, ¿cuánto puede pagar?"
+    });
+
+    assert.equal((calls.sms[0] as { body: string }).body, "Hola María, ¿cuánto puede pagar?");
+    assert.equal(result.renderedBody, "Hola María, ¿cuánto puede pagar?");
+  });
+
+  it("substitutes only the costly characters when normalizeGsm7 is on", async () => {
+    const { deps, calls } = makeDeps();
+    const result = await createDispatchOutreach(deps)({
+      channel: "SMS",
+      to: "+50670000000",
+      // The accented name comes from the substituted value, not the template — which is
+      // why normalization has to run after rendering.
+      context: { firstName: "María" },
+      body: "Hola {{firstName}}, ¿cuánto puede pagar? El año pasado, José.",
+      normalizeGsm7: true
+    });
+
+    // á/í/ó/ú go; ñ, é, ¿ were already in the 7-bit set and are untouched.
+    const expected = "Hola Maria, ¿cuanto puede pagar? El año pasado, José.";
+    assert.equal((calls.sms[0] as { body: string }).body, expected);
+    assert.equal(result.renderedBody, expected, "the gestión records what was actually sent");
+  });
+
   it("places a voice call to the app ref with the opening line plus the allow-listed account metadata", async () => {
     const { deps, calls } = makeDeps();
     const result = await createDispatchOutreach(deps)({

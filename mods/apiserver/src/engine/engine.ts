@@ -81,7 +81,7 @@ export interface EngineTemplate {
     optOutMessage: string | null;
     optOutConfirmationMessage: string | null;
   } | null;
-  smsConfig: { messageBody: string } | null;
+  smsConfig: { messageBody: string; normalizeGsm7: boolean } | null;
   emailConfig: {
     subject: string;
     messageBody: string;
@@ -297,7 +297,13 @@ export function createEngine(deps: EngineDeps) {
     });
     const t = c.agentTemplate!;
     if (channel === "SMS") {
-      return { channel, to: acc.phone!, context, body: t.smsConfig?.messageBody ?? "" };
+      return {
+        channel,
+        to: acc.phone!,
+        context,
+        body: t.smsConfig?.messageBody ?? "",
+        normalizeGsm7: t.smsConfig?.normalizeGsm7
+      };
     }
     if (channel === "EMAIL") {
       return {
