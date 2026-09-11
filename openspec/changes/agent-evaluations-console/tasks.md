@@ -36,6 +36,19 @@ the `uOaur`/`oZPkT` clusters directly** before trusting anything below is visual
 - [x] 1.6 Frame `"Agente · Detalle · Ejecución"` (`qr1TI`, in `uOaur`) — run detail: pass/fail
       summary header + download-report button, 4 ordered turn rows (3 closed + 1 open showing
       full tool-call/judge-reasoning detail)
+- [x] 1.6b Two alternate takes on 1.6's conversation view, per the user's live feedback ("look
+      more like the chat in the gestión detail block; instead of an 'Aprobado' badge, a color
+      or a checkmark") — same header/tab-bar shell as `qr1TI`, `qr1TI` itself untouched so all
+      three can be compared side by side in Pen.app: - `"Agente · Detalle · Ejecución · Chat (ícono)"` (`NlGTr`) — client/agent chat bubbles
+      mirroring the real Gestión · Voz IA transcript block's exact recipe (`row`+`bub`,
+      asymmetric corner radius, `$--color-success`/`$--secondary` tokens). Agent bubble
+      itself is tinted pass (green) / fail (red) with a check/x icon next to the sender
+      label; a failed bubble also carries a one-line reason caption. - `"Agente · Detalle · Ejecución · Chat (punto)"` (`uXAAv`) — same bubble layout, but the
+      agent bubble stays the brand-green voice color always (matching the real gestión
+      transcript exactly), and verdict is a small colored dot next to the sender label
+      instead of recoloring the bubble or adding an icon — the subtler of the two options.
+      Both verified clean via `TakeScreenshot` (no clipping/collapse) — this iteration's
+      screenshots rendered correctly, unlike the tool flakiness noted in 1.1-1.9 above.
 - [x] 1.7 Frame `"Agente · Detalle · Vista previa"` (`OZ6rZ`, in `uOaur`, SMS/VOICE_PRERECORDED
       only) — sample-account input form + rendered-output panel, 3-tab bar
       (Configuración/Campañas/Vista previa only — no Escenarios/Ejecuciones)
@@ -96,7 +109,7 @@ the `uOaur`/`oZPkT` clusters directly** before trusting anything below is visual
       (`startEvaluationRun`/`finalizeEvaluationRun`, see `design.md`), including the
       `finally`-block `INTERRUPTED` handling for a dropped connection
 - [ ] 5.4 New `evaluationRuns` router: `list`/`get` (history + detail) and `report({id,
-  format})` reusing `buildReportModel`/`renderHtml`/`renderPdf` from
+format})` reusing `buildReportModel`/`renderHtml`/`renderPdf` from
       `@qcobro/common/reporting`
 
 ## 6. Webapp (`mods/webapp`)
