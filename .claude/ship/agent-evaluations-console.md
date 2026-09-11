@@ -29,6 +29,20 @@ Status values: `pending` · `in-progress` · `done` · `skipped` (with reason).
 
 Newest first. One line per meaningful decision or stage transition.
 
+- 2026-09-11 — Run-detail conversation view, round 3 (`tasks.md` 1.6c): 1.6b's chat attempts
+  failed because they kept `qr1TI`'s full-width card and floated ~460px bubbles inside it, so
+  every row had a huge empty gutter; the real gestión transcript (`ERZaG`) works because the
+  whole column is 554px. Built `"… · Chat angosto"` (`ho0vG`, one narrow centered column),
+  `"… · Chat + Esperado"` (`PJcon`, transcript + aligned code-review-style expected
+  annotations) and `"… · Panel vertical"` (`zhK6d`, tall narrow panel with the hover-reveal of
+  the expected response mocked via a `Tooltip` instance), each carrying per-turn input
+  metadata, function-call results and a `similar`/`exacto` match pill, with pass/fail shown as
+  color + check/x rather than a text badge. Also dropped the `Campañas` tab from all 10
+  agent-detail tab bars and added a primary "Ejecutar los 3 escenarios" suite-run button to
+  `RrD1d` and `M21wq` so a prompt change can be regression-checked against every scenario at
+  once. **The user deleted `qr1TI`, `NlGTr`, `uXAAv` and `PJcon` in Pen.app while this round
+  was in flight** — not recreated; `ho0vG` and `zhK6d` are the surviving candidates and the
+  stage-1 human gate is still owed.
 - 2026-09-11 — Design build finished for tonight: all 9 `tasks.md` §1 items structurally
   built and verified via the Pencil MCP's `Get`/bounds inspection (correct structure,
   positions, sizes — no zero/negative dimensions, no orphaned nodes). **Could not reliably

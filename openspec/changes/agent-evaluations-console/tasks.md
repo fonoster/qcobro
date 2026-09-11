@@ -49,6 +49,31 @@ the `uOaur`/`oZPkT` clusters directly** before trusting anything below is visual
       instead of recoloring the bubble or adding an icon — the subtler of the two options.
       Both verified clean via `TakeScreenshot` (no clipping/collapse) — this iteration's
       screenshots rendered correctly, unlike the tool flakiness noted in 1.1-1.9 above.
+- [x] 1.6c Third round on 1.6's conversation view, after the user rejected 1.6b ("because the
+      area is too wide the bubbles look very strange... it doesn't look like a conversation").
+      Root cause: 1.6b copied `qr1TI`'s full-width (~1136px) card but pinned bubbles at ~460px,
+      leaving a large empty gutter on every row; the real Gestión · Voz IA transcript (`ERZaG`)
+      reads correctly because its whole column is only 554px wide. Built as new frames so all
+      options stayed comparable, then extended per the user's follow-up notes — narrower still,
+      per-turn input metadata, function-call results, and a `similar`/`exacto` match note per
+      turn: - `"Agente · Detalle · Ejecución · Chat angosto"` (`ho0vG`) — a single 460px column
+      centered in the card. Per turn: a meta line (timestamp · latency · tokens) with a
+      `SIMILAR · 0.94` / `EXACTO · sin coincidencia` match pill on the right, the client
+      bubble, a function-call chip showing the call and its result (or the expected-but-never-
+      invoked call, in error color), then the agent bubble tinted pass/fail with a check/x dot. - `"Agente · Detalle · Ejecución · Chat + Esperado"` (`PJcon`) — narrow transcript on the
+      left, code-review-style annotation cards on the right, each vertically aligned with its
+      agent bubble and carrying the turn metadata, the function call, the `ESPERADO` text, the
+      match-mode pill and the failure reason. **Deleted by the user in Pen.app while this round
+      was still in flight; not recreated** (live user edits are not undone from here). - `"Agente · Detalle · Ejecución · Panel vertical"` (`zhK6d`) — a 400px tall/narrow panel
+      (gestión-slide-over proportions, no phone chrome), same per-turn meta/function-call/
+      bubble stack at a tighter type scale, with the hover state mocked statically: a `Tooltip`
+      (`T18KT`) instance anchored beside turn 2's agent bubble showing `ESPERADO` + match pill + failure reason, plus an annotation noting it is a hover-only reveal.
+      Also in this round, per the user's live notes: the `Campañas` tab was removed from all 10
+      agent-detail tab bars (`oK2Cr` included), and a "run the whole suite at once so a prompt
+      change can't silently drift another scenario" action was added as a primary
+      "Ejecutar los 3 escenarios" button on both `RrD1d`'s and `M21wq`'s card headers. The user
+      also deleted `qr1TI`, `NlGTr` and `uXAAv` in Pen.app during the session, leaving `ho0vG`
+      and `zhK6d` as the surviving run-detail candidates.
 - [x] 1.7 Frame `"Agente · Detalle · Vista previa"` (`OZ6rZ`, in `uOaur`, SMS/VOICE_PRERECORDED
       only) — sample-account input form + rendered-output panel, 3-tab bar
       (Configuración/Campañas/Vista previa only — no Escenarios/Ejecuciones)
