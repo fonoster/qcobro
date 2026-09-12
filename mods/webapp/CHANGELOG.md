@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.50.0](https://github.com/fonoster/qcobro/compare/v1.49.0...v1.50.0) (2026-09-12)
+
+### Features
+
+- **webapp:** collapsible sidebar nav ([#182](https://github.com/fonoster/qcobro/issues/182)) ([4808aff](https://github.com/fonoster/qcobro/commit/4808aff11d0432929d6b7f51d38b765df23a19e2))
+
 # [1.49.0](https://github.com/fonoster/qcobro/compare/v1.48.2...v1.49.0) (2026-09-12)
 
 ### Features
