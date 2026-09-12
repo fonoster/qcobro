@@ -189,7 +189,11 @@ test.describe("pre-recorded DTMF menu", () => {
     await page.getByRole("link", { name: "Gestiones" }).click();
     const prerecordedRows = page.locator("tbody tr", { hasText: "Voz pregrabada" });
     const optOutRow = prerecordedRows.filter({ hasText: "Baja" });
-    const baselineRow = prerecordedRows.filter({ hasNotText: "Baja" });
+    // Excludes the machine-detected row too (added below) — it also has no "Baja" outcome,
+    // so "baseline" must be narrowed to "neither Baja nor the machine row's delivery reason".
+    const baselineRow = prerecordedRows
+      .filter({ hasNotText: "Baja" })
+      .filter({ hasNotText: "Inalcanzable" });
     await expect(optOutRow).toHaveCount(1);
     await expect(baselineRow).toHaveCount(1);
 
