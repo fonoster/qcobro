@@ -42,6 +42,9 @@ export const dispatchOutreachSchema = z
     optOutDigit: z.string().optional(),
     optOutMessage: z.string().optional(),
     optOutConfirmationMessage: z.string().optional(),
+    /** Voz pregrabada: hang up instead of playing the script if Fonoster's
+     * answering-machine detection reports the call was picked up by a machine. */
+    hangupOnMachineDetected: z.boolean().optional(),
     /** SMS / EMAIL / WHATSAPP: message body template. For WHATSAPP this is the fetched
      * template body whose `{{vars}}` are extracted and sent as named parameters. */
     body: z.string().optional(),

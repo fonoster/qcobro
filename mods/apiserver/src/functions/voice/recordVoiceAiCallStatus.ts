@@ -2,20 +2,27 @@ import type { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import {
   deliveryReasonSchema,
+  pathSchema,
   voiceAiCallStatusCompletionSchema,
   withErrorHandlingAndValidation,
   type DeliveryReason,
-  type Delivery
+  type Delivery,
+  type Path
 } from "@qcobro/common";
 
 /**
  * `voiceAiCallStatusCompletionSchema` (in `@qcobro/common`) still carries only the boolean
  * `answered` signal; the `deliveryReason` this call-status-tracking recovery path derives
- * from the Fonoster CDR clearing cause (see `resolveVoiceCallFromCdr`) is layered on
- * locally rather than added to the shared schema.
+ * from the Fonoster CDR clearing cause (see `resolveVoiceCallFromCdr`), and the `path` it
+ * derives from the CDR's `amdStatus` (see `voiceCompletionTimeoutSweep`'s `classify`), are
+ * layered on locally rather than added to the shared schema.
  */
 const voiceAiCallStatusInputSchema = voiceAiCallStatusCompletionSchema.extend({
-  deliveryReason: deliveryReasonSchema.optional()
+  deliveryReason: deliveryReasonSchema.optional(),
+  /** `ANSWERED_BY_MACHINE` when the sweep's CDR lookup reported `amdStatus: MACHINE`; unset
+   *  otherwise. The only way a `VOICE_AI` gestión's `path` is ever set from this recovery
+   *  path — see `account-contact-log`'s voice completion sweep requirement. */
+  path: pathSchema.optional()
 });
 export type VoiceAiCallStatusInput = z.infer<typeof voiceAiCallStatusInputSchema>;
 
@@ -46,6 +53,7 @@ export interface VoiceAiCallStatusClient {
         deliveryReason: DeliveryReason | null;
         durationSeconds: number;
         channelData: Record<string, unknown>;
+        path: Path | null;
       };
     }): Promise<{ count: number }>;
   };
@@ -97,7 +105,8 @@ export function createRecordVoiceAiCallStatus(client: VoiceAiCallStatusClient) {
         delivery: reportedDelivery,
         deliveryReason: reportedDeliveryReason,
         durationSeconds: input.answeredSeconds,
-        channelData
+        channelData,
+        path: input.path ?? null
       }
     });
 

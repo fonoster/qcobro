@@ -18,8 +18,9 @@ const GATHER_TIMEOUT_MS = 5000;
 const DEFAULT_MAX_REPEATS = 2;
 
 export interface PrerecordedCallCompletion extends PrerecordedCompletionInput {
-  /** Always `ENGAGED`: reaching completion means the script played to the end without the
-   *  caller hanging up early (see `handlePrerecordedCall`). */
+  /** `ENGAGED` when the script played to the end without the caller hanging up early, or
+   *  `ANSWERED_BY_MACHINE` when a detected answering machine skipped it entirely (see
+   *  `handlePrerecordedCall`). */
   path?: Path;
   /** Set when the caller pressed the opt-out digit specifically. */
   outcome?: Outcome;
@@ -48,6 +49,10 @@ type VoiceServerCtor = new (config?: ServerConfig) => {
   listen: (handler: (req: VoiceRequest, res: VoiceResponse) => Promise<void>) => Promise<void>;
 };
 const VoiceServer = createRequire(import.meta.url)("@fonoster/voice").default as VoiceServerCtor;
+
+// TODO(voice-amd-detection): drop this local augmentation once `@fonoster/voice` publishes
+// a release including PR #893 and `VoiceRequest.amd` is part of its own types.
+type VoiceRequestWithAmd = VoiceRequest & { amd?: { status?: AmdStatus } };
 
 export interface DtmfMenu {
   repeatDigit?: string;
@@ -88,32 +93,47 @@ export interface PrerecordedCallVerbs {
   }): Promise<{ digits?: string }>;
 }
 
+/** Fonoster's answering-machine detection verdict on the live call — absent unless AMD
+ *  was enabled upstream for this call. Only `MACHINE` changes this function's behavior. */
+export type AmdStatus = "HUMAN" | "MACHINE" | "UNKNOWN";
+
 /**
- * Drives one pre-recorded call: answer, play the script, then — only when the dispatched
- * template configured a DTMF menu (`repeatDigit`/`optOutDigit` present in metadata; see
- * `agent-templates`) — play whichever menu message(s) are set and gather a single DTMF
- * digit. Pressing the repeat digit (while under the per-call cap) replays the script and
- * gathers again; pressing the opt-out digit plays the opt-out confirmation message (if
- * configured) and ends the call. Any other digit, or a timed-out gather, hangs up —
- * identical to a template with no menu configured at all. See `prerecorded-audio`.
+ * Drives one pre-recorded call: answer, then — unless answering-machine detection says
+ * `MACHINE` and the template's toggle is on, in which case it hangs up immediately without
+ * speaking — play the script, then — only when the dispatched template configured a DTMF
+ * menu (`repeatDigit`/`optOutDigit` present in metadata; see `agent-templates`) — play
+ * whichever menu message(s) are set and gather a single DTMF digit. Pressing the repeat
+ * digit (while under the per-call cap) replays the script and gathers again; pressing the
+ * opt-out digit plays the opt-out confirmation message (if configured) and ends the call.
+ * Any other digit, or a timed-out gather, hangs up — identical to a template with no menu
+ * configured at all. See `prerecorded-audio`.
  *
  * Returns the fields `onCompleted` needs beyond `answeredSeconds`/`providerRef`/`at`, which
  * the caller (the VoiceServer's real Fonoster callback, or a test) attaches itself — kept
  * out of this function so it stays a pure driver over the verb interface, not a clock.
  *
- * `path` is always `ENGAGED` on a normal return: mirrors `decidePath` on the Voz IA
- * side (`decideVoiceOutcome.ts`) — reaching this function's return means the script played
- * to the end (an early hangup mid-`say`/`gather` throws and never reaches it), so the
- * recipient heard the whole message, menu or no menu, press or no press. Only `outcome`
- * stays conditional on an explicit opt-out digit — it is a claim about what the caller did,
- * not just that they listened.
+ * `path` is `ANSWERED_BY_MACHINE` when a detected machine skipped the script, or `ENGAGED`
+ * on every other normal return: mirrors `decidePath` on the Voz IA side
+ * (`decideVoiceOutcome.ts`) — reaching this function's return without a detected machine
+ * means the script played to the end (an early hangup mid-`say`/`gather` throws and never
+ * reaches it), so the recipient heard the whole message, menu or no menu, press or no
+ * press. Only `outcome` stays conditional on an explicit opt-out digit — it is a claim
+ * about what the caller did, not just that they listened.
  */
 export async function handlePrerecordedCall(
   message: string,
   menu: DtmfMenu | null,
-  res: PrerecordedCallVerbs
+  res: PrerecordedCallVerbs,
+  amdStatus?: AmdStatus,
+  hangupOnMachineDetected = true
 ): Promise<{ path?: Path; outcome?: Outcome; repeatCount: number }> {
   await res.answer();
+
+  if (amdStatus === "MACHINE" && hangupOnMachineDetected) {
+    await res.hangup();
+    return { path: "ANSWERED_BY_MACHINE", outcome: undefined, repeatCount: 0 };
+  }
+
   await res.say(message);
 
   let path: Path | undefined;
@@ -165,11 +185,11 @@ export async function handlePrerecordedCall(
  * indistinguishable from a call that never connected.
  *
  * Catching here reports the outcome immediately, and reports it honestly:
- * `scriptCompleted` is `true` only on a clean return, so a call that connected but played
- * nothing is not recorded as a delivery. Picking up is not the same as being told
- * anything — see `recordPrerecordedOutcome` for how the pair maps to `delivery`. The catch
- * path also records no `path`/`outcome`, since the caller did not necessarily hear the
- * script.
+ * `scriptCompleted` is `true` only when the script actually played — a call that connected
+ * but played nothing (a verb failure, or a detected machine that skipped it) is not
+ * recorded as a delivery. Picking up is not the same as being told anything — see
+ * `recordPrerecordedOutcome` for how the pair maps to `delivery`. The catch path also
+ * records no `path`/`outcome`, since the caller did not necessarily hear the script.
  *
  * `answeredSeconds` is the real elapsed time either way. A call stranded in silence for
  * two minutes was two minutes long; it just was not a delivery.
@@ -178,7 +198,9 @@ export async function runPrerecordedCall(
   message: string,
   menu: DtmfMenu | null,
   res: PrerecordedCallVerbs,
-  now: () => number = Date.now
+  now: () => number = Date.now,
+  amdStatus?: AmdStatus,
+  hangupOnMachineDetected = true
 ): Promise<{
   path?: Path;
   outcome?: Outcome;
@@ -188,13 +210,21 @@ export async function runPrerecordedCall(
 }> {
   const answeredAt = now();
   try {
-    const { path, outcome, repeatCount } = await handlePrerecordedCall(message, menu, res);
+    const { path, outcome, repeatCount } = await handlePrerecordedCall(
+      message,
+      menu,
+      res,
+      amdStatus,
+      hangupOnMachineDetected
+    );
     return {
       path,
       outcome,
       repeatCount,
       answeredSeconds: Math.max(0, Math.round((now() - answeredAt) / 1000)),
-      scriptCompleted: true
+      // A detected machine reached this return without throwing, but deliberately never
+      // heard the script — the one case a clean return is still not a delivery.
+      scriptCompleted: path !== "ANSWERED_BY_MACHINE"
     };
   } catch (err) {
     logger.warn(
@@ -224,14 +254,16 @@ export function startVoiceServer(deps: VoiceServerDeps = {}): void {
     async (req: VoiceRequest, res: VoiceResponse) => {
       const message = req.metadata?.message ?? "";
       const menu = readDtmfMenu(req.metadata);
+      const amdStatus = (req as VoiceRequestWithAmd).amd?.status;
+      const hangupOnMachineDetected = req.metadata?.hangupOnMachineDetected !== "false";
 
       logger.verbose(
-        `pre-recorded message (appRef=${req.appRef}, callRef=${req.callRef}, menu=${Boolean(menu)}):`,
+        `pre-recorded message (appRef=${req.appRef}, callRef=${req.callRef}, menu=${Boolean(menu)}, amd=${amdStatus ?? "n/a"}):`,
         message
       );
 
       const { path, outcome, repeatCount, answeredSeconds, scriptCompleted } =
-        await runPrerecordedCall(message, menu, res);
+        await runPrerecordedCall(message, menu, res, Date.now, amdStatus, hangupOnMachineDetected);
 
       // Fonoster records the call from its dialplan, under a name built from this same
       // request — so the console can link the audio without us storing a copy. Reported

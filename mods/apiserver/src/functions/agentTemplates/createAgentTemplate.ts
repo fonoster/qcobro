@@ -62,7 +62,8 @@ export function createCreateAgentTemplate(
               maxRepeats: params.maxRepeats ?? null,
               optOutDigit: params.optOutDigit ?? null,
               optOutMessage: params.optOutMessage ?? null,
-              optOutConfirmationMessage: params.optOutConfirmationMessage ?? null
+              optOutConfirmationMessage: params.optOutConfirmationMessage ?? null,
+              hangupOnMachineDetected: params.hangupOnMachineDetected ?? true
             }
           });
           break;

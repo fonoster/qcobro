@@ -100,10 +100,14 @@ export type RecordPrerecordedOutcomeResult =
  *
  * `path` mirrors Voz IA's `decidePath`: the script playing to the end (menu or no menu,
  * press or no press) means the account holder heard the message, so `path: ENGAGED` is
- * recorded alongside a delivered completion. A completion that played nothing records no
- * `path` — nothing was heard and nothing was pressed. `outcome: OPT_OUT` is set only when
- * the template's optional DTMF menu was configured and the caller specifically pressed the
- * opt-out digit (see `channelCanEngage` and its `VOICE_PRERECORDED` carve-out).
+ * recorded alongside a delivered completion. A completion whose script never played
+ * because a verb failed records no `path` — nothing was heard and nothing was pressed —
+ * but one that never played because a detected answering machine skipped it records
+ * `path: ANSWERED_BY_MACHINE` instead, alongside `delivery: FAILED`/`UNREACHABLE`, exactly
+ * as `handlePrerecordedCall` reports it (see `prerecorded-audio`). `outcome: OPT_OUT` is
+ * set only when the template's optional DTMF menu was configured and the caller
+ * specifically pressed the opt-out digit (see `channelCanEngage` and its
+ * `VOICE_PRERECORDED` carve-out).
  *
  * Idempotent per call ref: `delivery` only ever advances, and `path`/`outcome` are written
  * only alongside that same finalizing completion — once a gestión has left `DISPATCHED`, a

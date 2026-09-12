@@ -108,11 +108,11 @@ enum DeliveryReason {
 }
 
 // What path the interaction took once delivered. Null when none was observed — always so on
-// SMS and VOICE_PRERECORDED, which have no inbound path.
+// SMS, which has no inbound path at all.
 enum Path {
   ENGAGED
   ABANDONED
-  VOICEMAIL
+  ANSWERED_BY_MACHINE
 }
 
 // What came of the engagement. Null is the common case and means nothing came of it.
@@ -256,6 +256,10 @@ model VoicePrerecordedConfig {
   // Played once the opt-out digit is detected, before hangup — closes the call out for the
   // caller ("we've stopped calling you") rather than just ending it silently.
   optOutConfirmationMessage String?
+  // When true (the default), the VoiceServer hangs up instead of playing the script if
+  // Fonoster's answering-machine detection reports the call was picked up by a machine.
+  // See account-contact-log/prerecorded-audio specs.
+  hangupOnMachineDetected   Boolean       @default(true)
   template                  AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@map("voice_prerecorded_configs")
