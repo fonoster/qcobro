@@ -357,7 +357,7 @@ export const messages = {
     "agents.form.firstMessagePlaceholder":
       "Hi, I'm calling from Créditos Demo about your past-due account.",
     "agents.form.systemPromptPlaceholder":
-      "You are a collections agent for Créditos Demo. Be courteous and offer payment options. Customer: {{firstName}}, balance {{outstandingBalance}}.",
+      "You are a courteous, professional collections agent for Créditos Demo. Offer payment options. If the customer promises to pay, record the amount and the date.",
     "agents.form.scriptPlaceholder":
       "Hi {{firstName}}, this is a reminder that your Créditos Demo account has a balance of {{outstandingBalance}}.",
     "agents.form.messageBodyPlaceholder":
@@ -393,7 +393,7 @@ export const messages = {
     "agents.form.idleTimeout": "Idle timeout (ms, min. 3000)",
     "agents.form.idleMaxTimeoutCount": "Max idle timeouts",
     "agents.form.idleMessagePlaceholder":
-      "Are you still there, {{firstName}}? I need to confirm a payment date.",
+      "Are you still there? I need to confirm a payment date for your account.",
     "agents.form.idleTimeoutPlaceholder": "8000",
     "agents.form.idleMaxTimeoutCountPlaceholder": "3",
     "agents.form.idleInvalid":
@@ -1050,7 +1050,7 @@ export const messages = {
     "agents.form.firstMessagePlaceholder":
       "Hola, le llamo de Créditos Demo por su cuenta pendiente.",
     "agents.form.systemPromptPlaceholder":
-      "Eres un agente de cobranza de Créditos Demo. Sé cortés y ofrece opciones de pago. Cliente: {{firstName}}, saldo {{outstandingBalance}}.",
+      "Eres un agente de cobranza cordial y profesional de Créditos Demo. Ofrece opciones de pago. Si el cliente promete pagar, registra el monto y la fecha.",
     "agents.form.scriptPlaceholder":
       "Hola {{firstName}}, le recordamos que su cuenta con Créditos Demo presenta un saldo de {{outstandingBalance}}.",
     "agents.form.messageBodyPlaceholder":
@@ -1086,7 +1086,7 @@ export const messages = {
     "agents.form.idleTimeout": "Tiempo de inactividad (ms, mín. 3000)",
     "agents.form.idleMaxTimeoutCount": "Máximo de reintentos por inactividad",
     "agents.form.idleMessagePlaceholder":
-      "¿Sigue en la línea, {{firstName}}? Necesito confirmar una fecha de pago.",
+      "¿Se encuentra en la línea? Necesito confirmar una fecha de pago para su cuenta.",
     "agents.form.idleTimeoutPlaceholder": "8000",
     "agents.form.idleMaxTimeoutCountPlaceholder": "3",
     "agents.form.idleInvalid":
