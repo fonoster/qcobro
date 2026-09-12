@@ -113,6 +113,10 @@ evaluation path.
 - `optOutConfirmationMessage String?` — spoken prompt played once `optOutDigit` is detected,
   before hangup, closing the interaction out for the caller instead of ending the call with no
   acknowledgment; required exactly when `optOutDigit` is set
+- `hangupOnMachineDetected Boolean` — when `true` (the default), the call hangs up instead
+  of playing the script if Fonoster's answering-machine detection reports the call was
+  picked up by a machine (see `prerecorded-audio`). Has no observable effect unless AMD is
+  enabled upstream for the call.
 
 `VOICE_PRERECORDED` SHALL NOT carry a `firstMessage` field — the `script` is the
 complete spoken content.
@@ -191,6 +195,20 @@ capability existed.
 
 - **WHEN** an operator saves a `VOICE_PRERECORDED` template leaving both digit fields empty
 - **THEN** the template saves with no DTMF menu, identical to a pre-existing template
+
+#### Scenario: A new VOICE_PRERECORDED template defaults to hanging up on a detected machine
+
+- **WHEN** an operator creates a `VOICE_PRERECORDED` template without explicitly setting
+  `hangupOnMachineDetected`
+- **THEN** the template is stored with `hangupOnMachineDetected: true`
+
+#### Scenario: An operator turns off the hang-up behavior for one template
+
+- **WHEN** an operator saves a `VOICE_PRERECORDED` template with `hangupOnMachineDetected`
+  set to `false`
+- **THEN** the template is stored with that value
+- **AND** a detected machine on a call dispatched from that template does not trigger a
+  hang-up (see `prerecorded-audio`)
 
 ### Requirement: Voice catalog is sourced from deployment config
 

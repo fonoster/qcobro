@@ -116,7 +116,7 @@ Each `AccountContactLog` entry SHALL capture:
 `NOT_ORIGINATED`. The last two are voice-only, written by the voice completion sweep (see
 below) from Fonoster's CDR rather than a live completion signal.
 
-**Path enum:** `ENGAGED` · `ABANDONED` · `VOICEMAIL`
+**Path enum:** `ENGAGED` · `ABANDONED` · `ANSWERED_BY_MACHINE`
 
 **Outcome enum:** `PAYMENT_PROMISE` · `NEW_TERMS` · `PAID` · `CALLBACK_REQUESTED` ·
 `DISPUTE_RAISED` · `INFORMATION_REQUEST` · `REFUSED` · `OPT_OUT` · `WRONG_PARTY` · `RESOLVED`
@@ -137,16 +137,28 @@ The channel physically bounds which axes are reachable:
 - `SMS` has no inbound path at all, so it SHALL produce `delivery` only — `path` and
   `outcome` SHALL remain null.
 - `VOICE_PRERECORDED` has no inbound path **except** its optional DTMF menu (see
-  `prerecorded-audio`): with no menu configured, or when the caller presses nothing/an
+  `prerecorded-audio`) and answering-machine detection (also `prerecorded-audio`): with no
+  menu configured and no machine detected, or when the caller presses nothing/an
   unrecognized digit, it SHALL produce `delivery` only. When the menu is configured and the
   caller presses any configured digit, it SHALL additionally set `path` to `ENGAGED`; when
   that digit is specifically the opt-out digit, it SHALL also set `outcome` to `OPT_OUT`.
-  `path` on this channel is reachable only as `ENGAGED` — `ABANDONED`/`VOICEMAIL` are not
-  observable from a DTMF press. `VOICE_PRERECORDED` SHALL set `delivery` to `DELIVERED` when
-  the call was **answered** and `FAILED` otherwise, together with the answered
-  `durationSeconds`. `DELIVERED` SHALL mean only that the call was answered — it SHALL NOT be
-  construed or displayed as proof that the account holder heard the message.
-- `VOICE_AI` MAY produce the full set, including `path` of `VOICEMAIL` or `ABANDONED`.
+  When answering-machine detection hangs up the call before the script plays, it SHALL set
+  `path` to `ANSWERED_BY_MACHINE` instead. `path` on this channel is reachable as `ENGAGED`
+  or `ANSWERED_BY_MACHINE`; `ABANDONED` is not observable on this channel.
+  `VOICE_PRERECORDED` SHALL set `delivery` to `DELIVERED` when the call was **answered and
+  the script played to completion**, and to `FAILED` otherwise — including when the script
+  was never played because a machine was detected — together with the answered
+  `durationSeconds`. `DELIVERED` SHALL mean only that the script played out in full — it
+  SHALL NOT be construed or displayed as proof that the account holder heard or understood
+  it.
+- `VOICE_AI` MAY produce the full set, including `path` of `ANSWERED_BY_MACHINE` or
+  `ABANDONED`. `ANSWERED_BY_MACHINE` on this channel is derived from the CDR's `amdStatus`
+  and is set only by the voice completion sweep (see "Voice gestións stuck at DISPATCHED are
+  finalized by the voice completion sweep"), for a gestión that never reached the
+  autopilot's own `conversation.ended` webhook. A call that does reach `conversation.ended`
+  SHALL record `path: ENGAGED` regardless of `amdStatus` — Fonoster's answering-machine
+  detection does not stop the call from reaching the autopilot, and nothing yet exposes the
+  verdict to the autopilot's own decision loop.
 - `EMAIL` and `WHATSAPP` MAY produce any `outcome`, but `path` SHALL only be `ENGAGED` —
   a threaded channel has no observable voicemail or abandonment.
 
@@ -190,6 +202,14 @@ The channel physically bounds which axes are reachable:
 - **AND** `path` is `ENGAGED`
 - **AND** `outcome` is `OPT_OUT`
 
+#### Scenario: Pre-recorded call detects a machine and hangs up
+
+- **WHEN** answering-machine detection is enabled, the template's hang-up toggle is on, and
+  the call's live AMD verdict reports `MACHINE`
+- **THEN** the gestión `delivery` is `FAILED`
+- **AND** `path` is `ANSWERED_BY_MACHINE`
+- **AND** `outcome` remains null
+
 #### Scenario: A wrong-party conversation is a delivery success
 
 - **WHEN** a `VOICE_AI` call is answered and the person states they are not the account holder
@@ -210,6 +230,15 @@ The channel physically bounds which axes are reachable:
   commits to nothing
 - **THEN** the gestión `delivery` is `DELIVERED` and `path` is `ENGAGED`
 - **AND** `outcome` is null
+
+#### Scenario: A Voz IA call that reaches conversation.ended is never labeled ANSWERED_BY_MACHINE
+
+- **WHEN** a `VOICE_AI` call's CDR reports `amdStatus: MACHINE`, but the autopilot still
+  exchanges enough words with the greeting/IVR to produce a transcript and the
+  `conversation.ended` webhook fires
+- **THEN** the gestión `path` is `ENGAGED`, decided from the transcript as usual
+- **AND** the CDR's `amdStatus` has no effect on this gestión, because the live decision path
+  does not consult the CDR
 
 #### Scenario: Voice gestión includes AI insight fields and transcript
 
@@ -373,6 +402,18 @@ Fonoster's call detail record (CDR, `Calls.getCall`):
   no channel survives past 60 minutes: past that plus a margin, an uncleared CDR has genuinely
   lost its end record rather than still being a live call.
 
+Additionally, whenever the CDR the sweep reads carries an `amdStatus` of `MACHINE`
+(Fonoster's answering-machine detection — only present when enabled upstream, and only ever
+reported for a call that was answered), the sweep SHALL set the gestión's `path` to
+`ANSWERED_BY_MACHINE` at the same finalization that writes the `delivery`/`deliveryReason`
+above, regardless of which `deliveryReason` applies. This is the **only** place `amdStatus`
+reaches a `VOICE_AI` gestión's `path` — it is never consulted on the autopilot's live
+`conversation.ended` path — so it only labels gestións this sweep itself finalizes; a
+`VOICE_AI` call that instead completes a live conversation keeps `path: ENGAGED` regardless of
+`amdStatus` (see the primary Gestión requirement). For `VOICE_PRERECORDED`, this is a
+secondary path to the same label the co-located VoiceServer already sets in real time (see
+`prerecorded-audio`) — it only matters when that in-process completion itself was lost.
+
 The sweep SHALL NOT record `delivery` `DELIVERED`: every path it finalizes is a failure to
 observe an answer, never a confirmed one. It SHALL NOT write the CDR's own duration (measured
 from call setup and including ring time) into a gestión's `durationSeconds` — that field is the
@@ -380,8 +421,8 @@ answered duration recorded by the channel's own live completion signal, and is l
 
 Finalization via the sweep SHALL be idempotent per gestión: once a gestión's `delivery` has left
 `DISPATCHED` — whether via the channel's own normal completion path or a prior sweep pass — a
-later sweep finalization SHALL NOT overwrite it, and SHALL NOT overwrite `durationSeconds` or
-`channelData` either.
+later sweep finalization SHALL NOT overwrite it, and SHALL NOT overwrite `durationSeconds`,
+`channelData`, or `path` either.
 
 `fonoster.webhookBaseUrl` SHALL be **required whenever a `fonoster` section is configured**. The
 `fonoster` section itself remains optional; omitting it disables the voice channels entirely.
@@ -473,7 +514,21 @@ later sweep finalization SHALL NOT overwrite it, and SHALL NOT overwrite `durati
 - **WHEN** a gestión's `delivery` has already left `DISPATCHED` via the channel's own normal
   completion path
 - **THEN** a subsequent sweep pass for the same call SHALL NOT modify `delivery`,
-  `durationSeconds`, or `channelData`
+  `durationSeconds`, `channelData`, or `path`
+
+#### Scenario: The sweep labels a machine-answered Voz IA call that never produced a transcript
+
+- **WHEN** a `VOICE_AI` call is dispatched, no `conversation.started`/`conversation.ended`
+  event is ever received for it, and once past `floorMinutes` its CDR shows a normal call
+  clearing with `amdStatus: MACHINE`
+- **THEN** the gestión is finalized `delivery: FAILED`, `deliveryReason: OUTCOME_UNKNOWN`
+- **AND** `path` is set to `ANSWERED_BY_MACHINE`
+
+#### Scenario: A CDR with no amdStatus leaves path unset
+
+- **WHEN** the sweep finalizes a gestión from a CDR that carries no `amdStatus` (AMD not
+  enabled for the call, or the verdict was `UNKNOWN`)
+- **THEN** `path` is left null, exactly as before this capability existed
 
 ### Requirement: Gestión log triggers hot-path field updates
 
