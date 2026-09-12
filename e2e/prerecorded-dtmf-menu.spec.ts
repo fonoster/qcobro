@@ -52,7 +52,9 @@ test.describe("pre-recorded DTMF menu", () => {
     await page.getByLabel("Nombre del agente").fill(agentName);
     await page.getByLabel("Tipo de canal").selectOption({ label: "Voz pregrabada" });
     await page.getByLabel("Idioma").selectOption("es");
-    await page.getByLabel("Voz").selectOption({ label: "Sofía (es, femenina)" });
+    // Exact match: the new AMD checkbox's label ends in "buzón de voz", which a
+    // substring match against "Voz" would otherwise also resolve to.
+    await page.getByLabel("Voz", { exact: true }).selectOption({ label: "Sofía (es, femenina)" });
     await page.getByLabel("Guion").fill(script);
 
     // The hang-up-on-detected-machine toggle defaults on, matching the server default.
