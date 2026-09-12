@@ -174,7 +174,12 @@ export const createAgentTemplateSchema = z
       script: z.string().min(1).max(PRERECORDED_SCRIPT_MAX_LENGTH),
       language: z.string().min(1),
       fonosterAppName: z.string().min(1).optional(),
-      ...voicePrerecordedDtmfFields
+      ...voicePrerecordedDtmfFields,
+      /** When true (the default), the call hangs up instead of playing the script if
+       *  Fonoster's answering-machine detection reports the call was picked up by a
+       *  machine (see the `prerecorded-audio` spec). No observable effect unless AMD is
+       *  enabled upstream for the call. */
+      hangupOnMachineDetected: z.boolean().optional()
     }),
     z.object({
       ...baseFields,

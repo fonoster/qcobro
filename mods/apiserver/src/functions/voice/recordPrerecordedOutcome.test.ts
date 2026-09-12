@@ -271,6 +271,25 @@ describe("recordPrerecordedOutcome", () => {
     assert.equal(cap.updateMany?.data.outcome, "OPT_OUT");
   });
 
+  it("a detected machine hang-up records FAILED/UNREACHABLE with path ANSWERED_BY_MACHINE", async () => {
+    const { client, cap } = makeClient({ id: "g-1", delivery: "DISPATCHED", channelData: {} });
+
+    const result = await createRecordPrerecordedOutcome(client as never)({
+      providerRef: "call-abc",
+      answered: true,
+      scriptCompleted: false,
+      answeredSeconds: 1,
+      at: "2026-07-12T10:00:00.000Z",
+      path: "ANSWERED_BY_MACHINE"
+    });
+
+    assert.equal(result.matched && result.delivery, "FAILED");
+    assert.equal(result.matched && result.deliveryReason, "UNREACHABLE");
+    assert.equal(result.matched && result.path, "ANSWERED_BY_MACHINE");
+    assert.equal(result.matched && result.outcome, null);
+    assert.equal(cap.updateMany?.data.durationSeconds, 1);
+  });
+
   it("idempotent: delivery only advances, a finalized value is never downgraded", async () => {
     const { client, getRow } = makeClient({ id: "g-1", delivery: "DELIVERED", channelData: {} });
 

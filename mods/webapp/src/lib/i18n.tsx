@@ -379,6 +379,8 @@ export const messages = {
     "agents.form.optOutDigit": "Opt-out digit",
     "agents.form.optOutMessage": "Opt-out message",
     "agents.form.optOutConfirmationMessage": "Opt-out confirmation message",
+    "agents.form.hangupOnMachineDetected":
+      "Hang up if an answering machine or voicemail is detected",
     "agents.form.dtmfMessageRequired": "A message is required when this digit is set.",
     "agents.form.dtmfDigitRequired": "A digit is required when this message is set.",
     "agents.form.dtmfDigitsMustDiffer": "Must differ from the repeat digit.",
@@ -518,7 +520,7 @@ export const messages = {
     // VOICE_PRERECORDED has no conversation: the value means the script played to the end.
     "gestiones.path.prerecorded.ENGAGED": "Got the message",
     "gestiones.path.ABANDONED": "Hung up",
-    "gestiones.path.VOICEMAIL": "Voicemail",
+    "gestiones.path.ANSWERED_BY_MACHINE": "Answered by machine",
     // Display-only stage from channelData.openedAt — not a path value.
     "gestiones.path.read": "Read",
     "gestiones.outcome.PAYMENT_PROMISE": "Payment promise",
@@ -1072,6 +1074,8 @@ export const messages = {
     "agents.form.optOutDigit": "Dígito para darse de baja",
     "agents.form.optOutMessage": "Mensaje de baja",
     "agents.form.optOutConfirmationMessage": "Mensaje de confirmación de baja",
+    "agents.form.hangupOnMachineDetected":
+      "Colgar si se detecta un contestador automático o buzón de voz",
     "agents.form.dtmfMessageRequired": "Se requiere un mensaje cuando este dígito está definido.",
     "agents.form.dtmfDigitRequired": "Se requiere un dígito cuando este mensaje está definido.",
     "agents.form.dtmfDigitsMustDiffer": "Debe ser distinto del dígito para repetir.",
@@ -1211,7 +1215,7 @@ export const messages = {
     // Voz pregrabada no tiene conversación: el valor significa que el guion se reprodujo completo.
     "gestiones.path.prerecorded.ENGAGED": "Recibido",
     "gestiones.path.ABANDONED": "Colgó",
-    "gestiones.path.VOICEMAIL": "Buzón de voz",
+    "gestiones.path.ANSWERED_BY_MACHINE": "Contestó una máquina",
     // Etapa solo visual, tomada de channelData.openedAt — no es un valor de camino.
     "gestiones.path.read": "Leído",
     "gestiones.outcome.PAYMENT_PROMISE": "Promesa de pago",

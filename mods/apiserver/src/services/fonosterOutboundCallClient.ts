@@ -2,6 +2,7 @@ import { getLogger } from "@fonoster/logger";
 import * as SDK from "@fonoster/sdk";
 import {
   DispatchError,
+  type AmdStatus,
   type FonosterConfig,
   type OutboundCallClient,
   type OutboundCallInput,
@@ -70,6 +71,28 @@ export function parseEndedAt(value: unknown): Date | null {
   if (!Number.isFinite(ms) || ms <= 0) return null;
   if (ms < EPOCH_SECONDS_MAGNITUDE_CUTOFF) ms *= 1000;
   return new Date(ms);
+}
+
+const VALID_AMD_STATUSES = new Set<AmdStatus>(["HUMAN", "MACHINE", "UNKNOWN"]);
+
+// TODO(voice-amd-detection): drop this local cast once fonoster/fonoster#897 lands —
+// `calls.proto`'s `CallDetailRecord` (returned by `Calls.getCall()`) does not carry an AMD
+// verdict at all as of @fonoster/sdk 0.23.0 (confirmed by inspecting the published package;
+// PR #893 only added `amd` to `voice.proto`'s `CreateSessionRequest`, not to `calls.proto`).
+// This read is forward-compatible dead code until Fonoster exposes the field: `parseAmdStatus`
+// always returns `undefined` today, so no `path` is ever set from this path yet.
+type CallDetailRecordWithAmd = { amdStatus?: unknown };
+
+/**
+ * Reads the CDR's `amdStatus` (Fonoster's answering-machine detection verdict), treating
+ * the wire the same way `status`/`endedAt` already are here: not trusted at the declared
+ * type. `undefined` for anything unrecognized or absent (AMD wasn't enabled for the call)
+ * — the sweep must never invent a verdict that wasn't actually reported.
+ */
+export function parseAmdStatus(value: unknown): AmdStatus | undefined {
+  return typeof value === "string" && VALID_AMD_STATUSES.has(value as AmdStatus)
+    ? (value as AmdStatus)
+    : undefined;
 }
 
 let warnedUnparseableEndedAt = false;
@@ -193,6 +216,8 @@ export class FonosterOutboundCallClient implements OutboundCallClient {
    * Fonoster answers a ref with no record at all — the call never originated — with a gRPC
    * `NOT_FOUND`, not a null; that is caught here and surfaced as `{ found: false }` rather
    * than left to throw, since the sweep needs to branch on it, not treat it as failure.
+   * Also surfaces the CDR's `amdStatus` (answering-machine detection verdict) when present —
+   * see {@link parseAmdStatus}.
    */
   async getCall(ref: string): Promise<VoiceCallLookupResult> {
     try {
@@ -207,11 +232,13 @@ export class FonosterOutboundCallClient implements OutboundCallClient {
       if (status !== "UNKNOWN" && endedAt === null) {
         warnUnparseableEndedAt(record.endedAt);
       }
+      const amdStatus = parseAmdStatus((record as unknown as CallDetailRecordWithAmd).amdStatus);
       return {
         found: true,
         status,
         setupToClearSeconds: record.duration ?? 0,
-        endedAt
+        endedAt,
+        ...(amdStatus ? { amdStatus } : {})
       };
     } catch (err) {
       if (isGrpcServiceError(err) && err.code === GRPC_NOT_FOUND) {

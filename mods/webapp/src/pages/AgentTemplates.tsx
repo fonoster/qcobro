@@ -448,6 +448,9 @@ function CreateAgentTemplateModal({
   const [type, setType] = useState<AgentType>("VOICE_AI");
   // Boolean, so it lives beside `name`/`type` rather than in the string-valued `fields` bag.
   const [normalizeGsm7, setNormalizeGsm7] = useState(false);
+  // Defaults on, mirroring the server default — a new template hangs up on a detected
+  // machine unless the operator explicitly turns it off.
+  const [hangupOnMachineDetected, setHangupOnMachineDetected] = useState(true);
   const [fields, setFields] = useState<Record<string, string>>({
     language: "es",
     // Idle options pre-filled from the deployment default; the operator may override.
@@ -543,7 +546,8 @@ function CreateAgentTemplateModal({
           ...(fields.optOutMessage ? { optOutMessage: fields.optOutMessage } : {}),
           ...(fields.optOutConfirmationMessage
             ? { optOutConfirmationMessage: fields.optOutConfirmationMessage }
-            : {})
+            : {}),
+          hangupOnMachineDetected
         };
         break;
       case "SMS":
@@ -751,6 +755,16 @@ function CreateAgentTemplateModal({
               onChange={(e) => set("optOutConfirmationMessage", e.target.value)}
               error={createDtmfErrors.optOutConfirmationMessage}
             />
+            <label className="flex items-center gap-2 text-sm text-fg-muted">
+              <input
+                type="checkbox"
+                id="a-hangup-on-amd"
+                checked={hangupOnMachineDetected}
+                onChange={(e) => setHangupOnMachineDetected(e.target.checked)}
+                className="size-4 accent-primary"
+              />
+              {t("agents.form.hangupOnMachineDetected")}
+            </label>
           </>
         )}
 
@@ -873,7 +887,7 @@ type FullTemplate = {
   name: string;
   type: AgentType;
   voiceAiConfig: Record<string, unknown> | null;
-  voicePrerecordedConfig: Record<string, unknown> | null;
+  voicePrerecordedConfig: (Record<string, unknown> & { hangupOnMachineDetected?: boolean }) | null;
   smsConfig: (Record<string, unknown> & { normalizeGsm7?: boolean }) | null;
   emailConfig: Record<string, unknown> | null;
   whatsAppConfig: Record<string, unknown> | null;
@@ -897,6 +911,7 @@ function EditAgentTemplateModal({
   const [fields, setFields] = useState<Record<string, string>>({});
   // Boolean, so it can't ride along in the string-valued `fields` bag.
   const [normalizeGsm7, setNormalizeGsm7] = useState(false);
+  const [hangupOnMachineDetected, setHangupOnMachineDetected] = useState(true);
   const [seeded, setSeeded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const editDtmfErrors = validateVoicePrerecordedDtmf(fields, t);
@@ -941,6 +956,7 @@ function EditAgentTemplateModal({
     }
     setFields(f);
     setNormalizeGsm7(full.smsConfig?.normalizeGsm7 ?? false);
+    setHangupOnMachineDetected(full.voicePrerecordedConfig?.hangupOnMachineDetected ?? true);
     setSeeded(true);
   }, [full, seeded]);
 
@@ -998,7 +1014,8 @@ function EditAgentTemplateModal({
           maxRepeats: fields.maxRepeats ? Number(fields.maxRepeats) : null,
           optOutDigit: fields.optOutDigit || null,
           optOutMessage: fields.optOutMessage || null,
-          optOutConfirmationMessage: fields.optOutConfirmationMessage || null
+          optOutConfirmationMessage: fields.optOutConfirmationMessage || null,
+          hangupOnMachineDetected
         };
         break;
       case "SMS":
@@ -1203,6 +1220,16 @@ function EditAgentTemplateModal({
                   onChange={(e) => set("optOutConfirmationMessage", e.target.value)}
                   error={editDtmfErrors.optOutConfirmationMessage}
                 />
+                <label className="flex items-center gap-2 text-sm text-fg-muted">
+                  <input
+                    type="checkbox"
+                    id="e-hangup-on-amd"
+                    checked={hangupOnMachineDetected}
+                    onChange={(e) => setHangupOnMachineDetected(e.target.checked)}
+                    className="size-4 accent-primary"
+                  />
+                  {t("agents.form.hangupOnMachineDetected")}
+                </label>
               </>
             )}
 

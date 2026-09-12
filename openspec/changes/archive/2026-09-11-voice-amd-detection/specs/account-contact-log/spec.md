@@ -1,15 +1,4 @@
-# account-contact-log Specification
-
-## Purpose
-
-The gestión (contact log) is the append-only record of every outreach attempt against a
-`PortfolioAccount`. Each gestión carries three independent structured axes — `delivery`
-(did it reach the device/inbox), `path` (what path the interaction took), and `outcome`
-(what came of the engagement). An `outcome` of `PAYMENT_PROMISE` creates a linked
-`PaymentPromise` (the only tracked outcome), and future-dated outcomes feed campaign-local
-re-contact suppression.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Gestión — contact log records every outreach attempt
 
@@ -152,17 +141,13 @@ The channel physically bounds which axes are reachable:
   SHALL NOT be construed or displayed as proof that the account holder heard or understood
   it.
 - `VOICE_AI` MAY produce the full set, including `path` of `ANSWERED_BY_MACHINE` or
-  `ABANDONED`. `ANSWERED_BY_MACHINE` on this channel would be derived from the CDR's
-  `amdStatus` and set only by the voice completion sweep (see "Voice gestións stuck at
-  DISPATCHED are finalized by the voice completion sweep"), for a gestión that never reached
-  the autopilot's own `conversation.ended` webhook — **not yet reachable in practice**:
-  Fonoster's `Calls.getCall()` does not expose an AMD verdict as of `@fonoster/sdk` 0.23.0
-  (tracked upstream as fonoster/fonoster#897); the sweep-side plumbing is written
-  defensively so it activates with no further QCobro change once that field ships. A call
-  that reaches `conversation.ended` SHALL record `path: ENGAGED` regardless of `amdStatus`
-  even once the CDR path is live — Fonoster's answering-machine detection does not stop the
-  call from reaching the autopilot, and nothing yet exposes the verdict to the autopilot's
-  own decision loop (tracked separately, issue #180).
+  `ABANDONED`. `ANSWERED_BY_MACHINE` on this channel is derived from the CDR's `amdStatus`
+  and is set only by the voice completion sweep (see "Voice gestións stuck at DISPATCHED are
+  finalized by the voice completion sweep"), for a gestión that never reached the
+  autopilot's own `conversation.ended` webhook. A call that does reach `conversation.ended`
+  SHALL record `path: ENGAGED` regardless of `amdStatus` — Fonoster's answering-machine
+  detection does not stop the call from reaching the autopilot, and nothing yet exposes the
+  verdict to the autopilot's own decision loop.
 - `EMAIL` and `WHATSAPP` MAY produce any `outcome`, but `path` SHALL only be `ENGAGED` —
   a threaded channel has no observable voicemail or abandonment.
 
@@ -297,67 +282,6 @@ The channel physically bounds which axes are reachable:
   fetch-on-mount/navigation behavior
 - **AND** no error is shown to the operator solely because the stream is unavailable
 
-### Requirement: SMS delivery outcome is recorded from Twilio's status callback
-
-An `SMS` gestión at `delivery` `DISPATCHED` SHALL be finalized from Twilio's message-status
-callback. A terminal Twilio status SHALL finalize the gestión: `delivered` sets `delivery`
-`DELIVERED`; `undelivered` or `failed` sets `delivery` `FAILED` with a `deliveryReason` derived
-from Twilio's error code — `INVALID_DESTINATION` when the destination is rejected as invalid or
-unroutable, `CHANNEL_UNSUPPORTED` when the destination cannot receive SMS (e.g. a landline),
-`REJECTED` when the carrier or recipient refuses the message, and `PROVIDER_ERROR` otherwise.
-Non-terminal statuses (`queued`, `sending`, `sent`, and any other value) SHALL NOT finalize the
-gestión.
-
-Every status callback received, terminal or not, SHALL update `channelData.deliveryStatus` to
-the raw Twilio status, so an operator can see a message's current progress (e.g. "sent" awaiting
-"delivered") even before it finalizes.
-
-Finalization SHALL be idempotent per gestión: once a gestión's `delivery` has left `DISPATCHED`,
-a subsequently received status callback SHALL NOT modify it, regardless of what status it
-carries.
-
-`twilio.webhookBaseUrl` SHALL be **required whenever a `twilio` section is configured**. The
-`twilio` section itself remains optional; omitting it disables SMS entirely. There SHALL be no
-configuration in which SMS dispatches but no status callback is ever registered.
-
-#### Scenario: Delivered SMS is finalized
-
-- **WHEN** Twilio's status callback reports `delivered` for a gestión still at `DISPATCHED`
-- **THEN** the gestión `delivery` is set to `DELIVERED`
-- **AND** `channelData.deliveryStatus` is set to `delivered`
-
-#### Scenario: Undelivered or failed SMS is finalized with a reason
-
-- **WHEN** Twilio's status callback reports `undelivered` or `failed` for a gestión still at
-  `DISPATCHED`
-- **THEN** the gestión `delivery` is set to `FAILED`
-- **AND** `deliveryReason` is derived from Twilio's error code
-- **AND** `channelData.deliveryStatus` is set to the reported status
-
-#### Scenario: An SMS to a landline records CHANNEL_UNSUPPORTED
-
-- **WHEN** Twilio reports the destination cannot receive SMS
-- **THEN** the gestión `delivery` is `FAILED` with `deliveryReason` `CHANNEL_UNSUPPORTED`
-
-#### Scenario: An interim status updates visibility without finalizing
-
-- **WHEN** Twilio's status callback reports `queued`, `sending`, or `sent`
-- **THEN** `channelData.deliveryStatus` is updated to that status
-- **AND** the gestión `delivery` remains `DISPATCHED`
-
-#### Scenario: A callback after finalization never changes delivery
-
-- **WHEN** a gestión's `delivery` has already left `DISPATCHED`
-- **THEN** a subsequently received status callback for the same message, terminal or otherwise,
-  SHALL NOT modify it
-
-#### Scenario: SMS is unavailable when Twilio is not configured
-
-- **WHEN** no `twilio` section is present in configuration
-- **THEN** SMS dispatch is unavailable and no `SMS` gestión is ever written
-- **WHEN** a `twilio` section is present without `webhookBaseUrl`
-- **THEN** configuration validation fails at startup
-
 ### Requirement: Voice gestións stuck at DISPATCHED are finalized by the voice completion sweep
 
 A `VOICE_PRERECORDED` or `VOICE_AI` gestión at `delivery` `DISPATCHED` SHALL be finalized by a
@@ -410,14 +334,8 @@ Additionally, whenever the CDR the sweep reads carries an `amdStatus` of `MACHIN
 (Fonoster's answering-machine detection — only present when enabled upstream, and only ever
 reported for a call that was answered), the sweep SHALL set the gestión's `path` to
 `ANSWERED_BY_MACHINE` at the same finalization that writes the `delivery`/`deliveryReason`
-above, regardless of which `deliveryReason` applies. **As of `@fonoster/sdk` 0.23.0, this
-branch is written but not yet reachable**: `Calls.getCall()`'s `CallDetailRecord` carries no
-AMD field at all (only `voice.proto`'s live `CreateSessionRequest.amd` shipped in #893/0.23.0
-— `calls.proto` is untouched), so `amdStatus` is always absent and this requirement's
-`path`-setting clause never fires in production yet. It's written defensively so it starts
-working the moment Fonoster exposes the field (tracked upstream as fonoster/fonoster#897),
-with no further QCobro change required. This is the **only** place `amdStatus` reaches a
-`VOICE_AI` gestión's `path` — it is never consulted on the autopilot's live
+above, regardless of which `deliveryReason` applies. This is the **only** place `amdStatus`
+reaches a `VOICE_AI` gestión's `path` — it is never consulted on the autopilot's live
 `conversation.ended` path — so it only labels gestións this sweep itself finalizes; a
 `VOICE_AI` call that instead completes a live conversation keeps `path: ENGAGED` regardless of
 `amdStatus` (see the primary Gestión requirement). For `VOICE_PRERECORDED`, this is a
@@ -539,142 +457,3 @@ later sweep finalization SHALL NOT overwrite it, and SHALL NOT overwrite `durati
 - **WHEN** the sweep finalizes a gestión from a CDR that carries no `amdStatus` (AMD not
   enabled for the call, or the verdict was `UNKNOWN`)
 - **THEN** `path` is left null, exactly as before this capability existed
-
-### Requirement: Gestión log triggers hot-path field updates
-
-When a gestión entry is written, the API server SHALL atomically update the
-corresponding `PortfolioAccount` hot-path fields and `CampaignAccountState`.
-
-#### Scenario: `lastContactedAt` and `totalAttempts` always updated
-
-- **WHEN** any gestión entry is written for account A
-- **THEN** `PortfolioAccount.lastContactedAt` is updated to `contactedAt`
-- **AND** `PortfolioAccount.totalAttempts` is incremented by 1
-- **AND** `CampaignAccountState.attemptCount` and `attemptsToday` are incremented
-
-#### Scenario: Campaign-local `suppressUntil` set from any future-dated outcome (Lever B)
-
-- **WHEN** a gestión entry carries a future-dated `outcome` — a `PAYMENT_PROMISE` `dueDate`,
-  a `CALLBACK_REQUESTED` requested time, or a `NEW_TERMS` grace window
-- **AND** the campaign has a matching trigger configured
-- **THEN** `CampaignAccountState.suppressUntil` is set to that future date
-  (falls back to `contactedAt + suppressDays` if no future date is present)
-- **AND** this re-contact suppression is independent of whether a tracked `PaymentPromise`
-  was created
-
-#### Scenario: Callback sets suppression without creating a tracked entity
-
-- **WHEN** a gestión is written with `outcome` `CALLBACK_REQUESTED` and a requested time
-- **THEN** `CampaignAccountState.suppressUntil` is set to the requested time
-- **AND** no `PaymentPromise` (or other tracked entity) is created
-
-#### Scenario: Global `intentStatus` set when the debt is settled
-
-- **WHEN** a gestión entry is written with `outcome` `RESOLVED` or `PAID`
-- **THEN** `PortfolioAccount.intentStatus` is set to `INTENT_MET`
-- **AND** global suppression blocks the account across ALL campaigns
-
-#### Scenario: An opt-out is recorded but suppresses nothing
-
-- **WHEN** a gestión is written with `outcome` `OPT_OUT`
-- **THEN** the opt-out is recorded on the gestión and visible in the console
-- **AND** `PortfolioAccount.intentStatus` is unchanged
-- **AND** the account remains eligible for dispatch until an explicit Do Not Contact entry
-  exists for the contact point
-
-#### Scenario: A delivery failure never sets global suppression
-
-- **WHEN** a gestión is written with `delivery` `FAILED` and any `deliveryReason`
-- **THEN** `PortfolioAccount.intentStatus` is unchanged
-- **AND** the account remains eligible for future campaigns
-
-#### Scenario: A wrong-party outcome never sets global suppression
-
-- **WHEN** a gestión is written with `outcome` `WRONG_PARTY`
-- **THEN** `PortfolioAccount.intentStatus` is unchanged
-- **AND** the account remains eligible for future campaigns
-- **AND** the wrong-party finding is recorded on the gestión only
-
-The engine SHALL NOT infer suppression from an identity claim made during an interaction or
-from a delivery failure. Removing a contact point from outreach is an explicit, labelled
-decision recorded on the workspace Do Not Contact list by an operator or an external system.
-
-### Requirement: External contact-log ingress with workspace-scoped basic auth
-
-The API server SHALL expose a REST endpoint `POST /api/contact-logs` for external callers —
-notably the Fonoster voice service posting call outcomes via callback — in addition to the
-tRPC `accountContactLog.create` procedure used by the operator console. The endpoint accepts
-the same payload as the tRPC procedure and runs the same hot-path updates and payment-promise
-creation.
-
-Authentication is **workspace-scoped HTTP Basic auth**: the credential identifies and
-authorizes writes for exactly one workspace, matching the system's tenancy boundary
-(not per-campaign — campaigns within a workspace share the boundary). Enforcement is
-gated by configuration so it can be disabled in local development.
-
-The credential storage/derivation mechanism is owned by the engine/integration change;
-this spec fixes only the auth _scope_ (workspace level) and _scheme_ (HTTP Basic).
-
-Unlike the tRPC procedure, the REST endpoint's schema SHALL be **strict**: a payload key that
-is not one of the documented fields SHALL be rejected with `400`, naming the unrecognized
-key(s), rather than silently stripped. This is the one write path a caller outside this
-codebase reaches directly, so a payload still shaped for a field name this API no longer
-accepts — notably the pre-rename `entrega`/`camino`/`resultado` — must fail loudly instead of
-being accepted as a `201` with the fields it did recognize silently defaulted (`delivery:
-DISPATCHED`, no `outcome`).
-
-#### Scenario: Authenticated callback writes a gestión
-
-- **WHEN** the Fonoster service posts a contact-log payload to `POST /api/contact-logs`
-  with valid Basic credentials for workspace W
-- **THEN** the entry is written for an account in workspace W with the same hot-path
-  updates and payment-promise creation as the tRPC path
-
-#### Scenario: Credentials are scoped to a single workspace
-
-- **WHEN** a caller presents valid Basic credentials for workspace W
-- **AND** the payload references an account in a different workspace
-- **THEN** the request SHALL be rejected as unauthorized
-
-#### Scenario: Auth enforcement is gated by configuration
-
-- **WHEN** `apiserver.contactLogAuth.enabled` is false (local development)
-- **THEN** the endpoint accepts unauthenticated requests
-- **WHEN** it is true
-- **THEN** requests without valid workspace Basic credentials are rejected with 401
-
-#### Scenario: A payload using the pre-rename field names is rejected, not silently accepted
-
-- **WHEN** a caller posts a payload keyed `entrega`/`camino`/`resultado` instead of
-  `delivery`/`path`/`outcome`
-- **THEN** the request is rejected with `400` naming the unrecognized keys
-- **AND** no gestión is written
-
-### Requirement: Email thread on the gestión
-
-A gestión recorded for an EMAIL collection attempt SHALL carry an ordered email thread —
-each message with its direction (outbound/inbound), sender, timestamp, body, and message id
-— plus the count of autopilot replies sent on that thread. The thread SHALL be enriched in
-place by inbound replies and by autopilot replies, all correlated to the gestión by its
-`providerRef`.
-
-An inbound reply SHALL set `delivery` to `DELIVERED` if it is still `DISPATCHED` (a reply is
-proof of delivery) and SHALL set `path` to `ENGAGED`. The gestión's `outcome` SHALL reflect
-the latest thread state and SHALL NOT downgrade a previously recorded `outcome` to null.
-
-#### Scenario: Inbound and autopilot messages are threaded
-
-- **WHEN** an inbound reply is correlated and the autopilot sends a response
-- **THEN** both messages are appended to the gestión's email thread in order
-- **AND** the autopilot reply count is incremented
-
-#### Scenario: An inbound reply proves delivery
-
-- **WHEN** an inbound reply is correlated to a gestión still at `delivery` `DISPATCHED`
-- **THEN** `delivery` is set to `DELIVERED` and `path` is set to `ENGAGED`
-
-#### Scenario: Outcome is never downgraded by a later message
-
-- **WHEN** a later inbound message carries no classifiable outcome
-- **AND** an `outcome` (e.g. `PAYMENT_PROMISE`) was already recorded
-- **THEN** the recorded `outcome` is preserved

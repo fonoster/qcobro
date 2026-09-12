@@ -186,6 +186,12 @@ export function createDispatchOutreach(deps: DispatchDeps) {
       if (params.optOutConfirmationMessage) {
         metadata.optOutConfirmationMessage = params.optOutConfirmationMessage;
       }
+      // Explicit `!= null` (not truthy) check: `false` is a real, meaningful value here —
+      // an operator who turned the toggle off must not have it silently read back as the
+      // default `true` by the VoiceServer's own `!== "false"` check.
+      if (params.hangupOnMachineDetected != null) {
+        metadata.hangupOnMachineDetected = String(params.hangupOnMachineDetected);
+      }
     } else {
       renderedBody = renderTemplate(params.firstMessage ?? "", params.context);
       metadata = { ...toCallMetadata(params.context), firstMessage: renderedBody };

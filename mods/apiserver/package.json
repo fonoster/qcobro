@@ -31,8 +31,8 @@
   "dependencies": {
     "@fonoster/identity-client": "0.22.8",
     "@fonoster/logger": "0.22.0",
-    "@fonoster/sdk": "0.22.11",
-    "@fonoster/voice": "0.22.10",
+    "@fonoster/sdk": "0.23.0",
+    "@fonoster/voice": "0.23.0",
     "@grpc/grpc-js": "^1.10.6",
     "@prisma/client": "^6.0.0",
     "@qcobro/common": "^1.48.0",
