@@ -85,19 +85,33 @@ time.
 
 ## 5. Dependency bump (gated)
 
-- [ ] 5.1 **Still blocked as of 2026-09-12**: re-checked `npm view @fonoster/voice
-versions --json` / `@fonoster/sdk` — latest published are still 0.22.10/0.22.11; no
-      release contains PR #893 yet (confirmed via its own CI logs earlier in this session:
-      merged to `main`, not in any tag/release). §3/§4 were built against local type
-      augmentations (`VoiceRequestWithAmd` in `voiceServer.ts`, `CallDetailRecordWithAmd` in
-      `fonosterOutboundCallClient.ts`) precisely so this gate doesn't block the rest of the
-      build. Re-run this check before resuming §5.2–5.3.
-- [ ] 5.2 Bump `@fonoster/voice`/`@fonoster/sdk` in `mods/apiserver/package.json` to that
-      version once confirmed.
-- [ ] 5.3 Reconcile the design's assumed `VoiceRequest.amd`/`CallDetailRecord.amdStatus`
-      shape against the actual published `.d.ts` files; adjust types 2.4/3.4/4.1 if the real
-      shape differs, and delete the two local augmentation types/TODOs once the real fields
-      are in place.
+- [x] 5.1 **Unblocked 2026-09-12**: the PR #893 AMD work had initially landed on Fonoster's
+      `next` branch; it's since been fixed and cherry-picked into `main`, and
+      `@fonoster/voice`/`@fonoster/sdk` `0.23.0` are now published. Verified by downloading
+      and inspecting the actual `0.23.0` tarballs (not just the `.d.ts` — the full
+      `voice.proto`/`calls.proto` bundled inside).
+- [x] 5.2 Bumped `@fonoster/voice`/`@fonoster/sdk` to `0.23.0` in
+      `mods/apiserver/package.json`; `npm install` + `prisma generate` re-run.
+- [x] 5.3 Reconciled the design's assumed shape against the real package — **two different
+      outcomes per field**: - `VoiceRequest.amd` (live path, §3): **matches**. `voice.proto`'s
+      `CreateSessionRequest` really does carry `Amd amd = 12`, and
+      `VoiceClientConfig`/`VoiceRequest` really does carry `amd?: Amd`. Removed the local
+      `VoiceRequestWithAmd` augmentation in `voiceServer.ts` — reads `req.amd?.status`
+      directly off the real type now, cast to this file's narrower `AmdStatus` alias
+      (Asterisk only ever emits `HUMAN`/`MACHINE`/`UNKNOWN`, never the upstream enum's
+      reserved `VOICEMAIL`/`IVR`/`AMD_STATUS_UNSPECIFIED`). - `CallDetailRecord.amdStatus` (CDR/sweep path, §4): **does not exist**. Extracted and
+      read the complete `calls.proto` from the published `0.23.0` tarball — `CallDetailRecord`
+      has exactly its original 10 fields, no AMD data, no generic bag to carry it either.
+      PR #893 only touched `voice.proto`; `calls.proto`/the SDK's `Calls` resource are
+      untouched. The design's assumption that "the verdict rides to the CDR" conflated
+      Fonoster's own internal InfluxDB analytics point (`createInfluxDbPub`) with the public
+      `Calls.getCall()` RPC — different things. **Decision (user, 2026-09-12): keep §4 as
+      forward-compatible dead code** (the `CallDetailRecordWithAmd` cast in
+      `fonosterOutboundCallClient.ts` stays, `parseAmdStatus` will just always return
+      `undefined` until Fonoster ships the field) rather than reverting it, and file the gap
+      upstream immediately rather than waiting. Filed as
+      [fonoster/fonoster#897](https://github.com/fonoster/fonoster/issues/897). Updated the
+      `account-contact-log` main spec (not just this archived copy) to say this plainly.
 
 ## 6. Webapp
 
@@ -151,10 +165,15 @@ addressed in §7.
 
 ## 8. Manual verification & issue tracker
 
-- [ ] 8.1 **Deferred, follow-up work**: with `APISERVER_AMD_ENABLED` on in a test workspace
-      (once §5's dependency bump lands), run a real dev-stack pre-recorded call against a
-      known voicemail number; confirm dead air, hang-up, and the gestión's recorded
-      `path`/`delivery`. Also run `e2e/prerecorded-dtmf-menu.spec.ts` for real against a live
-      dev stack (webapp+apiserver+db) — it was only compile-checked in this session.
+- [ ] 8.1 **Still deferred, follow-up work**: the dependency bump (§5) is done, so this is
+      now just a matter of running it — with `APISERVER_AMD_ENABLED` on in a test workspace,
+      run a real dev-stack pre-recorded call against a known voicemail number; confirm dead
+      air, hang-up, and the gestión's recorded `path`/`delivery`. Also run
+      `e2e/prerecorded-dtmf-menu.spec.ts` for real against a live dev stack
+      (webapp+apiserver+db) — it was only compile-checked in this session.
 - [x] 8.2 Closed GitHub issue #83 with a summary comment pointing at this change.
 - [x] 8.3 Filed issue #180: "Let Voz IA (Autopilot) react to AMD in real time."
+- [x] 8.4 Filed [fonoster/fonoster#897](https://github.com/fonoster/fonoster/issues/897):
+      "Expose AMD verdict on Calls.getCall() / CallDetailRecord" — the gap discovered when
+      double-checking §5 (see §5.3's notes). This is what would make §4 (sweep-path
+      labeling) actually reachable in production.

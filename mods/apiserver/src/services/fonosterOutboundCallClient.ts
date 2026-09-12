@@ -75,8 +75,12 @@ export function parseEndedAt(value: unknown): Date | null {
 
 const VALID_AMD_STATUSES = new Set<AmdStatus>(["HUMAN", "MACHINE", "UNKNOWN"]);
 
-// TODO(voice-amd-detection): drop this local cast once `@fonoster/sdk` publishes a release
-// including PR #893 and `CallDetailRecord.amdStatus` is part of its own types.
+// TODO(voice-amd-detection): drop this local cast once fonoster/fonoster#897 lands —
+// `calls.proto`'s `CallDetailRecord` (returned by `Calls.getCall()`) does not carry an AMD
+// verdict at all as of @fonoster/sdk 0.23.0 (confirmed by inspecting the published package;
+// PR #893 only added `amd` to `voice.proto`'s `CreateSessionRequest`, not to `calls.proto`).
+// This read is forward-compatible dead code until Fonoster exposes the field: `parseAmdStatus`
+// always returns `undefined` today, so no `path` is ever set from this path yet.
 type CallDetailRecordWithAmd = { amdStatus?: unknown };
 
 /**

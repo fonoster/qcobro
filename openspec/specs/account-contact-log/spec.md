@@ -152,13 +152,17 @@ The channel physically bounds which axes are reachable:
   SHALL NOT be construed or displayed as proof that the account holder heard or understood
   it.
 - `VOICE_AI` MAY produce the full set, including `path` of `ANSWERED_BY_MACHINE` or
-  `ABANDONED`. `ANSWERED_BY_MACHINE` on this channel is derived from the CDR's `amdStatus`
-  and is set only by the voice completion sweep (see "Voice gestións stuck at DISPATCHED are
-  finalized by the voice completion sweep"), for a gestión that never reached the
-  autopilot's own `conversation.ended` webhook. A call that does reach `conversation.ended`
-  SHALL record `path: ENGAGED` regardless of `amdStatus` — Fonoster's answering-machine
-  detection does not stop the call from reaching the autopilot, and nothing yet exposes the
-  verdict to the autopilot's own decision loop.
+  `ABANDONED`. `ANSWERED_BY_MACHINE` on this channel would be derived from the CDR's
+  `amdStatus` and set only by the voice completion sweep (see "Voice gestións stuck at
+  DISPATCHED are finalized by the voice completion sweep"), for a gestión that never reached
+  the autopilot's own `conversation.ended` webhook — **not yet reachable in practice**:
+  Fonoster's `Calls.getCall()` does not expose an AMD verdict as of `@fonoster/sdk` 0.23.0
+  (tracked upstream as fonoster/fonoster#897); the sweep-side plumbing is written
+  defensively so it activates with no further QCobro change once that field ships. A call
+  that reaches `conversation.ended` SHALL record `path: ENGAGED` regardless of `amdStatus`
+  even once the CDR path is live — Fonoster's answering-machine detection does not stop the
+  call from reaching the autopilot, and nothing yet exposes the verdict to the autopilot's
+  own decision loop (tracked separately, issue #180).
 - `EMAIL` and `WHATSAPP` MAY produce any `outcome`, but `path` SHALL only be `ENGAGED` —
   a threaded channel has no observable voicemail or abandonment.
 
@@ -406,8 +410,14 @@ Additionally, whenever the CDR the sweep reads carries an `amdStatus` of `MACHIN
 (Fonoster's answering-machine detection — only present when enabled upstream, and only ever
 reported for a call that was answered), the sweep SHALL set the gestión's `path` to
 `ANSWERED_BY_MACHINE` at the same finalization that writes the `delivery`/`deliveryReason`
-above, regardless of which `deliveryReason` applies. This is the **only** place `amdStatus`
-reaches a `VOICE_AI` gestión's `path` — it is never consulted on the autopilot's live
+above, regardless of which `deliveryReason` applies. **As of `@fonoster/sdk` 0.23.0, this
+branch is written but not yet reachable**: `Calls.getCall()`'s `CallDetailRecord` carries no
+AMD field at all (only `voice.proto`'s live `CreateSessionRequest.amd` shipped in #893/0.23.0
+— `calls.proto` is untouched), so `amdStatus` is always absent and this requirement's
+`path`-setting clause never fires in production yet. It's written defensively so it starts
+working the moment Fonoster exposes the field (tracked upstream as fonoster/fonoster#897),
+with no further QCobro change required. This is the **only** place `amdStatus` reaches a
+`VOICE_AI` gestión's `path` — it is never consulted on the autopilot's live
 `conversation.ended` path — so it only labels gestións this sweep itself finalizes; a
 `VOICE_AI` call that instead completes a live conversation keeps `path: ENGAGED` regardless of
 `amdStatus` (see the primary Gestión requirement). For `VOICE_PRERECORDED`, this is a

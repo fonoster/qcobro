@@ -50,10 +50,6 @@ type VoiceServerCtor = new (config?: ServerConfig) => {
 };
 const VoiceServer = createRequire(import.meta.url)("@fonoster/voice").default as VoiceServerCtor;
 
-// TODO(voice-amd-detection): drop this local augmentation once `@fonoster/voice` publishes
-// a release including PR #893 and `VoiceRequest.amd` is part of its own types.
-type VoiceRequestWithAmd = VoiceRequest & { amd?: { status?: AmdStatus } };
-
 export interface DtmfMenu {
   repeatDigit?: string;
   repeatMessage?: string;
@@ -93,8 +89,16 @@ export interface PrerecordedCallVerbs {
   }): Promise<{ digits?: string }>;
 }
 
-/** Fonoster's answering-machine detection verdict on the live call — absent unless AMD
- *  was enabled upstream for this call. Only `MACHINE` changes this function's behavior. */
+/**
+ * Fonoster's answering-machine detection verdict on the live call — absent unless AMD was
+ * enabled upstream for this call. Only `MACHINE` changes this function's behavior.
+ *
+ * Deliberately narrower than `@fonoster/voice`'s own `AmdStatus` enum (which also reserves
+ * `VOICEMAIL`, `IVR`, and `AMD_STATUS_UNSPECIFIED` for future detectors): the Asterisk-based
+ * detector QCobro actually runs against (`asterisk-amd@1`) only ever reports `HUMAN`,
+ * `MACHINE`, or `UNKNOWN` — see the `prerecorded-audio` spec. A value outside this set
+ * (should a future detector ever emit one) safely falls through as "not MACHINE" below.
+ */
 export type AmdStatus = "HUMAN" | "MACHINE" | "UNKNOWN";
 
 /**
@@ -254,7 +258,9 @@ export function startVoiceServer(deps: VoiceServerDeps = {}): void {
     async (req: VoiceRequest, res: VoiceResponse) => {
       const message = req.metadata?.message ?? "";
       const menu = readDtmfMenu(req.metadata);
-      const amdStatus = (req as VoiceRequestWithAmd).amd?.status;
+      // Real field as of @fonoster/voice 0.23.0 (PR #893). Cast narrows the upstream
+      // enum to the subset this codebase branches on — see the `AmdStatus` doc comment.
+      const amdStatus = req.amd?.status as AmdStatus | undefined;
       const hangupOnMachineDetected = req.metadata?.hangupOnMachineDetected !== "false";
 
       logger.verbose(
