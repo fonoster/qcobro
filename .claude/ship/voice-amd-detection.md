@@ -31,6 +31,16 @@ Status values: `pending` · `in-progress` · `done` · `skipped` (with reason).
 
 Newest first. One line per meaningful decision or stage transition.
 
+- 2026-09-12 — Corrected after ship: user flagged that the AMD PR had landed on
+  Fonoster's wrong branch (`next`) and was cherry-picked into `main`; `@fonoster/voice`/
+  `@fonoster/sdk` 0.23.0 published. Verified by extracting the real tarballs (not just
+  `.d.ts`): `voice.proto`'s live `req.amd` path is real and now wired up for real
+  (removed the local type shim); `calls.proto` genuinely has no AMD field at all
+  (independent of version) — filed fonoster/fonoster#897, kept §4 as disclosed
+  forward-compatible dead code per user's explicit call. Bumped the dependency
+  (`670b631`), updated the `account-contact-log` spec and the archived tasks.md to say
+  this plainly. Pushed `worktree-feat+voice-amd-detection` and opened
+  **https://github.com/fonoster/qcobro/pull/181**.
 - 2026-09-12 — Sync + Archive complete, per user approval ("sync + archive now, leave
   §5/e2e as follow-up"). Closed #83 (commented with a summary), filed #180 for the Voz
   IA real-time follow-up. Synced delta specs into account-contact-log, agent-templates,
