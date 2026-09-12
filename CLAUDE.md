@@ -45,8 +45,10 @@ Full guide, rationale, and scaffolding: `/ps:create-validated-function`
 - Form fields: give every non-obvious input an example, and put it **inside** the field as its
   `placeholder`. A field is a label, the control, and — only while something is wrong — an
   error; the design system draws no explanatory line underneath one, so the field components
-  have no `hint` prop. Example text for content fields shows a `{{variable}}` and carries no
-  `Ej.: ` / `E.g. ` prefix. Don't restate the label, and never leave a validation rule visible
+  have no `hint` prop. Example text carries no `Ej.: ` / `E.g. ` prefix, and shows a
+  `{{variable}}` **only where that field's text is actually template-rendered** — an example
+  is a claim about how the field behaves, so a variable in a field nobody renders teaches the
+  operator something false. Don't restate the label, and never leave a validation rule visible
   only in an example — a rule the reader can't infer goes in the label, the way the design
   qualifies labels (`Tiempo de inactividad (ms, mín. 3000)`, `Correo · no editable`).
 - Reach services through the tRPC context, not via ad-hoc imports inside procedures.

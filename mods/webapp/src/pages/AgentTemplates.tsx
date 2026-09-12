@@ -46,6 +46,16 @@ const EXAMPLE_VARS = ["{{firstName}}", "{{principalAmount}}", "{{outstandingBala
  * Example text for the non-obvious agent-template fields (issue #118). Defined once and
  * consumed by both the create and edit modals so the two can't drift. Every example is
  * shown inside its own field as the placeholder, the way the design system draws it.
+ *
+ * Only some of these fields are template-rendered, and an example must not suggest
+ * otherwise. `dispatchOutreach` runs `renderTemplate` over the SMS/EMAIL body, the EMAIL
+ * subject, the pre-recorded `script`, and the Voz IA `firstMessage` — those examples may
+ * carry a `{{variable}}`. It never runs over `systemPrompt` or `idleMessage`: both are
+ * stored verbatim on the synced Fonoster application (`syncVoiceApplication`), one per
+ * agent rather than one per account, so a `{{variable}}` there would reach the model as
+ * literal braces. The account's figures arrive on their own — as the metadata block
+ * `toCallMetadata` builds for voice, and as the `Contexto` line
+ * `buildAutopilotContextLines` builds for the EMAIL/WhatsApp autopilots.
  */
 const FIELD_PLACEHOLDER = {
   firstMessage: "agents.form.firstMessagePlaceholder",
