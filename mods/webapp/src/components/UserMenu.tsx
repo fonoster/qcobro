@@ -7,8 +7,9 @@ import { useAuth } from "../lib/auth.js";
 import { useI18n } from "../lib/i18n.js";
 import { isWorkspaceAdmin } from "../lib/workspaceRole.js";
 import { MenuPanel, MenuHeader, MenuDivider, MenuItem } from "./menu.js";
+import { cn } from "@/lib/utils.js";
 
-export function UserMenu() {
+export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
   const { currentUser, logout, accessToken, workspace } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
@@ -90,15 +91,20 @@ export function UserMenu() {
         type="button"
         aria-label={t("userMenu.aria")}
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-elevated"
+        className={cn(
+          "flex items-center gap-2.5 rounded-lg hover:bg-elevated",
+          collapsed ? "justify-center p-2" : "w-full px-2 py-2"
+        )}
       >
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
           {initials}
         </span>
-        <div className="flex min-w-0 flex-col leading-tight text-left">
-          <span className="truncate text-[13px] font-semibold text-fg">{name}</span>
-          <span className="truncate text-[11px] text-fg-subtle">{email || "Cuenta"}</span>
-        </div>
+        {!collapsed && (
+          <div className="flex min-w-0 flex-col leading-tight text-left">
+            <span className="truncate text-[13px] font-semibold text-fg">{name}</span>
+            <span className="truncate text-[11px] text-fg-subtle">{email || "Cuenta"}</span>
+          </div>
+        )}
       </button>
     </div>
   );
