@@ -55,6 +55,11 @@ test.describe("pre-recorded DTMF menu", () => {
     await page.getByLabel("Voz").selectOption({ label: "Sofía (es, femenina)" });
     await page.getByLabel("Guion").fill(script);
 
+    // The hang-up-on-detected-machine toggle defaults on, matching the server default.
+    await expect(
+      page.getByLabel("Colgar si se detecta un contestador automático o buzón de voz")
+    ).toBeChecked();
+
     // A digit with no message is rejected client-side before it ever reaches the API.
     await page.getByLabel("Dígito para repetir").fill("1");
     await page.getByRole("button", { name: "Crear agente" }).click();
@@ -95,14 +100,20 @@ test.describe("pre-recorded DTMF menu", () => {
     await expect(page.getByLabel("Mensaje de confirmación de baja")).toHaveValue(
       "Hemos registrado su solicitud. No recibirá más llamadas de este número."
     );
+    await expect(
+      page.getByLabel("Colgar si se detecta un contestador automático o buzón de voz")
+    ).toBeChecked();
     await page.getByRole("button", { name: "Cancelar", exact: true }).click();
 
-    // --- Clearing the opt-out digit/messages actually disables it (not silently ignored) --
+    // --- Clearing the opt-out digit/messages and the AMD toggle actually persist (not silently ignored) --
     await templateRow.getByRole("button", { name: "Acciones" }).click();
     await page.getByRole("button", { name: "Editar" }).click();
     await page.getByLabel("Dígito para darse de baja").fill("");
     await page.getByLabel("Mensaje de baja").fill("");
     await page.getByLabel("Mensaje de confirmación de baja").fill("");
+    await page
+      .getByLabel("Colgar si se detecta un contestador automático o buzón de voz")
+      .uncheck();
     await page.getByRole("button", { name: "Guardar cambios" }).click();
     await expect(page.getByRole("button", { name: "Guardar cambios" })).toHaveCount(0);
     await templateRow.getByRole("button", { name: "Acciones" }).click();
@@ -110,6 +121,9 @@ test.describe("pre-recorded DTMF menu", () => {
     await expect(page.getByLabel("Dígito para darse de baja")).toHaveValue("");
     await expect(page.getByLabel("Mensaje de baja")).toHaveValue("");
     await expect(page.getByLabel("Mensaje de confirmación de baja")).toHaveValue("");
+    await expect(
+      page.getByLabel("Colgar si se detecta un contestador automático o buzón de voz")
+    ).not.toBeChecked();
     // The repeat digit was never touched, so it should still be there.
     await expect(page.getByLabel("Dígito para repetir")).toHaveValue("1");
     await page.getByRole("button", { name: "Cancelar", exact: true }).click();
@@ -154,6 +168,16 @@ test.describe("pre-recorded DTMF menu", () => {
     });
     expect(optOut.ok(), JSON.stringify(await optOut.json())).toBeTruthy();
 
+    // A detected answering machine hung up before the script played: FAILED/UNREACHABLE,
+    // path ANSWERED_BY_MACHINE — reachable on this channel since the AMD change.
+    const machine = await seed({
+      delivery: "FAILED",
+      deliveryReason: "UNREACHABLE",
+      path: "ANSWERED_BY_MACHINE",
+      channelData: { to: "+525500000012" }
+    });
+    expect(machine.ok(), JSON.stringify(await machine.json())).toBeTruthy();
+
     // The carve-out is value-scoped, not a blanket "this channel can engage": every other
     // path/outcome value stays rejected for VOICE_PRERECORDED.
     const disallowed = await seed({ delivery: "DELIVERED", path: "ABANDONED" });
@@ -185,5 +209,18 @@ test.describe("pre-recorded DTMF menu", () => {
     await expect(panel.getByText("Despachado → Recibido")).toBeVisible();
     await expect(panel.getByText("Resultado", { exact: true })).toBeVisible();
     await expect(panel.getByText("Baja").first()).toBeVisible();
+    await page.getByRole("button", { name: "Volver a gestiones" }).click();
+
+    // --- Detail: the machine-detected hang-up shows Camino, no Resultado -----
+    // Selected by its delivery-reason label ("Inalcanzable") — the list has no path column
+    // at all, only delivery/outcome (see `deliveryLabel`).
+    const machineRow = prerecordedRows.filter({ hasText: "Inalcanzable" });
+    await expect(machineRow).toHaveCount(1);
+    await machineRow.first().click();
+    panel = page.getByRole("dialog");
+    await expect(panel).toBeVisible();
+    await expect(panel.getByText("Camino", { exact: true })).toBeVisible();
+    await expect(panel.getByText("Despachado → Contestó una máquina")).toBeVisible();
+    await expect(panel.getByText("Resultado", { exact: true })).toHaveCount(0);
   });
 });
