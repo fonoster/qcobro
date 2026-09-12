@@ -13,7 +13,7 @@
       `20260907120000_contact_log_axes_english_names` / `20260911120000_sms_normalize_gsm7`
       precedents — no Prisma-generated drop+recreate).
 - [x] 1.4 Run the migration against a dev DB; confirm no data loss. Applied via `prisma
-  migrate deploy` against the local dev Postgres (`qcobro-db-1`); verified via `psql`;
+migrate deploy` against the local dev Postgres (`qcobro-db-1`); verified via `psql`;
       regenerated the Prisma client.
 
 ## 2. Shared schemas (`mods/common`)
@@ -43,7 +43,7 @@
       fields.
 - [x] 3.3 `dispatchOutreach.ts`: add `metadata.hangupOnMachineDetected` to the
       `VOICE_PRERECORDED` metadata bag, same shape as `repeatDigit` et al. (explicit `!=
-  null` check, not truthy — `false` must still ride through).
+null` check, not truthy — `false` must still ride through).
 - [x] 3.4 `voiceServer.ts`: read `req.amd?.status` (via a local `VoiceRequestWithAmd`
       augmentation type until `@fonoster/voice` publishes the real field) and
       `req.metadata?.hangupOnMachineDetected` (default true when absent) in
@@ -55,7 +55,7 @@
       the stale doc comments, plus `recordPrerecordedOutcome.ts`'s comment on the same
       invariant (no code change needed there — it already forwards `path` generically).
 - [x] 3.6 `engine/emulators.ts`: no code change needed — `EmulatedOutboundCallClient.
-  setCallDetail` already takes the full `VoiceCallLookupResult`, which now includes
+setCallDetail` already takes the full `VoiceCallLookupResult`, which now includes
       `amdStatus` from the `mods/common` type extension in §2.
 
 ## 4. Voz IA sweep-path labeling (apiserver)
@@ -66,7 +66,7 @@
       (`amdCause` from the design's Impact section turned out unnecessary — nothing in this
       change consumes it; only `amdStatus` is read.)
 - [x] 4.2 `voiceCompletionTimeoutSweep.ts`: `classify()` now returns `{ deliveryReason, path?
-  } | null` (was `DeliveryReason | null`); sets `path: "ANSWERED_BY_MACHINE"` whenever
+} | null` (was `DeliveryReason | null`); sets `path: "ANSWERED_BY_MACHINE"` whenever
       `amdStatus === "MACHINE"`, alongside whichever `deliveryReason` applies. Threaded
       through the main loop and `VoiceOutcomeRecorder`.
 - [x] 4.3 `recordVoiceAiCallStatus.ts`: added `path` to `voiceAiCallStatusInputSchema`, the
@@ -86,7 +86,7 @@ time.
 ## 5. Dependency bump (gated)
 
 - [ ] 5.1 **Still blocked as of 2026-09-12**: re-checked `npm view @fonoster/voice
-  versions --json` / `@fonoster/sdk` — latest published are still 0.22.10/0.22.11; no
+versions --json` / `@fonoster/sdk` — latest published are still 0.22.10/0.22.11; no
       release contains PR #893 yet (confirmed via its own CI logs earlier in this session:
       merged to `main`, not in any tag/release). §3/§4 were built against local type
       augmentations (`VoiceRequestWithAmd` in `voiceServer.ts`, `CallDetailRecordWithAmd` in
@@ -151,9 +151,10 @@ addressed in §7.
 
 ## 8. Manual verification & issue tracker
 
-- [ ] 8.1 With `APISERVER_AMD_ENABLED` on in a test workspace (once available), run a real
-      dev-stack pre-recorded call against a known voicemail number; confirm dead air, hang-up,
-      and the gestión's recorded `path`/`delivery`.
-- [ ] 8.2 Narrow/close GitHub issue #83.
-- [ ] 8.3 File a new issue: "Let Voz IA (Autopilot) react to AMD in real time" — blocked on
-      Fonoster exposing `amd` to the autopilot's own decision loop.
+- [ ] 8.1 **Deferred, follow-up work**: with `APISERVER_AMD_ENABLED` on in a test workspace
+      (once §5's dependency bump lands), run a real dev-stack pre-recorded call against a
+      known voicemail number; confirm dead air, hang-up, and the gestión's recorded
+      `path`/`delivery`. Also run `e2e/prerecorded-dtmf-menu.spec.ts` for real against a live
+      dev stack (webapp+apiserver+db) — it was only compile-checked in this session.
+- [x] 8.2 Closed GitHub issue #83 with a summary comment pointing at this change.
+- [x] 8.3 Filed issue #180: "Let Voz IA (Autopilot) react to AMD in real time."
