@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
@@ -14,28 +15,31 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
   const { workspace, setWorkspace } = useAuth();
   const workspaces = trpc.workspaces.list.useQuery();
   const [open, setOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [popupPos, setPopupPos] = useState({ top: 0, left: 0 });
 
   const items = workspaces.data?.items ?? [];
   const active = items.find((w) => w.accessKeyId === workspace) ?? items[0];
 
-  if (collapsed) {
-    return (
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          aria-label={active?.name ?? "Espacio"}
-          className="flex h-[33px] w-10 items-center justify-center rounded-[10px] bg-primary/10 hover:bg-elevated"
-        >
-          <span className="text-[11px] font-bold text-primary">
-            {wsInitials(active?.name ?? "WS")}
-          </span>
-        </button>
+  useEffect(() => {
+    if (open && buttonRef.current) {
+      const r = buttonRef.current.getBoundingClientRect();
+      setPopupPos({ top: r.bottom + 8, left: r.left });
+    }
+  }, [open]);
 
-        {open && (
+  if (collapsed) {
+    // The sidebar clips horizontal overflow while collapsed, so the popup — wider
+    // than the 64px rail — is portaled to the body and positioned off the trigger's
+    // own rect instead of being laid out inside the clipped column.
+    const popup = open
+      ? createPortal(
           <>
-            <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-            <div className="absolute left-0 z-20 mt-1.5 w-56 rounded-xl border border-border bg-surface p-1.5 shadow-lg">
+            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+            <div
+              className="fixed z-50 w-56 rounded-xl border border-border bg-surface p-1.5 shadow-lg"
+              style={{ top: popupPos.top, left: popupPos.left }}
+            >
               <p className="px-2.5 py-1.5 text-[11px] font-semibold tracking-wide text-fg-subtle">
                 ESPACIOS
               </p>
@@ -63,8 +67,25 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
                 );
               })}
             </div>
-          </>
-        )}
+          </>,
+          document.body
+        )
+      : null;
+
+    return (
+      <div className="relative">
+        {popup}
+        <button
+          ref={buttonRef}
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-label={active?.name ?? "Espacio"}
+          className="flex h-[33px] w-10 items-center justify-center rounded-[10px] bg-primary/10 hover:bg-elevated"
+        >
+          <span className="text-[11px] font-bold text-primary">
+            {wsInitials(active?.name ?? "WS")}
+          </span>
+        </button>
       </div>
     );
   }

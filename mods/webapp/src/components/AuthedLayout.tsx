@@ -98,9 +98,9 @@ export function AuthedLayout() {
             collapsed ? "w-16 px-2" : "w-60 px-4"
           )}
         >
-          <div className={cn("flex flex-col gap-6", collapsed && "items-center")}>
+          <div className={cn("flex flex-col", collapsed ? "items-center gap-2" : "gap-6")}>
             {collapsed ? (
-              <>
+              <div className="flex flex-col items-center gap-2">
                 <button
                   type="button"
                   onClick={toggleCollapsed}
@@ -113,25 +113,27 @@ export function AuthedLayout() {
                 <Link to="/workspaces" aria-label="Ir a la lista de espacios">
                   <Logo collapsed />
                 </Link>
-              </>
-            ) : (
-              <div className="flex items-center justify-between">
-                <Link to="/workspaces" aria-label="Ir a la lista de espacios">
-                  <Logo />
-                </Link>
-                <button
-                  type="button"
-                  onClick={toggleCollapsed}
-                  aria-label={t("nav.collapse")}
-                  title={t("nav.collapse")}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-fg-subtle hover:bg-elevated"
-                >
-                  <PanelLeftClose className="h-[18px] w-[18px]" />
-                </button>
+                <WorkspaceSwitcher collapsed />
               </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <Link to="/workspaces" aria-label="Ir a la lista de espacios">
+                    <Logo />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={toggleCollapsed}
+                    aria-label={t("nav.collapse")}
+                    title={t("nav.collapse")}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-fg-subtle hover:bg-elevated"
+                  >
+                    <PanelLeftClose className="h-[18px] w-[18px]" />
+                  </button>
+                </div>
+                <WorkspaceSwitcher />
+              </>
             )}
-
-            <WorkspaceSwitcher collapsed={collapsed} />
 
             <nav className={cn("flex flex-col gap-1", collapsed && "items-center")}>
               {NAV.map(({ icon: Icon, labelKey, to, end }) =>
