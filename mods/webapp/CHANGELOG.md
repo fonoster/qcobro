@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.48.2](https://github.com/fonoster/qcobro/compare/v1.48.1...v1.48.2) (2026-09-12)
+
+### Bug Fixes
+
+- **webapp:** stop showing {{variables}} on fields nobody renders ([#179](https://github.com/fonoster/qcobro/issues/179)) ([f1531cb](https://github.com/fonoster/qcobro/commit/f1531cb762328e6b6053a35e1a0a5dc511c1fa7c))
+
 ## [1.48.1](https://github.com/fonoster/qcobro/compare/v1.48.0...v1.48.1) (2026-09-11)
 
 ### Bug Fixes
