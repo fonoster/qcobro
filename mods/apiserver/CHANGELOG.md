@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.50.2](https://github.com/fonoster/qcobro/compare/v1.50.1...v1.50.2) (2026-09-13)
+
+### Bug Fixes
+
+- **apiserver:** re-login FonosterVoiceApplicationClient after a token-refresh failure ([#184](https://github.com/fonoster/qcobro/issues/184)) ([585b1c4](https://github.com/fonoster/qcobro/commit/585b1c40d71cc2c6e90ebadb6f14bed6982aea8b))
+
 ## [1.50.1](https://github.com/fonoster/qcobro/compare/v1.50.0...v1.50.1) (2026-09-13)
 
 ### Bug Fixes
