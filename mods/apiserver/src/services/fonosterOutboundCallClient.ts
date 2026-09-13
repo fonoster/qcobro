@@ -125,6 +125,27 @@ const DELIVERY_REJECTED_GRPC_CODES = new Set([
 ]);
 
 /**
+ * True when a post-login RPC failed because the session's access token is no longer good —
+ * either Fonoster rejected it outright (`UNAUTHENTICATED`) or its own token-refresh attempt
+ * failed server-side, which Fonoster surfaces as `UNAVAILABLE` with this specific message
+ * rather than `UNAUTHENTICATED`. Distinguishing this from an ordinary transport `UNAVAILABLE`
+ * matters because {@link FonosterOutboundCallClient.client} only re-runs `loginWithApiKey`
+ * when the *login itself* rejects; once a login has succeeded, nothing else would ever
+ * notice the underlying token had gone bad, and every later call would keep reusing that
+ * same wedged client for the life of the process. See
+ * `FonosterOutboundCallClient.invalidateOnAuthFailure`.
+ */
+export function isAuthTokenFailure(err: unknown): boolean {
+  if (!isGrpcServiceError(err)) return false;
+  if (err.code === 16 /* UNAUTHENTICATED */) return true;
+  return (
+    err.code === 14 /* UNAVAILABLE */ &&
+    typeof err.message === "string" &&
+    /refresh the access token/i.test(err.message)
+  );
+}
+
+/**
  * Classifies a failed login or `createCall`. A recognized carrier/invalid-destination gRPC
  * code is `DELIVERY_REJECTED`; everything else (auth, network, timeout, unclassified) falls
  * back to `SYSTEM_ERROR`, since only those two codes are ones we can confidently attribute
@@ -152,9 +173,12 @@ export function classifyVoiceError(err: unknown): DispatchError {
  * rides along as call `metadata` so personalization needs no app re-sync.
  *
  * Auth mirrors {@link FonosterVoiceApplicationClient}: a workspace access key,
- * then an API key/secret login. The login promise is memoized once it succeeds,
- * so login only happens once per process; a failed login is not memoized and is
- * retried on the next call.
+ * then an API key/secret login. The login promise is memoized once it succeeds, so login
+ * only happens once per process; a failed login is not memoized and is retried on the next
+ * call. A *successful* login can still go bad later (the session's token stops refreshing
+ * server-side) — {@link invalidateOnAuthFailure} watches for that on every call and drops
+ * the memoized client so the next one re-logs in, rather than reusing the same wedged
+ * session for the life of the process.
  */
 export class FonosterOutboundCallClient implements OutboundCallClient {
   private readonly settings: FonosterSettings;
@@ -188,6 +212,22 @@ export class FonosterOutboundCallClient implements OutboundCallClient {
     return new SDK.Calls(await this.client());
   }
 
+  /**
+   * Drops the memoized client the moment a call reports its token is no longer good, so the
+   * *next* call re-runs `loginWithApiKey` instead of retrying forever against the same wedged
+   * session — see {@link isAuthTokenFailure}. Never awaited or retried itself: this call's own
+   * error still propagates unchanged, this only clears the way for the one after it to recover.
+   */
+  private invalidateOnAuthFailure(err: unknown): void {
+    if (!isAuthTokenFailure(err)) return;
+    logger.warn(
+      `Fonoster client session invalid — forcing re-login on next call: ${
+        err instanceof Error ? err.message : String(err)
+      }`
+    );
+    this.clientPromise = null;
+  }
+
   async createCall(input: OutboundCallInput): Promise<{ ref: string }> {
     try {
       const calls = await withTimeout(this.calls(), "login");
@@ -207,6 +247,7 @@ export class FonosterOutboundCallClient implements OutboundCallClient {
       );
       return { ref };
     } catch (err) {
+      this.invalidateOnAuthFailure(err);
       throw classifyVoiceError(err);
     }
   }
@@ -244,6 +285,7 @@ export class FonosterOutboundCallClient implements OutboundCallClient {
       if (isGrpcServiceError(err) && err.code === GRPC_NOT_FOUND) {
         return { found: false };
       }
+      this.invalidateOnAuthFailure(err);
       // Unlike createCall, a lookup failure isn't a dispatch outcome to classify — just
       // propagate it so the caller (the sweep) logs it and retries on its next pass.
       throw err;
