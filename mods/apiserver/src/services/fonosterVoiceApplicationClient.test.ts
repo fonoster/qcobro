@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { DEFAULT_VOICE_IDLE_OPTIONS } from "@qcobro/common";
-import { FonosterVoiceApplicationClient } from "./fonosterVoiceApplicationClient.js";
+import { FonosterVoiceApplicationClient, type AppsApi } from "./fonosterVoiceApplicationClient.js";
 
 /**
  * These exercise the request shape `FonosterVoiceApplicationClient` sends to Fonoster,
@@ -132,5 +132,91 @@ describe("FonosterVoiceApplicationClient.evaluate", () => {
       timeout: DEFAULT_VOICE_IDLE_OPTIONS.timeout,
       maxTimeoutCount: DEFAULT_VOICE_IDLE_OPTIONS.maxTimeoutCount
     });
+  });
+});
+
+/**
+ * End-to-end through the public `deleteApplication` surface, with a fake `AppsApi` injected
+ * via the constructor's `createAppsApi` seam — mirrors `FonosterOutboundCallClient`'s own
+ * coverage for the identical bug shape: a memoized login that has already succeeded is never
+ * re-checked on its own, so only a call made through it can discover the underlying token has
+ * gone bad, and only a compare-and-swap on invalidation keeps a stale failure from discarding
+ * a fresh login a concurrent call already completed.
+ */
+describe("FonosterVoiceApplicationClient — auth-failure recovery", () => {
+  const authError = { code: 16, message: "Invalid or expired token" };
+
+  function deferredRejection<T>(): { promise: Promise<T>; reject: (err: unknown) => void } {
+    let reject!: (err: unknown) => void;
+    const promise = new Promise<T>((_, rej) => {
+      reject = rej;
+    });
+    return { promise, reject };
+  }
+
+  function fakeAppsApi(deleteApplication: AppsApi["deleteApplication"]): AppsApi {
+    return {
+      createApplication: async () => {
+        throw new Error("not exercised in this test");
+      },
+      updateApplication: async () => {
+        throw new Error("not exercised in this test");
+      },
+      evaluateIntelligence: () => {
+        throw new Error("not exercised in this test");
+      },
+      deleteApplication
+    } as unknown as AppsApi;
+  }
+
+  it("re-logs in on the next call after a token-refresh failure", async () => {
+    let loginCount = 0;
+    const client = new FonosterVoiceApplicationClient(SETTINGS, async () => {
+      loginCount++;
+      const instanceNumber = loginCount;
+      return fakeAppsApi(async () =>
+        instanceNumber === 1 ? Promise.reject(authError) : { ref: "app-xyz" }
+      );
+    });
+
+    await assert.rejects(client.deleteApplication("app-1"), (err) => err === authError);
+    assert.equal(loginCount, 1, "the first call logs in once");
+
+    await client.deleteApplication("app-2");
+    assert.equal(loginCount, 2, "the failed call forced a fresh login for the next call");
+  });
+
+  it("does not discard a fresh re-login a concurrent call already completed", async () => {
+    let loginCount = 0;
+    const straggler = deferredRejection<{ ref: string }>();
+
+    const client = new FonosterVoiceApplicationClient(SETTINGS, async () => {
+      loginCount++;
+      const instanceNumber = loginCount;
+      return fakeAppsApi(async (ref: string) => {
+        if (instanceNumber !== 1) return { ref }; // instance 2: the fresh relogin
+        if (ref === "app-A") return straggler.promise; // the slow, stale straggler
+        return Promise.reject(authError); // app-B — a concurrent failure on the same client
+      });
+    });
+
+    // opA reads the current (soon-to-be-stale) client and stalls mid-call.
+    const opA = client.deleteApplication("app-A");
+    // opB reuses that same cached client (opA hasn't failed yet) and fails first,
+    // invalidating it.
+    await assert.rejects(client.deleteApplication("app-B"), (err) => err === authError);
+    assert.equal(loginCount, 1);
+
+    // opC re-logs in fresh and succeeds — the "a concurrent call already recovered" state.
+    await client.deleteApplication("app-C");
+    assert.equal(loginCount, 2);
+
+    // The straggler from the OLD client finally fails. It must not discard the fresh login.
+    straggler.reject(authError);
+    await assert.rejects(opA, (err) => err === authError);
+
+    // Proven by: the next call reuses the healthy client instead of logging in a third time.
+    await client.deleteApplication("app-D");
+    assert.equal(loginCount, 2, "the stale opA failure must not force an unnecessary third login");
   });
 });
