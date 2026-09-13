@@ -9,6 +9,7 @@ import {
   type VoiceCallLookupResult,
   type VoiceCallStatus
 } from "@qcobro/common";
+import { isAuthTokenFailure, isGrpcServiceError } from "./fonosterAuthErrors.js";
 
 const logger = getLogger({ service: "fonoster-outbound-call-client", filePath: import.meta.url });
 
@@ -24,16 +25,6 @@ function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
       setTimeout(() => reject(new Error(`Fonoster ${label} timed out`)), CALL_TIMEOUT_MS)
     )
   ]);
-}
-
-/** The Fonoster SDK's gRPC client throws `ServiceError`s carrying a numeric `.code` (grpc.status). */
-interface GrpcServiceError {
-  code?: number;
-  message?: string;
-}
-
-function isGrpcServiceError(err: unknown): err is GrpcServiceError {
-  return typeof err === "object" && err !== null && "code" in err && typeof err.code === "number";
 }
 
 /** gRPC status code Fonoster returns from `Calls.getCall` when the ref has no CDR at all. */
@@ -123,27 +114,6 @@ function warnUnparseableEndedAt(rawValue: unknown): void {
 const DELIVERY_REJECTED_GRPC_CODES = new Set([
   3 /* INVALID_ARGUMENT */, 9 /* FAILED_PRECONDITION */
 ]);
-
-/**
- * True when a post-login RPC failed because the session's access token is no longer good —
- * either Fonoster rejected it outright (`UNAUTHENTICATED`) or its own token-refresh attempt
- * failed server-side, which Fonoster surfaces as `UNAVAILABLE` with this specific message
- * rather than `UNAUTHENTICATED`. Distinguishing this from an ordinary transport `UNAVAILABLE`
- * matters because {@link FonosterOutboundCallClient.client} only re-runs `loginWithApiKey`
- * when the *login itself* rejects; once a login has succeeded, nothing else would ever
- * notice the underlying token had gone bad, and every later call would keep reusing that
- * same wedged client for the life of the process. See
- * `FonosterOutboundCallClient.invalidateOnAuthFailure`.
- */
-export function isAuthTokenFailure(err: unknown): boolean {
-  if (!isGrpcServiceError(err)) return false;
-  if (err.code === 16 /* UNAUTHENTICATED */) return true;
-  return (
-    err.code === 14 /* UNAVAILABLE */ &&
-    typeof err.message === "string" &&
-    /refresh the access token/i.test(err.message)
-  );
-}
 
 /**
  * Classifies a failed login or `createCall`. A recognized carrier/invalid-destination gRPC

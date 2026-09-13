@@ -1,3 +1,4 @@
+import { getLogger } from "@fonoster/logger";
 import * as SDK from "@fonoster/sdk";
 import {
   DEFAULT_VOICE_IDLE_OPTIONS,
@@ -11,10 +12,16 @@ import {
   type VoiceApplicationInput
 } from "@qcobro/common";
 import { createRequire } from "node:module";
+import { isAuthTokenFailure } from "./fonosterAuthErrors.js";
 const require = createRequire(import.meta.url);
 
 const autopilotTemplate =
   require("./autopilotTemplate.json") as typeof import("./autopilotTemplate.json");
+
+const logger = getLogger({
+  service: "fonoster-voice-application-client",
+  filePath: import.meta.url
+});
 
 type FonosterSettings = NonNullable<FonosterConfig>;
 
@@ -30,35 +37,54 @@ function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
   ]);
 }
 
+/** The subset of `SDK.Applications` this client actually drives — the seam tests inject a fake through. */
+export type AppsApi = Pick<
+  SDK.Applications,
+  "createApplication" | "updateApplication" | "deleteApplication" | "evaluateIntelligence"
+>;
+
+/** Logs in and hands back a ready `Applications` client. The production {@link CreateAppsApi}. */
+async function loginAndCreateAppsApi(settings: FonosterSettings): Promise<AppsApi> {
+  const client = new SDK.Client({
+    accessKeyId: settings.accessKeyId,
+    ...(settings.endpoint ? { endpoint: settings.endpoint } : {})
+  } as ConstructorParameters<typeof SDK.Client>[0]);
+  await client.loginWithApiKey(settings.apiKey, settings.apiSecret);
+  return new SDK.Applications(client);
+}
+
+export type CreateAppsApi = (settings: FonosterSettings) => Promise<AppsApi>;
+
 /**
  * Fonoster-backed {@link VoiceApplicationClient}. Syncs VOICE_AI agent templates
  * to Fonoster as AUTOPILOT applications: TTS voice, STT language, and the LLM
  * conversation settings (system prompt + first message) are assembled from the
  * template plus the deployment's Autopilot defaults (`qcobro.json`).
  *
- * Auth mirrors the Fonoster SDK demo: a workspace access key, then an API
- * key/secret login. The login promise is memoized once it succeeds, so login only
- * happens once per process; a failed login is not memoized and is retried on the
- * next call.
+ * Auth mirrors {@link FonosterOutboundCallClient}: a workspace access key, then an API
+ * key/secret login. The login promise is memoized once it succeeds, so login only happens
+ * once per process; a failed login is not memoized and is retried on the next call. A
+ * *successful* login can still go bad later (the session's token stops refreshing
+ * server-side) — {@link invalidateOnAuthFailure} watches for that on every call and drops
+ * the memoized client so the next one re-logs in, rather than reusing the same wedged
+ * session for the life of the process.
+ *
+ * `createAppsApi` defaults to the real Fonoster login (`loginAndCreateAppsApi`) and only
+ * exists as a constructor parameter so tests can substitute a fake `AppsApi`.
  */
 export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
   private readonly settings: FonosterSettings;
-  private appsPromise: Promise<SDK.Applications> | null = null;
+  private readonly createAppsApi: CreateAppsApi;
+  private appsPromise: Promise<AppsApi> | null = null;
 
-  constructor(settings: FonosterSettings) {
+  constructor(settings: FonosterSettings, createAppsApi: CreateAppsApi = loginAndCreateAppsApi) {
     this.settings = settings;
+    this.createAppsApi = createAppsApi;
   }
 
-  private apps(): Promise<SDK.Applications> {
+  private apps(): Promise<AppsApi> {
     if (!this.appsPromise) {
-      this.appsPromise = (async () => {
-        const client = new SDK.Client({
-          accessKeyId: this.settings.accessKeyId,
-          ...(this.settings.endpoint ? { endpoint: this.settings.endpoint } : {})
-        } as ConstructorParameters<typeof SDK.Client>[0]);
-        await client.loginWithApiKey(this.settings.apiKey, this.settings.apiSecret);
-        return new SDK.Applications(client);
-      })().catch((err) => {
+      this.appsPromise = this.createAppsApi(this.settings).catch((err) => {
         // A failed login must not be memoized — otherwise one transient auth error
         // permanently breaks every future call for the life of this process, since
         // appsPromise would stay set to a rejection.
@@ -67,6 +93,29 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
       });
     }
     return this.appsPromise;
+  }
+
+  /**
+   * Drops the memoized client the moment a call reports its token is no longer good, so the
+   * *next* call re-runs the login instead of retrying forever against the same wedged
+   * session — see {@link isAuthTokenFailure}. Never awaited or retried itself: this call's
+   * own error still propagates unchanged, this only clears the way for the one after it to
+   * recover.
+   *
+   * `usedAppsPromise` must be the exact promise this failing call read from `this.apps()`,
+   * compared by reference before clearing — see `FonosterOutboundCallClient` for why a
+   * shared, module-level singleton needs that compare-and-swap rather than an unconditional
+   * reset.
+   */
+  private invalidateOnAuthFailure(err: unknown, usedAppsPromise: Promise<AppsApi>): void {
+    if (!isAuthTokenFailure(err)) return;
+    if (this.appsPromise !== usedAppsPromise) return; // already replaced by another call
+    logger.warn(
+      `Fonoster client session invalid — forcing re-login on next call: ${
+        err instanceof Error ? err.message : String(err)
+      }`
+    );
+    this.appsPromise = null;
   }
 
   /** Build the AUTOPILOT application request from the template + Autopilot defaults. */
@@ -128,28 +177,46 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
   }
 
   async createApplication(input: VoiceApplicationInput): Promise<{ ref: string }> {
-    const apps = await withTimeout(this.apps(), "login");
-    const request = this.buildRequest(input);
-    const { ref } = await withTimeout(
-      apps.createApplication(request as Parameters<SDK.Applications["createApplication"]>[0]),
-      "createApplication"
-    );
-    return { ref };
+    const appsPromise = this.apps();
+    try {
+      const apps = await withTimeout(appsPromise, "login");
+      const request = this.buildRequest(input);
+      const { ref } = await withTimeout(
+        apps.createApplication(request as Parameters<SDK.Applications["createApplication"]>[0]),
+        "createApplication"
+      );
+      return { ref };
+    } catch (err) {
+      this.invalidateOnAuthFailure(err, appsPromise);
+      throw err;
+    }
   }
 
   async updateApplication(ref: string, input: VoiceApplicationInput): Promise<{ ref: string }> {
-    const apps = await withTimeout(this.apps(), "login");
-    const request = { ref, ...this.buildRequest(input) };
-    const result = await withTimeout(
-      apps.updateApplication(request as Parameters<SDK.Applications["updateApplication"]>[0]),
-      "updateApplication"
-    );
-    return { ref: result.ref };
+    const appsPromise = this.apps();
+    try {
+      const apps = await withTimeout(appsPromise, "login");
+      const request = { ref, ...this.buildRequest(input) };
+      const result = await withTimeout(
+        apps.updateApplication(request as Parameters<SDK.Applications["updateApplication"]>[0]),
+        "updateApplication"
+      );
+      return { ref: result.ref };
+    } catch (err) {
+      this.invalidateOnAuthFailure(err, appsPromise);
+      throw err;
+    }
   }
 
   async deleteApplication(ref: string): Promise<void> {
-    const apps = await withTimeout(this.apps(), "login");
-    await withTimeout(apps.deleteApplication(ref), "deleteApplication");
+    const appsPromise = this.apps();
+    try {
+      const apps = await withTimeout(appsPromise, "login");
+      await withTimeout(apps.deleteApplication(ref), "deleteApplication");
+    } catch (err) {
+      this.invalidateOnAuthFailure(err, appsPromise);
+      throw err;
+    }
   }
 
   /** Translates one eval scenario into Fonoster's `testCases.scenarios[]` shape. The
@@ -207,7 +274,8 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
    */
   async *evaluate(input: VoiceApplicationEvalInput): AsyncGenerator<VoiceApplicationEvalEvent> {
     const { autopilot } = this.settings;
-    const apps = await withTimeout(this.apps(), "login");
+    const appsPromise = this.apps();
+    const apps = await withTimeout(appsPromise, "login");
     const request = {
       intelligence: {
         productRef: autopilot.llmProductRef,
@@ -238,11 +306,16 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
         }
       }
     };
-    const stream = apps.evaluateIntelligence(
-      request as Parameters<SDK.Applications["evaluateIntelligence"]>[0]
-    );
-    for await (const event of stream) {
-      yield event as VoiceApplicationEvalEvent;
+    try {
+      const stream = apps.evaluateIntelligence(
+        request as Parameters<SDK.Applications["evaluateIntelligence"]>[0]
+      );
+      for await (const event of stream) {
+        yield event as VoiceApplicationEvalEvent;
+      }
+    } catch (err) {
+      this.invalidateOnAuthFailure(err, appsPromise);
+      throw err;
     }
   }
 }
