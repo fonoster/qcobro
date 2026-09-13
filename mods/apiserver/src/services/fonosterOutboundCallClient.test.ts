@@ -1,6 +1,21 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { classifyVoiceError, parseEndedAt } from "./fonosterOutboundCallClient.js";
+import { fonosterConfigSchema } from "@qcobro/common";
+import {
+  classifyVoiceError,
+  FonosterOutboundCallClient,
+  isAuthTokenFailure,
+  parseEndedAt,
+  type CallsApi
+} from "./fonosterOutboundCallClient.js";
+
+/** Minimal, fully-defaulted settings — only the fields the schema actually requires. */
+const settings = fonosterConfigSchema.parse({
+  accessKeyId: "WOtest",
+  apiKey: "key",
+  apiSecret: "secret",
+  webhookBaseUrl: "https://example.test"
+})!;
 
 describe("classifyVoiceError", () => {
   it("classifies INVALID_ARGUMENT (invalid destination) as DELIVERY_REJECTED", () => {
@@ -26,6 +41,122 @@ describe("classifyVoiceError", () => {
   it("falls back to SYSTEM_ERROR for an unclassifiable error (e.g. a timeout)", () => {
     const err = classifyVoiceError(new Error("Fonoster createCall timed out"));
     assert.equal(err.kind, "SYSTEM_ERROR");
+  });
+});
+
+/**
+ * A memoized login that has already succeeded is never re-checked on its own — only a call
+ * made through it can discover the underlying token has gone bad. These cases decide which
+ * failures should force that re-login and which shouldn't (an ordinary transport blip must
+ * not trigger one on every call).
+ */
+describe("isAuthTokenFailure", () => {
+  it("is true for UNAUTHENTICATED — the token was rejected outright", () => {
+    assert.equal(isAuthTokenFailure({ code: 16, message: "Invalid or expired token" }), true);
+  });
+
+  it("is true for UNAVAILABLE whose message names a failed token refresh", () => {
+    assert.equal(
+      isAuthTokenFailure({
+        code: 14,
+        message: "Failed to refresh the access token: 13 INTERNAL: Internal server error"
+      }),
+      true
+    );
+  });
+
+  it("is false for an ordinary UNAVAILABLE (transport/connectivity, not auth)", () => {
+    assert.equal(isAuthTokenFailure({ code: 14, message: "fonoster unavailable" }), false);
+  });
+
+  it("is false for unrelated gRPC codes", () => {
+    assert.equal(isAuthTokenFailure({ code: 3, message: "invalid 'to' number" }), false);
+  });
+
+  it("is false for a non-gRPC error (e.g. a timeout Error)", () => {
+    assert.equal(isAuthTokenFailure(new Error("Fonoster getCall timed out")), false);
+  });
+});
+
+/**
+ * End-to-end through the public `createCall`/`getCall` surface, with a fake `CallsApi`
+ * injected via the constructor's `createCallsApi` seam — proves `invalidateOnAuthFailure`
+ * actually forces a fresh login on the *next* call, and that a stale failure from a call
+ * made against an old (now-replaced) client can't discard a login a concurrent call already
+ * completed. Neither is exercised by testing `isAuthTokenFailure` alone.
+ */
+describe("FonosterOutboundCallClient — auth-failure recovery", () => {
+  const authError = { code: 16, message: "Invalid or expired token" };
+  const healthyRecord = { status: "UNKNOWN", duration: 0, endedAt: 0 };
+
+  function deferredRejection<T>(): { promise: Promise<T>; reject: (err: unknown) => void } {
+    let reject!: (err: unknown) => void;
+    const promise = new Promise<T>((_, rej) => {
+      reject = rej;
+    });
+    return { promise, reject };
+  }
+
+  it("re-logs in on the next call after a token-refresh failure", async () => {
+    let loginCount = 0;
+    const client = new FonosterOutboundCallClient(settings, async () => {
+      loginCount++;
+      const instanceNumber = loginCount;
+      return {
+        createCall: async () => {
+          throw new Error("not exercised in this test");
+        },
+        getCall: async () => (instanceNumber === 1 ? Promise.reject(authError) : healthyRecord)
+      } as unknown as CallsApi;
+    });
+
+    await assert.rejects(client.getCall("ref-1"), (err) => err === authError);
+    assert.equal(loginCount, 1, "the first call logs in once");
+
+    const result = await client.getCall("ref-2");
+    assert.equal(result.found, true);
+    assert.equal(loginCount, 2, "the failed call forced a fresh login for the next call");
+  });
+
+  it("does not discard a fresh re-login a concurrent call already completed", async () => {
+    let loginCount = 0;
+    const straggler = deferredRejection<unknown>();
+
+    const client = new FonosterOutboundCallClient(settings, async () => {
+      loginCount++;
+      const instanceNumber = loginCount;
+      return {
+        createCall: async () => {
+          throw new Error("not exercised in this test");
+        },
+        getCall: async (ref: string) => {
+          if (instanceNumber !== 1) return healthyRecord; // instance 2: the fresh relogin
+          if (ref === "refA") return straggler.promise; // the slow, stale straggler
+          return Promise.reject(authError); // refB — a concurrent failure on the same client
+        }
+      } as unknown as CallsApi;
+    });
+
+    // opA reads the current (soon-to-be-stale) client and stalls mid-call.
+    const opA = client.getCall("refA");
+    // opB reuses that same cached client (opA hasn't failed yet) and fails first,
+    // invalidating it.
+    await assert.rejects(client.getCall("refB"), (err) => err === authError);
+    assert.equal(loginCount, 1);
+
+    // opC re-logs in fresh and succeeds — the "a concurrent call already recovered" state.
+    const opC = await client.getCall("refC");
+    assert.equal(opC.found, true);
+    assert.equal(loginCount, 2);
+
+    // The straggler from the OLD client finally fails. It must not discard the fresh login.
+    straggler.reject(authError);
+    await assert.rejects(opA, (err) => err === authError);
+
+    // Proven by: the next call reuses the healthy client instead of logging in a third time.
+    const opD = await client.getCall("refD");
+    assert.equal(opD.found, true);
+    assert.equal(loginCount, 2, "the stale opA failure must not force an unnecessary third login");
   });
 });
 
