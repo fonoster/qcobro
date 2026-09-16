@@ -74,7 +74,8 @@ Assets
 
 - [ ] Each export is exactly its canvas size (sips), PNG at 1×.
 - [ ] `feed-4x5` **and** `vertical-9x16` exist for the idea (the minimum set).
-- [ ] Every export read back: text, logo, faces, UI and offer inside the safe area.
+- [ ] Scripted bounds check: every text, icon and pill node inside the canvas rule (4:5 → central 1:1, y 180–1620; 9:16 → y 358–1664; sides 86).
+- [ ] Guide-visible export read back: faces and key subjects **inside photos** stay out of the red bands (a script can't see them).
 - [ ] Headline readable at 25% zoom.
 - [ ] No fake UI; no text on `thumb-1x1-notext` assets.
 - [ ] Screenshots and audio fully anonymized.
