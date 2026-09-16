@@ -26,13 +26,21 @@ report at the end).
 
 ## Look
 
-The ads follow the website v3 concept, **"Todo a la vista"** (everything in plain sight):
+**Revised 2026-09-16 after the first drafts.** The editorial v3 look and the gestión-record widget
+don't stop a thumb in a feed, and most viewers have never heard of QCobro. Ads are louder than
+the site:
 
-- Editorial paper and ink. Green is **only** an accent: the "verified" mark, never a full-bleed fill.
-- Realistic Dominican photography (the colmado owner on a call is the reference). No readable
-  third-party brands in a photo.
-- The QCobro wordmark stays small, inside the safe area.
-- Few words. One idea per ad.
+- **Say what QCobro is first.** Every ad opens with the category: "Cobranzas automatizadas con Voz
+  IA" (or a channel variant). The pilot offer comes later in the funnel, never as the lead.
+- **People doing collection work**, in realistic Dominican photos, with the text on a dark scrim
+  that never covers faces. No readable third-party brands, dates or religious imagery.
+- **Money icons** as the visual hook.
+- **Big, bold type** (heavy sans, all caps) when there is no photo, on high-contrast fills
+  (near-black, strong green) with a lime highlight.
+- The QCobro wordmark stays small, inside the safe area. One idea per ad.
+
+The v3 editorial look stays on the website; the first drafts in that style remain in `ads.pen`
+sections 04–05 for reference.
 
 ## Proof the ads may use
 
