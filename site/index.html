@@ -1,31 +1,31 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-DO">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QCobro — Cobra. Siempre.</title>
+  <title>QCobro — Cobranza que se puede escuchar, revisar y comprobar</title>
+  <meta name="description" content="QCobro contacta su cartera por SMS, WhatsApp, correo, voz e IA, y con gestores reales cuando hace falta. Cada intento queda grabado y registrado. Pida su piloto gratuito de 15 días.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;800&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
   <link rel="stylesheet" href="styles.css">
+  <script>document.documentElement.classList.add('js');</script>
 
-  <!-- OpenGraph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://qcobro.com/">
-  <meta property="og:title" content="QCobro — Cobra. Siempre.">
-  <meta property="og:description" content="Infraestructura de cobro con IA que garantiza tu liquidez. Empieza en menos de 7 días.">
+  <meta property="og:title" content="QCobro — Cobranza que se puede escuchar, revisar y comprobar">
+  <meta property="og:description" content="SMS, WhatsApp, correo, voz, IA y gestores reales. Cada intento grabado y registrado, a la vista. Piloto gratuito de 15 días con 300 de sus cuentas.">
   <meta property="og:image" content="https://qcobro.com/assets/og-banner.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:locale" content="es_ES">
+  <meta property="og:locale" content="es_DO">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="QCobro — Cobra. Siempre.">
-  <meta name="twitter:description" content="Infraestructura de cobro con IA que garantiza tu liquidez. Empieza en menos de 7 días.">
+  <meta name="twitter:title" content="QCobro — Cobranza que se puede escuchar, revisar y comprobar">
+  <meta name="twitter:description" content="SMS, WhatsApp, correo, voz, IA y gestores reales. Cada intento grabado y registrado, a la vista.">
   <meta name="twitter:image" content="https://qcobro.com/assets/og-banner.png">
-
   <!-- Meta Pixel — dataset "QCobro Website" (Fonoster business portfolio). -->
   <script>
   !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -41,525 +41,372 @@
 </head>
 <body id="top">
 
+  <a class="skip" href="#main">Saltar al contenido</a>
+
   <!-- ═══════════════ NAV ═══════════════ -->
-  <header class="nav">
-    <div class="nav__inner">
-      <a class="nav__logo" href="#top">
-        <span class="nav__logo-text">QCobro</span>
-        <span class="nav__logo-sub">by Fonoster</span>
+  <header class="nav" id="nav">
+    <div class="nav__inner wrap">
+      <a class="logo" href="#top" aria-label="QCobro, inicio">
+        <span class="logo__mark">QCobro</span>
+        <span class="logo__by">by Fonoster</span>
       </a>
-      <nav class="nav__links">
-        <a href="#como">Cómo funciona</a>
+      <nav class="nav__links" aria-label="Principal">
+        <a href="#como-funciona">Cómo funciona</a>
+        <a href="#canales">Canales</a>
         <a href="#precios">Precios</a>
-        <a href="#integraciones">Integraciones</a>
         <a href="https://docs.qcobro.com">Documentación</a>
       </nav>
       <div class="nav__actions">
         <a class="nav__login" href="https://app.qcobro.com">Iniciar sesión</a>
-        <button type="button" class="btn btn--primary" data-demo-open>Solicitar demo</button>
+        <button type="button" class="btn btn--primary btn--sm" data-pilot-open>Pida su piloto</button>
       </div>
-      <button class="nav__hamburger" id="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
-        <i data-lucide="menu"></i>
-      </button>
     </div>
   </header>
 
-  <!-- ═══════════════ MOBILE MENU ═══════════════ -->
-  <div class="nav__mobile-menu" id="nav-mobile-menu" aria-hidden="true">
-    <div class="nav__mobile-backdrop" id="nav-mobile-backdrop"></div>
-    <div class="nav__mobile-panel">
-      <div class="nav__mobile-header">
-        <a class="nav__logo" href="#top">
-          <span class="nav__logo-text">QCobro</span>
-          <span class="nav__logo-sub">by Fonoster</span>
-        </a>
-        <button class="nav__mobile-close" id="nav-mobile-close" aria-label="Cerrar menú">
-          <i data-lucide="x"></i>
-        </button>
-      </div>
-      <nav class="nav__mobile-links">
-        <a href="#como">Cómo funciona</a>
-        <a href="#precios">Precios</a>
-        <a href="#integraciones">Integraciones</a>
-        <a href="https://docs.qcobro.com">Documentación</a>
-      </nav>
-      <div class="nav__mobile-cta">
-        <button type="button" class="btn btn--primary" style="width:100%" data-demo-open>Solicitar demo</button>
-      </div>
-    </div>
-  </div>
+  <main id="main">
 
-  <!-- ═══════════════ HERO (full green) ═══════════════ -->
-  <section class="hero">
-    <div class="hero__inner">
-      <!-- Left: pitch -->
-      <div class="hero__pitch">
-        <span class="eyebrow"><i data-lucide="phone-call"></i> Cobranza con Voz IA</span>
-        <h1 class="hero__title"><span>Cobra.</span><span>Siempre.</span></h1>
-        <p class="hero__subline">Infraestructura de cobro con IA que garantiza tu liquidez.</p>
-        <p class="hero__support">Cobra más, gasta menos, sin pausas, sin límites.</p>
-        <div class="hero__cta">
-          <button type="button" class="btn btn--white" data-demo-open>Solicitar demo</button>
-          <a class="btn btn--ghost" href="#como"><i data-lucide="arrow-down"></i> Ver cómo funciona</a>
-        </div>
-        <p class="hero__reassure"><i data-lucide="shield-check"></i> Sin compromiso · En vivo en menos de 7 días</p>
-      </div>
-
-      <!-- Right: gestión card (animated + audio player) -->
-      <div class="hero__visual">
-        <h2 class="hero__visual-title">Una gestión real, de la llamada al pago</h2>
-
-        <!--
-          IMPLEMENTATION NOTE:
-          - The .gcard__call block IS the audio player (plays assets/cobro_demo.wav, same as v1).
-          - The waveform animates while the audio plays; the transcript bubbles animate in.
-          - See script at the bottom of this file (Gestión card player + animation).
-        -->
-        <audio id="demo-audio" preload="metadata" src="assets/cobro_demo.wav"></audio>
-
-        <article class="gcard" id="gcard">
-          <div class="gcard__header">
-            <div class="gcard__head-left">
-              <span class="gcard__title">Detalle de gestión</span>
-              <span class="gcard__sub">José · Cuenta #00892</span>
-            </div>
-            <span class="gcard__chip"><i data-lucide="phone-call"></i> Voz IA</span>
+    <!-- ═══════════════ HERO ═══════════════ -->
+    <section class="hero">
+      <div class="hero__inner wrap">
+        <div class="hero__pitch">
+          <p class="eyebrow">Para microfinancieras y empresas con equipos de cobro pequeños</p>
+          <h1 class="hero__title">Cobranza que se puede escuchar, revisar y comprobar.</h1>
+          <p class="hero__sub">Contactamos su cartera por SMS, WhatsApp, correo, voz con IA y gestores humanos. Cada intento queda grabado y a la vista.</p>
+          <div class="hero__ctas">
+            <button type="button" class="btn btn--primary btn--lg" data-pilot-open>
+              Pida su piloto de 15 días <i data-lucide="arrow-right" class="btn__arrow"></i>
+            </button>
+            <button type="button" class="btn btn--outline btn--lg" id="hero-listen">
+              <i data-lucide="play"></i> Escuchar una llamada real
+            </button>
           </div>
+        </div>
+      </div>
+      <div class="hero__scene" aria-hidden="true">
+        <img src="assets/hero-colmado.jpg" alt="" width="1408" height="768" fetchpriority="high">
+      </div>
+    </section>
 
-          <div class="gcard__body">
-            <!-- Call block = player -->
-            <div class="gcard__call">
-              <button type="button" class="gcard__play" id="gcard-play" aria-label="Reproducir gestión">
-                <i data-lucide="play" class="gcard__icon-play"></i>
-                <i data-lucide="pause" class="gcard__icon-pause"></i>
+    <!-- ═══════════════ LO QUE OTROS ESCONDEN ═══════════════ -->
+    <section class="section section--surface">
+      <div class="wrap split split--statement">
+        <div class="reveal">
+          <p class="eyebrow eyebrow--accent">Todo a la vista</p>
+          <h2 class="h2">Lo que otros esconden, aquí se muestra.</h2>
+        </div>
+        <p class="statement reveal">En cobranza con IA casi todo se pide con una demo. Aquí no: <a href="https://app.qcobro.com/signup">cree su cuenta ahora mismo</a>, sin hablar con ventas, y <a href="#precios">vea nuestros precios publicados</a>.</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════ CADA INTENTO DEJA UN REGISTRO ═══════════════ -->
+    <section class="section" id="como-funciona">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div>
+            <p class="eyebrow eyebrow--accent">Cómo funciona</p>
+            <h2 class="h2 h2--xl">Cada intento deja un registro.</h2>
+          </div>
+          <p class="lead">Cada contacto con una cuenta produce una gestión: lo que usted revisa y lo que queda como evidencia.</p>
+        </div>
+
+        <div class="anatomy">
+          <!-- The signature element: complete by default, replays in sync with the real call. -->
+          <article class="record anatomy__record reveal" id="hero-record" aria-label="Gestión de ejemplo con una llamada real">
+            <header class="record__head">
+              <div>
+                <p class="record__label">Gestión · Cuenta #00892</p>
+                <p class="record__name">José</p>
+              </div>
+              <span class="pill"><i data-lucide="audio-lines"></i> Voz IA</span>
+            </header>
+
+            <div class="record__audio">
+              <audio id="hero-audio" preload="metadata" src="assets/cobro_demo.wav"></audio>
+              <button type="button" class="play" id="hero-play" aria-label="Reproducir la llamada" aria-pressed="false">
+                <i data-lucide="play" class="play__icon play__icon--play"></i>
+                <i data-lucide="pause" class="play__icon play__icon--pause"></i>
               </button>
-              <div class="gcard__call-mid">
-                <div class="gcard__call-top">
-                  <span>Llamada de cobranza</span>
-                  <span class="gcard__time" id="gcard-time">0:42</span>
-                </div>
-                <div class="gcard__wave" id="gcard-wave" aria-hidden="true"></div>
-              </div>
+              <div class="wave" id="hero-wave" aria-hidden="true"></div>
+              <span class="record__time" id="hero-time">1:01</span>
             </div>
 
-            <!-- Transcript -->
-            <div class="gcard__transcript">
-              <span class="gcard__tlabel">TRANSCRIPCIÓN</span>
-              <div class="bubble bubble--agent">Hola, ¿hablo con José?</div>
-              <div class="bubble bubble--client">Sí, él habla.</div>
-              <div class="bubble bubble--agent">Mire, usted tiene dos pagos atrasados de 650 pesos.</div>
-            </div>
+            <ol class="record__transcript">
+              <li class="turn" data-at="4"><span class="turn__who">Agente</span><span class="turn__line">Hola, ¿hablo con José?</span></li>
+              <li class="turn" data-at="7"><span class="turn__who">Cliente</span><span class="turn__line">Sí, él habla.</span></li>
+              <li class="turn" data-at="9"><span class="turn__who">Agente</span><span class="turn__line">Mire, usted tiene dos pagos atrasados de 650 pesos.</span></li>
+            </ol>
 
-            <div class="gcard__divider"></div>
+            <dl class="record__axes">
+              <div class="axis" data-at="1.75"><dt>Entrega</dt><dd>Contestada</dd><span class="check" aria-hidden="true"><i data-lucide="check"></i></span></div>
+              <div class="axis" data-at="7"><dt>Camino</dt><dd>Conversación</dd><span class="check" aria-hidden="true"><i data-lucide="check"></i></span></div>
+              <div class="axis axis--result" data-at="55"><dt>Resultado</dt><dd>Nuevo plan de pago</dd><span class="check" aria-hidden="true"><i data-lucide="check"></i></span></div>
+            </dl>
 
-            <!-- Outcome -->
-            <div class="gcard__outcome">
-              <i data-lucide="calendar-clock" class="gcard__outcome-icon"></i>
-              <div class="gcard__outcome-mid">
-                <span class="gcard__outcome-label">Cambio de términos</span>
-                <span class="gcard__outcome-value">Nuevo plan de pago</span>
-              </div>
-              <span class="gcard__badge"><i data-lucide="check"></i> Actualizado</span>
-            </div>
-          </div>
-        </article>
+            <footer class="record__foot">
+              <span>Grabación</span><span>Transcripción</span><span>Análisis IA</span>
+            </footer>
+          </article>
 
-        <p class="hero__caption">Escucha cómo QCobro negocia un cambio de términos con un cliente real — con empatía, en español, y cumpliendo la regulación.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════════════ TRUSTED BY ═══════════════ -->
-  <section class="trusted">
-    <p class="trusted__label">Hecho para estos segmentos del sector financiero</p>
-    <div class="trusted__logos">
-      <span>Financieras</span><span>Bancos Pequeños</span><span>Cooperativas</span><span>Fintechs</span><span>Casas de Empeño</span><span>Agencias de Vehículos</span>
-    </div>
-  </section>
-
-  <!-- ═══════════════ VALUE PROPS ═══════════════ -->
-  <section class="vprops">
-    <h2 class="section-title">Resultados desde el primer mes</h2>
-    <div class="vprops__grid">
-      <div class="vcard">
-        <div class="vcard__icon"><i data-lucide="trending-up"></i></div>
-        <span class="vcard__stat">+30K</span>
-        <h3 class="vcard__title">Interacciones mensuales</h3>
-        <p class="vcard__body">Capacidad omnicanal real. Un solo ecosistema, sin sumar agentes ni infraestructura.</p>
-      </div>
-      <div class="vcard">
-        <div class="vcard__icon"><i data-lucide="wallet"></i></div>
-        <span class="vcard__stat">10x</span>
-        <h3 class="vcard__title">Reducción de costos</h3>
-        <p class="vcard__body">Reduce hasta 10 veces el costo por contacto frente a un call center tradicional al mismo volumen.</p>
-      </div>
-      <div class="vcard">
-        <div class="vcard__icon"><i data-lucide="rocket"></i></div>
-        <span class="vcard__stat">&lt; 7 días</span>
-        <h3 class="vcard__title">Configuración rápida</h3>
-        <p class="vcard__body">Prueba de concepto en menos de 7 días. ROI desde el primer mes.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
-  <section class="hiw" id="como">
-    <span class="hiw__eyebrow">Cómo funciona</span>
-    <h2 class="hiw__heading">De tu cartera a pagos reales, en 3 pasos</h2>
-    <div class="hiw__steps">
-      <div class="hstep">
-        <div class="hstep__num">1</div>
-        <h3 class="hstep__title">Conectas tu cartera</h3>
-        <div class="hstep__mock">
-          <span class="hstep__mock-l1">📄 cartera_abril.csv</span>
-          <span class="hstep__mock-l2">12,430 cuentas cargadas</span>
-          <div class="hstep__bar"><div class="hstep__bar-fill"></div></div>
+          <ol class="labels reveal">
+            <li><span>01</span>Entrega</li>
+            <li><span>02</span>Camino</li>
+            <li><span>03</span>Resultado</li>
+            <li><span>04</span>Grabación, transcripción y análisis</li>
+            <li><span>05</span>Promesa de pago</li>
+          </ol>
         </div>
-        <p class="hstep__body">Sube un CSV o integra tu CRM / core bancario vía API en minutos.</p>
       </div>
-      <div class="hstep">
-        <div class="hstep__num">2</div>
-        <h3 class="hstep__title">QCobro llama y cobra</h3>
-        <div class="hstep__mock hstep__mock--chat">
-          <div class="cbub cbub--agent">Buenos días, le llamo de...</div>
-          <div class="cbub cbub--client">Sí, puedo pagar el viernes</div>
-          <div class="cbub cbub--agent">Perfecto, registrado ✓</div>
+    </section>
+
+    <!-- ═══════════════ CANALES ═══════════════ -->
+    <section class="section section--surface" id="canales">
+      <div class="wrap">
+        <div class="reveal">
+          <p class="eyebrow eyebrow--accent">Canales</p>
+          <h2 class="h2 h2--xl">Seis canales. Un solo registro.</h2>
         </div>
-        <p class="hstep__body">El agente IA contacta, identifica intención de pago y ofrece soluciones dentro de tus reglas.</p>
-      </div>
-      <div class="hstep">
-        <div class="hstep__num">3</div>
-        <h3 class="hstep__title">Recibes compromisos y pagos</h3>
-        <div class="hstep__mock hstep__mock--res">
-          <div class="resrow"><span class="resrow__l">Promesas hoy</span><span class="resrow__v resrow__v--green">312</span></div>
-          <div class="resrow"><span class="resrow__l">Recuperado</span><span class="resrow__v">$287,430</span></div>
+
+        <div class="ladder" id="ladder">
+          <div class="ladder__axis" aria-hidden="true"><span>← Más ligero, más volumen</span><span>Más personal →</span></div>
+          <ol class="ladder__list">
+            <li class="channel"><span class="channel__idx">01</span><i data-lucide="message-square"></i><h3 class="h3">SMS</h3></li>
+            <li class="channel"><span class="channel__idx">02</span><i data-lucide="message-circle"></i><h3 class="h3">WhatsApp</h3></li>
+            <li class="channel"><span class="channel__idx">03</span><i data-lucide="mail"></i><h3 class="h3">Correo</h3></li>
+            <li class="channel"><span class="channel__idx">04</span><i data-lucide="voicemail"></i><h3 class="h3">Voz pregrabada</h3></li>
+            <li class="channel"><span class="channel__idx">05</span><i data-lucide="audio-lines"></i><h3 class="h3">Voz IA</h3></li>
+            <li class="channel channel--human"><span class="channel__idx">06</span><i data-lucide="user-round"></i><h3 class="h3">Humano</h3></li>
+          </ol>
         </div>
-        <p class="hstep__body">Cada acuerdo queda registrado, auditado y listo para cobrar — con grabación completa.</p>
-      </div>
-    </div>
-  </section>
 
-  <!-- ═══════════════ TESTIMONIALS ═══════════════ -->
-  <section class="tests">
-    <h2 class="section-title">Lo que dicen nuestros clientes</h2>
-    <div class="tests__grid">
-      <div class="tcard">
-        <span class="tcard__stars">★★★★★</span>
-        <p class="tcard__quote">"Antes una implementación nos tomaba 3 meses. Con QCobro entregamos la primera campaña en 7 días. Cambió por completo nuestra propuesta de valor."</p>
-        <div class="tcard__author"><div class="tcard__av">FP</div><div><span class="tcard__name">Fred Peña</span><span class="tcard__role">Dir. Técnico, Alphanology</span></div></div>
+        <div class="human reveal">
+          <div class="human__text">
+            <p class="eyebrow eyebrow--accent">06 · Humano</p>
+            <h3 class="h2 h2--md">Cuando hace falta una persona, la ponemos nosotros.</h3>
+          </div>
+          <div class="human__body">
+            <p class="lead">QCobro pone sus propios gestores asociados. Usted no los contrata, no los entrena ni los supervisa, y cada llamada queda grabada como las demás.</p>
+            <ul class="ticks">
+              <li><i data-lucide="check"></i> Sin nómina</li>
+              <li><i data-lucide="check"></i> Sin entrenamiento</li>
+              <li><i data-lucide="check"></i> Con grabación</li>
+            </ul>
+          </div>
+        </div>
       </div>
-      <div class="tcard">
-        <span class="tcard__stars">★★★★★</span>
-        <p class="tcard__quote">"Lo que más me sorprendió fue la empatía del agente. Los clientes nos agradecen la llamada. Eso antes no pasaba."</p>
-        <div class="tcard__author"><div class="tcard__av">CR</div><div><span class="tcard__name">Carlos Ruiz</span><span class="tcard__role">Dir. de Cobros, Auto Prestamos</span></div></div>
-      </div>
-      <div class="tcard">
-        <span class="tcard__stars">★★★★★</span>
-        <p class="tcard__quote">"Integramos QCobro con nuestro software de cobros en dos días. ROI en el primer mes. Mi equipo no quiere volver atrás."</p>
-        <div class="tcard__author"><div class="tcard__av">MT</div><div><span class="tcard__name">Madeline Torres</span><span class="tcard__role">Presidente, Mikro</span></div></div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ═══════════════ INTEGRATIONS ═══════════════ -->
-  <section class="integ" id="integraciones">
-    <span class="integ__label">Integraciones nativas y API abierta</span>
-    <h2 class="integ__heading">Conecta con tus herramientas existentes</h2>
-    <div class="integ__pills">
-      <span>Salesforce</span><span>HubSpot</span><span>WhatsApp</span><span>Zapier</span><span>Twilio</span><span>REST API</span><span>Webhooks</span>
-    </div>
-    <p class="integ__note">Construido sobre la plataforma de comunicaciones programables de Fonoster</p>
-  </section>
-
-  <!-- ═══════════════ PRICING ═══════════════ -->
-  <section class="pricing" id="precios">
-    <div class="pricing__header">
-      <span class="pricing__eyebrow">Planes</span>
-      <h2 class="section-title">Planes simples, sin sorpresas</h2>
-      <p class="pricing__sub">Empieza pequeño, crece sin migrar. Mismo modelo, mismas APIs, sin pagar tu legacy.</p>
-    </div>
-    <div class="pricing__scroll">
-      <div class="pricing__cards">
-        <article class="pcard">
-          <div class="pcard__badge-row"></div>
-          <div class="pcard__head">
-            <div class="pcard__title-row"><i data-lucide="flask-conical" class="pcard__ticon"></i><h3 class="pcard__title">Starter</h3></div>
-            <p class="pcard__tagline">Para probar la plataforma</p>
+    <!-- ═══════════════ PILOTO ═══════════════ -->
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head section-head--cta reveal">
+          <div>
+            <p class="eyebrow eyebrow--accent">El piloto</p>
+            <h2 class="h2 h2--xl">Quince días con sus propias cuentas.</h2>
           </div>
-          <div class="pcard__price"><span class="pcard__amount">$79.99</span><span class="pcard__per"> / mes</span></div>
-          <div class="pcard__divider"></div>
-          <ul class="pcard__feats">
-            <li><i data-lucide="phone" class="feat--green"></i><span>30 minutos de Voz IA</span></li>
-            <li><i data-lucide="message-square" class="feat--green"></i><span>350 mensajes SMS</span></li>
-            <li><i data-lucide="mic" class="feat--green"></i><span>175 llamadas pregrabadas</span></li>
-            <li><i data-lucide="mail" class="feat--green"></i><span>Soporte por correo</span></li>
-            <li class="muted"><i data-lucide="x" class="feat--muted"></i><span>WhatsApp no incluido</span></li>
-          </ul>
-        </article>
-        <article class="pcard pcard--pro">
-          <div class="pcard__badge-row"><span class="pcard__badge pcard__badge--blue">Recomendado</span></div>
-          <div class="pcard__head">
-            <div class="pcard__title-row"><i data-lucide="rocket" class="pcard__ticon pcard__ticon--blue"></i><h3 class="pcard__title">Pro</h3></div>
-            <p class="pcard__tagline">Para operar de verdad</p>
-          </div>
-          <div class="pcard__price"><span class="pcard__amount">$239.99</span><span class="pcard__per"> / mes</span></div>
-          <div class="pcard__divider"></div>
-          <ul class="pcard__feats">
-            <li><i data-lucide="phone" class="feat--blue"></i><span>100 minutos de Voz IA</span></li>
-            <li><i data-lucide="message-square" class="feat--blue"></i><span>1,100 mensajes SMS</span></li>
-            <li><i data-lucide="mic" class="feat--blue"></i><span>550 llamadas pregrabadas</span></li>
-            <li><i data-lucide="message-circle" class="feat--blue"></i><span>WhatsApp incluido</span></li>
-            <li><i data-lucide="headset" class="feat--blue"></i><span>Soporte prioritario</span></li>
-            <li><i data-lucide="refresh-cw" class="feat--blue"></i><span>Uso adicional automático</span></li>
-          </ul>
-        </article>
-        <article class="pcard">
-          <div class="pcard__badge-row"><span class="pcard__badge pcard__badge--gray">A la medida</span></div>
-          <div class="pcard__head">
-            <div class="pcard__title-row"><i data-lucide="building-2" class="pcard__ticon"></i><h3 class="pcard__title">Enterprise</h3></div>
-            <p class="pcard__tagline">Para operaciones a gran escala</p>
-          </div>
-          <div class="pcard__price"><span class="pcard__amount">Cotización</span></div>
-          <div class="pcard__divider"></div>
-          <ul class="pcard__feats">
-            <li><i data-lucide="infinity" class="feat--green"></i><span>Volumen negociado en todos los canales</span></li>
-            <li><i data-lucide="message-circle" class="feat--green"></i><span>WhatsApp incluido</span></li>
-            <li><i data-lucide="user-cog" class="feat--green"></i><span>Ingeniero dedicado</span></li>
-            <li><i data-lucide="cable" class="feat--green"></i><span>Integración con sistemas legacy</span></li>
-            <li><i data-lucide="dollar-sign" class="feat--green"></i><span>Tarifas negociadas por volumen</span></li>
-          </ul>
-          <div class="pcard__sla">
-            <i data-lucide="clock-3" class="pcard__sla-icon"></i>
-            <div><span class="pcard__sla-label">SLA de respuesta</span><span class="pcard__sla-value">3 horas</span></div>
-          </div>
-        </article>
+          <button type="button" class="btn btn--primary btn--lg" data-pilot-open>Pida su piloto <i data-lucide="arrow-right" class="btn__arrow"></i></button>
+        </div>
+        <ol class="steps">
+          <li class="step reveal"><div class="step__top"><span class="step__num">1</span><span class="step__tag">Día 0</span></div><h3 class="h3 h3--lg">Nos envía 300 cuentas.</h3><p>Un archivo CSV con el saldo, los días de atraso y el teléfono de cada cuenta. No hace falta integrar su sistema.</p></li>
+          <li class="step reveal"><div class="step__top"><span class="step__num">2</span><span class="step__tag">Días 1 – 15</span></div><h3 class="h3 h3--lg">QCobro las contacta.</h3><p>Por los canales que usted elija, dentro de su horario y sus reglas. Usted ve cada gestión a medida que ocurre.</p></li>
+          <li class="step reveal"><div class="step__top"><span class="step__num">3</span><span class="step__tag">Día 15</span></div><h3 class="h3 h3--lg">Recibe el informe de recuperación.</h3><p>Qué se cobró, qué se prometió y qué dijo cada cliente, con cada gestión adjunta para revisarla.</p></li>
+        </ol>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ═══════════════ FINAL CTA ═══════════════ -->
-  <section class="fcta">
-    <h2 class="fcta__heading">¿Listo para recuperar más cartera?</h2>
-    <p class="fcta__sub">Agenda una demo de 20 minutos y ve a QCobro en acción con tu propia cartera.</p>
-    <div class="fcta__buttons">
-      <button type="button" class="btn btn--white" data-demo-open>Solicitar demo gratis</button>
-      <a class="fcta__secondary" href="https://app.qcobro.com">Hablar con ventas →</a>
-    </div>
-  </section>
+    <!-- ═══════════════ HECHO AQUÍ ═══════════════ -->
+    <section class="section section--night">
+      <div class="wrap">
+        <div class="trust">
+          <div class="trust__statement reveal">
+            <p class="eyebrow eyebrow--night">Hecho aquí</p>
+            <h2 class="h2 h2--xl">Tecnología de voz global, aplicada al mercado dominicano.</h2>
+          </div>
+          <div class="trust__facts reveal">
+            <ul class="facts">
+              <li><i data-lucide="network"></i> Interconexión SIP local en la República Dominicana</li>
+              <li><i data-lucide="headset"></i> Soporte en español, en su horario</li>
+              <li><i data-lucide="handshake"></i> Un equipo que puede conocer en persona</li>
+            </ul>
+          </div>
+        </div>
+        <div class="quotes">
+          <figure class="quote reveal">
+            <blockquote>“Lo que más me sorprendió fue la empatía del agente. Los clientes nos agradecen la llamada. Eso antes no pasaba.”</blockquote>
+            <figcaption><strong>Carlos Ruiz</strong><span>Dir. de Cobros, Auto Prestamos</span></figcaption>
+          </figure>
+          <figure class="quote reveal">
+            <blockquote>“Antes una implementación nos tomaba 3 meses. Con QCobro entregamos la primera campaña en 7 días. Cambió por completo nuestra propuesta de valor.”</blockquote>
+            <figcaption><strong>Fred Peña</strong><span>Dir. Técnico, Alphanology</span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ PRECIOS ═══════════════ -->
+    <section class="section" id="precios">
+      <div class="wrap">
+        <div class="reveal">
+          <p class="eyebrow eyebrow--accent">Precios</p>
+          <h2 class="h2 h2--xl">Primero pruebe gratis. Después, precios publicados.</h2>
+        </div>
+
+        <div class="pilot reveal">
+          <div class="pilot__text">
+            <p class="eyebrow eyebrow--accent">Empiece aquí · Sin costo</p>
+            <h3 class="h2 h2--md">Piloto gratuito</h3>
+            <p>Usted elige 300 cuentas de su cartera. QCobro las trabaja durante 15 días y le entrega el informe de recuperación, con cada gestión adjunta.</p>
+          </div>
+          <dl class="pilot__terms">
+            <div><dt>15</dt><dd>días</dd></div>
+            <div><dt>300</dt><dd>cuentas</dd></div>
+            <div><dt>1</dt><dd>informe de recuperación</dd></div>
+          </dl>
+          <button type="button" class="btn btn--primary btn--lg" data-pilot-open>Pida su piloto <i data-lucide="arrow-right" class="btn__arrow"></i></button>
+        </div>
+
+        <p class="eyebrow after-pilot">Después del piloto</p>
+
+        <div class="plans reveal">
+          <table class="plans__table">
+            <caption class="sr">Planes después del piloto</caption>
+            <thead>
+              <tr>
+                <td></td>
+                <th scope="col"><span class="plan__name">Starter</span><span class="plan__desc">Para empezar</span><span class="plan__price">$79.99<small>/ mes</small></span></th>
+                <th scope="col" class="is-rec"><span class="plan__name">Pro <span class="badge">Recomendado</span></span><span class="plan__desc">Para operar a diario</span><span class="plan__price">$239.99<small>/ mes</small></span></th>
+                <th scope="col"><span class="plan__name">Enterprise</span><span class="plan__desc">Para grandes volúmenes</span><span class="plan__price">Cotización</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Voz IA</th><td>30 minutos</td><td class="is-rec">100 minutos</td><td>Volumen negociado</td></tr>
+              <tr><th scope="row">SMS</th><td>350 mensajes</td><td class="is-rec">1,100 mensajes</td><td>Volumen negociado</td></tr>
+              <tr><th scope="row">Llamadas pregrabadas</th><td>175 llamadas</td><td class="is-rec">550 llamadas</td><td>Volumen negociado</td></tr>
+              <tr><th scope="row">WhatsApp</th><td class="is-muted">No incluido</td><td class="is-rec">Incluido</td><td>Incluido</td></tr>
+              <tr><th scope="row">Humano</th><td>Con cotización</td><td class="is-rec">Con cotización</td><td>Con cotización</td></tr>
+              <tr><th scope="row">Uso adicional</th><td class="is-muted">—</td><td class="is-rec">Automático</td><td>Tarifas por volumen</td></tr>
+              <tr><th scope="row">Soporte</th><td>Por correo</td><td class="is-rec">Prioritario</td><td>Ingeniero dedicado · SLA 3 horas</td></tr>
+              <tr><th scope="row">Sistemas legacy</th><td class="is-muted">—</td><td class="is-rec is-muted">—</td><td>Integración incluida</td></tr>
+            </tbody>
+          </table>
+
+          <!-- Mobile: the same plans as stacked cards -->
+          <div class="plan-cards">
+            <article class="plan-card">
+              <p class="plan__name">Starter</p>
+              <p class="plan__price">$79.99<small>/ mes</small></p>
+              <dl><div><dt>Voz IA</dt><dd>30 min</dd></div><div><dt>SMS</dt><dd>350</dd></div><div><dt>Pregrabadas</dt><dd>175</dd></div><div><dt>WhatsApp</dt><dd class="is-muted">No incluido</dd></div><div><dt>Soporte</dt><dd>Por correo</dd></div></dl>
+            </article>
+            <article class="plan-card is-rec">
+              <p class="plan__name">Pro <span class="badge">Recomendado</span></p>
+              <p class="plan__price">$239.99<small>/ mes</small></p>
+              <dl><div><dt>Voz IA</dt><dd>100 min</dd></div><div><dt>SMS</dt><dd>1,100</dd></div><div><dt>Pregrabadas</dt><dd>550</dd></div><div><dt>WhatsApp</dt><dd>Incluido</dd></div><div><dt>Soporte</dt><dd>Prioritario</dd></div><div><dt>Uso adicional</dt><dd>Automático</dd></div></dl>
+            </article>
+            <article class="plan-card">
+              <p class="plan__name">Enterprise</p>
+              <p class="plan__price">Cotización</p>
+              <dl><div><dt>Canales</dt><dd>Volumen negociado</dd></div><div><dt>WhatsApp</dt><dd>Incluido</dd></div><div><dt>Soporte</dt><dd>Ingeniero dedicado</dd></div><div><dt>SLA</dt><dd>3 horas</dd></div><div><dt>Sistemas legacy</dt><dd>Integración incluida</dd></div></dl>
+            </article>
+            <p class="plan-cards__note">Canal Humano: según volumen, con cotización en todos los planes.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ PREGUNTAS ═══════════════ -->
+    <section class="section section--surface">
+      <div class="wrap split">
+        <div class="split__intro reveal">
+          <p class="eyebrow eyebrow--accent">Preguntas frecuentes</p>
+          <h2 class="h2">Lo que suelen preguntar.</h2>
+        </div>
+        <div class="faq reveal">
+          <details open>
+            <summary>¿Qué incluye el piloto?<span class="faq__icon" aria-hidden="true"></span></summary>
+            <div class="faq__body"><p>Es gratis. Durante 15 días QCobro contacta 300 cuentas de su cartera por los canales que usted elija. Al final recibe el informe de recuperación con cada gestión adjunta: grabación, transcripción y resultado.</p></div>
+          </details>
+          <details>
+            <summary>¿Tengo que integrar mi sistema?<span class="faq__icon" aria-hidden="true"></span></summary>
+            <div class="faq__body"><p>No. Basta un archivo CSV con sus cuentas. Si luego quiere sincronizar su sistema, QCobro tiene API.</p></div>
+          </details>
+          <details>
+            <summary>¿Qué pasa si el cliente pide hablar con una persona?<span class="faq__icon" aria-hidden="true"></span></summary>
+            <div class="faq__body"><p>La gestión registra la solicitud, con su grabación y transcripción, y su equipo decide el siguiente paso.</p></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ CTA FINAL ═══════════════ -->
+    <section class="section final">
+      <div class="wrap final__inner reveal">
+        <h2 class="final__title">Pruébelo con 300 de sus cuentas.</h2>
+        <div class="final__ctas">
+          <button type="button" class="btn btn--primary btn--xl" data-pilot-open>Pida su piloto de 15 días <i data-lucide="arrow-right" class="btn__arrow"></i></button>
+        </div>
+      </div>
+    </section>
+  </main>
 
   <!-- ═══════════════ FOOTER ═══════════════ -->
   <footer class="footer">
-    <div class="footer__logo"><span class="footer__logo-text">QCobro</span><span class="footer__logo-sub">by Fonoster</span></div>
-    <p class="footer__copy">© 2026 Fonoster, Inc. Todos los derechos reservados.</p>
-    <div class="footer__links"><a href="https://docs.qcobro.com">Documentación</a><a href="brand.html">Kit de Marca</a><a href="#">Privacidad</a><a href="#">Términos</a><a href="#">Contacto</a></div>
+    <div class="wrap footer__inner">
+      <a class="logo logo--night" href="#top" aria-label="QCobro, inicio"><span class="logo__mark">QCobro</span><span class="logo__by">by Fonoster</span></a>
+      <nav class="footer__links" aria-label="Pie de página">
+        <a href="https://docs.qcobro.com">Documentación</a>
+        <a href="brand.html">Kit de Marca</a>
+        <a href="#">Privacidad</a>
+        <a href="#">Términos</a>
+        <a href="#">Contacto</a>
+      </nav>
+      <p class="footer__copy">© 2026 Fonoster, Inc.</p>
+    </div>
   </footer>
 
-  <!-- ═══════════════ DEMO MODAL ═══════════════ -->
-  <div class="modal" id="demo-modal" aria-hidden="true">
-    <div class="modal__backdrop" data-demo-close></div>
-    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="demo-modal-title">
-      <button type="button" class="modal__close" data-demo-close aria-label="Cerrar"><i data-lucide="x"></i></button>
-      <h2 class="modal__title" id="demo-modal-title">Solicita tu demo gratis</h2>
-      <p class="modal__sub">Descubre cómo QCobro recupera tu cartera vencida con llamadas interactivas de Voz IA.</p>
-      <form class="demo-form">
-        <div class="form-row">
-          <div class="input-group">
-            <label class="input-label">Nombre</label>
-            <input type="text" class="input-field" name="nombre" placeholder="Tu nombre" required>
-            <span class="field-error"></span>
-          </div>
-          <div class="input-group">
-            <label class="input-label">Apellido</label>
-            <input type="text" class="input-field" name="apellido" placeholder="Tu apellido" required>
-            <span class="field-error"></span>
-          </div>
+  <!-- ═══════════════ PILOT MODAL ═══════════════ -->
+  <div class="modal" id="pilot-modal" hidden>
+    <div class="modal__backdrop" data-pilot-close></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="pilot-title">
+      <button type="button" class="modal__close" data-pilot-close aria-label="Cerrar"><i data-lucide="x"></i></button>
+      <p class="eyebrow eyebrow--accent">Piloto gratuito de 15 días</p>
+      <h2 class="modal__title" id="pilot-title">Pida su piloto</h2>
+      <p class="modal__sub">Sin costo: 300 de sus cuentas, 15 días y un informe de recuperación al final. Le contactamos para coordinarlo.</p>
+      <form class="form" id="pilot-form" novalidate>
+        <div class="form__row">
+          <label class="field"><span class="field__label">Nombre</span><input name="nombre" type="text" placeholder="María" autocomplete="given-name" required><span class="field__error"></span></label>
+          <label class="field"><span class="field__label">Apellido</span><input name="apellido" type="text" placeholder="Rodríguez" autocomplete="family-name" required><span class="field__error"></span></label>
         </div>
-        <div class="input-group">
-          <label class="input-label">Email corporativo</label>
-          <input type="email" class="input-field" name="email" placeholder="tu@empresa.com" required>
-          <span class="field-error"></span>
+        <label class="field"><span class="field__label">Correo de trabajo</span><input name="email" type="email" placeholder="maria@financiera.com.do" autocomplete="email" required><span class="field__error"></span></label>
+        <label class="field"><span class="field__label">Teléfono</span><input name="telefono" type="tel" placeholder="+1 809 555 0123" autocomplete="tel"><span class="field__error"></span></label>
+        <label class="field"><span class="field__label">Empresa</span><input name="empresa" type="text" placeholder="Financiera del Cibao" autocomplete="organization" required><span class="field__error"></span></label>
+        <div class="form__row">
+          <label class="field"><span class="field__label">Tipo de empresa</span>
+            <select name="tipo_empresa">
+              <option value="microfinanciera">Microfinanciera</option>
+              <option value="financiera">Financiera</option>
+              <option value="cooperativa">Cooperativa</option>
+              <option value="casa_empeno">Casa de empeño</option>
+              <option value="agencia_vehiculos">Agencia de vehículos</option>
+              <option value="banco">Banco</option>
+              <option value="fintech">Fintech</option>
+              <option value="otro">Otro</option>
+            </select>
+          </label>
+          <label class="field"><span class="field__label">Cuentas en cartera</span>
+            <select name="cuentas_en_cartera">
+              <option value="lt1000">Menos de 1,000</option>
+              <option value="1k-10k">1,000 – 10,000</option>
+              <option value="10k-50k">10,000 – 50,000</option>
+              <option value="gt50k">Más de 50,000</option>
+            </select>
+          </label>
         </div>
-        <div class="input-group">
-          <label class="input-label">Teléfono</label>
-          <input type="tel" class="input-field" name="telefono" placeholder="+1 809 317 8070">
-        </div>
-        <div class="input-group">
-          <label class="input-label">Empresa</label>
-          <input type="text" class="input-field" name="empresa" placeholder="Nombre de tu empresa" required>
-          <span class="field-error"></span>
-        </div>
-        <div class="form-row">
-          <div class="input-group">
-            <label class="input-label">Tipo de empresa</label>
-            <div class="select-wrapper">
-              <select class="select-field" name="tipo_empresa">
-                <option value="banco" selected>Banco</option>
-                <option value="financiera">Financiera</option>
-                <option value="cooperativa">Cooperativa</option>
-                <option value="fintech">Fintech</option>
-                <option value="otro">Otro</option>
-              </select>
-              <i data-lucide="chevron-down" class="select-chevron"></i>
-            </div>
-          </div>
-          <div class="input-group">
-            <label class="input-label">Cuentas en cartera</label>
-            <div class="select-wrapper">
-              <select class="select-field" name="cuentas_en_cartera">
-                <option value="lt1000" selected>&lt; 1,000</option>
-                <option value="1k-10k">1,000 – 10,000</option>
-                <option value="10k-50k">10,000 – 50,000</option>
-                <option value="gt50k">&gt; 50,000</option>
-              </select>
-              <i data-lucide="chevron-down" class="select-chevron"></i>
-            </div>
-          </div>
-        </div>
-        <button type="submit" class="submit-btn">Solicitar demo gratis</button>
-        <p class="form-disclaimer">Al enviar aceptas nuestra política de privacidad. Sin compromiso y sin pago por adelantado.</p>
+        <button type="submit" class="btn btn--primary btn--lg btn--block" id="pilot-submit">Enviar solicitud</button>
+        <p class="form__status" id="pilot-status" role="status" aria-live="polite"></p>
       </form>
     </div>
   </div>
 
-  <script>
-  (function () {
-    // ─── Build waveform bars ───
-    var wave = document.getElementById('gcard-wave');
-    var BARS = 38;
-    for (var i = 0; i < BARS; i++) {
-      var b = document.createElement('span');
-      b.style.setProperty('--i', i);
-      // varied base height for an organic waveform
-      var h = 5 + Math.round(13 * Math.abs(Math.sin(i * 0.7)));
-      b.style.setProperty('--h', h + 'px');
-      wave.appendChild(b);
-    }
-
-    // ─── Gestión card audio player (implemented as in v1) ───
-    var audio = document.getElementById('demo-audio');
-    var card = document.getElementById('gcard');
-    var playBtn = document.getElementById('gcard-play');
-    var timeEl = document.getElementById('gcard-time');
-
-    function fmt(s) {
-      if (!isFinite(s)) return '0:42';
-      var m = Math.floor(s / 60), sec = Math.floor(s % 60);
-      return m + ':' + (sec < 10 ? '0' : '') + sec;
-    }
-    function sync() {
-      card.classList.toggle('is-playing', !audio.paused);
-    }
-    playBtn.addEventListener('click', function () {
-      if (audio.paused) { audio.play(); } else { audio.pause(); }
-    });
-    audio.addEventListener('play', sync);
-    audio.addEventListener('pause', sync);
-    audio.addEventListener('loadedmetadata', function () { timeEl.textContent = '0:00 / ' + fmt(audio.duration); });
-    audio.addEventListener('timeupdate', function () {
-      if (isFinite(audio.duration)) timeEl.textContent = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
-    });
-    audio.addEventListener('ended', function () { card.classList.remove('is-playing'); });
-
-    // ─── Mobile menu ───
-    var navToggle = document.getElementById('nav-toggle');
-    var navMobileMenu = document.getElementById('nav-mobile-menu');
-    var navMobileClose = document.getElementById('nav-mobile-close');
-    var navMobileBackdrop = document.getElementById('nav-mobile-backdrop');
-    function openMobileMenu() {
-      navMobileMenu.classList.add('is-open');
-      navMobileMenu.setAttribute('aria-hidden', 'false');
-      navToggle.setAttribute('aria-expanded', 'true');
-      document.body.style.overflow = 'hidden';
-    }
-    function closeMobileMenu() {
-      navMobileMenu.classList.remove('is-open');
-      navMobileMenu.setAttribute('aria-hidden', 'true');
-      navToggle.setAttribute('aria-expanded', 'false');
-      document.body.style.overflow = '';
-    }
-    navToggle.addEventListener('click', openMobileMenu);
-    navMobileClose.addEventListener('click', closeMobileMenu);
-    navMobileBackdrop.addEventListener('click', closeMobileMenu);
-
-    // ─── Demo modal ───
-    var modal = document.getElementById('demo-modal');
-    function openModal() {
-      // The demo modal is the funnel step between landing and Lead.
-      if (window.fbq) fbq('track', 'ViewContent', { content_name: 'demo-modal' });
-      modal.classList.add('is-open');
-      modal.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
-      var first = modal.querySelector('input');
-      if (first) setTimeout(function () { first.focus(); }, 50);
-    }
-    function closeModal() {
-      modal.classList.remove('is-open');
-      modal.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
-    }
-    document.querySelectorAll('[data-demo-open]').forEach(function (el) {
-      el.addEventListener('click', openModal);
-    });
-    document.querySelectorAll('[data-demo-close]').forEach(function (el) {
-      el.addEventListener('click', closeModal);
-    });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        if (modal.classList.contains('is-open')) closeModal();
-        closeMobileMenu();
-      }
-    });
-
-    // ─── Form validation + submit ───
-    var form = document.querySelector('.demo-form');
-    var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    function showErr(f, m) { f.classList.add('invalid'); var e = f.parentElement.querySelector('.field-error'); if (e) e.textContent = m; }
-    function clearErr(f) { f.classList.remove('invalid'); var e = f.parentElement.querySelector('.field-error'); if (e) e.textContent = ''; }
-    form.querySelectorAll('.input-field[required]').forEach(function (f) {
-      f.addEventListener('input', function () { clearErr(f); });
-    });
-    function validate() {
-      var ok = true;
-      [['nombre', 'El nombre es obligatorio'], ['apellido', 'El apellido es obligatorio'], ['empresa', 'El nombre de la empresa es obligatorio']].forEach(function (p) {
-        var f = form[p[0]]; if (!f.value.trim()) { showErr(f, p[1]); ok = false; } else clearErr(f);
-      });
-      var em = form.email;
-      if (!em.value.trim()) { showErr(em, 'El email es obligatorio'); ok = false; }
-      else if (!emailRe.test(em.value.trim())) { showErr(em, 'Ingresa un email válido'); ok = false; }
-      else clearErr(em);
-      return ok;
-    }
-    form.addEventListener('submit', async function (e) {
-      e.preventDefault();
-      if (!validate()) return;
-      var btn = form.querySelector('.submit-btn');
-      var orig = btn.textContent;
-      btn.textContent = 'Enviando...';
-      btn.disabled = true;
-      var payload = {
-        nombre: form.nombre.value.trim(), apellido: form.apellido.value.trim(),
-        email: form.email.value.trim(), telefono: form.telefono.value.trim(),
-        empresa: form.empresa.value.trim(), tipo_empresa: form.tipo_empresa.value,
-        cuentas_en_cartera: form.cuentas_en_cartera.value
-      };
-      try {
-        await fetch('https://script.google.com/macros/s/AKfycbwB2WuEvbyzje0xi5JyjminYUPZJmg5mVqf4I8zE0t4QKm8cFtMAwRoLOd-DC1ow4WyHA/exec', {
-          method: 'POST', body: JSON.stringify(payload)
-        });
-        // Never pass form fields here: prospect PII must not reach Meta.
-        if (window.fbq) fbq('track', 'Lead', { content_name: 'demo-request' });
-        btn.textContent = '¡Enviado!';
-        form.reset();
-        setTimeout(function () { btn.textContent = orig; btn.disabled = false; closeModal(); }, 2000);
-      } catch (err) {
-        btn.textContent = 'Error — intenta de nuevo';
-        btn.disabled = false;
-      }
-    });
-  })();
-  </script>
-
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script>if (window.lucide) lucide.createIcons();</script>
+  <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
