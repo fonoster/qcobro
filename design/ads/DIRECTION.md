@@ -35,8 +35,15 @@ the site:
 - **People doing collection work**, in realistic Dominican photos, with the text on a dark scrim
   that never covers faces. No readable third-party brands, dates or religious imagery.
 - **Money icons** as the visual hook.
-- **Big, bold type** (heavy sans, all caps) when there is no photo, on high-contrast fills
-  (near-black, strong green) with a lime highlight.
+- **Big, bold type** (Inter, heavy, all caps) when there is no photo.
+- **Website colors only**, so the ad and the landing page feel like one brand. Two moods from
+  the v3 tokens: **night** (`#111513` background, `#F2F0EA` text, `#6FCF9F` highlight and pill)
+  and **paper** (`#F6F4EE` background, `#15181B` text, `#047857` highlight and pill). Generated
+  art uses the same greens; no lime, gold or neon.
+- **Match the headline to the image.** A "Voz IA" headline never sits on a photo of a person
+  (that implies the person is the AI). Photos of people say the team is augmented ("Su equipo de
+  cobros, ahora con Voz IA"); "Cobranzas automatizadas con Voz IA" uses a clearly artificial
+  avatar or no person.
 - The QCobro wordmark stays small, inside the safe area. One idea per ad.
 
 The v3 editorial look stays on the website; the first drafts in that style remain in `ads.pen`
