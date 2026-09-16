@@ -47,10 +47,9 @@ numbers, the Mikro quote, Credifácil by name, GitHub or community stats.
 
 ## Round 1 formats
 
-The framework documents every format. The first campaign ships only:
-
-1. **Static images**, 4:5 feed and 9:16 story/reel versions, for the pilot and product-UI angles.
-2. **One 9:16 captioned video** of a real call.
+The framework documents every format. The first campaign ships **static images only**
+(4:5 feed + 9:16 story/reel per idea); updated 2026-09-16, see `brand/qcobro/rounds/r1.md`.
+The captioned call Reel moves to a later round.
 
 ## Surfaces the framework covers
 
