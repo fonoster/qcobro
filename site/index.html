@@ -25,6 +25,19 @@
   <meta name="twitter:title" content="QCobro — Cobra. Siempre.">
   <meta name="twitter:description" content="Infraestructura de cobro con IA que garantiza tu liquidez. Empieza en menos de 7 días.">
   <meta name="twitter:image" content="https://qcobro.com/assets/og-banner.png">
+
+  <!-- Meta Pixel — dataset "QCobro Website" (Fonoster business portfolio). -->
+  <script>
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+  document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '1116591830868264');
+  fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1116591830868264&ev=PageView&noscript=1" alt=""></noscript>
 </head>
 <body id="top">
 
@@ -471,6 +484,8 @@
     // ─── Demo modal ───
     var modal = document.getElementById('demo-modal');
     function openModal() {
+      // The demo modal is the funnel step between landing and Lead.
+      if (window.fbq) fbq('track', 'ViewContent', { content_name: 'demo-modal' });
       modal.classList.add('is-open');
       modal.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
@@ -531,6 +546,8 @@
         await fetch('https://script.google.com/macros/s/AKfycbwB2WuEvbyzje0xi5JyjminYUPZJmg5mVqf4I8zE0t4QKm8cFtMAwRoLOd-DC1ow4WyHA/exec', {
           method: 'POST', body: JSON.stringify(payload)
         });
+        // Never pass form fields here: prospect PII must not reach Meta.
+        if (window.fbq) fbq('track', 'Lead', { content_name: 'demo-request' });
         btn.textContent = '¡Enviado!';
         form.reset();
         setTimeout(function () { btn.textContent = orig; btn.disabled = false; closeModal(); }, 2000);
