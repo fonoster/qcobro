@@ -143,6 +143,8 @@
   var modal = document.getElementById('pilot-modal');
   var lastFocus = null;
   function openModal() {
+    // The pilot modal is the funnel step between landing and Lead.
+    if (window.fbq) window.fbq('track', 'ViewContent', { content_name: 'demo-modal' });
     lastFocus = document.activeElement;
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
@@ -213,6 +215,8 @@
     };
     fetch(ENDPOINT, { method: 'POST', body: JSON.stringify(payload) })
       .then(function () {
+        // Never pass form fields here: prospect PII must not reach Meta.
+        if (window.fbq) window.fbq('track', 'Lead', { content_name: 'demo-request' });
         form.reset();
         submit.textContent = 'Solicitud enviada';
         status.textContent = 'Gracias. Le contactamos para coordinar su piloto.';
