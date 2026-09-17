@@ -56,6 +56,8 @@ function seedFakeApps(client: FonosterVoiceApplicationClient): Captured {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const idleOf = (req: any) => req.intelligence.config.conversationSettings.idleOptions;
+
+const audioFiltersOf = (req: any) => req.intelligence.config.audioFilters;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 const BASE_INPUT = {
@@ -101,6 +103,24 @@ describe("FonosterVoiceApplicationClient.buildRequest (via createApplication)", 
       timeout: 9000,
       maxTimeoutCount: 4
     });
+  });
+
+  it("asks Fonoster to filter the caller's audio, on create and on update", async () => {
+    const client = new FonosterVoiceApplicationClient(SETTINGS);
+    const captured = seedFakeApps(client);
+    const input = {
+      ...BASE_INPUT,
+      idleMessage: "¿Sigue ahí?",
+      idleTimeout: 5000,
+      idleMaxTimeoutCount: 2
+    };
+
+    await client.createApplication(input);
+    await client.updateApplication("app-xyz", input);
+
+    const expected = [{ name: "aiCoustics", options: { enhancementLevel: 0.8 } }];
+    assert.deepEqual(audioFiltersOf(captured.create), expected);
+    assert.deepEqual(audioFiltersOf(captured.update), expected);
   });
 });
 
