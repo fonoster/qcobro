@@ -3,5 +3,13 @@
     "allowUserBargeIn": false,
     "goodbyeMessage": "Que tenga buen día.",
     "systemErrorMessage": "Ha ocurrido un error. Por favor contacte directamente a nuestra empresa."
-  }
+  },
+  "audioFilters": [
+    {
+      "name": "aiCoustics",
+      "options": {
+        "enhancementLevel": 0.8
+      }
+    }
+  ]
 }

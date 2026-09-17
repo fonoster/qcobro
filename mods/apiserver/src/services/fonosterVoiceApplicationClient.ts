@@ -121,6 +121,13 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
             maxTokens: autopilot.maxTokens,
             temperature: autopilot.temperature
           },
+          // Audio filters run in Fonoster's media server, on the caller's audio,
+          // before speech recognition and voice activity detection — that is what
+          // keeps a television or a second person in the room out of the
+          // transcript. Comes from the template so every synced agent gets it.
+          ...(autopilotTemplate.audioFilters?.length
+            ? { audioFilters: autopilotTemplate.audioFilters }
+            : {}),
           ...(eventsHook ? { eventsHook } : {})
         }
       }
