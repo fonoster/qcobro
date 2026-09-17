@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.51.0](https://github.com/fonoster/qcobro/compare/v1.50.2...v1.51.0) (2026-09-17)
+
+### Features
+
+- **apiserver:** filter the caller's audio on synced agents ([#189](https://github.com/fonoster/qcobro/issues/189)) ([feba005](https://github.com/fonoster/qcobro/commit/feba005d6d4bee7a4f744b3f81db1de6841b4f46))
+
 ## [1.50.2](https://github.com/fonoster/qcobro/compare/v1.50.1...v1.50.2) (2026-09-13)
 
 ### Bug Fixes

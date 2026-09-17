@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.51.0](https://github.com/fonoster/qcobro/compare/v1.50.2...v1.51.0) (2026-09-17)
+
+### Bug Fixes
+
+- **site:** point the Meta pixel at the new Fonoster business dataset ([#187](https://github.com/fonoster/qcobro/issues/187)) ([78fa137](https://github.com/fonoster/qcobro/commit/78fa137c763488e0a37a5ba73de062977fa07c48))
+
+### Features
+
+- **apiserver:** filter the caller's audio on synced agents ([#189](https://github.com/fonoster/qcobro/issues/189)) ([feba005](https://github.com/fonoster/qcobro/commit/feba005d6d4bee7a4f744b3f81db1de6841b4f46))
+- **design:** Meta ads framework and QCobro round 1 creative ([#188](https://github.com/fonoster/qcobro/issues/188)) ([00c0a23](https://github.com/fonoster/qcobro/commit/00c0a23d18532e32036e40e724513ac54ef65264))
+- **site:** add the Meta pixel with PageView, ViewContent and Lead ([#185](https://github.com/fonoster/qcobro/issues/185)) ([5f93714](https://github.com/fonoster/qcobro/commit/5f93714bdd6355e6a4aec136c72eb4a19a7553ae))
+- **site:** redesign marketing site and brand kit around "Todo a la vista" ([#186](https://github.com/fonoster/qcobro/issues/186)) ([b8a1bbd](https://github.com/fonoster/qcobro/commit/b8a1bbd147a7f80e6644ccfced2b4f61c462ec3f))
+
 ## [1.50.2](https://github.com/fonoster/qcobro/compare/v1.50.1...v1.50.2) (2026-09-13)
 
 ### Bug Fixes
