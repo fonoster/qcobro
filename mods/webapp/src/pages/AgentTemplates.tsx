@@ -4,6 +4,8 @@ import {
   buildOutreachContext,
   calculateSmsSegments,
   DEFAULT_VOICE_IDLE_OPTIONS,
+  DEFAULT_VOICE_LANGUAGE,
+  MULTILINGUAL_LANGUAGE,
   normalizeForGsm7,
   renderTemplate,
   voicePrerecordedDtmfSchema
@@ -18,6 +20,7 @@ import { Dialog } from "../components/ui/dialog.js";
 import { ConfirmDeleteDialog } from "../components/ui/confirm-delete-dialog.js";
 import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
+import { Switch } from "../components/ui/switch.js";
 import { TextareaGroup } from "../components/ui/textarea.js";
 import { SelectGroup, FilterSelect } from "../components/ui/select.js";
 import { Badge } from "../components/ui/badge.js";
@@ -170,16 +173,12 @@ function SmsFields({
           </p>
         )}
       </div>
-      <label className="flex items-center gap-2 text-sm text-fg-muted">
-        <input
-          type="checkbox"
-          id={`${idPrefix}-gsm7`}
-          checked={normalizeGsm7}
-          onChange={(e) => onNormalizeChange(e.target.checked)}
-          className="size-4 accent-primary"
-        />
-        {t("agents.form.normalizeGsm7")}
-      </label>
+      <Switch
+        id={`${idPrefix}-gsm7`}
+        label={t("agents.form.normalizeGsm7")}
+        checked={normalizeGsm7}
+        onChange={(e) => onNormalizeChange(e.target.checked)}
+      />
       <InputGroup
         label={t("agents.form.senderId")}
         id={`${idPrefix}-sender`}
@@ -358,7 +357,12 @@ export function AgentTemplates() {
 }
 
 const CREATABLE_TYPES: AgentType[] = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL", "WHATSAPP"];
-const LANGUAGES = ["es", "en"] as const;
+/** Voice template languages. `multi` (callers mixing languages) only means something for
+ *  VOICE_AI, whose speech recognition runs on it; a pre-recorded call recognizes no speech. */
+function languagesFor(type: AgentType): string[] {
+  const base = [DEFAULT_VOICE_LANGUAGE, "en"];
+  return type === "VOICE_AI" ? [...base, MULTILINGUAL_LANGUAGE] : base;
+}
 
 type DtmfFieldErrors = Partial<
   Record<
@@ -451,8 +455,10 @@ function CreateAgentTemplateModal({
   // Defaults on, mirroring the server default — a new template hangs up on a detected
   // machine unless the operator explicitly turns it off.
   const [hangupOnMachineDetected, setHangupOnMachineDetected] = useState(true);
+  // VOICE_AI barge-in; defaults off, mirroring the server default.
+  const [allowUserBargeIn, setAllowUserBargeIn] = useState(false);
   const [fields, setFields] = useState<Record<string, string>>({
-    language: "es",
+    language: DEFAULT_VOICE_LANGUAGE,
     // Idle options pre-filled from the deployment default; the operator may override.
     idleMessage: DEFAULT_VOICE_IDLE_OPTIONS.message,
     idleTimeout: String(DEFAULT_VOICE_IDLE_OPTIONS.timeout),
@@ -526,10 +532,11 @@ function CreateAgentTemplateModal({
           voice: fields.voice ?? "",
           systemPrompt: fields.systemPrompt ?? "",
           firstMessage: fields.firstMessage ?? "",
-          language: fields.language ?? "es",
+          language: fields.language ?? DEFAULT_VOICE_LANGUAGE,
           idleMessage: fields.idleMessage ?? "",
           idleTimeout: Number(fields.idleTimeout),
-          idleMaxTimeoutCount: Number(fields.idleMaxTimeoutCount)
+          idleMaxTimeoutCount: Number(fields.idleMaxTimeoutCount),
+          allowUserBargeIn
         };
         break;
       case "VOICE_PRERECORDED":
@@ -538,7 +545,7 @@ function CreateAgentTemplateModal({
           type,
           voice: fields.voice ?? "",
           script: fields.script ?? "",
-          language: fields.language ?? "es",
+          language: fields.language ?? DEFAULT_VOICE_LANGUAGE,
           ...(fields.repeatDigit ? { repeatDigit: fields.repeatDigit } : {}),
           ...(fields.repeatMessage ? { repeatMessage: fields.repeatMessage } : {}),
           ...(fields.maxRepeats ? { maxRepeats: Number(fields.maxRepeats) } : {}),
@@ -606,7 +613,14 @@ function CreateAgentTemplateModal({
           label={t("agents.form.type")}
           id="a-type"
           value={type}
-          onChange={(e) => setType(e.target.value as AgentType)}
+          onChange={(e) => {
+            const next = e.target.value as AgentType;
+            setType(next);
+            // `multi` is VOICE_AI-only; don't carry it into a type that doesn't offer it.
+            if (fields.language && !languagesFor(next).includes(fields.language)) {
+              set("language", DEFAULT_VOICE_LANGUAGE);
+            }
+          }}
         >
           {CREATABLE_TYPES.map((tp) => (
             <option key={tp} value={tp}>
@@ -620,10 +634,10 @@ function CreateAgentTemplateModal({
             <SelectGroup
               label={t("agents.form.language")}
               id="a-lang"
-              value={fields.language ?? "es"}
+              value={fields.language ?? DEFAULT_VOICE_LANGUAGE}
               onChange={(e) => set("language", e.target.value)}
             >
-              {LANGUAGES.map((lng) => (
+              {languagesFor(type).map((lng) => (
                 <option key={lng} value={lng}>
                   {t(`agents.lang.${lng}` as Parameters<typeof t>[0])}
                 </option>
@@ -687,6 +701,12 @@ function CreateAgentTemplateModal({
               placeholder={t(FIELD_PLACEHOLDER.idleMaxTimeoutCount)}
               value={fields.idleMaxTimeoutCount ?? ""}
               onChange={(e) => set("idleMaxTimeoutCount", e.target.value)}
+            />
+            <Switch
+              id="a-barge-in"
+              label={t("agents.form.allowUserBargeIn")}
+              checked={allowUserBargeIn}
+              onChange={(e) => setAllowUserBargeIn(e.target.checked)}
             />
           </>
         )}
@@ -755,16 +775,12 @@ function CreateAgentTemplateModal({
               onChange={(e) => set("optOutConfirmationMessage", e.target.value)}
               error={createDtmfErrors.optOutConfirmationMessage}
             />
-            <label className="flex items-center gap-2 text-sm text-fg-muted">
-              <input
-                type="checkbox"
-                id="a-hangup-on-amd"
-                checked={hangupOnMachineDetected}
-                onChange={(e) => setHangupOnMachineDetected(e.target.checked)}
-                className="size-4 accent-primary"
-              />
-              {t("agents.form.hangupOnMachineDetected")}
-            </label>
+            <Switch
+              id="a-hangup-on-amd"
+              label={t("agents.form.hangupOnMachineDetected")}
+              checked={hangupOnMachineDetected}
+              onChange={(e) => setHangupOnMachineDetected(e.target.checked)}
+            />
           </>
         )}
 
@@ -886,7 +902,7 @@ type FullTemplate = {
   id: string;
   name: string;
   type: AgentType;
-  voiceAiConfig: Record<string, unknown> | null;
+  voiceAiConfig: (Record<string, unknown> & { allowUserBargeIn?: boolean }) | null;
   voicePrerecordedConfig: (Record<string, unknown> & { hangupOnMachineDetected?: boolean }) | null;
   smsConfig: (Record<string, unknown> & { normalizeGsm7?: boolean }) | null;
   emailConfig: Record<string, unknown> | null;
@@ -912,6 +928,7 @@ function EditAgentTemplateModal({
   // Boolean, so it can't ride along in the string-valued `fields` bag.
   const [normalizeGsm7, setNormalizeGsm7] = useState(false);
   const [hangupOnMachineDetected, setHangupOnMachineDetected] = useState(true);
+  const [allowUserBargeIn, setAllowUserBargeIn] = useState(false);
   const [seeded, setSeeded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const editDtmfErrors = validateVoicePrerecordedDtmf(fields, t);
@@ -957,6 +974,7 @@ function EditAgentTemplateModal({
     setFields(f);
     setNormalizeGsm7(full.smsConfig?.normalizeGsm7 ?? false);
     setHangupOnMachineDetected(full.voicePrerecordedConfig?.hangupOnMachineDetected ?? true);
+    setAllowUserBargeIn(full.voiceAiConfig?.allowUserBargeIn ?? false);
     setSeeded(true);
   }, [full, seeded]);
 
@@ -997,7 +1015,8 @@ function EditAgentTemplateModal({
           language: fields.language,
           idleMessage: fields.idleMessage,
           idleTimeout: Number(fields.idleTimeout),
-          idleMaxTimeoutCount: Number(fields.idleMaxTimeoutCount)
+          idleMaxTimeoutCount: Number(fields.idleMaxTimeoutCount),
+          allowUserBargeIn
         };
         break;
       case "VOICE_PRERECORDED":
@@ -1081,10 +1100,10 @@ function EditAgentTemplateModal({
                 <SelectGroup
                   label={t("agents.form.language")}
                   id="e-lang"
-                  value={fields.language ?? "es"}
+                  value={fields.language ?? DEFAULT_VOICE_LANGUAGE}
                   onChange={(e) => set("language", e.target.value)}
                 >
-                  {(["es", "en"] as const).map((lng) => (
+                  {languagesFor(template.type).map((lng) => (
                     <option key={lng} value={lng}>
                       {t(`agents.lang.${lng}` as Parameters<typeof t>[0])}
                     </option>
@@ -1148,6 +1167,12 @@ function EditAgentTemplateModal({
                   placeholder={t(FIELD_PLACEHOLDER.idleMaxTimeoutCount)}
                   value={fields.idleMaxTimeoutCount ?? ""}
                   onChange={(e) => set("idleMaxTimeoutCount", e.target.value)}
+                />
+                <Switch
+                  id="e-barge-in"
+                  label={t("agents.form.allowUserBargeIn")}
+                  checked={allowUserBargeIn}
+                  onChange={(e) => setAllowUserBargeIn(e.target.checked)}
                 />
               </>
             )}
@@ -1220,16 +1245,12 @@ function EditAgentTemplateModal({
                   onChange={(e) => set("optOutConfirmationMessage", e.target.value)}
                   error={editDtmfErrors.optOutConfirmationMessage}
                 />
-                <label className="flex items-center gap-2 text-sm text-fg-muted">
-                  <input
-                    type="checkbox"
-                    id="e-hangup-on-amd"
-                    checked={hangupOnMachineDetected}
-                    onChange={(e) => setHangupOnMachineDetected(e.target.checked)}
-                    className="size-4 accent-primary"
-                  />
-                  {t("agents.form.hangupOnMachineDetected")}
-                </label>
+                <Switch
+                  id="e-hangup-on-amd"
+                  label={t("agents.form.hangupOnMachineDetected")}
+                  checked={hangupOnMachineDetected}
+                  onChange={(e) => setHangupOnMachineDetected(e.target.checked)}
+                />
               </>
             )}
 

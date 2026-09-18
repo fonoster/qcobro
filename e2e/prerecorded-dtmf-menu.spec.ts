@@ -51,7 +51,7 @@ test.describe("pre-recorded DTMF menu", () => {
     await page.getByRole("button", { name: /Nuevo agente/ }).click();
     await page.getByLabel("Nombre del agente").fill(agentName);
     await page.getByLabel("Tipo de canal").selectOption({ label: "Voz pregrabada" });
-    await page.getByLabel("Idioma").selectOption("es");
+    await page.getByLabel("Idioma", { exact: true }).selectOption("es-419");
     // Exact match: the new AMD checkbox's label ends in "buzón de voz", which a
     // substring match against "Voz" would otherwise also resolve to.
     await page.getByLabel("Voz", { exact: true }).selectOption({ label: "Sofía (es, femenina)" });

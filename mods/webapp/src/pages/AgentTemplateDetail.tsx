@@ -48,6 +48,8 @@ export function AgentTemplateDetail() {
 
   const voiceCfg = tmpl?.voiceAiConfig ?? tmpl?.voicePrerecordedConfig ?? null;
   const synced = voiceCfg?.fonosterAppRef != null;
+  const yesNo = (value: unknown) =>
+    typeof value === "boolean" ? t(value ? "agents.detail.yes" : "agents.detail.no") : null;
   // Only VOICE_AI agents sync to Fonoster (as AUTOPILOT apps). Pre-recorded and the
   // text channels are managed locally and have no per-agent sync.
   const syncsWithFonoster = tmpl?.type === "VOICE_AI";
@@ -122,6 +124,10 @@ export function AgentTemplateDetail() {
                         ? null
                         : String(voiceCfg.idleMaxTimeoutCount)
                     }
+                  />
+                  <ConfigRow
+                    label={t("agents.detail.allowUserBargeIn")}
+                    value={yesNo(voiceCfg.allowUserBargeIn)}
                   />
                 </>
               )}

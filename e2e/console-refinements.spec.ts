@@ -29,7 +29,7 @@ test.describe("console refinements", () => {
     await page.getByRole("link", { name: "Agentes IA" }).click();
     await page.getByRole("button", { name: /Nuevo agente/ }).click();
     await page.getByLabel("Nombre del agente").fill(agentName);
-    await page.getByLabel("Idioma").selectOption("es");
+    await page.getByLabel("Idioma", { exact: true }).selectOption("es-419");
     await page.getByLabel("Voz").selectOption({ label: "Sofía (es, femenina)" });
     // Deliberately leave "Primer mensaje" empty.
     await page.getByLabel("Prompt del sistema").fill("Sé cordial y claro.");
