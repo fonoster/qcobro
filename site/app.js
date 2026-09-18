@@ -4,6 +4,27 @@
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // ─── Ad attribution ───
+  // Meta fills these into the ad's URL at click time (ad_id={{ad.id}}&…). Kept
+  // for the visit in sessionStorage, since the visitor may browse before opening
+  // the pilot form, and sent with the submission so a lead in the sheet can be
+  // traced to the ad that brought it. sessionStorage, not localStorage: a
+  // visitor who returns directly next week applied organically.
+  var AD_PARAMS = ['ad_id', 'adset_id', 'campaign_id', 'ad_name', 'adset_name', 'campaign_name',
+    'utm_source', 'utm_medium', 'utm_campaign', 'utm_content'];
+  var AD_KEY = 'qcobro:ad-attribution';
+  function readAttribution() {
+    try { return JSON.parse(sessionStorage.getItem(AD_KEY)) || {}; } catch (e) { return {}; }
+  }
+  (function captureAttribution() {
+    var params = new URLSearchParams(window.location.search);
+    var found = {};
+    AD_PARAMS.forEach(function (k) { var v = params.get(k); if (v) found[k] = v.slice(0, 200); });
+    // Only a new ad click replaces what the visit already carries.
+    if (!found.ad_id && !found.utm_source) return;
+    try { sessionStorage.setItem(AD_KEY, JSON.stringify(found)); } catch (e) { /* private mode */ }
+  })();
+
   if (window.lucide) window.lucide.createIcons();
 
   // ─── Nav: hairline once the page scrolls ───
@@ -213,6 +234,8 @@
       tipo_empresa: form.tipo_empresa.value,
       cuentas_en_cartera: form.cuentas_en_cartera.value
     };
+    var attribution = readAttribution();
+    AD_PARAMS.forEach(function (k) { payload[k] = attribution[k] || ''; });
     fetch(ENDPOINT, { method: 'POST', body: JSON.stringify(payload) })
       .then(function () {
         // Never pass form fields here: prospect PII must not reach Meta.
