@@ -2,6 +2,8 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   DEFAULT_VOICE_IDLE_OPTIONS,
+  DEFAULT_VOICE_LANGUAGE,
+  MULTILINGUAL_LANGUAGE,
   createAgentTemplateSchema,
   voicePrerecordedDtmfSchema
 } from "./agentTemplates.js";
@@ -157,5 +159,43 @@ describe("createAgentTemplateSchema — VOICE_AI idle options", () => {
       idleTimeout: 5000.5
     });
     assert.equal(result.success, false);
+  });
+});
+
+describe("createAgentTemplateSchema — VOICE_AI barge-in and language", () => {
+  const base = {
+    name: "Cobrador AI",
+    type: "VOICE_AI" as const,
+    voice: "voice-x",
+    systemPrompt: "Be polite",
+    language: "es"
+  };
+
+  it("defaults allowUserBargeIn to false when omitted", () => {
+    const result = createAgentTemplateSchema.safeParse(base);
+    assert.equal(result.success, true);
+    assert.equal((result as { data: Record<string, unknown> }).data.allowUserBargeIn, false);
+  });
+
+  it("accepts allowUserBargeIn true", () => {
+    const result = createAgentTemplateSchema.safeParse({ ...base, allowUserBargeIn: true });
+    assert.equal(result.success, true);
+    assert.equal((result as { data: Record<string, unknown> }).data.allowUserBargeIn, true);
+  });
+
+  it("rejects a non-boolean allowUserBargeIn", () => {
+    const result = createAgentTemplateSchema.safeParse({ ...base, allowUserBargeIn: 1 });
+    assert.equal(result.success, false);
+  });
+
+  it("accepts the multilingual and Latin American Spanish language codes", () => {
+    for (const language of [MULTILINGUAL_LANGUAGE, DEFAULT_VOICE_LANGUAGE]) {
+      assert.equal(createAgentTemplateSchema.safeParse({ ...base, language }).success, true);
+    }
+  });
+
+  it("defaults new voice templates to Latin American Spanish", () => {
+    assert.equal(DEFAULT_VOICE_LANGUAGE, "es-419");
+    assert.equal(MULTILINGUAL_LANGUAGE, "multi");
   });
 });
