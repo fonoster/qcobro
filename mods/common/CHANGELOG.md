@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.52.0](https://github.com/fonoster/qcobro/compare/v1.51.0...v1.52.0) (2026-09-18)
+
+### Features
+
+- Voz IA barge-in, es-419 default and multilingual language option ([#190](https://github.com/fonoster/qcobro/issues/190)) ([1f66879](https://github.com/fonoster/qcobro/commit/1f668791ebc18fcafdf832cd7299035e95e79a59))
+
 # [1.49.0](https://github.com/fonoster/qcobro/compare/v1.48.2...v1.49.0) (2026-09-12)
 
 ### Features
