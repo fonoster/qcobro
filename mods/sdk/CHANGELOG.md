@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.52.1](https://github.com/fonoster/qcobro/compare/v1.52.0...v1.52.1) (2026-09-18)
+
+### Bug Fixes
+
+- **common:** accept an empty rows batch in REPLACE sync mode ([#191](https://github.com/fonoster/qcobro/issues/191)) ([9435470](https://github.com/fonoster/qcobro/commit/9435470f2d26d1652dd4414eb949499716290d94))
+
 # [1.52.0](https://github.com/fonoster/qcobro/compare/v1.51.0...v1.52.0) (2026-09-18)
 
 **Note:** Version bump only for package @qcobro/sdk
