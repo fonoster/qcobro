@@ -10,6 +10,7 @@ function makeClient(
   let baseUpdate: Record<string, unknown> | null = null;
   let smsUpdate: Record<string, unknown> | null = null;
   let prerecordedUpdate: Record<string, unknown> | null = null;
+  let voiceAiUpdate: Record<string, unknown> | null = null;
 
   const client = {
     agentTemplate: {
@@ -19,7 +20,13 @@ function makeClient(
         return { id: args.where.id, ...args.data } as never;
       }
     },
-    voiceAiConfig: { update: async () => ({}) as never, create: async () => ({}) as never },
+    voiceAiConfig: {
+      update: async (args: { where: unknown; data: Record<string, unknown> }) => {
+        voiceAiUpdate = args.data;
+        return {} as never;
+      },
+      create: async () => ({}) as never
+    },
     voicePrerecordedConfig: {
       findUnique: async () =>
         (existingPrerecordedConfig
@@ -50,7 +57,10 @@ function makeClient(
     whatsAppConfig: { update: async () => ({}) as never, create: async () => ({}) as never }
   };
 
-  return { client, stats: () => ({ baseUpdate, smsUpdate, prerecordedUpdate }) };
+  return {
+    client,
+    stats: () => ({ baseUpdate, smsUpdate, prerecordedUpdate, voiceAiUpdate })
+  };
 }
 
 describe("updateAgentTemplate", () => {
@@ -77,6 +87,16 @@ describe("updateAgentTemplate", () => {
     await fn({ id: "tmpl-1", config: { messageBody: "Nuevo mensaje" } });
 
     assert.equal(stats().smsUpdate?.messageBody, "Nuevo mensaje");
+  });
+
+  it("forwards VOICE_AI barge-in and language in the config patch", async () => {
+    const { client, stats } = makeClient("VOICE_AI");
+    const fn = createUpdateAgentTemplate(client as never, "ws-1");
+
+    await fn({ id: "tmpl-1", config: { language: "multi", allowUserBargeIn: true } });
+
+    assert.equal(stats().voiceAiUpdate?.language, "multi");
+    assert.equal(stats().voiceAiUpdate?.allowUserBargeIn, true);
   });
 
   it("archiving sets archivedAt to a timestamp", async () => {

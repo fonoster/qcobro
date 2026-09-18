@@ -234,6 +234,9 @@ model VoiceAiConfig {
   idleMessage         String
   idleTimeout         Int
   idleMaxTimeoutCount Int
+  // The caller can interrupt the agent mid-speech. Off by default (= behavior before it
+  // existed, when autopilotTemplate.json hard-coded `false`).
+  allowUserBargeIn    Boolean       @default(false)
   template            AgentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@map("voice_ai_configs")

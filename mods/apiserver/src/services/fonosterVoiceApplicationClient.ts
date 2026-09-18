@@ -2,6 +2,7 @@ import { getLogger } from "@fonoster/logger";
 import * as SDK from "@fonoster/sdk";
 import {
   DEFAULT_VOICE_IDLE_OPTIONS,
+  MULTILINGUAL_LANGUAGE,
   toCallMetadata,
   ttsProductRefForVoice,
   type FonosterConfig,
@@ -24,6 +25,24 @@ const logger = getLogger({
 });
 
 type FonosterSettings = NonNullable<FonosterConfig>;
+
+/** Deepgram models that accept `multi` (fonoster/fonoster#910); the phonecall and
+ * conversationalai variants are English-only and Fonoster rejects them with `multi`. */
+const MULTILINGUAL_STT_MODELS = ["nova-3", "nova-2"];
+
+/** Speech-to-text config for one agent: the template's language as-is. A multilingual
+ * (`multi`) agent keeps the deployment model if it can do `multi`, and otherwise falls back
+ * to `nova-3` so the sync isn't rejected. */
+export function buildSpeechToTextConfig(
+  sttModel: string,
+  language: string
+): { model: string; languageCode: string } {
+  const model =
+    language === MULTILINGUAL_LANGUAGE && !MULTILINGUAL_STT_MODELS.includes(sttModel)
+      ? "nova-3"
+      : sttModel;
+  return { model, languageCode: language };
+}
 
 /** Cap provider calls so an unreachable Fonoster can't hang the request path. */
 const CALL_TIMEOUT_MS = 15_000;
@@ -136,7 +155,7 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
       type: "AUTOPILOT",
       speechToText: {
         productRef: autopilot.sttProductRef,
-        config: { model: autopilot.sttModel, languageCode: input.language }
+        config: buildSpeechToTextConfig(autopilot.sttModel, input.language)
       },
       textToSpeech: {
         productRef: ttsProductRefForVoice(input.voice, this.settings.voices ?? []),
@@ -147,11 +166,12 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
         credentials: {},
         config: {
           conversationSettings: {
-            // Static conversation defaults (goodbyeMessage, systemErrorMessage,
-            // allowUserBargeIn) come from the autopilot template (derived from
-            // autopilot.yaml; required by Fonoster). Per-agent firstMessage +
-            // systemPrompt + idleOptions override on top.
+            // Static conversation defaults (goodbyeMessage, systemErrorMessage) come
+            // from the autopilot template (derived from autopilot.yaml; required by
+            // Fonoster). Per-agent firstMessage + systemPrompt + idleOptions +
+            // allowUserBargeIn override on top.
             ...autopilotTemplate.conversationSettings,
+            allowUserBargeIn: input.allowUserBargeIn,
             // Only override the template's default greeting when the agent has a
             // scripted first message; otherwise the autopilot default stands.
             ...(input.firstMessage ? { firstMessage: input.firstMessage } : {}),
@@ -289,6 +309,9 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
         config: {
           conversationSettings: {
             ...autopilotTemplate.conversationSettings,
+            // Barge-in is a live-call behavior evaluateIntelligence never exercises, but
+            // Fonoster requires the field; off, like a template that never set it.
+            allowUserBargeIn: false,
             ...(input.firstMessage ? { firstMessage: input.firstMessage } : {}),
             systemPrompt: input.systemPrompt,
             // No template row here (ephemeral eval agent) — use the deployment default.

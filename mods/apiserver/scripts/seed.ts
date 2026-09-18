@@ -536,7 +536,7 @@ async function main() {
   const smsId = await ensureAgent("Recordatorio SMS", "SMS", { messageBody: SMS_BODY });
   const sofiaId = await ensureAgent("Sofia", "VOICE_PRERECORDED", {
     voice: SOFIA_VOICE,
-    language: "es",
+    language: "es-419",
     script: SOFIA_SCRIPT
   });
 

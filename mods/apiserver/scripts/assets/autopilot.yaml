@@ -5,7 +5,7 @@ speechToText:
   productRef: "stt.deepgram"
   config:
     model: "nova-3"
-    languageCode: "es-ES"
+    languageCode: "es-419"
 textToSpeech:
   productRef: "tts.elevenlabs"
   config:
