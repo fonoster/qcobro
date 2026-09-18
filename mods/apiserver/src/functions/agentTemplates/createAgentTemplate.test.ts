@@ -162,7 +162,9 @@ describe("createAgentTemplate", () => {
       // omitted them so they carry the DEFAULT_VOICE_IDLE_OPTIONS values.
       idleMessage: DEFAULT_VOICE_IDLE_OPTIONS.message,
       idleTimeout: DEFAULT_VOICE_IDLE_OPTIONS.timeout,
-      idleMaxTimeoutCount: DEFAULT_VOICE_IDLE_OPTIONS.maxTimeoutCount
+      idleMaxTimeoutCount: DEFAULT_VOICE_IDLE_OPTIONS.maxTimeoutCount,
+      // Barge-in defaults off and is forwarded from the row the same way.
+      allowUserBargeIn: false
     });
     assert.deepEqual(updates.voiceAi, { fonosterAppRef: "app-1" });
   });
@@ -202,6 +204,39 @@ describe("createAgentTemplate", () => {
     assert.equal(created.voiceAi?.idleMessage, "¿Sigue ahí?");
     assert.equal(created.voiceAi?.idleTimeout, 5000);
     assert.equal(created.voiceAi?.idleMaxTimeoutCount, 2);
+  });
+
+  it("persists barge-in off when the input omits it", async () => {
+    const { client, created } = makeClient();
+    const fn = createCreateAgentTemplate(client as never, "ws-1");
+
+    await fn({
+      name: "Sin barge-in",
+      type: "VOICE_AI",
+      voice: "voice-x",
+      systemPrompt: "Be polite",
+      language: "es"
+    });
+
+    assert.equal(created.voiceAi?.allowUserBargeIn, false);
+  });
+
+  it("persists and syncs barge-in as given", async () => {
+    const { client, created } = makeClient();
+    const voice = makeVoiceClient();
+    const fn = createCreateAgentTemplate(client as never, "ws-1", voice.client as never);
+
+    await fn({
+      name: "Con barge-in",
+      type: "VOICE_AI",
+      voice: "voice-x",
+      systemPrompt: "Be polite",
+      language: "es",
+      allowUserBargeIn: true
+    });
+
+    assert.equal(created.voiceAi?.allowUserBargeIn, true);
+    assert.equal(voice.calls[0]?.input.allowUserBargeIn, true);
   });
 
   it("saves locally when the Fonoster sync fails (no throw, ref unset)", async () => {

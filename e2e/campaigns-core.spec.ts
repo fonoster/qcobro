@@ -34,7 +34,7 @@ test.describe("campaigns core", () => {
     await page.getByRole("button", { name: /Nuevo agente/ }).click();
     await page.getByLabel("Nombre del agente").fill(agentName);
     // VOICE_AI is the default type. Idioma + Voz are now config-sourced selects.
-    await page.getByLabel("Idioma").selectOption("es");
+    await page.getByLabel("Idioma", { exact: true }).selectOption("es-419");
     await page.getByLabel("Voz").selectOption({ label: "Sofía (es, femenina)" });
     await page.getByLabel("Primer mensaje").fill("Hola, le llamo de QCobro.");
     await page.getByLabel("Prompt del sistema").fill("Sé cordial y claro.");
@@ -43,6 +43,8 @@ test.describe("campaigns core", () => {
     await expect(page.getByLabel("Tiempo de inactividad (ms, mín. 3000)")).toHaveValue("8000");
     await expect(page.getByLabel("Máximo de reintentos por inactividad")).toHaveValue("3");
     await expect(page.getByLabel("Mensaje de inactividad")).not.toHaveValue("");
+    // Barge-in defaults off.
+    await expect(page.getByLabel(/Permitir que el cliente interrumpa/)).not.toBeChecked();
     await page.getByRole("button", { name: "Crear agente" }).click();
     // VOICE_AI create runs a best-effort Fonoster sync inline (≤15s timeout), so
     // give the row a wide window to appear.

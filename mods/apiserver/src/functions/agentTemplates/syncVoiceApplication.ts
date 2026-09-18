@@ -24,7 +24,8 @@ export async function syncVoiceAiApplication(
     language: cfg.language,
     idleMessage: cfg.idleMessage,
     idleTimeout: cfg.idleTimeout,
-    idleMaxTimeoutCount: cfg.idleMaxTimeoutCount
+    idleMaxTimeoutCount: cfg.idleMaxTimeoutCount,
+    allowUserBargeIn: cfg.allowUserBargeIn
   };
 
   const { ref } = cfg.fonosterAppRef

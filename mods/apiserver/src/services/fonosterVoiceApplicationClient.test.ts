@@ -1,7 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { DEFAULT_VOICE_IDLE_OPTIONS } from "@qcobro/common";
-import { FonosterVoiceApplicationClient, type AppsApi } from "./fonosterVoiceApplicationClient.js";
+import {
+  buildSpeechToTextConfig,
+  FonosterVoiceApplicationClient,
+  type AppsApi
+} from "./fonosterVoiceApplicationClient.js";
 
 /**
  * These exercise the request shape `FonosterVoiceApplicationClient` sends to Fonoster,
@@ -58,6 +62,10 @@ function seedFakeApps(client: FonosterVoiceApplicationClient): Captured {
 const idleOf = (req: any) => req.intelligence.config.conversationSettings.idleOptions;
 
 const audioFiltersOf = (req: any) => req.intelligence.config.audioFilters;
+
+const sttOf = (req: any) => req.speechToText.config;
+
+const bargeInOf = (req: any) => req.intelligence.config.conversationSettings.allowUserBargeIn;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 const BASE_INPUT = {
@@ -65,8 +73,11 @@ const BASE_INPUT = {
   voice: "voice-x",
   systemPrompt: "Be polite",
   firstMessage: "Hola",
-  language: "es"
+  language: "es",
+  allowUserBargeIn: false
 };
+
+const IDLE = { idleMessage: "¿Sigue ahí?", idleTimeout: 5000, idleMaxTimeoutCount: 2 };
 
 describe("FonosterVoiceApplicationClient.buildRequest (via createApplication)", () => {
   it("builds conversationSettings.idleOptions from the input's idle fields", async () => {
@@ -124,6 +135,61 @@ describe("FonosterVoiceApplicationClient.buildRequest (via createApplication)", 
   });
 });
 
+describe("FonosterVoiceApplicationClient speech options", () => {
+  it("sends the template language as the STT language, with no barge-in by default", async () => {
+    const client = new FonosterVoiceApplicationClient(SETTINGS);
+    const captured = seedFakeApps(client);
+
+    await client.createApplication({ ...BASE_INPUT, ...IDLE, language: "es-419" });
+
+    assert.deepEqual(sttOf(captured.create), { model: "nova-3", languageCode: "es-419" });
+    assert.equal(bargeInOf(captured.create), false);
+  });
+
+  it("sends Deepgram multi for a multilingual template", async () => {
+    const client = new FonosterVoiceApplicationClient(SETTINGS);
+    const captured = seedFakeApps(client);
+
+    await client.updateApplication("app-xyz", { ...BASE_INPUT, ...IDLE, language: "multi" });
+
+    assert.deepEqual(sttOf(captured.update), { model: "nova-3", languageCode: "multi" });
+  });
+
+  it("passes allowUserBargeIn through on create and update", async () => {
+    const client = new FonosterVoiceApplicationClient(SETTINGS);
+    const captured = seedFakeApps(client);
+    const input = { ...BASE_INPUT, ...IDLE, allowUserBargeIn: true };
+
+    await client.createApplication(input);
+    await client.updateApplication("app-xyz", input);
+
+    assert.equal(bargeInOf(captured.create), true);
+    assert.equal(bargeInOf(captured.update), true);
+  });
+});
+
+describe("buildSpeechToTextConfig", () => {
+  it("keeps a deployment model that supports multi", () => {
+    for (const model of ["nova-3", "nova-2"]) {
+      assert.deepEqual(buildSpeechToTextConfig(model, "multi"), { model, languageCode: "multi" });
+    }
+  });
+
+  it("falls back to nova-3 for multi when the deployment model can't do it", () => {
+    assert.deepEqual(buildSpeechToTextConfig("nova-2-phonecall", "multi"), {
+      model: "nova-3",
+      languageCode: "multi"
+    });
+  });
+
+  it("leaves the deployment model alone for a single language", () => {
+    assert.deepEqual(buildSpeechToTextConfig("nova-2-phonecall", "es"), {
+      model: "nova-2-phonecall",
+      languageCode: "es"
+    });
+  });
+});
+
 describe("FonosterVoiceApplicationClient.evaluate", () => {
   it("builds idleOptions from DEFAULT_VOICE_IDLE_OPTIONS (no template row)", async () => {
     const client = new FonosterVoiceApplicationClient(SETTINGS);
@@ -152,6 +218,7 @@ describe("FonosterVoiceApplicationClient.evaluate", () => {
       timeout: DEFAULT_VOICE_IDLE_OPTIONS.timeout,
       maxTimeoutCount: DEFAULT_VOICE_IDLE_OPTIONS.maxTimeoutCount
     });
+    assert.equal(bargeInOf(captured.evaluate), false);
   });
 });
 

@@ -23,6 +23,9 @@ export interface VoiceApplicationInput {
   idleTimeout: number;
   /** Consecutive idle timeouts tolerated before the call ends; ≥ 1. */
   idleMaxTimeoutCount: number;
+  /** The caller can interrupt the agent while it is speaking (maps to
+   * VoiceAiConfig.allowUserBargeIn). */
+  allowUserBargeIn: boolean;
 }
 
 /** One scripted turn within a VOICE_AI eval scenario, translated into Fonoster's

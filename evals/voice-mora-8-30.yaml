@@ -22,7 +22,7 @@
 type: VOICE_AI
 name: "Créditos Demo · Mora 8-30"
 voice: "eleven-es-do-female" # any configured es-DO voice id; not graded by `agents:eval`
-language: "es"
+language: "es-419"
 
 systemPrompt: |
   ## Rol
