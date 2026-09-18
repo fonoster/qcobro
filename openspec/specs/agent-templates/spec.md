@@ -78,13 +78,17 @@ their respective child tables:
 - `systemPrompt String` — the AI agent's persona and instructions
 - `firstMessage String?` — the opening line spoken to the contact; optional, an agent may
   rely on the system prompt alone with no scripted opening line
-- `language String` — default language code (e.g. `es`, `en`)
+- `language String` — language code; one of `es-419` (Latin American Spanish, the default for
+  new templates), `en`, or `multi` — the last meaning the agent's callers are expected to mix
+  languages, so speech recognition accepts more than one
 - `idleMessage String` — the line the agent speaks when the caller has gone silent,
   prompting them to re-engage; non-empty
 - `idleTimeout Int` — how long, in **milliseconds**, the agent waits for caller speech
   before speaking `idleMessage`; an integer of at least `3000`, with no upper bound
 - `idleMaxTimeoutCount Int` — how many consecutive idle timeouts the agent tolerates
   before ending the call; an integer of at least `1`, with no upper bound
+- `allowUserBargeIn Boolean` — when `true`, the caller can interrupt the agent while it is
+  speaking; defaults to `false`
 
 The three idle fields are conceptually required — the database columns are NOT NULL, the
 console form rejects an empty value, and every synced Fonoster application always carries
@@ -93,13 +97,18 @@ deployment's idle-option defaults rather than rejected. The defaults are a singl
 shared by the migration backfill, the console create form's pre-fill, and the ephemeral
 evaluation path.
 
+`allowUserBargeIn` SHALL be stored as `false` for any template saved without it, including
+every template that existed before the field, so that such a template behaves exactly as it
+did before.
+
 **VoicePrerecordedConfig** (for `VOICE_PRERECORDED`):
 
 - `fonosterAppName String` — the name of the Fonoster application
 - `fonosterAppRef String?` — the Fonoster application ID, populated after sync
 - `voice String` — voice identifier used for TTS generation
 - `script String` — the full script text to be converted to speech
-- `language String` — language code for TTS synthesis
+- `language String` — language code; one of `es-419` (the default for new templates) or `en`.
+  `multi` is not offered: a pre-recorded call recognizes no speech
 - `repeatDigit String?` — single DTMF digit (`0`-`9`) that replays the script; unset means no
   repeat option is offered
 - `repeatMessage String?` — spoken prompt played (once, after the script) inviting the caller
@@ -163,6 +172,37 @@ capability existed.
   milliseconds, or `idleMaxTimeoutCount` less than `1`, or an empty `idleMessage`
 - **THEN** the save is rejected with a structured validation error naming the offending
   field
+
+#### Scenario: VOICE_AI template saved without barge-in keeps it off
+
+- **WHEN** a VOICE_AI template is created without `allowUserBargeIn` supplied
+- **THEN** the template is stored with `allowUserBargeIn: false`
+- **AND** the synced Fonoster application's `conversationSettings.allowUserBargeIn` is `false`
+
+#### Scenario: Barge-in setting reaches the synced application
+
+- **WHEN** an operator saves a VOICE_AI template with `allowUserBargeIn` set to `true`
+- **THEN** the synced Fonoster application's `conversationSettings.allowUserBargeIn` is
+  `true`
+
+#### Scenario: New voice templates default to Latin American Spanish
+
+- **WHEN** an operator opens the create form for a voice agent template
+- **THEN** the language is pre-selected as `es-419`
+- **AND** the synced Fonoster application's speech-to-text `languageCode` is `es-419` unless
+  the operator picks another language
+
+#### Scenario: Multilingual language switches the synced application to Deepgram's multi mode
+
+- **WHEN** an operator saves a VOICE_AI template with `language` set to `multi`
+- **THEN** the synced Fonoster application's speech-to-text `languageCode` is `multi`
+- **AND** its speech-to-text `model` is the deployment's STT model if that model supports
+  `multi` (`nova-3` or `nova-2`), and `nova-3` otherwise
+
+#### Scenario: Multilingual is not offered for pre-recorded templates
+
+- **WHEN** an operator creates or edits a `VOICE_PRERECORDED` template
+- **THEN** the language options are `es-419` and `en` only
 
 #### Scenario: Template saves locally even if Fonoster sync fails
 
