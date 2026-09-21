@@ -141,9 +141,11 @@ a { color: inherit; }
 .hero__sub { font-size: 19px; line-height: 1.55; color: var(--ink-2); max-width: 520px; margin-top: 28px; }
 .hero__ctas { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 36px; }
 /* The photo fades into the paper on its left and bottom edges. */
-.hero__scene { position: absolute; top: 0; right: 0; bottom: 0; width: 52%; }
+/* The photo is a portrait frame, so cap the column: past ~820px `cover` starts
+   zooming into her face instead of showing the colmado around her. */
+.hero__scene { position: absolute; top: 0; right: 0; bottom: 0; width: 52%; max-width: 820px; }
 .hero__scene img {
-  width: 100%; height: 100%; object-fit: cover; object-position: 78% 40%;
+  width: 100%; height: 100%; object-fit: cover; object-position: 50% 14%;
   -webkit-mask-image: linear-gradient(to right, transparent 0, #000 42%), linear-gradient(to top, transparent 0, #000 28%);
   -webkit-mask-composite: source-in;
   mask-image: linear-gradient(to right, transparent 0, #000 42%), linear-gradient(to top, transparent 0, #000 28%);
@@ -413,9 +415,9 @@ a { color: inherit; }
   .statement { font-size: 24px; }
 
   .hero__inner { min-height: 0; padding-block: 48px 32px; }
-  .hero__scene { position: relative; width: 100%; height: 440px; }
+  .hero__scene { position: relative; width: 100%; max-width: none; height: 440px; }
   .hero__scene img {
-    object-position: 70% 30%;
+    object-position: 50% 30%;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 32%);
     mask-image: linear-gradient(to bottom, transparent 0, #000 32%);
   }
