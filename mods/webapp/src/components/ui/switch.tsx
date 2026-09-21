@@ -15,12 +15,14 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(
           id={id}
           checked={checked}
           onChange={onChange}
-          className="peer sr-only"
+          // Transparent but full-size over the track (not sr-only), so pointers and test
+          // drivers hit the real input; the track below ignores pointer events.
+          className="peer absolute inset-0 z-10 m-0 h-full w-full cursor-pointer opacity-0"
           {...props}
         />
         <div
           className={cn(
-            "h-5 w-9 rounded-full bg-elevated transition-colors peer-checked:bg-primary peer-focus:ring-2 peer-focus:ring-ring/20",
+            "pointer-events-none h-5 w-9 rounded-full bg-elevated transition-colors peer-checked:bg-primary peer-focus:ring-2 peer-focus:ring-ring/20",
             "after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-surface after:shadow after:transition-transform peer-checked:after:translate-x-4",
             className
           )}

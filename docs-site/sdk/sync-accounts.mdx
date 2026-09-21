@@ -31,7 +31,8 @@ elegiste.
     ```
   </Step>
   <Step title="Envía las filas">
-    Pasa el `portfolioId`, un `mode` y al menos una fila. Cada fila necesita un `externalId`,
+    Pasa el `portfolioId`, un `mode` y al menos una fila (solo `REPLACE` acepta un lote
+    vacío). Cada fila necesita un `externalId`,
     un `fullName` y un `outstandingBalance`.
 
     ```ts
@@ -86,7 +87,8 @@ por `externalId` dentro de la cartera.
   <Tab title="REPLACE">
     Haz que la cartera refleje el lote: crea, actualiza y archiva cualquier cuenta cuyo
     `externalId` no esté en `rows`. Úsalo cuando el lote es una instantánea completa de la
-    cartera.
+    cartera. Un lote vacío (`rows: []`) es una instantánea válida: vacía la cartera archivando
+    todas sus cuentas.
 
     ```ts
     await client.portfolios.syncAccounts({ portfolioId: "f47ac10b-...", mode: "REPLACE", rows });
@@ -179,8 +181,9 @@ cuando se omiten.
 ## Maneja los errores de validación
 
 Las filas se validan **en el cliente** contra el esquema compartido de QCobro antes de enviar
-cualquier petición. Un lote vacío, un `mode` desconocido o un `email` malformado lanza un
-`ValidationError` con detalle por campo y no hace ninguna llamada de red.
+cualquier petición. Un lote vacío en `APPEND_ONLY` o `UPDATE_EXISTING`, un `mode` desconocido
+o un `email` malformado lanza un `ValidationError` con detalle por campo y no hace ninguna
+llamada de red.
 
 ```ts
 import { ValidationError } from "@qcobro/sdk";
@@ -189,7 +192,7 @@ try {
   await client.portfolios.syncAccounts({
     portfolioId: "f47ac10b-...",
     mode: "APPEND_ONLY",
-    rows: [] // los lotes vacíos se rechazan
+    rows: [] // los lotes vacíos se rechazan fuera de REPLACE
   });
 } catch (err) {
   if (err instanceof ValidationError) {

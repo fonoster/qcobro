@@ -62,6 +62,18 @@ test("syncAccounts rejects an empty rows batch before any request", async () => 
   assert.equal(calls.length, 0);
 });
 
+test("syncAccounts sends an empty REPLACE batch (it empties the portfolio)", async () => {
+  const { calls, fetchImpl } = recordingFetch();
+  const client = authedClient(fetchImpl);
+
+  // Validation passes, so the request reaches the (throwing) transport.
+  await assert.rejects(
+    () => client.portfolios.syncAccounts({ portfolioId: "p1", mode: "REPLACE", rows: [] }),
+    (err: unknown) => !(err instanceof ValidationError)
+  );
+  assert.equal(calls.length, 1);
+});
+
 test("get rejects an empty id before any request", async () => {
   const { calls, fetchImpl } = recordingFetch();
   const client = authedClient(fetchImpl);

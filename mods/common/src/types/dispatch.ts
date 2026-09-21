@@ -65,6 +65,13 @@ export type VoiceCallStatus =
   | "UNKNOWN";
 
 /**
+ * Fonoster's answering-machine detection (AMD) verdict, read off the CDR's `amdStatus`
+ * field. Only ever present when AMD was enabled upstream for the call (`undefined`
+ * otherwise — always null-check); `MACHINE` is the only value the sweep acts on.
+ */
+export type AmdStatus = "HUMAN" | "MACHINE" | "UNKNOWN";
+
+/**
  * Result of looking up a call's CDR by provider ref. `found: false` is Fonoster's own
  * `NOT_FOUND` (the call never originated at all) — surfaced as a typed result rather than a
  * thrown error, since it is an expected, distinct outcome the sweep branches on.
@@ -80,9 +87,19 @@ export type VoiceCallStatus =
  * rather than from when it happened to poll: the CDR write and the channel's own live
  * completion signal (the autopilot webhook, the co-located VoiceServer) are triggered by the
  * same event and race, and only `endedAt` says how far into that race the sweep actually is.
+ *
+ * `amdStatus` rides on the same CDR, undefined when AMD wasn't enabled for the call. It is
+ * the only place the sweep learns of a detected machine (see `account-contact-log`'s voice
+ * completion sweep requirement) — it is never consulted on the live completion path.
  */
 export type VoiceCallLookupResult =
-  | { found: true; status: VoiceCallStatus; setupToClearSeconds: number; endedAt: Date | null }
+  | {
+      found: true;
+      status: VoiceCallStatus;
+      setupToClearSeconds: number;
+      endedAt: Date | null;
+      amdStatus?: AmdStatus;
+    }
   | { found: false };
 
 export interface OutboundCallClient {

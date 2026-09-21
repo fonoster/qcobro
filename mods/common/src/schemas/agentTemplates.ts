@@ -9,6 +9,14 @@ import { z } from "zod";
  */
 export const PRERECORDED_SCRIPT_MAX_LENGTH = 2000;
 
+/** Language code for a voice template that expects callers to mix languages: speech
+ *  recognition uses Deepgram's `multi` (code-switching) mode. VOICE_AI only. */
+export const MULTILINGUAL_LANGUAGE = "multi";
+
+/** Default language for new voice templates: Latin American Spanish, which Deepgram's
+ *  Nova-3 (the deployment's default STT model) recognizes more accurately than generic `es`. */
+export const DEFAULT_VOICE_LANGUAGE = "es-419";
+
 /**
  * Deployment defaults for a VOICE_AI agent's Fonoster AUTOPILOT idle options — the line the
  * agent speaks when the caller goes silent (`message`), how long it waits for speech before
@@ -165,7 +173,9 @@ export const createAgentTemplateSchema = z
         .number()
         .int()
         .min(1)
-        .default(DEFAULT_VOICE_IDLE_OPTIONS.maxTimeoutCount)
+        .default(DEFAULT_VOICE_IDLE_OPTIONS.maxTimeoutCount),
+      /** The caller can interrupt the agent while it is speaking. Defaults off. */
+      allowUserBargeIn: z.boolean().default(false)
     }),
     z.object({
       ...baseFields,
@@ -174,7 +184,12 @@ export const createAgentTemplateSchema = z
       script: z.string().min(1).max(PRERECORDED_SCRIPT_MAX_LENGTH),
       language: z.string().min(1),
       fonosterAppName: z.string().min(1).optional(),
-      ...voicePrerecordedDtmfFields
+      ...voicePrerecordedDtmfFields,
+      /** When true (the default), the call hangs up instead of playing the script if
+       *  Fonoster's answering-machine detection reports the call was picked up by a
+       *  machine (see the `prerecorded-audio` spec). No observable effect unless AMD is
+       *  enabled upstream for the call. */
+      hangupOnMachineDetected: z.boolean().optional()
     }),
     z.object({
       ...baseFields,

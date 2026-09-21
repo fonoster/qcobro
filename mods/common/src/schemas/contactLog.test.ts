@@ -42,13 +42,14 @@ describe("createContactLogSchema — VOICE_PRERECORDED path/outcome carve-out", 
     assert.equal(result.success, false);
   });
 
-  it("rejects path VOICEMAIL — unreachable on this channel even with the carve-out", () => {
+  it("accepts path ANSWERED_BY_MACHINE — a detected machine hang-up", () => {
     const result = createContactLogSchema.safeParse({
       ...base,
-      delivery: "DELIVERED",
-      path: "VOICEMAIL"
+      delivery: "FAILED",
+      deliveryReason: "UNREACHABLE",
+      path: "ANSWERED_BY_MACHINE"
     });
-    assert.equal(result.success, false);
+    assert.equal(result.success, true);
   });
 
   it("rejects any outcome other than OPT_OUT — e.g. PAYMENT_PROMISE stays unreachable", () => {

@@ -45,7 +45,9 @@ export function createCreateAgentTemplate(
               // pointing at DEFAULT_VOICE_IDLE_OPTIONS.
               idleMessage: params.idleMessage,
               idleTimeout: params.idleTimeout,
-              idleMaxTimeoutCount: params.idleMaxTimeoutCount
+              idleMaxTimeoutCount: params.idleMaxTimeoutCount,
+              // `.default(false)` in the schema.
+              allowUserBargeIn: params.allowUserBargeIn
             }
           });
           break;
@@ -62,7 +64,8 @@ export function createCreateAgentTemplate(
               maxRepeats: params.maxRepeats ?? null,
               optOutDigit: params.optOutDigit ?? null,
               optOutMessage: params.optOutMessage ?? null,
-              optOutConfirmationMessage: params.optOutConfirmationMessage ?? null
+              optOutConfirmationMessage: params.optOutConfirmationMessage ?? null,
+              hangupOnMachineDetected: params.hangupOnMachineDetected ?? true
             }
           });
           break;

@@ -5,7 +5,7 @@ speechToText:
   productRef: "stt.deepgram"
   config:
     model: "nova-3"
-    languageCode: "es-ES"
+    languageCode: "es-419"
 textToSpeech:
   productRef: "tts.elevenlabs"
   config:
@@ -13,6 +13,13 @@ textToSpeech:
 intelligence:
   productRef: "llm.google"
   config:
+    # Runs in Fonoster's media server, on the caller's audio, before speech
+    # recognition — keeps a television or a second person out of the transcript.
+    # Mirrors autopilotTemplate.json, which is what synced agents get.
+    audioFilters:
+      - name: aiCoustics
+        options:
+          enhancementLevel: 0.8
     conversationSettings:
       allowUserBargeIn: false
       systemPrompt: |

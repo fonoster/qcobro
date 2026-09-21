@@ -38,6 +38,7 @@ type TemplateWithConfigs = {
     optOutDigit: string | null;
     optOutMessage: string | null;
     optOutConfirmationMessage: string | null;
+    hangupOnMachineDetected: boolean;
   } | null;
   smsConfig: { messageBody: string; normalizeGsm7: boolean } | null;
   emailConfig: { subject: string; messageBody: string; systemPrompt: string } | null;
@@ -94,7 +95,8 @@ function buildDispatchRequest(
         optOutDigit: template.voicePrerecordedConfig.optOutDigit ?? undefined,
         optOutMessage: template.voicePrerecordedConfig.optOutMessage ?? undefined,
         optOutConfirmationMessage:
-          template.voicePrerecordedConfig.optOutConfirmationMessage ?? undefined
+          template.voicePrerecordedConfig.optOutConfirmationMessage ?? undefined,
+        hangupOnMachineDetected: template.voicePrerecordedConfig.hangupOnMachineDetected
       };
     case "EMAIL":
       if (!template.emailConfig)

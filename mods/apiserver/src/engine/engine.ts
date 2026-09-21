@@ -80,6 +80,7 @@ export interface EngineTemplate {
     optOutDigit: string | null;
     optOutMessage: string | null;
     optOutConfirmationMessage: string | null;
+    hangupOnMachineDetected: boolean;
   } | null;
   smsConfig: { messageBody: string; normalizeGsm7: boolean } | null;
   emailConfig: {
@@ -344,7 +345,8 @@ export function createEngine(deps: EngineDeps) {
       maxRepeats: t.voicePrerecordedConfig?.maxRepeats ?? undefined,
       optOutDigit: t.voicePrerecordedConfig?.optOutDigit ?? undefined,
       optOutMessage: t.voicePrerecordedConfig?.optOutMessage ?? undefined,
-      optOutConfirmationMessage: t.voicePrerecordedConfig?.optOutConfirmationMessage ?? undefined
+      optOutConfirmationMessage: t.voicePrerecordedConfig?.optOutConfirmationMessage ?? undefined,
+      hangupOnMachineDetected: t.voicePrerecordedConfig?.hangupOnMachineDetected
     };
   }
 

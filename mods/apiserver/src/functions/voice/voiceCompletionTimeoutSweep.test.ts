@@ -230,6 +230,121 @@ describe("createVoiceCompletionTimeoutSweep", () => {
     });
   });
 
+  describe("branch: answering-machine detection", () => {
+    it("labels path ANSWERED_BY_MACHINE on a VOICE_AI gestión alongside its deliveryReason", async () => {
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        {
+          "call-1": {
+            found: true,
+            status: "NORMAL_CLEARING",
+            setupToClearSeconds: 45,
+            endedAt: WELL_PAST_GRACE,
+            amdStatus: "MACHINE"
+          }
+        }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      await sweep();
+
+      assert.deepEqual(aiCalls, [
+        {
+          providerRef: "call-1",
+          answered: false,
+          deliveryReason: "OUTCOME_UNKNOWN",
+          answeredSeconds: 0,
+          at: NOW.toISOString(),
+          path: "ANSWERED_BY_MACHINE"
+        }
+      ]);
+    });
+
+    it("labels path ANSWERED_BY_MACHINE on a VOICE_PRERECORDED gestión the sweep finalizes too", async () => {
+      const { deps, prerecordedCalls } = makeDeps(
+        [
+          {
+            id: "g-2",
+            providerRef: "call-2",
+            agentType: "VOICE_PRERECORDED",
+            contactedAt: JUST_PAST_FLOOR
+          }
+        ],
+        {
+          "call-2": {
+            found: true,
+            status: "NO_ANSWER",
+            setupToClearSeconds: 30,
+            endedAt: WELL_PAST_GRACE,
+            amdStatus: "MACHINE"
+          }
+        }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      await sweep();
+
+      assert.deepEqual(prerecordedCalls, [
+        {
+          providerRef: "call-2",
+          answered: false,
+          deliveryReason: "NO_ANSWER",
+          answeredSeconds: 0,
+          at: NOW.toISOString(),
+          path: "ANSWERED_BY_MACHINE"
+        }
+      ]);
+    });
+
+    it("leaves path unset when the CDR reports no amdStatus at all", async () => {
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        {
+          "call-1": {
+            found: true,
+            status: "USER_BUSY",
+            setupToClearSeconds: 12,
+            endedAt: WELL_PAST_GRACE
+          }
+        }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      await sweep();
+
+      assert.deepEqual(aiCalls, [
+        {
+          providerRef: "call-1",
+          answered: false,
+          deliveryReason: "BUSY",
+          answeredSeconds: 0,
+          at: NOW.toISOString()
+        }
+      ]);
+      assert.equal("path" in (aiCalls[0] as object), false);
+    });
+
+    it("leaves path unset when amdStatus is HUMAN or UNKNOWN", async () => {
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        {
+          "call-1": {
+            found: true,
+            status: "USER_BUSY",
+            setupToClearSeconds: 12,
+            endedAt: WELL_PAST_GRACE,
+            amdStatus: "HUMAN"
+          }
+        }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      await sweep();
+
+      assert.equal("path" in (aiCalls[0] as object), false);
+    });
+  });
+
   describe("branch: grace period — a terminal CDR races a live completion signal", () => {
     it("does not finalize a terminal CDR ended only 5 seconds ago", async () => {
       const { deps, aiCalls, prerecordedCalls } = makeDeps(

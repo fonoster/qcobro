@@ -1,5 +1,5 @@
 {
-  "version": "2.17",
+  "version": "2.18",
   "children": [
     {
       "type": "frame",
@@ -95633,6 +95633,7 @@
                   "lineHeight": 1.02,
                   "fontFamily": "$site3-display",
                   "fontSize": 76,
+                  "fontWeight": "normal",
                   "letterSpacing": -2
                 },
                 {
@@ -95754,7 +95755,7 @@
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "images/generated-1789583654735.png",
+                    "url": "images/hero-colmado.jpg",
                     "mode": "fill"
                   },
                   "width": 720,
@@ -99483,6 +99484,7 @@
                   "lineHeight": 1.02,
                   "fontFamily": "$site3-display",
                   "fontSize": 46,
+                  "fontWeight": "normal",
                   "letterSpacing": -2
                 },
                 {
@@ -99604,7 +99606,7 @@
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "images/generated-1789583654735.png",
+                    "url": "images/hero-colmado.jpg",
                     "mode": "fill"
                   },
                   "width": 390,
@@ -105666,6 +105668,7 @@
                       "lineHeight": 1.1,
                       "fontFamily": "$site3-display",
                       "fontSize": 64,
+                      "fontWeight": "normal",
                       "letterSpacing": -1.4
                     }
                   ]
@@ -105813,7 +105816,8 @@
                       "content": "ENTREGA · CAMINO · RESULTADO",
                       "lineHeight": 1.1,
                       "fontFamily": "$site3-mono",
-                      "fontSize": 32
+                      "fontSize": 32,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -108366,6 +108370,7 @@
                       "lineHeight": 1.1,
                       "fontFamily": "$site3-display",
                       "fontSize": 40,
+                      "fontWeight": "normal",
                       "letterSpacing": -1.4
                     }
                   ]
@@ -108513,7 +108518,8 @@
                       "content": "ENTREGA · CAMINO · RESULTADO",
                       "lineHeight": 1.1,
                       "fontFamily": "$site3-mono",
-                      "fontSize": 22
+                      "fontSize": 22,
+                      "fontWeight": "normal"
                     }
                   ]
                 }

@@ -192,15 +192,44 @@ describe("syncAccounts", () => {
     assert.equal(result.archived, 0);
   });
 
-  it("throws ValidationError when rows array is empty", async () => {
+  it("throws ValidationError when rows array is empty in APPEND_ONLY or UPDATE_EXISTING mode", async () => {
+    for (const mode of ["APPEND_ONLY", "UPDATE_EXISTING"] as const) {
+      const { client, stats } = makeTx([makeAccount("C001")]);
+      const fn = createSyncAccounts(client as never);
+
+      await assert.rejects(() => fn({ portfolioId: "p1", mode, rows: [] }), ValidationError);
+      assert.equal(stats().portfolioUpdate, null);
+      assert.equal(stats().archivedCount, 0);
+    }
+  });
+
+  it("empties the portfolio when REPLACE is called with an empty batch", async () => {
+    const { client, stats } = makeTx([makeAccount("C001", 1000), makeAccount("C002", 500)]);
+    const fn = createSyncAccounts(client as never);
+
+    const result = await fn({ portfolioId: "p1", mode: "REPLACE", rows: [] });
+
+    assert.deepEqual(result, { created: 0, updated: 0, archived: 2, total: 0 });
+    const s = stats();
+    assert.equal(s.createdCount, 0);
+    assert.equal(s.updatedCount, 0);
+    assert.equal(s.archivedCount, 2);
+    // PENDING promises of every archived account are expired.
+    assert.equal(s.expiredPromiseCount, 1);
+    assert.equal(s.portfolioUpdate?.accountCount, 0);
+    assert.equal(s.portfolioUpdate?.totalOutstandingBalance, 0);
+    assert.ok(s.portfolioUpdate?.lastSyncedAt instanceof Date);
+  });
+
+  it("REPLACE with an empty batch on an already-empty portfolio archives nothing", async () => {
     const { client, stats } = makeTx([]);
     const fn = createSyncAccounts(client as never);
 
-    await assert.rejects(
-      () => fn({ portfolioId: "p1", mode: "REPLACE", rows: [] }),
-      ValidationError
-    );
-    assert.equal(stats().portfolioUpdate, null);
+    const result = await fn({ portfolioId: "p1", mode: "REPLACE", rows: [] });
+
+    assert.deepEqual(result, { created: 0, updated: 0, archived: 0, total: 0 });
+    assert.equal(stats().expiredPromiseCount, 0);
+    assert.equal(stats().portfolioUpdate?.accountCount, 0);
   });
 
   it("normalizes a non-canonical but parseable phone to E.164 at write time", async () => {

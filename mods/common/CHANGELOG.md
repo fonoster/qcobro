@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.52.1](https://github.com/fonoster/qcobro/compare/v1.52.0...v1.52.1) (2026-09-18)
+
+### Bug Fixes
+
+- **common:** accept an empty rows batch in REPLACE sync mode ([#191](https://github.com/fonoster/qcobro/issues/191)) ([9435470](https://github.com/fonoster/qcobro/commit/9435470f2d26d1652dd4414eb949499716290d94))
+
+# [1.52.0](https://github.com/fonoster/qcobro/compare/v1.51.0...v1.52.0) (2026-09-18)
+
+### Features
+
+- Voz IA barge-in, es-419 default and multilingual language option ([#190](https://github.com/fonoster/qcobro/issues/190)) ([1f66879](https://github.com/fonoster/qcobro/commit/1f668791ebc18fcafdf832cd7299035e95e79a59))
+
+# [1.49.0](https://github.com/fonoster/qcobro/compare/v1.48.2...v1.49.0) (2026-09-12)
+
+### Features
+
+- **voice:** activate Fonoster answering-machine detection (AMD) ([#181](https://github.com/fonoster/qcobro/issues/181)) ([cca6c1d](https://github.com/fonoster/qcobro/commit/cca6c1d1ee0524b1a9c2d1a5e8ae3b4fcf3b16ae)), closes [#893](https://github.com/fonoster/qcobro/issues/893) [#893](https://github.com/fonoster/qcobro/issues/893) [#893](https://github.com/fonoster/qcobro/issues/893) [#83](https://github.com/fonoster/qcobro/issues/83) [fonoster/fonoster#893](https://github.com/fonoster/fonoster/issues/893) [#893](https://github.com/fonoster/qcobro/issues/893) [fonoster/fonoster#897](https://github.com/fonoster/fonoster/issues/897)
+
 # [1.48.0](https://github.com/fonoster/qcobro/compare/v1.47.0...v1.48.0) (2026-09-11)
 
 ### Features

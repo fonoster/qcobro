@@ -29,6 +29,8 @@ export interface VoiceAiConfigRecord {
   idleTimeout: number;
   /** Consecutive idle timeouts tolerated before the call ends; ≥ 1. */
   idleMaxTimeoutCount: number;
+  /** The caller can interrupt the agent while it is speaking. */
+  allowUserBargeIn: boolean;
 }
 
 export interface VoicePrerecordedConfigRecord {
@@ -44,6 +46,9 @@ export interface VoicePrerecordedConfigRecord {
   optOutDigit: string | null;
   optOutMessage: string | null;
   optOutConfirmationMessage: string | null;
+  /** Hang up instead of playing the script when AMD reports the call was picked up by a
+   *  machine. Defaults `true` in the database; always populated for a persisted row. */
+  hangupOnMachineDetected: boolean;
 }
 
 export interface SmsConfigRecord {

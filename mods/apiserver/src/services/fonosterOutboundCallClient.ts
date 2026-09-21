@@ -2,12 +2,14 @@ import { getLogger } from "@fonoster/logger";
 import * as SDK from "@fonoster/sdk";
 import {
   DispatchError,
+  type AmdStatus,
   type FonosterConfig,
   type OutboundCallClient,
   type OutboundCallInput,
   type VoiceCallLookupResult,
   type VoiceCallStatus
 } from "@qcobro/common";
+import { isAuthTokenFailure, isGrpcServiceError } from "./fonosterAuthErrors.js";
 
 const logger = getLogger({ service: "fonoster-outbound-call-client", filePath: import.meta.url });
 
@@ -23,16 +25,6 @@ function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
       setTimeout(() => reject(new Error(`Fonoster ${label} timed out`)), CALL_TIMEOUT_MS)
     )
   ]);
-}
-
-/** The Fonoster SDK's gRPC client throws `ServiceError`s carrying a numeric `.code` (grpc.status). */
-interface GrpcServiceError {
-  code?: number;
-  message?: string;
-}
-
-function isGrpcServiceError(err: unknown): err is GrpcServiceError {
-  return typeof err === "object" && err !== null && "code" in err && typeof err.code === "number";
 }
 
 /** gRPC status code Fonoster returns from `Calls.getCall` when the ref has no CDR at all. */
@@ -70,6 +62,28 @@ export function parseEndedAt(value: unknown): Date | null {
   if (!Number.isFinite(ms) || ms <= 0) return null;
   if (ms < EPOCH_SECONDS_MAGNITUDE_CUTOFF) ms *= 1000;
   return new Date(ms);
+}
+
+const VALID_AMD_STATUSES = new Set<AmdStatus>(["HUMAN", "MACHINE", "UNKNOWN"]);
+
+// TODO(voice-amd-detection): drop this local cast once fonoster/fonoster#897 lands —
+// `calls.proto`'s `CallDetailRecord` (returned by `Calls.getCall()`) does not carry an AMD
+// verdict at all as of @fonoster/sdk 0.23.0 (confirmed by inspecting the published package;
+// PR #893 only added `amd` to `voice.proto`'s `CreateSessionRequest`, not to `calls.proto`).
+// This read is forward-compatible dead code until Fonoster exposes the field: `parseAmdStatus`
+// always returns `undefined` today, so no `path` is ever set from this path yet.
+type CallDetailRecordWithAmd = { amdStatus?: unknown };
+
+/**
+ * Reads the CDR's `amdStatus` (Fonoster's answering-machine detection verdict), treating
+ * the wire the same way `status`/`endedAt` already are here: not trusted at the declared
+ * type. `undefined` for anything unrecognized or absent (AMD wasn't enabled for the call)
+ * — the sweep must never invent a verdict that wasn't actually reported.
+ */
+export function parseAmdStatus(value: unknown): AmdStatus | undefined {
+  return typeof value === "string" && VALID_AMD_STATUSES.has(value as AmdStatus)
+    ? (value as AmdStatus)
+    : undefined;
 }
 
 let warnedUnparseableEndedAt = false;
@@ -123,51 +137,90 @@ export function classifyVoiceError(err: unknown): DispatchError {
   );
 }
 
+/** The subset of `SDK.Calls` this client actually drives — the seam {@link FonosterOutboundCallClient} tests inject a fake through. */
+export type CallsApi = Pick<SDK.Calls, "createCall" | "getCall">;
+
+/** Logs in and hands back a ready `Calls` client. The production {@link CreateCallsApi}. */
+async function loginAndCreateCallsApi(settings: FonosterSettings): Promise<CallsApi> {
+  const client = new SDK.Client({
+    accessKeyId: settings.accessKeyId,
+    ...(settings.endpoint ? { endpoint: settings.endpoint } : {})
+  } as ConstructorParameters<typeof SDK.Client>[0]);
+  await client.loginWithApiKey(settings.apiKey, settings.apiSecret);
+  return new SDK.Calls(client);
+}
+
+export type CreateCallsApi = (settings: FonosterSettings) => Promise<CallsApi>;
+
 /**
  * Fonoster-backed {@link OutboundCallClient}. Originates outbound calls to a
  * synced AUTOPILOT application (`appRef`); the rendered, per-customer payload
  * rides along as call `metadata` so personalization needs no app re-sync.
  *
  * Auth mirrors {@link FonosterVoiceApplicationClient}: a workspace access key,
- * then an API key/secret login. The login promise is memoized once it succeeds,
- * so login only happens once per process; a failed login is not memoized and is
- * retried on the next call.
+ * then an API key/secret login. The login promise is memoized once it succeeds, so login
+ * only happens once per process; a failed login is not memoized and is retried on the next
+ * call. A *successful* login can still go bad later (the session's token stops refreshing
+ * server-side) — {@link invalidateOnAuthFailure} watches for that on every call and drops
+ * the memoized client so the next one re-logs in, rather than reusing the same wedged
+ * session for the life of the process.
+ *
+ * `createCallsApi` defaults to the real Fonoster login (`loginAndCreateCallsApi`) and only
+ * exists as a constructor parameter so tests can substitute a fake `CallsApi` — this class
+ * otherwise hard-codes the real SDK, matching `FonosterVoiceApplicationClient`.
  */
 export class FonosterOutboundCallClient implements OutboundCallClient {
   private readonly settings: FonosterSettings;
-  private clientPromise: Promise<SDK.Client> | null = null;
+  private readonly createCallsApi: CreateCallsApi;
+  private callsPromise: Promise<CallsApi> | null = null;
 
-  constructor(settings: FonosterSettings) {
+  constructor(settings: FonosterSettings, createCallsApi: CreateCallsApi = loginAndCreateCallsApi) {
     this.settings = settings;
+    this.createCallsApi = createCallsApi;
   }
 
-  private client(): Promise<SDK.Client> {
-    if (!this.clientPromise) {
-      this.clientPromise = (async () => {
-        const client = new SDK.Client({
-          accessKeyId: this.settings.accessKeyId,
-          ...(this.settings.endpoint ? { endpoint: this.settings.endpoint } : {})
-        } as ConstructorParameters<typeof SDK.Client>[0]);
-        await client.loginWithApiKey(this.settings.apiKey, this.settings.apiSecret);
-        return client;
-      })().catch((err) => {
+  private calls(): Promise<CallsApi> {
+    if (!this.callsPromise) {
+      this.callsPromise = this.createCallsApi(this.settings).catch((err) => {
         // A failed login must not be memoized — otherwise one transient auth error
         // (expired key, network blip) permanently breaks every future call for the
-        // life of this process, since clientPromise would stay set to a rejection.
-        this.clientPromise = null;
+        // life of this process, since callsPromise would stay set to a rejection.
+        this.callsPromise = null;
         throw err;
       });
     }
-    return this.clientPromise;
+    return this.callsPromise;
   }
 
-  private async calls(): Promise<SDK.Calls> {
-    return new SDK.Calls(await this.client());
+  /**
+   * Drops the memoized client the moment a call reports its token is no longer good, so the
+   * *next* call re-runs the login instead of retrying forever against the same wedged
+   * session — see {@link isAuthTokenFailure}. Never awaited or retried itself: this call's own
+   * error still propagates unchanged, this only clears the way for the one after it to recover.
+   *
+   * `usedCallsPromise` must be the exact promise this failing call read from `this.calls()`,
+   * compared by reference before clearing. This class is a shared, module-level singleton
+   * (one instance serves every concurrent request — see `trpc/context.ts`), so without that
+   * check a call that had been in flight against an old client since before an outage could
+   * still be failing after a concurrent call already detected the same outage and completed
+   * a fresh, healthy re-login — nulling `callsPromise` at that point would discard the new
+   * login instead of the dead one, forcing an unnecessary extra round-trip.
+   */
+  private invalidateOnAuthFailure(err: unknown, usedCallsPromise: Promise<CallsApi>): void {
+    if (!isAuthTokenFailure(err)) return;
+    if (this.callsPromise !== usedCallsPromise) return; // already replaced by another call
+    logger.warn(
+      `Fonoster client session invalid — forcing re-login on next call: ${
+        err instanceof Error ? err.message : String(err)
+      }`
+    );
+    this.callsPromise = null;
   }
 
   async createCall(input: OutboundCallInput): Promise<{ ref: string }> {
+    const callsPromise = this.calls();
     try {
-      const calls = await withTimeout(this.calls(), "login");
+      const calls = await withTimeout(callsPromise, "login");
       const { ref } = await withTimeout(
         calls.createCall({
           from: input.from,
@@ -184,6 +237,7 @@ export class FonosterOutboundCallClient implements OutboundCallClient {
       );
       return { ref };
     } catch (err) {
+      this.invalidateOnAuthFailure(err, callsPromise);
       throw classifyVoiceError(err);
     }
   }
@@ -193,10 +247,13 @@ export class FonosterOutboundCallClient implements OutboundCallClient {
    * Fonoster answers a ref with no record at all — the call never originated — with a gRPC
    * `NOT_FOUND`, not a null; that is caught here and surfaced as `{ found: false }` rather
    * than left to throw, since the sweep needs to branch on it, not treat it as failure.
+   * Also surfaces the CDR's `amdStatus` (answering-machine detection verdict) when present —
+   * see {@link parseAmdStatus}.
    */
   async getCall(ref: string): Promise<VoiceCallLookupResult> {
+    const callsPromise = this.calls();
     try {
-      const calls = await withTimeout(this.calls(), "login");
+      const calls = await withTimeout(callsPromise, "login");
       const record = await withTimeout(calls.getCall(ref), "getCall");
       // The SDK's own CallStatus type omits UNKNOWN (the protobuf zero-value), so an
       // in-progress call's status can arrive as something outside that type at runtime.
@@ -207,16 +264,19 @@ export class FonosterOutboundCallClient implements OutboundCallClient {
       if (status !== "UNKNOWN" && endedAt === null) {
         warnUnparseableEndedAt(record.endedAt);
       }
+      const amdStatus = parseAmdStatus((record as unknown as CallDetailRecordWithAmd).amdStatus);
       return {
         found: true,
         status,
         setupToClearSeconds: record.duration ?? 0,
-        endedAt
+        endedAt,
+        ...(amdStatus ? { amdStatus } : {})
       };
     } catch (err) {
       if (isGrpcServiceError(err) && err.code === GRPC_NOT_FOUND) {
         return { found: false };
       }
+      this.invalidateOnAuthFailure(err, callsPromise);
       // Unlike createCall, a lookup failure isn't a dispatch outcome to classify — just
       // propagate it so the caller (the sweep) logs it and retries on its next pass.
       throw err;

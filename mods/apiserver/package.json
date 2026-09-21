@@ -1,6 +1,6 @@
 {
   "name": "@qcobro/apiserver",
-  "version": "1.48.0",
+  "version": "1.52.1",
   "private": true,
   "type": "module",
   "exports": {
@@ -31,11 +31,11 @@
   "dependencies": {
     "@fonoster/identity-client": "0.22.8",
     "@fonoster/logger": "0.22.0",
-    "@fonoster/sdk": "0.22.11",
-    "@fonoster/voice": "0.22.10",
+    "@fonoster/sdk": "0.23.0",
+    "@fonoster/voice": "0.23.0",
     "@grpc/grpc-js": "^1.10.6",
     "@prisma/client": "^6.0.0",
-    "@qcobro/common": "^1.48.0",
+    "@qcobro/common": "^1.52.1",
     "@trpc/server": "^11.0.0",
     "cors": "^2.8.5",
     "express": "^5.0.0",

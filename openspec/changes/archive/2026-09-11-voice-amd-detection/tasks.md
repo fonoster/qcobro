@@ -1,0 +1,179 @@
+## 1. Schema & migrations
+
+- [x] 1.1 Confirm zero live `Path = 'VOICEMAIL'` rows in prod before renaming (query, not a
+      backfill). Confirmed zero rows on the local dev DB (245 null, 49 ENGAGED, 0 other) —
+      re-verify against prod specifically before deploying, since this session only had
+      dev-DB access.
+- [x] 1.2 `mods/apiserver/prisma/schema.prisma`: rename `Path` enum value `VOICEMAIL` →
+      `ANSWERED_BY_MACHINE`; add `VoicePrerecordedConfig.hangupOnMachineDetected Boolean
+@default(true)`.
+- [x] 1.3 Hand-write the migration: `ALTER TYPE "Path" RENAME VALUE 'VOICEMAIL' TO
+'ANSWERED_BY_MACHINE';` and `ALTER TABLE "voice_prerecorded_configs" ADD COLUMN
+"hangupOnMachineDetected" BOOLEAN NOT NULL DEFAULT true;` (follow the
+      `20260907120000_contact_log_axes_english_names` / `20260911120000_sms_normalize_gsm7`
+      precedents — no Prisma-generated drop+recreate).
+- [x] 1.4 Run the migration against a dev DB; confirm no data loss. Applied via `prisma
+migrate deploy` against the local dev Postgres (`qcobro-db-1`); verified via `psql`;
+      regenerated the Prisma client.
+
+## 2. Shared schemas (`mods/common`)
+
+- [x] 2.1 `schemas/contactLog.ts`: rename `pathSchema`'s `VOICEMAIL` literal to
+      `ANSWERED_BY_MACHINE`; update the two doc comments referencing the old name/issue #83.
+- [x] 2.2 `schemas/contactLog.test.ts`: rename the test asserting the old literal is
+      rejected/reachable; add a case for the new value where relevant.
+- [x] 2.3 `schemas/agentTemplates.ts` + `types/agentTemplates.ts`: add
+      `hangupOnMachineDetected` (boolean, optional on input with server-side default true) to
+      the `VOICE_PRERECORDED` create/update schema and `VoicePrerecordedConfigRecord` type.
+- [x] 2.4 `schemas/dispatch.ts` + `types/dispatch.ts`: add `hangupOnMachineDetected` to
+      `dispatchOutreachSchema`/`DispatchOutreachInput`; add `amdStatus?: "HUMAN" | "MACHINE" |
+"UNKNOWN"` to `VoiceCallLookupResult`.
+- [x] 2.5 Build `mods/common` and confirm no downstream type errors yet (apiserver/webapp
+      updates land in the following sections). `tsc -b --force` clean; 271/271 tests pass.
+
+## 3. Pre-recorded hang-up (apiserver)
+
+- [x] 3.1 `createAgentTemplate.ts` / `updateAgentTemplate.ts`: persist
+      `hangupOnMachineDetected` on `VoicePrerecordedConfig`. (Update path needs no change —
+      `config` is an unvalidated bag passed straight to Prisma; no cross-field validation
+      applies to this field.)
+- [x] 3.2 `trpc/routers/outreach.ts` (manual outreach — actual path, not
+      `functions/outreach/outreach.ts` as originally noted) and campaigns `engine.ts` +
+      `prismaEngineClient.ts`: map `hangupOnMachineDetected` alongside the existing DTMF
+      fields.
+- [x] 3.3 `dispatchOutreach.ts`: add `metadata.hangupOnMachineDetected` to the
+      `VOICE_PRERECORDED` metadata bag, same shape as `repeatDigit` et al. (explicit `!=
+null` check, not truthy — `false` must still ride through).
+- [x] 3.4 `voiceServer.ts`: read `req.amd?.status` (via a local `VoiceRequestWithAmd`
+      augmentation type until `@fonoster/voice` publishes the real field) and
+      `req.metadata?.hangupOnMachineDetected` (default true when absent) in
+      `startVoiceServer`; thread both into `runPrerecordedCall`/`handlePrerecordedCall`.
+- [x] 3.5 `handlePrerecordedCall`: branch between `answer()` and `say(message)` — on
+      `MACHINE` + toggle-on, skip `say`/DTMF and hang up immediately, returning
+      `path: "ANSWERED_BY_MACHINE"`. `runPrerecordedCall` now derives `scriptCompleted` from
+      `path !== "ANSWERED_BY_MACHINE"` instead of always `true` on a clean return. Updated
+      the stale doc comments, plus `recordPrerecordedOutcome.ts`'s comment on the same
+      invariant (no code change needed there — it already forwards `path` generically).
+- [x] 3.6 `engine/emulators.ts`: no code change needed — `EmulatedOutboundCallClient.
+setCallDetail` already takes the full `VoiceCallLookupResult`, which now includes
+      `amdStatus` from the `mods/common` type extension in §2.
+
+## 4. Voz IA sweep-path labeling (apiserver)
+
+- [x] 4.1 `fonosterOutboundCallClient.ts`: read `amdStatus` defensively off the raw SDK
+      `CallDetailRecord` (via a local `CallDetailRecordWithAmd` cast + `parseAmdStatus`
+      validator) in `getCall()`, same treat-the-wire-as-unreliable pattern as `parseEndedAt`.
+      (`amdCause` from the design's Impact section turned out unnecessary — nothing in this
+      change consumes it; only `amdStatus` is read.)
+- [x] 4.2 `voiceCompletionTimeoutSweep.ts`: `classify()` now returns `{ deliveryReason, path?
+} | null` (was `DeliveryReason | null`); sets `path: "ANSWERED_BY_MACHINE"` whenever
+      `amdStatus === "MACHINE"`, alongside whichever `deliveryReason` applies. Threaded
+      through the main loop and `VoiceOutcomeRecorder`.
+- [x] 4.3 `recordVoiceAiCallStatus.ts`: added `path` to `voiceAiCallStatusInputSchema`, the
+      `VoiceAiCallStatusClient.updateMany` data shape, and the write itself.
+- [x] 4.4 Confirmed: `decideVoiceOutcome.ts`/`decidePath()` untouched, per the design's scope
+      decision.
+
+Verification for §3–4: `tsc --noEmit` clean, `eslint` clean, and the full apiserver suite
+(555/555) plus the specifically-touched files (84 tests) pass. Worktree setup gotchas hit
+and resolved along the way: this worktree had no `node_modules` at all (Node module
+resolution was silently walking up to the _main checkout's_ `node_modules/@qcobro/common`,
+per `[[project_worktree_tooling_gotchas]]`) — fixed with a root `npm install` +
+`prisma generate` inside the worktree; also copied `config/qcobro.example.json` →
+`config/qcobro.json` (git-ignored) since `voiceServer.ts`'s test suite loads it at import
+time.
+
+## 5. Dependency bump (gated)
+
+- [x] 5.1 **Unblocked 2026-09-12**: the PR #893 AMD work had initially landed on Fonoster's
+      `next` branch; it's since been fixed and cherry-picked into `main`, and
+      `@fonoster/voice`/`@fonoster/sdk` `0.23.0` are now published. Verified by downloading
+      and inspecting the actual `0.23.0` tarballs (not just the `.d.ts` — the full
+      `voice.proto`/`calls.proto` bundled inside).
+- [x] 5.2 Bumped `@fonoster/voice`/`@fonoster/sdk` to `0.23.0` in
+      `mods/apiserver/package.json`; `npm install` + `prisma generate` re-run.
+- [x] 5.3 Reconciled the design's assumed shape against the real package — **two different
+      outcomes per field**: - `VoiceRequest.amd` (live path, §3): **matches**. `voice.proto`'s
+      `CreateSessionRequest` really does carry `Amd amd = 12`, and
+      `VoiceClientConfig`/`VoiceRequest` really does carry `amd?: Amd`. Removed the local
+      `VoiceRequestWithAmd` augmentation in `voiceServer.ts` — reads `req.amd?.status`
+      directly off the real type now, cast to this file's narrower `AmdStatus` alias
+      (Asterisk only ever emits `HUMAN`/`MACHINE`/`UNKNOWN`, never the upstream enum's
+      reserved `VOICEMAIL`/`IVR`/`AMD_STATUS_UNSPECIFIED`). - `CallDetailRecord.amdStatus` (CDR/sweep path, §4): **does not exist**. Extracted and
+      read the complete `calls.proto` from the published `0.23.0` tarball — `CallDetailRecord`
+      has exactly its original 10 fields, no AMD data, no generic bag to carry it either.
+      PR #893 only touched `voice.proto`; `calls.proto`/the SDK's `Calls` resource are
+      untouched. The design's assumption that "the verdict rides to the CDR" conflated
+      Fonoster's own internal InfluxDB analytics point (`createInfluxDbPub`) with the public
+      `Calls.getCall()` RPC — different things. **Decision (user, 2026-09-12): keep §4 as
+      forward-compatible dead code** (the `CallDetailRecordWithAmd` cast in
+      `fonosterOutboundCallClient.ts` stays, `parseAmdStatus` will just always return
+      `undefined` until Fonoster ships the field) rather than reverting it, and file the gap
+      upstream immediately rather than waiting. Filed as
+      [fonoster/fonoster#897](https://github.com/fonoster/fonoster/issues/897). Updated the
+      `account-contact-log` main spec (not just this archived copy) to say this plainly.
+
+## 6. Webapp
+
+- [x] 6.1 `lib/i18n.tsx`: rename `gestiones.path.VOICEMAIL` →
+      `gestiones.path.ANSWERED_BY_MACHINE` in both EN and ES locale tables. (No code change
+      needed in `contactAxes.ts` — `pathWord()`'s generic fallthrough already handles any
+      non-`ENGAGED` value, confirmed by re-reading it.)
+- [x] 6.2 `pages/AgentTemplates.tsx`: added a `hangupOnMachineDetected` checkbox (default
+      checked) to the `VOICE_PRERECORDED` fields in both the create and edit modals,
+      following the `normalizeGsm7` boolean-state pattern exactly (dedicated `useState`,
+      seeded from `full.voicePrerecordedConfig?.hangupOnMachineDetected` on edit-modal load,
+      included directly in both mutation payloads). New i18n key
+      `agents.form.hangupOnMachineDetected` (EN/ES).
+- [x] 6.3 Pencil: added during the design stage (see checkpoint) — checkbox added to
+      "Crear agente · Voz pregrabada"; no edit-modal mock exists for this channel to update
+      in parallel (pre-existing gap, not introduced by this change).
+
+Verification for §6: `tsc -p tsconfig.app.json --noEmit` and `eslint` both clean. No webapp
+unit-test runner is configured in this repo (no `test` script) — Storybook/e2e coverage is
+addressed in §7.
+
+## 7. Tests
+
+- [x] 7.1 `contactLog.test.ts`: renamed-value coverage (see 2.2).
+- [x] 7.2 `voiceServer.test.ts`: added 5 cases — MACHINE + toggle-on hangs up without playing
+      (`handlePrerecordedCall`), MACHINE + toggle-off plays anyway, HUMAN plays normally, no
+      verdict plays normally, and `runPrerecordedCall` reports `scriptCompleted: false` for a
+      clean machine-detected return. Existing early-hangup-catch tests unaffected (verified by
+      re-running the full file).
+- [x] 7.3 `voiceCompletionTimeoutSweep.test.ts`: added 4 cases — `amdStatus: MACHINE` sets
+      `path` on both `VOICE_AI` and `VOICE_PRERECORDED` finalizations; no `amdStatus` or a
+      `HUMAN`/`UNKNOWN` verdict leaves `path` unset. (Idempotency — an already-finalized
+      gestión untouched by a later sweep pass — was already covered by the pre-existing
+      "Sweep finalization never overwrites a finalized delivery" scenario/test; not
+      AMD-specific, so no new test needed there.)
+- [x] 7.4 `recordVoiceAiCallStatus.test.ts`: added 2 cases — `path` written alongside a
+      `deliveryReason`, and `path: null` when the sweep reports no verdict.
+      `recordPrerecordedOutcome.test.ts` also got a case (not originally called out in this
+      task, but symmetric and needed): the machine-detected hang-up → `FAILED`/`UNREACHABLE` + `path: ANSWERED_BY_MACHINE`.
+- [x] 7.5 Ran repo lint/typecheck/test: `mods/common` (tsc + 271/271 tests), `mods/apiserver`
+      (tsc + eslint + 567/567 tests), `mods/webapp` (tsc + eslint). All green.
+- [x] 7.6 (added) E2E: extended `e2e/prerecorded-dtmf-menu.spec.ts` — the existing golden
+      path for this exact form — with: the AMD checkbox defaulting checked in the create
+      modal, round-tripping checked then unchecked through Editar (alongside the existing
+      opt-out-clearing assertions), a `path: ANSWERED_BY_MACHINE` gestión seeded via the REST
+      API (confirming the schema now accepts it for `VOICE_PRERECORDED`), and its list/detail
+      rendering ("Inalcanzable" in the list, "Despachado → Contestó una máquina" with no
+      Resultado in the detail panel). Verified with `playwright test --list` (parses/compiles
+      cleanly) — **not run end-to-end**: no dev stack (webapp/apiserver/db) is up in this
+      sandbox. Run it for real before merging, per `[[feedback_test_locally_before_pr]]`.
+
+## 8. Manual verification & issue tracker
+
+- [ ] 8.1 **Still deferred, follow-up work**: the dependency bump (§5) is done, so this is
+      now just a matter of running it — with `APISERVER_AMD_ENABLED` on in a test workspace,
+      run a real dev-stack pre-recorded call against a known voicemail number; confirm dead
+      air, hang-up, and the gestión's recorded `path`/`delivery`. Also run
+      `e2e/prerecorded-dtmf-menu.spec.ts` for real against a live dev stack
+      (webapp+apiserver+db) — it was only compile-checked in this session.
+- [x] 8.2 Closed GitHub issue #83 with a summary comment pointing at this change.
+- [x] 8.3 Filed issue #180: "Let Voz IA (Autopilot) react to AMD in real time."
+- [x] 8.4 Filed [fonoster/fonoster#897](https://github.com/fonoster/fonoster/issues/897):
+      "Expose AMD verdict on Calls.getCall() / CallDetailRecord" — the gap discovered when
+      double-checking §5 (see §5.3's notes). This is what would make §4 (sweep-path
+      labeling) actually reachable in production.

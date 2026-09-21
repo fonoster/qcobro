@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, NavLink, Outlet } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -7,6 +7,8 @@ import {
   Bot,
   PhoneCall,
   HandCoins,
+  PanelLeftClose,
+  PanelLeftOpen,
   type LucideIcon
 } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
@@ -28,12 +30,35 @@ const NAV: { icon: LucideIcon; labelKey: MessageId; to?: string; end?: boolean }
   { icon: HandCoins, labelKey: "nav.paymentPromises", to: "/payment-promises" }
 ];
 
+const SIDEBAR_COLLAPSED_KEY = "qcobro.sidebar.collapsed";
+
+function readStoredSidebarCollapsed(): boolean {
+  try {
+    return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 export function AuthedLayout() {
   const { t } = useI18n();
   const { workspace, setWorkspace, logout } = useAuth();
   const workspaces = trpc.workspaces.list.useQuery();
   const data = workspaces.data;
   const items = data?.items ?? [];
+  const [collapsed, setCollapsed] = useState(readStoredSidebarCollapsed);
+
+  function toggleCollapsed() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? "1" : "0");
+      } catch {
+        // Non-fatal: the toggle still works for the rest of the session.
+      }
+      return next;
+    });
+  }
 
   // The profile is the source of truth for language + appearance; reconcile the
   // cached/default choices with it once it loads (and whenever it changes elsewhere).
@@ -67,22 +92,61 @@ export function AuthedLayout() {
     <div className="flex h-screen flex-col bg-bg">
       <AnnouncementBanner />
       <div className="flex flex-1 overflow-hidden">
-        <aside className="flex w-60 shrink-0 flex-col justify-between overflow-y-auto border-r border-border bg-surface px-4 py-5">
-          <div className="flex flex-col gap-6">
-            <Link to="/workspaces" aria-label="Ir a la lista de espacios">
-              <Logo />
-            </Link>
-            <WorkspaceSwitcher />
-            <nav className="flex flex-col gap-1">
+        <aside
+          className={cn(
+            "flex shrink-0 flex-col justify-between overflow-y-auto overflow-x-hidden border-r border-border bg-surface py-5 transition-[width] duration-200 ease-in-out",
+            collapsed ? "w-16 px-2" : "w-60 px-4"
+          )}
+        >
+          <div className={cn("flex flex-col", collapsed ? "items-center gap-2" : "gap-6")}>
+            {collapsed ? (
+              <div className="flex flex-col items-center gap-2">
+                <button
+                  type="button"
+                  onClick={toggleCollapsed}
+                  aria-label={t("nav.expand")}
+                  title={t("nav.expand")}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-fg-subtle hover:bg-elevated"
+                >
+                  <PanelLeftOpen className="h-[18px] w-[18px]" />
+                </button>
+                <Link to="/workspaces" aria-label="Ir a la lista de espacios">
+                  <Logo collapsed />
+                </Link>
+                <WorkspaceSwitcher collapsed />
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <Link to="/workspaces" aria-label="Ir a la lista de espacios">
+                    <Logo />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={toggleCollapsed}
+                    aria-label={t("nav.collapse")}
+                    title={t("nav.collapse")}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-fg-subtle hover:bg-elevated"
+                  >
+                    <PanelLeftClose className="h-[18px] w-[18px]" />
+                  </button>
+                </div>
+                <WorkspaceSwitcher />
+              </>
+            )}
+
+            <nav className={cn("flex flex-col gap-1", collapsed && "items-center")}>
               {NAV.map(({ icon: Icon, labelKey, to, end }) =>
                 to ? (
                   <NavLink
                     key={labelKey}
                     to={to}
                     end={end}
+                    title={collapsed ? t(labelKey) : undefined}
                     className={({ isActive }) =>
                       cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm",
+                        "flex items-center rounded-lg text-sm",
+                        collapsed ? "h-10 w-10 justify-center" : "gap-3 px-3 py-2.5",
                         isActive
                           ? "bg-primary/10 font-semibold text-primary"
                           : "font-medium text-fg-muted hover:bg-elevated"
@@ -93,28 +157,32 @@ export function AuthedLayout() {
                       <>
                         <Icon
                           className={cn(
-                            "h-[18px] w-[18px]",
+                            "h-[18px] w-[18px] shrink-0",
                             isActive ? "text-primary" : "text-fg-subtle"
                           )}
                         />
-                        {t(labelKey)}
+                        <span className={cn(collapsed && "sr-only")}>{t(labelKey)}</span>
                       </>
                     )}
                   </NavLink>
                 ) : (
                   <button
                     key={labelKey}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-fg-muted opacity-50 cursor-not-allowed"
+                    title={collapsed ? t(labelKey) : undefined}
+                    className={cn(
+                      "flex items-center rounded-lg text-sm font-medium text-fg-muted opacity-50 cursor-not-allowed",
+                      collapsed ? "h-10 w-10 justify-center" : "gap-3 px-3 py-2.5"
+                    )}
                   >
-                    <Icon className="h-[18px] w-[18px] text-fg-subtle" />
-                    {t(labelKey)}
+                    <Icon className="h-[18px] w-[18px] shrink-0 text-fg-subtle" />
+                    <span className={cn(collapsed && "sr-only")}>{t(labelKey)}</span>
                   </button>
                 )
               )}
             </nav>
           </div>
 
-          <UserMenu />
+          <UserMenu collapsed={collapsed} />
         </aside>
 
         <main className="flex-1 overflow-y-auto p-8">

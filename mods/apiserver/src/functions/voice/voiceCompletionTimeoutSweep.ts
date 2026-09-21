@@ -1,5 +1,5 @@
 import { getLogger } from "@fonoster/logger";
-import type { DeliveryReason, OutboundCallClient } from "@qcobro/common";
+import type { DeliveryReason, OutboundCallClient, Path } from "@qcobro/common";
 import { mapVoiceCallStatusToDeliveryReason } from "./mapVoiceCallStatusToDeliveryReason.js";
 
 const logger = getLogger({ service: "voice-completion-sweep", filePath: import.meta.url });
@@ -33,7 +33,12 @@ type VoiceOutcomeRecorder = (input: {
   deliveryReason?: DeliveryReason;
   answeredSeconds: number;
   at: string;
+  path?: Path;
 }) => Promise<unknown>;
+
+/** What the sweep decided for one gestión — `null` means "still in progress, don't finalize
+ *  yet". `path` is set alongside `deliveryReason`, never in its place. */
+type SweepClassification = { deliveryReason: DeliveryReason; path?: Path } | null;
 
 export interface VoiceCompletionTimeoutSweepDeps {
   client: StaleVoiceDispatchClient;
@@ -103,6 +108,13 @@ export interface VoiceCompletionTimeoutSweepDeps {
  * - Backstop: a gestión still with no status past `backstopMinutes` is finalized `FAILED` /
  *   `OUTCOME_UNKNOWN` rather than polled forever — the provider can lose the end record.
  *
+ * Whenever the CDR also reports `amdStatus: MACHINE` (Fonoster's answering-machine
+ * detection), the same finalization additionally sets `path: ANSWERED_BY_MACHINE` —
+ * alongside whichever `deliveryReason` applies above, never instead of one. This is the
+ * only place a `VOICE_AI` gestión's `path` is ever set from AMD: the autopilot's own live
+ * `conversation.ended` decision never consults the CDR (see `decideVoiceOutcome.ts`), so a
+ * call that reaches a live conversation keeps `path: ENGAGED` regardless of `amdStatus`.
+ *
  * Never passes the CDR's own duration (measured from call setup and including ring time)
  * as `answeredSeconds` — every sweep-driven finalize is a failure, so `answeredSeconds` is
  * always 0 and `durationSeconds` is left alone. Idempotence is enforced by
@@ -140,8 +152,8 @@ export function createVoiceCompletionTimeoutSweep(
     let swept = 0;
     for (const row of stale) {
       try {
-        const deliveryReason = await classify(deps, row, nowMs);
-        if (deliveryReason === null) continue; // still in progress — leave it at DISPATCHED
+        const classification = await classify(deps, row, nowMs);
+        if (classification === null) continue; // still in progress — leave it at DISPATCHED
 
         const at = deps.now().toISOString();
         const record =
@@ -151,12 +163,13 @@ export function createVoiceCompletionTimeoutSweep(
         await record({
           providerRef: row.providerRef,
           answered: false,
-          deliveryReason,
+          deliveryReason: classification.deliveryReason,
           // Never the CDR's own duration — it includes ring time and this is always a
           // failure path; a gestión's real answered duration comes only from a live
           // completion signal, never from this sweep.
           answeredSeconds: 0,
-          at
+          at,
+          ...(classification.path ? { path: classification.path } : {})
         });
         swept++;
       } catch (err) {
@@ -172,16 +185,17 @@ export function createVoiceCompletionTimeoutSweep(
 }
 
 /**
- * Looks up one gestión's CDR and decides its `deliveryReason`, or `null` when nothing should
- * be written yet — either because the call is still in progress, because it has cleared too
- * recently to rule out a live completion signal still being in flight for it, or because
- * there's no CDR yet and it's too soon to call that irreversible.
+ * Looks up one gestión's CDR and decides its `deliveryReason` (plus `path` when the CDR
+ * also reports a detected answering machine), or `null` when nothing should be written yet
+ * — either because the call is still in progress, because it has cleared too recently to
+ * rule out a live completion signal still being in flight for it, or because there's no CDR
+ * yet and it's too soon to call that irreversible.
  */
 async function classify(
   deps: VoiceCompletionTimeoutSweepDeps,
   row: { contactedAt: Date; providerRef: string },
   nowMs: number
-): Promise<DeliveryReason | null> {
+): Promise<SweepClassification> {
   const ageMinutes = (nowMs - row.contactedAt.getTime()) / 60_000;
   const lookup = await deps.outboundCallClient.getCall(row.providerRef);
 
@@ -189,8 +203,12 @@ async function classify(
     // No grace against a live signal here — there isn't one to race, the call never
     // originated. But the write is irreversible, and the CDR's start record can lag
     // dispatch, so this gets its own (longer) age gate rather than firing at floorMinutes.
-    return ageMinutes >= deps.notOriginatedMinutes ? "NOT_ORIGINATED" : null;
+    return ageMinutes >= deps.notOriginatedMinutes ? { deliveryReason: "NOT_ORIGINATED" } : null;
   }
+
+  // Fonoster's answering-machine detection only ever runs on an answered call, so it rides
+  // alongside whichever deliveryReason the CDR maps to below — never in place of one.
+  const path: Path | undefined = lookup.amdStatus === "MACHINE" ? "ANSWERED_BY_MACHINE" : undefined;
 
   const terminal = mapVoiceCallStatusToDeliveryReason(lookup.status);
   if (terminal !== null) {
@@ -198,17 +216,17 @@ async function classify(
       // The CDR write and the channel's own live completion signal race the same event —
       // give the live signal `graceSeconds` to land first before finalizing over it.
       const secondsSinceEnded = (nowMs - lookup.endedAt.getTime()) / 1000;
-      if (secondsSinceEnded >= deps.graceSeconds) return terminal;
+      if (secondsSinceEnded >= deps.graceSeconds) return { deliveryReason: terminal, path };
       return null;
     }
     // endedAt is unusable, so the grace can't be evaluated either way — but unlike the "no
     // status yet" branch below, the CDR does say how this call cleared. Don't stall
     // forever waiting on a timestamp that will never parse: past the backstop, finalize
     // with the mapped reason rather than the generic OUTCOME_UNKNOWN.
-    return ageMinutes >= deps.backstopMinutes ? terminal : null;
+    return ageMinutes >= deps.backstopMinutes ? { deliveryReason: terminal, path } : null;
   }
 
   // No terminal status yet (UNKNOWN / not yet cleared). Only the backstop can close this
   // out — otherwise a call still genuinely in progress must be left alone.
-  return ageMinutes >= deps.backstopMinutes ? "OUTCOME_UNKNOWN" : null;
+  return ageMinutes >= deps.backstopMinutes ? { deliveryReason: "OUTCOME_UNKNOWN", path } : null;
 }

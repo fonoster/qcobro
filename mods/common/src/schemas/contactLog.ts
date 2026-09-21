@@ -43,10 +43,15 @@ export type DeliveryReason = z.infer<typeof deliveryReasonSchema>;
 /**
  * What path the interaction took once delivered. Null when no interaction was observed —
  * which is always the case on the one-way channels, and often the case elsewhere.
- * `VOICEMAIL` is reachable only on `VOICE_AI` and needs AMD before it can actually be
- * detected (issue #83); it is defined now so the enum needs no second migration later.
+ * `ANSWERED_BY_MACHINE` is set from Fonoster's answering-machine detection (AMD): in real
+ * time on `VOICE_PRERECORDED` (see `prerecorded-audio`), and from the CDR's `amdStatus` on
+ * `VOICE_AI` — but only via the voice completion sweep, for a call that never reached a
+ * live conversation (see `account-contact-log`'s voice completion sweep requirement).
+ * Collapses what was reserved as `VOICEMAIL` (issue #83): AMD can only ever report
+ * HUMAN/MACHINE/UNKNOWN, never distinguishing a voicemail greeting from an IVR menu, so
+ * QCobro doesn't try to either.
  */
-export const pathSchema = z.enum(["ENGAGED", "ABANDONED", "VOICEMAIL"]);
+export const pathSchema = z.enum(["ENGAGED", "ABANDONED", "ANSWERED_BY_MACHINE"]);
 export type Path = z.infer<typeof pathSchema>;
 
 /**
@@ -73,9 +78,10 @@ export type Outcome = z.infer<typeof outcomeSchema>;
  * usually-null there — they are unreachable. `VOICE_PRERECORDED` is the one exception: it has
  * no inbound path of its own, but reaching call completion (the script played to the end,
  * with or without an optional DTMF menu — see `prerecorded-audio`) always sets
- * `path: ENGAGED`, and the opt-out digit specifically also sets `outcome: OPT_OUT` — no
- * other path/outcome value is reachable. See {@link isAllowedOnPrerecorded} for that
- * narrow carve-out.
+ * `path: ENGAGED`, the opt-out digit specifically also sets `outcome: OPT_OUT`, and
+ * answering-machine detection hanging up the call before the script plays sets
+ * `path: ANSWERED_BY_MACHINE` instead — no other path/outcome value is reachable. See
+ * {@link isAllowedOnPrerecorded} for that narrow carve-out.
  */
 export const CHANNEL_CAN_ENGAGE = ["VOICE_AI", "EMAIL", "WHATSAPP"] as const;
 
@@ -84,14 +90,15 @@ export function channelCanEngage(agentType: string): boolean {
   return (CHANNEL_CAN_ENGAGE as readonly string[]).includes(agentType);
 }
 
-const PRERECORDED_ALLOWED_PATH: ReadonlySet<Path> = new Set(["ENGAGED"]);
+const PRERECORDED_ALLOWED_PATH: ReadonlySet<Path> = new Set(["ENGAGED", "ANSWERED_BY_MACHINE"]);
 const PRERECORDED_ALLOWED_OUTCOME: ReadonlySet<Outcome> = new Set(["OPT_OUT"]);
 
 /**
- * `VOICE_PRERECORDED`'s one carve-out from {@link channelCanEngage}: call completion sets
- * `path: ENGAGED`, and the opt-out digit specifically also sets `outcome: OPT_OUT` — and
- * nothing else. `ABANDONED`/`VOICEMAIL` and every other `outcome` value stay unreachable,
- * exactly as for any other one-way channel.
+ * `VOICE_PRERECORDED`'s carve-out from {@link channelCanEngage}: call completion sets
+ * `path: ENGAGED`, the opt-out digit specifically also sets `outcome: OPT_OUT`, and a
+ * detected answering machine sets `path: ANSWERED_BY_MACHINE` — and nothing else.
+ * `ABANDONED` and every other `outcome` value stay unreachable, exactly as for any other
+ * one-way channel.
  */
 function isAllowedOnPrerecorded(field: "path" | "outcome", value: Path | Outcome): boolean {
   return field === "path"

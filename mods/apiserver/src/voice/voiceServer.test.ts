@@ -89,6 +89,47 @@ describe("handlePrerecordedCall", () => {
     assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 0 });
   });
 
+  it("a detected machine hangs up immediately without playing the script (toggle on, the default)", async () => {
+    const { verbs, calls } = makeVerbs([]);
+    const menu = { repeatDigit: "1", repeatMessage: "Presione 1.", maxRepeats: 2 };
+
+    const result = await handlePrerecordedCall("Su saldo es...", menu, verbs, "MACHINE");
+
+    assert.deepEqual(calls, ["answer", "hangup"]);
+    assert.deepEqual(result, {
+      path: "ANSWERED_BY_MACHINE",
+      outcome: undefined,
+      repeatCount: 0
+    });
+  });
+
+  it("a detected machine plays the script anyway when the template's toggle is off", async () => {
+    const { verbs, calls } = makeVerbs([]);
+
+    const result = await handlePrerecordedCall("Su saldo es...", null, verbs, "MACHINE", false);
+
+    assert.deepEqual(calls, ["answer", "say:Su saldo es...", "hangup"]);
+    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 0 });
+  });
+
+  it("a HUMAN verdict plays the script normally", async () => {
+    const { verbs, calls } = makeVerbs([]);
+
+    const result = await handlePrerecordedCall("Su saldo es...", null, verbs, "HUMAN");
+
+    assert.deepEqual(calls, ["answer", "say:Su saldo es...", "hangup"]);
+    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 0 });
+  });
+
+  it("no AMD verdict (undefined) plays the script normally", async () => {
+    const { verbs, calls } = makeVerbs([]);
+
+    const result = await handlePrerecordedCall("Su saldo es...", null, verbs);
+
+    assert.deepEqual(calls, ["answer", "say:Su saldo es...", "hangup"]);
+    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 0 });
+  });
+
   it("repeat digit replays the script and gathers again, setting path ENGAGED", async () => {
     const { verbs, calls } = makeVerbs(["1", undefined]);
     const menu = { repeatDigit: "1", maxRepeats: 2 };
@@ -208,6 +249,23 @@ describe("runPrerecordedCall", () => {
       answeredSeconds: 4,
       scriptCompleted: true
     });
+  });
+
+  it("a detected machine returns cleanly but scriptCompleted is false — it never heard anything", async () => {
+    const { verbs, calls } = makeVerbs([]);
+
+    const result = await runPrerecordedCall(
+      "Su saldo es...",
+      null,
+      verbs,
+      Date.now,
+      "MACHINE",
+      true
+    );
+
+    assert.deepEqual(calls, ["answer", "hangup"]);
+    assert.equal(result.path, "ANSWERED_BY_MACHINE");
+    assert.equal(result.scriptCompleted, false);
   });
 
   it("early hangup mid-script (say() throws on the dead channel) still reports answered — not lost", async () => {

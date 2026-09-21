@@ -3,6 +3,61 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.52.1](https://github.com/fonoster/qcobro/compare/v1.52.0...v1.52.1) (2026-09-18)
+
+### Bug Fixes
+
+- **common:** accept an empty rows batch in REPLACE sync mode ([#191](https://github.com/fonoster/qcobro/issues/191)) ([9435470](https://github.com/fonoster/qcobro/commit/9435470f2d26d1652dd4414eb949499716290d94))
+
+# [1.52.0](https://github.com/fonoster/qcobro/compare/v1.51.0...v1.52.0) (2026-09-18)
+
+### Features
+
+- Voz IA barge-in, es-419 default and multilingual language option ([#190](https://github.com/fonoster/qcobro/issues/190)) ([1f66879](https://github.com/fonoster/qcobro/commit/1f668791ebc18fcafdf832cd7299035e95e79a59))
+
+# [1.51.0](https://github.com/fonoster/qcobro/compare/v1.50.2...v1.51.0) (2026-09-17)
+
+### Bug Fixes
+
+- **site:** point the Meta pixel at the new Fonoster business dataset ([#187](https://github.com/fonoster/qcobro/issues/187)) ([78fa137](https://github.com/fonoster/qcobro/commit/78fa137c763488e0a37a5ba73de062977fa07c48))
+
+### Features
+
+- **apiserver:** filter the caller's audio on synced agents ([#189](https://github.com/fonoster/qcobro/issues/189)) ([feba005](https://github.com/fonoster/qcobro/commit/feba005d6d4bee7a4f744b3f81db1de6841b4f46))
+- **design:** Meta ads framework and QCobro round 1 creative ([#188](https://github.com/fonoster/qcobro/issues/188)) ([00c0a23](https://github.com/fonoster/qcobro/commit/00c0a23d18532e32036e40e724513ac54ef65264))
+- **site:** add the Meta pixel with PageView, ViewContent and Lead ([#185](https://github.com/fonoster/qcobro/issues/185)) ([5f93714](https://github.com/fonoster/qcobro/commit/5f93714bdd6355e6a4aec136c72eb4a19a7553ae))
+- **site:** redesign marketing site and brand kit around "Todo a la vista" ([#186](https://github.com/fonoster/qcobro/issues/186)) ([b8a1bbd](https://github.com/fonoster/qcobro/commit/b8a1bbd147a7f80e6644ccfced2b4f61c462ec3f))
+
+## [1.50.2](https://github.com/fonoster/qcobro/compare/v1.50.1...v1.50.2) (2026-09-13)
+
+### Bug Fixes
+
+- **apiserver:** re-login FonosterVoiceApplicationClient after a token-refresh failure ([#184](https://github.com/fonoster/qcobro/issues/184)) ([585b1c4](https://github.com/fonoster/qcobro/commit/585b1c40d71cc2c6e90ebadb6f14bed6982aea8b))
+
+## [1.50.1](https://github.com/fonoster/qcobro/compare/v1.50.0...v1.50.1) (2026-09-13)
+
+### Bug Fixes
+
+- **apiserver:** re-login to Fonoster after a token-refresh failure ([#183](https://github.com/fonoster/qcobro/issues/183)) ([28f75fa](https://github.com/fonoster/qcobro/commit/28f75faf6e42a24639b2e57599a802db3ce3cfcd))
+
+# [1.50.0](https://github.com/fonoster/qcobro/compare/v1.49.0...v1.50.0) (2026-09-12)
+
+### Features
+
+- **webapp:** collapsible sidebar nav ([#182](https://github.com/fonoster/qcobro/issues/182)) ([4808aff](https://github.com/fonoster/qcobro/commit/4808aff11d0432929d6b7f51d38b765df23a19e2))
+
+# [1.49.0](https://github.com/fonoster/qcobro/compare/v1.48.2...v1.49.0) (2026-09-12)
+
+### Features
+
+- **voice:** activate Fonoster answering-machine detection (AMD) ([#181](https://github.com/fonoster/qcobro/issues/181)) ([cca6c1d](https://github.com/fonoster/qcobro/commit/cca6c1d1ee0524b1a9c2d1a5e8ae3b4fcf3b16ae)), closes [#893](https://github.com/fonoster/qcobro/issues/893) [#893](https://github.com/fonoster/qcobro/issues/893) [#893](https://github.com/fonoster/qcobro/issues/893) [#83](https://github.com/fonoster/qcobro/issues/83) [fonoster/fonoster#893](https://github.com/fonoster/fonoster/issues/893) [#893](https://github.com/fonoster/qcobro/issues/893) [fonoster/fonoster#897](https://github.com/fonoster/fonoster/issues/897)
+
+## [1.48.2](https://github.com/fonoster/qcobro/compare/v1.48.1...v1.48.2) (2026-09-12)
+
+### Bug Fixes
+
+- **webapp:** stop showing {{variables}} on fields nobody renders ([#179](https://github.com/fonoster/qcobro/issues/179)) ([f1531cb](https://github.com/fonoster/qcobro/commit/f1531cb762328e6b6053a35e1a0a5dc511c1fa7c))
+
 ## [1.48.1](https://github.com/fonoster/qcobro/compare/v1.48.0...v1.48.1) (2026-09-11)
 
 ### Bug Fixes

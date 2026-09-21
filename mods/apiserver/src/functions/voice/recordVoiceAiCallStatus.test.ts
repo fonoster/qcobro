@@ -131,6 +131,45 @@ describe("recordVoiceAiCallStatus", () => {
     assert.equal(getRow()?.deliveryReason, null);
   });
 
+  it("terminal tracking failure with a detected machine also writes path ANSWERED_BY_MACHINE", async () => {
+    const { client, cap } = makeClient({
+      id: "g-1",
+      delivery: "DISPATCHED",
+      deliveryReason: null,
+      channelData: null
+    });
+
+    await createRecordVoiceAiCallStatus(client as never)({
+      providerRef: "call-abc",
+      answered: false,
+      answeredSeconds: 0,
+      at: "2026-08-18T10:00:00.000Z",
+      deliveryReason: "OUTCOME_UNKNOWN",
+      path: "ANSWERED_BY_MACHINE"
+    });
+
+    assert.equal(cap.updateMany?.data.path, "ANSWERED_BY_MACHINE");
+  });
+
+  it("writes path null when the sweep reports no AMD verdict", async () => {
+    const { client, cap } = makeClient({
+      id: "g-1",
+      delivery: "DISPATCHED",
+      deliveryReason: null,
+      channelData: null
+    });
+
+    await createRecordVoiceAiCallStatus(client as never)({
+      providerRef: "call-abc",
+      answered: false,
+      answeredSeconds: 0,
+      at: "2026-08-18T10:00:00.000Z",
+      deliveryReason: "NO_ANSWER"
+    });
+
+    assert.equal(cap.updateMany?.data.path, null);
+  });
+
   it("returns matched:false and does not update when no gestión matches the call ref", async () => {
     const { client, cap } = makeClient(null);
 

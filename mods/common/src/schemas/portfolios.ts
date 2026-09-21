@@ -41,11 +41,29 @@ export const accountRowSchema = z.object({
 });
 export type AccountRowInput = z.infer<typeof accountRowSchema>;
 
-export const syncAccountsInputSchema = z.object({
-  portfolioId: z.string().min(1),
-  mode: z.enum(["APPEND_ONLY", "UPDATE_EXISTING", "REPLACE"]),
-  rows: z.array(accountRowSchema).min(1)
-});
+// `rows` may be empty only in REPLACE mode: a REPLACE batch is a full snapshot of the
+// portfolio, so an empty snapshot legitimately means "this portfolio has no accounts now" and
+// archives every existing one. For APPEND_ONLY and UPDATE_EXISTING an empty batch changes
+// nothing and is almost certainly a caller bug, so it is still rejected.
+export const syncAccountsInputSchema = z
+  .object({
+    portfolioId: z.string().min(1),
+    mode: z.enum(["APPEND_ONLY", "UPDATE_EXISTING", "REPLACE"]),
+    rows: z.array(accountRowSchema)
+  })
+  .superRefine((input, ctx) => {
+    if (input.mode !== "REPLACE" && input.rows.length === 0) {
+      ctx.addIssue({
+        code: "too_small",
+        origin: "array",
+        minimum: 1,
+        inclusive: true,
+        input: input.rows,
+        path: ["rows"],
+        message: `rows must not be empty in ${input.mode} mode (only REPLACE accepts an empty batch)`
+      });
+    }
+  });
 export type SyncAccountsInput = z.infer<typeof syncAccountsInputSchema>;
 
 // Window a contact-rate query can be computed over. 7 days is the default: a whole number of
