@@ -236,7 +236,10 @@
     };
     var attribution = readAttribution();
     AD_PARAMS.forEach(function (k) { payload[k] = attribution[k] || ''; });
-    fetch(ENDPOINT, { method: 'POST', body: JSON.stringify(payload) })
+    // Apps Script saves the row, then 302s to a host that sends no CORS headers,
+    // so a cors-mode fetch rejects after a successful save. no-cors resolves with
+    // an opaque response; keep it a simple request (no Content-Type header).
+    fetch(ENDPOINT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
       .then(function () {
         // Never pass form fields here: prospect PII must not reach Meta.
         if (window.fbq) window.fbq('track', 'Lead', { content_name: 'demo-request' });
