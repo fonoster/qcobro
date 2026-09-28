@@ -8,13 +8,14 @@
   },
   "files": [
     "dist",
+    "!dist/tsconfig.tsbuildinfo",
     "bin"
   ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -b --force",
+    "build": "tsc -b",
     "postbuild": "chmod +x ./bin/run.js",
     "clean": "rm -rf dist *.tsbuildinfo",
     "typecheck": "tsc --noEmit",

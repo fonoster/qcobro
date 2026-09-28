@@ -3,7 +3,8 @@
   "version": "1.52.1",
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "!dist/tsconfig.tsbuildinfo"
   ],
   "publishConfig": {
     "access": "public"

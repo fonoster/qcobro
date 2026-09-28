@@ -10,7 +10,7 @@
     }
   },
   "scripts": {
-    "build": "node scripts/prisma.mjs generate && tsc -b --force",
+    "build": "node scripts/prisma.mjs generate && tsc -b",
     "clean": "rm -rf dist *.tsbuildinfo",
     "start": "node dist/index.js",
     "start:dev": "tsx watch src/index.ts",
