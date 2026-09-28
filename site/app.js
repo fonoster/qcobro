@@ -162,6 +162,9 @@
 
   // ─── Pilot modal ───
   var modal = document.getElementById('pilot-modal');
+  var dialog = modal.querySelector('.modal__dialog');
+  var ask = document.getElementById('pilot-ask');
+  var done = document.getElementById('pilot-done');
   var lastFocus = null;
   function openModal() {
     // The pilot modal is the funnel step between landing and Lead.
@@ -169,7 +172,10 @@
     lastFocus = document.activeElement;
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
-    setTimeout(function () { var f = modal.querySelector('input'); if (f) f.focus(); }, 30);
+    setTimeout(function () {
+      var f = done.hidden ? modal.querySelector('input') : document.getElementById('pilot-done-title');
+      if (f) f.focus();
+    }, 30);
   }
   function closeModal() {
     modal.hidden = true;
@@ -182,7 +188,8 @@
     if (modal.hidden) return;
     if (e.key === 'Escape') closeModal();
     if (e.key === 'Tab') {
-      var items = modal.querySelectorAll('button, input, select');
+      var items = Array.prototype.filter.call(modal.querySelectorAll('button, input, select'),
+        function (el) { return el.offsetParent !== null; });
       var first = items[0], last = items[items.length - 1];
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
@@ -219,6 +226,28 @@
     return !firstBad;
   }
 
+  // A saved request swaps the form for a confirmation that stays until the
+  // visitor closes it; reopening the modal shows it again. A tiny line that
+  // auto-closed over an emptied form read as a failure and drew resubmissions.
+  function showDone(p) {
+    document.getElementById('pilot-done-name').textContent = p.nombre;
+    document.getElementById('pilot-done-email').textContent = p.email;
+    ask.hidden = true;
+    done.hidden = false;
+    dialog.setAttribute('aria-labelledby', 'pilot-done-title');
+    dialog.scrollTop = 0;
+    document.getElementById('pilot-done-title').focus();
+  }
+  document.getElementById('pilot-again').addEventListener('click', function () {
+    form.reset();
+    submit.disabled = false;
+    submit.textContent = 'Enviar solicitud';
+    done.hidden = true;
+    ask.hidden = false;
+    dialog.setAttribute('aria-labelledby', 'pilot-title');
+    form.nombre.focus();
+  });
+
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     if (!validate()) return;
@@ -243,15 +272,7 @@
       .then(function () {
         // Never pass form fields here: prospect PII must not reach Meta.
         if (window.fbq) window.fbq('track', 'Lead', { content_name: 'demo-request' });
-        form.reset();
-        submit.textContent = 'Solicitud enviada';
-        status.textContent = 'Gracias. Le contactamos para coordinar su piloto.';
-        setTimeout(function () {
-          submit.disabled = false;
-          submit.textContent = 'Enviar solicitud';
-          status.textContent = '';
-          closeModal();
-        }, 2600);
+        showDone(payload);
       })
       .catch(function () {
         submit.disabled = false;

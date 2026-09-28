@@ -377,6 +377,19 @@ a { color: inherit; }
 .form .btn { margin-top: 8px; }
 .form__status { font-size: 14px; color: var(--ink-2); text-align: center; min-height: 1em; }
 
+/* Pilot sent: replaces the form and stays until the visitor closes it, so a
+   saved request never looks like an empty form waiting to be filled again. */
+.pilot-done { display: grid; justify-items: center; text-align: center; padding: 24px 0 4px; animation: rise .35s var(--ease); }
+.pilot-done[hidden] { display: none; }
+.pilot-done__mark { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); margin-bottom: 12px; }
+.pilot-done__mark .lucide { width: 36px; height: 36px; stroke-width: 2.5; }
+.pilot-done .modal__title { outline: none; }
+.pilot-done__text { font-size: 17px; color: var(--ink-2); margin-top: 12px; max-width: 40ch; overflow-wrap: anywhere; }
+.pilot-done__text strong { color: var(--ink); font-weight: 600; }
+.pilot-done__note { font-size: 15px; font-weight: 500; color: var(--ink); margin: 12px 0 28px; }
+.pilot-done__again { margin-top: 16px; font-size: 14px; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
+.pilot-done__again:hover { color: var(--ink); }
+
 /* ─── Scroll reveal (armed by JS only, so content is visible without it) ─── */
 .js .reveal { opacity: 0; transform: translateY(12px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
 .js .reveal.is-in { opacity: 1; transform: none; }

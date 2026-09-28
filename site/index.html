@@ -367,6 +367,7 @@
     <div class="modal__backdrop" data-pilot-close></div>
     <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="pilot-title">
       <button type="button" class="modal__close" data-pilot-close aria-label="Cerrar"><i data-lucide="x"></i></button>
+      <div id="pilot-ask">
       <p class="eyebrow eyebrow--accent">Piloto gratuito de 15 días</p>
       <h2 class="modal__title" id="pilot-title">Pida su piloto</h2>
       <p class="modal__sub">Sin costo: 300 de sus cuentas, 15 días y un informe de recuperación al final. Le contactamos para coordinarlo.</p>
@@ -403,6 +404,15 @@
         <button type="submit" class="btn btn--primary btn--lg btn--block" id="pilot-submit">Enviar solicitud</button>
         <p class="form__status" id="pilot-status" role="status" aria-live="polite"></p>
       </form>
+      </div>
+      <div class="pilot-done" id="pilot-done" hidden>
+        <span class="pilot-done__mark" aria-hidden="true"><i data-lucide="check"></i></span>
+        <h2 class="modal__title" id="pilot-done-title" tabindex="-1">Solicitud enviada</h2>
+        <p class="pilot-done__text">Gracias, <span id="pilot-done-name"></span>. Recibimos su solicitud y le escribiremos a <strong id="pilot-done-email"></strong> para coordinar su piloto.</p>
+        <p class="pilot-done__note">No hace falta enviarla de nuevo.</p>
+        <button type="button" class="btn btn--primary btn--lg btn--block" data-pilot-close>Cerrar</button>
+        <button type="button" class="pilot-done__again" id="pilot-again">Enviar otra solicitud</button>
+      </div>
     </div>
   </div>
 
