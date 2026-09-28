@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.52.2](https://github.com/fonoster/qcobro/compare/v1.52.1...v1.52.2) (2026-09-28)
+
+### Bug Fixes
+
+- **build:** stop parallel package builds rewriting shared dist output ([#198](https://github.com/fonoster/qcobro/issues/198)) ([d1be2d7](https://github.com/fonoster/qcobro/commit/d1be2d7f24be2b69f547cb757cae4d7140a183a8)), closes [#196](https://github.com/fonoster/qcobro/issues/196)
+
 ## [1.52.1](https://github.com/fonoster/qcobro/compare/v1.52.0...v1.52.1) (2026-09-18)
 
 ### Bug Fixes

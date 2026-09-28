@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.52.2](https://github.com/fonoster/qcobro/compare/v1.52.1...v1.52.2) (2026-09-28)
+
+### Bug Fixes
+
+- **build:** stop parallel package builds rewriting shared dist output ([#198](https://github.com/fonoster/qcobro/issues/198)) ([d1be2d7](https://github.com/fonoster/qcobro/commit/d1be2d7f24be2b69f547cb757cae4d7140a183a8)), closes [#196](https://github.com/fonoster/qcobro/issues/196)
+- **site:** keep the pilot form's sent confirmation on screen ([#196](https://github.com/fonoster/qcobro/issues/196)) ([9c26d94](https://github.com/fonoster/qcobro/commit/9c26d94ea457f848102d46345297473f0ebdcabe))
+- **site:** stop pilot form reporting failure after a successful save ([#195](https://github.com/fonoster/qcobro/issues/195)) ([266a9db](https://github.com/fonoster/qcobro/commit/266a9dbff595671f1b97dbdf2544946e3f655279)), closes [micobro#142](https://github.com/micobro/issues/142)
+- **site:** use the portrait hero photo on the marketing page ([#194](https://github.com/fonoster/qcobro/issues/194)) ([6c95b36](https://github.com/fonoster/qcobro/commit/6c95b36960caf2595f763211caec903ae5219f0b))
+
+### Features
+
+- **site:** send ad attribution with pilot form submissions ([#192](https://github.com/fonoster/qcobro/issues/192)) ([6abfac4](https://github.com/fonoster/qcobro/commit/6abfac4078b4605a147860965dba248114655cea))
+
 ## [1.52.1](https://github.com/fonoster/qcobro/compare/v1.52.0...v1.52.1) (2026-09-18)
 
 ### Bug Fixes
