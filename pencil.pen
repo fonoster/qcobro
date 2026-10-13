@@ -30655,7 +30655,7 @@
                                   "fill": "$--foreground",
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
-                                  "content": "Español",
+                                  "content": "Español (Latinoamérica)",
                                   "fontFamily": "Inter",
                                   "fontSize": 14,
                                   "fontWeight": "normal"
@@ -30782,6 +30782,48 @@
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
                                   "content": "## Rol\n\nEres un asistente virtual de cobranza para Créditos Demo...",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 14,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "hNQsV",
+                              "name": "Interrupciones",
+                              "width": "fill_container",
+                              "stroke": "$--border",
+                              "strokeWidth": {
+                                "bottom": 1
+                              },
+                              "strokeAlignment": "inner",
+                              "strokeLinejoin": "round",
+                              "layout": "vertical",
+                              "gap": 2,
+                              "padding": [
+                                10,
+                                0
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "H2sL7i",
+                                  "name": "Label",
+                                  "fill": "$--muted-foreground",
+                                  "content": "Permitir interrupciones",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "mKdHf",
+                                  "name": "Value",
+                                  "fill": "$--foreground",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "No",
                                   "fontFamily": "Inter",
                                   "fontSize": 14,
                                   "fontWeight": "normal"
@@ -31274,7 +31316,7 @@
                               "content": "Idioma"
                             },
                             "KmeTM": {
-                              "content": "Español",
+                              "content": "Español (Latinoamérica)",
                               "fill": "$--foreground"
                             }
                           }
@@ -31377,6 +31419,22 @@
                             "KmeTM": {
                               "content": "3",
                               "fill": "$--foreground"
+                            }
+                          }
+                        },
+                        {
+                          "id": "gIELM",
+                          "type": "ref",
+                          "ref": "Izzso",
+                          "name": "Interrupciones",
+                          "width": "fill_container",
+                          "descendants": {
+                            "LADOY": {
+                              "content": "Permitir que el cliente interrumpa al agente mientras habla",
+                              "fontSize": 14,
+                              "fill": "$--muted-foreground",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container"
                             }
                           }
                         }
@@ -31683,7 +31741,7 @@
                               "content": "Idioma"
                             },
                             "KmeTM": {
-                              "content": "Españil",
+                              "content": "Español (Latinoamérica)",
                               "fill": "$--foreground"
                             }
                           }
@@ -31780,6 +31838,22 @@
                             "KmeTM": {
                               "content": "3",
                               "fill": "$--foreground"
+                            }
+                          }
+                        },
+                        {
+                          "id": "C6zx0a",
+                          "type": "ref",
+                          "ref": "Izzso",
+                          "name": "Interrupciones",
+                          "width": "fill_container",
+                          "descendants": {
+                            "LADOY": {
+                              "content": "Permitir que el cliente interrumpa al agente mientras habla",
+                              "fontSize": 14,
+                              "fill": "$--muted-foreground",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container"
                             }
                           }
                         }
@@ -32080,7 +32154,7 @@
                               "content": "Idioma"
                             },
                             "KmeTM": {
-                              "content": "Español",
+                              "content": "Español (Latinoamérica)",
                               "fill": "$--foreground"
                             }
                           }
@@ -32298,6 +32372,22 @@
                               "fontWeight": "normal"
                             }
                           ]
+                        },
+                        {
+                          "id": "fZY7M",
+                          "type": "ref",
+                          "ref": "h8PU2",
+                          "name": "Colgar si hay contestador",
+                          "width": "fill_container",
+                          "descendants": {
+                            "RAoMa": {
+                              "content": "Colgar si se detecta un contestador automático o buzón de voz",
+                              "fontSize": 14,
+                              "fill": "$--muted-foreground",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container"
+                            }
+                          }
                         }
                       ]
                     },
@@ -32986,30 +33076,20 @@
                           ]
                         },
                         {
-                          "type": "frame",
-                          "id": "ttvUF",
+                          "id": "yvDMY",
+                          "type": "ref",
+                          "ref": "Izzso",
                           "name": "Evitar caracteres costosos",
                           "width": "fill_container",
-                          "gap": 8,
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "id": "CyrJ7",
-                              "type": "ref",
-                              "ref": "LR9Dn",
-                              "name": "Checkbox"
-                            },
-                            {
-                              "type": "text",
-                              "id": "niImP",
-                              "name": "Checkbox Label",
-                              "fill": "$--foreground",
+                          "descendants": {
+                            "LADOY": {
                               "content": "Evitar caracteres que encarecen el envío",
-                              "fontFamily": "$--font-primary",
                               "fontSize": 14,
-                              "fontWeight": "normal"
+                              "fill": "$--muted-foreground",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container"
                             }
-                          ]
+                          }
                         },
                         {
                           "id": "ucFrt",
