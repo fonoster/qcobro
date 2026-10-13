@@ -37,3 +37,6 @@ playwright/.cache/
 
 # Fonoster dependency tarballs pre-packed for Docker builds
 .docker-deps/
+
+# Customer case studies (real customer metrics; never commit)
+design/case-studies/

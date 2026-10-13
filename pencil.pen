@@ -1,5 +1,5 @@
 {
-  "version": "2.18",
+  "version": "2.21",
   "children": [
     {
       "type": "frame",
@@ -37,8 +37,7 @@
               "x": 0,
               "y": 2
             },
-            "blur": 3.5,
-            "spread": -1
+            "blur": 3.5
           },
           "gap": 8,
           "padding": [
@@ -2335,7 +2334,7 @@
           "fill": {
             "type": "image",
             "enabled": true,
-            "mode": "fill"
+            "mode": "cover"
           },
           "cornerRadius": "$--radius-pill",
           "layout": "vertical",
@@ -4907,8 +4906,7 @@
               "x": 0,
               "y": 2
             },
-            "blur": 3.5,
-            "spread": -1
+            "blur": 3.5
           },
           "layout": "vertical",
           "alignItems": "center"
@@ -5082,8 +5080,7 @@
               "x": 0,
               "y": 1
             },
-            "blur": 3.5,
-            "spread": -1
+            "blur": 3.5
           },
           "gap": 8,
           "padding": [
@@ -5182,8 +5179,7 @@
                   "x": 0,
                   "y": 1
                 },
-                "blur": 3.5,
-                "spread": -1
+                "blur": 3.5
               },
               "gap": 8,
               "padding": [
@@ -6005,8 +6001,7 @@
               "x": 0,
               "y": 1
             },
-            "blur": 3.5,
-            "spread": -1
+            "blur": 3.5
           },
           "justifyContent": "center",
           "alignItems": "center",
@@ -9650,7 +9645,7 @@
           "fill": {
             "type": "image",
             "enabled": true,
-            "mode": "fill"
+            "mode": "cover"
           },
           "children": [
             {
@@ -12720,8 +12715,7 @@
               "x": 0,
               "y": 8
             },
-            "blur": 24,
-            "spread": -4
+            "blur": 24
           },
           "layout": "vertical",
           "gap": 2,
@@ -21576,8 +21570,7 @@
               "x": 0,
               "y": 24
             },
-            "blur": 50,
-            "spread": -8
+            "blur": 50
           },
           "layout": "vertical",
           "children": [
@@ -22536,8 +22529,8 @@
     {
       "type": "frame",
       "id": "GB47x",
-      "x": 12132,
-      "y": 1608,
+      "x": 13046,
+      "y": -77,
       "name": "QCobro · Planes y Precios (Doc)",
       "clip": true,
       "width": 794,
@@ -30504,8 +30497,7 @@
                               "x": 0,
                               "y": 1
                             },
-                            "blur": 3.5,
-                            "spread": -1
+                            "blur": 3.5
                           },
                           "padding": [
                             6,
@@ -36146,8 +36138,7 @@
                       "x": 0,
                       "y": 8
                     },
-                    "blur": 24,
-                    "spread": -4
+                    "blur": 24
                   },
                   "layout": "vertical",
                   "gap": 2,
@@ -36360,7 +36351,7 @@
                       "type": "text",
                       "id": "Xrh1P",
                       "name": "Sub",
-                      "fill": "$--color-success",
+                      "fill": "#e3e3e3ff",
                       "textGrowth": "fixed-width",
                       "width": 436,
                       "content": "Deudores, campañas, agentes IA y resultados — gestionados desde un panel directo y operativo.",
@@ -40480,8 +40471,7 @@
                   "x": 0,
                   "y": 8
                 },
-                "blur": 24,
-                "spread": -4
+                "blur": 24
               },
               "layout": "vertical",
               "gap": 2,
@@ -66494,8 +66484,7 @@
           "x": 0,
           "y": 8
         },
-        "blur": 24,
-        "spread": -4
+        "blur": 24
       },
       "layout": "vertical",
       "gap": 2,
@@ -81891,16 +81880,6 @@
       ]
     },
     {
-      "type": "note",
-      "id": "GH2hP",
-      "x": 12986,
-      "y": 1608,
-      "name": "Giro Offer — internal note",
-      "width": 520,
-      "height": 0,
-      "content": "NOTA INTERNA — no forma parte del diseño. Oferta para enviar junto con la hoja de precios.\n\n═══════════════════════════════\nLA OFERTA — Plan Pro con servicio nivel Enterprise\n═══════════════════════════════\n\n• Plan y precio: PLAN PRO — $239.99 / mes de suscripción + uso\n  (el uso se factura a las tarifas por unidad de la hoja).\n\n• Mínimo de facturación del Pro: USD 1,500 / mes (suscripción + uso).\n  Si el consumo del mes no llega a ese monto, se factura el mínimo.\n\n• Nivel de servicio normalmente reservado a Enterprise:\n   – SLA de respuesta de 3 horas (igual que Enterprise)\n   – Ingeniero dedicado\n   – Línea directa con el fundador\n\n• Vigencia de la oferta: 12 meses. Durante ese plazo, precio Pro\n  + servicio Enterprise. Al terminar se renueva a condiciones\n  estándar (o se renegocia).\n\nEn resumen: atención white-glove de Enterprise al precio de Pro,\npor 12 meses, con un piso de USD 1,500/mes.\n\n═══════════════════════════════\nLO QUE PEDIMOS A CAMBIO (condiciones)\n═══════════════════════════════\n\n1. Caso de éxito — Giro acepta que lo documentemos como caso de\n   éxito (producido con Hero — confirmar que es la herramienta).\n\n2. Logo en nuestro sitio — permiso para mostrar el logo de Giro\n   en el sitio de QCobro (sección de clientes / \"confían en nosotros\").\n\n3. Co-branding — permiso para usar un lockup \"Giro + QCobro\" en\n   materiales de lanzamiento y anuncios.\n\n4. Aprobación previa — Giro revisa y aprueba cada pieza pública\n   (caso de éxito, creatividades co-branded, anuncios) ANTES de publicarla.\n\n5. Vigencia — ventana de uso del logo / co-branding: POR DEFINIR.\n   Pedro planteó ~1 semana; falta redactar el texto.\n\n═══════════════════════════════\nPENDIENTES POR CERRAR\n═══════════════════════════════\n\n• Texto de la vigencia del logo / co-branding: ¿1 semana?\n  ¿mientras sean cliente? ¿ligada al plazo del contrato?\n• Confirmar que \"Hero\" es la herramienta para producir el caso de éxito.\n• ¿El compromiso de 12 meses es también permanencia mínima de Giro\n  (sin salida anticipada), o solo define la vigencia del precio?\n• Confirmar que el piso de USD 1,500/mes aplica desde el mes 1\n  (o si hay rampa los primeros meses)."
-    },
-    {
       "type": "frame",
       "id": "hJ7tu",
       "x": 15749,
@@ -82643,14 +82622,37 @@
                                       "alignItems": "center",
                                       "children": [
                                         {
-                                          "type": "text",
-                                          "id": "eE57V",
+                                          "type": "frame",
+                                          "id": "fEW5i",
                                           "name": "T",
-                                          "fill": "$--foreground",
-                                          "content": "María Fernández",
-                                          "fontFamily": "Inter",
-                                          "fontSize": 13,
-                                          "fontWeight": "500"
+                                          "gap": 4,
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "oaOMh",
+                                              "name": "Nombre",
+                                              "fill": "$--foreground",
+                                              "content": "María",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "rbPVd",
+                                              "name": "Apellido",
+                                              "fill": "$--foreground",
+                                              "effect": {
+                                                "type": "blur",
+                                                "radius": 4
+                                              },
+                                              "content": "Fernández",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500"
+                                            }
+                                          ]
                                         }
                                       ]
                                     },
@@ -82808,14 +82810,37 @@
                                       "alignItems": "center",
                                       "children": [
                                         {
-                                          "type": "text",
-                                          "id": "GNjpr",
+                                          "type": "frame",
+                                          "id": "A48mn",
                                           "name": "T",
-                                          "fill": "$--foreground",
-                                          "content": "Ramón Castillo",
-                                          "fontFamily": "Inter",
-                                          "fontSize": 13,
-                                          "fontWeight": "500"
+                                          "gap": 4,
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "s81W9",
+                                              "name": "Nombre",
+                                              "fill": "$--foreground",
+                                              "content": "Ramón",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "VAuSA",
+                                              "name": "Apellido",
+                                              "fill": "$--foreground",
+                                              "effect": {
+                                                "type": "blur",
+                                                "radius": 4
+                                              },
+                                              "content": "Castillo",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500"
+                                            }
+                                          ]
                                         }
                                       ]
                                     },
@@ -82973,14 +82998,37 @@
                                       "alignItems": "center",
                                       "children": [
                                         {
-                                          "type": "text",
-                                          "id": "Xmp1G",
+                                          "type": "frame",
+                                          "id": "v3in3a",
                                           "name": "T",
-                                          "fill": "$--foreground",
-                                          "content": "Yalitza Peña",
-                                          "fontFamily": "Inter",
-                                          "fontSize": 13,
-                                          "fontWeight": "500"
+                                          "gap": 4,
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "h31uWc",
+                                              "name": "Nombre",
+                                              "fill": "$--foreground",
+                                              "content": "Yalitza",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "E0wi3q",
+                                              "name": "Apellido",
+                                              "fill": "$--foreground",
+                                              "effect": {
+                                                "type": "blur",
+                                                "radius": 4
+                                              },
+                                              "content": "Peña",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500"
+                                            }
+                                          ]
                                         }
                                       ]
                                     },
@@ -83138,14 +83186,37 @@
                                       "alignItems": "center",
                                       "children": [
                                         {
-                                          "type": "text",
-                                          "id": "m0EjC",
+                                          "type": "frame",
+                                          "id": "J8HPhe",
                                           "name": "T",
-                                          "fill": "$--foreground",
-                                          "content": "José Almonte",
-                                          "fontFamily": "Inter",
-                                          "fontSize": 13,
-                                          "fontWeight": "500"
+                                          "gap": 4,
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "J2Ebm",
+                                              "name": "Nombre",
+                                              "fill": "$--foreground",
+                                              "content": "José",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "QN9YK",
+                                              "name": "Apellido",
+                                              "fill": "$--foreground",
+                                              "effect": {
+                                                "type": "blur",
+                                                "radius": 4
+                                              },
+                                              "content": "Almonte",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500"
+                                            }
+                                          ]
                                         }
                                       ]
                                     },
@@ -83303,14 +83374,37 @@
                                       "alignItems": "center",
                                       "children": [
                                         {
-                                          "type": "text",
-                                          "id": "CxTon",
+                                          "type": "frame",
+                                          "id": "y6CglX",
                                           "name": "T",
-                                          "fill": "$--foreground",
-                                          "content": "Carmen Ureña",
-                                          "fontFamily": "Inter",
-                                          "fontSize": 13,
-                                          "fontWeight": "500"
+                                          "gap": 4,
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "N8s8U",
+                                              "name": "Nombre",
+                                              "fill": "$--foreground",
+                                              "content": "Carmen",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "icjhv",
+                                              "name": "Apellido",
+                                              "fill": "$--foreground",
+                                              "effect": {
+                                                "type": "blur",
+                                                "radius": 4
+                                              },
+                                              "content": "Ureña",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500"
+                                            }
+                                          ]
                                         }
                                       ]
                                     },
@@ -83468,14 +83562,37 @@
                                       "alignItems": "center",
                                       "children": [
                                         {
-                                          "type": "text",
-                                          "id": "pBqRO",
+                                          "type": "frame",
+                                          "id": "Nh7y5",
                                           "name": "T",
-                                          "fill": "$--foreground",
-                                          "content": "Luis Batista",
-                                          "fontFamily": "Inter",
-                                          "fontSize": 13,
-                                          "fontWeight": "500"
+                                          "gap": 4,
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "hw3l3",
+                                              "name": "Nombre",
+                                              "fill": "$--foreground",
+                                              "content": "Luis",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "a3aaj",
+                                              "name": "Apellido",
+                                              "fill": "$--foreground",
+                                              "effect": {
+                                                "type": "blur",
+                                                "radius": 4
+                                              },
+                                              "content": "Batista",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500"
+                                            }
+                                          ]
                                         }
                                       ]
                                     },
@@ -83633,14 +83750,37 @@
                                       "alignItems": "center",
                                       "children": [
                                         {
-                                          "type": "text",
-                                          "id": "k3xRW",
+                                          "type": "frame",
+                                          "id": "moOuu",
                                           "name": "T",
-                                          "fill": "$--foreground",
-                                          "content": "Ana Rodríguez",
-                                          "fontFamily": "Inter",
-                                          "fontSize": 13,
-                                          "fontWeight": "500"
+                                          "gap": 4,
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "KfCO8",
+                                              "name": "Nombre",
+                                              "fill": "$--foreground",
+                                              "content": "Ana",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "PeCU1",
+                                              "name": "Apellido",
+                                              "fill": "$--foreground",
+                                              "effect": {
+                                                "type": "blur",
+                                                "radius": 4
+                                              },
+                                              "content": "Rodríguez",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500"
+                                            }
+                                          ]
                                         }
                                       ]
                                     },
@@ -84434,14 +84574,37 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "fojmc",
+                          "type": "frame",
+                          "id": "uR2du",
                           "name": "Nombre",
-                          "fill": "#F2F2F4",
-                          "content": "María Fernández",
-                          "fontFamily": "Inter",
-                          "fontSize": 15,
-                          "fontWeight": "600"
+                          "gap": 4,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "y8KWh",
+                              "name": "Nombre",
+                              "fill": "#F2F2F4",
+                              "content": "María",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "RHUqr",
+                              "name": "Apellido",
+                              "fill": "#F2F2F4",
+                              "effect": {
+                                "type": "blur",
+                                "radius": 4
+                              },
+                              "content": "Fernández",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                              "fontWeight": "600"
+                            }
+                          ]
                         },
                         {
                           "type": "ellipse",
@@ -84456,6 +84619,10 @@
                           "id": "S2NFB",
                           "name": "Tel",
                           "fill": "$--muted-foreground",
+                          "effect": {
+                            "type": "blur",
+                            "radius": 4
+                          },
                           "content": "+1 809 555 0142",
                           "fontFamily": "Inter",
                           "fontSize": 14,
@@ -84606,27 +84773,73 @@
                           "gap": 3,
                           "children": [
                             {
-                              "type": "text",
-                              "id": "QAaI8",
+                              "type": "frame",
+                              "id": "O1VbuV",
                               "name": "N",
-                              "fill": "$--foreground",
-                              "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "María Fernández",
-                              "fontFamily": "Inter",
-                              "fontSize": 24,
-                              "fontWeight": "700",
-                              "letterSpacing": -0.6
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "R1oF1q",
+                                  "name": "Nombre",
+                                  "fill": "$--foreground",
+                                  "content": "María",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 24,
+                                  "fontWeight": "700",
+                                  "letterSpacing": -0.6
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "FHxvG",
+                                  "name": "Apellido",
+                                  "fill": "$--foreground",
+                                  "effect": {
+                                    "type": "blur",
+                                    "radius": 7
+                                  },
+                                  "content": "Fernández",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 24,
+                                  "fontWeight": "700",
+                                  "letterSpacing": -0.6
+                                }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "hNmPt",
+                              "type": "frame",
+                              "id": "RnWBR",
                               "name": "Sub",
-                              "fill": "$--muted-foreground",
-                              "content": "Cédula 001-1234567-8",
-                              "fontFamily": "Inter",
-                              "fontSize": 13,
-                              "fontWeight": "normal"
+                              "gap": 4,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "X9fE6C",
+                                  "name": "Etiqueta",
+                                  "fill": "$--muted-foreground",
+                                  "content": "Cédula",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "KxY64",
+                                  "name": "Cédula",
+                                  "fill": "$--muted-foreground",
+                                  "effect": {
+                                    "type": "blur",
+                                    "radius": 4
+                                  },
+                                  "content": "001-1234567-8",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                }
+                              ]
                             }
                           ]
                         },
@@ -86754,14 +86967,37 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "OfK5s",
+                          "type": "frame",
+                          "id": "n8yOA",
                           "name": "Nombre",
-                          "fill": "#F2F2F4",
-                          "content": "María Fernández",
-                          "fontFamily": "Inter",
-                          "fontSize": 15,
-                          "fontWeight": "600"
+                          "gap": 4,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "jNtM6",
+                              "name": "Nombre",
+                              "fill": "#F2F2F4",
+                              "content": "María",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "V4wvv",
+                              "name": "Apellido",
+                              "fill": "#F2F2F4",
+                              "effect": {
+                                "type": "blur",
+                                "radius": 4
+                              },
+                              "content": "Fernández",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                              "fontWeight": "600"
+                            }
+                          ]
                         },
                         {
                           "type": "ellipse",
@@ -86776,6 +87012,10 @@
                           "id": "KxRfJ",
                           "name": "Tel",
                           "fill": "$--muted-foreground",
+                          "effect": {
+                            "type": "blur",
+                            "radius": 4
+                          },
                           "content": "+1 809 555 0142",
                           "fontFamily": "Inter",
                           "fontSize": 14,
@@ -86926,27 +87166,73 @@
                           "gap": 3,
                           "children": [
                             {
-                              "type": "text",
-                              "id": "X8e28",
+                              "type": "frame",
+                              "id": "nzFG8",
                               "name": "N",
-                              "fill": "$--foreground",
-                              "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "María Fernández",
-                              "fontFamily": "Inter",
-                              "fontSize": 24,
-                              "fontWeight": "700",
-                              "letterSpacing": -0.6
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "W2HEmH",
+                                  "name": "Nombre",
+                                  "fill": "$--foreground",
+                                  "content": "María",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 24,
+                                  "fontWeight": "700",
+                                  "letterSpacing": -0.6
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "K7YgC",
+                                  "name": "Apellido",
+                                  "fill": "$--foreground",
+                                  "effect": {
+                                    "type": "blur",
+                                    "radius": 7
+                                  },
+                                  "content": "Fernández",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 24,
+                                  "fontWeight": "700",
+                                  "letterSpacing": -0.6
+                                }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "AzayS",
+                              "type": "frame",
+                              "id": "GEtJM",
                               "name": "Sub",
-                              "fill": "$--muted-foreground",
-                              "content": "Cédula 001-1234567-8",
-                              "fontFamily": "Inter",
-                              "fontSize": 13,
-                              "fontWeight": "normal"
+                              "gap": 4,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "gMIez",
+                                  "name": "Etiqueta",
+                                  "fill": "$--muted-foreground",
+                                  "content": "Cédula",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "yDKtN",
+                                  "name": "Cédula",
+                                  "fill": "$--muted-foreground",
+                                  "effect": {
+                                    "type": "blur",
+                                    "radius": 4
+                                  },
+                                  "content": "001-1234567-8",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                }
+                              ]
                             }
                           ]
                         },
@@ -88832,8 +89118,7 @@
                       "x": 0,
                       "y": 24
                     },
-                    "blur": 60,
-                    "spread": -8
+                    "blur": 60
                   },
                   "layout": "vertical",
                   "children": [
@@ -88862,15 +89147,39 @@
                           "gap": 3,
                           "children": [
                             {
-                              "type": "text",
-                              "id": "L2UWuF",
+                              "type": "frame",
+                              "id": "ztPBn",
                               "name": "T",
-                              "fill": "$--foreground",
-                              "content": "Cerrar gestión · María Fernández",
-                              "fontFamily": "Inter",
-                              "fontSize": 18,
-                              "fontWeight": "600",
-                              "letterSpacing": -0.3
+                              "gap": 5,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "gnj2Z",
+                                  "name": "Nombre",
+                                  "fill": "$--foreground",
+                                  "content": "Cerrar gestión · María",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 18,
+                                  "fontWeight": "600",
+                                  "letterSpacing": -0.3
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "ogoen",
+                                  "name": "Apellido",
+                                  "fill": "$--foreground",
+                                  "effect": {
+                                    "type": "blur",
+                                    "radius": 5
+                                  },
+                                  "content": "Fernández",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 18,
+                                  "fontWeight": "600",
+                                  "letterSpacing": -0.3
+                                }
+                              ]
                             },
                             {
                               "type": "text",
@@ -91738,8 +92047,7 @@
                           "x": 0,
                           "y": 1
                         },
-                        "blur": 3.5,
-                        "spread": -1
+                        "blur": 3.5
                       },
                       "padding": [
                         6,
@@ -91774,8 +92082,7 @@
                           "x": 0,
                           "y": 1
                         },
-                        "blur": 3.5,
-                        "spread": -1
+                        "blur": 3.5
                       },
                       "padding": [
                         6,
@@ -92538,8 +92845,7 @@
                           "x": 0,
                           "y": 1
                         },
-                        "blur": 3.5,
-                        "spread": -1
+                        "blur": 3.5
                       },
                       "padding": [
                         6,
@@ -92950,8 +93256,7 @@
                           "x": 0,
                           "y": 1
                         },
-                        "blur": 3.5,
-                        "spread": -1
+                        "blur": 3.5
                       },
                       "padding": [
                         6,
@@ -92986,8 +93291,7 @@
                           "x": 0,
                           "y": 1
                         },
-                        "blur": 3.5,
-                        "spread": -1
+                        "blur": 3.5
                       },
                       "padding": [
                         6,
@@ -93022,8 +93326,7 @@
                           "x": 0,
                           "y": 1
                         },
-                        "blur": 3.5,
-                        "spread": -1
+                        "blur": 3.5
                       },
                       "padding": [
                         6,
@@ -95756,7 +96059,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "images/hero-colmado.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "width": 720,
                   "height": 780
@@ -99607,7 +99910,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "images/hero-colmado.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "width": 390,
                   "height": 440
@@ -109351,6 +109654,1847 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "E4GE6",
+      "x": 10683,
+      "y": -1368,
+      "name": "Partner Announcement Banner",
+      "clip": true,
+      "width": 1280,
+      "height": 720,
+      "fill": "#112317",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "zfk2a",
+          "x": 64,
+          "y": 72,
+          "name": "Lockup",
+          "gap": 48,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "uCoFR",
+              "name": "QCobro",
+              "fill": "#FFFFFF",
+              "content": "QCobro",
+              "fontFamily": "Inter",
+              "fontSize": 92,
+              "fontWeight": "800",
+              "letterSpacing": -3
+            },
+            {
+              "type": "icon",
+              "id": "DMVta",
+              "name": "Plus",
+              "width": 56,
+              "height": 56,
+              "icon": "plus",
+              "library": "lucide",
+              "fill": "#FFFFFF"
+            },
+            {
+              "type": "frame",
+              "id": "xFtyY",
+              "name": "Partner Placeholder",
+              "width": 260,
+              "height": 104,
+              "cornerRadius": 18,
+              "stroke": "#FFFFFF59",
+              "strokeWidth": 2,
+              "strokeAlignment": "inner",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "JXKeV",
+                  "name": "Mystery",
+                  "fill": "#FFFFFF",
+                  "content": "?",
+                  "lineHeight": 1,
+                  "fontFamily": "Newsreader",
+                  "fontSize": 84,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vyuic",
+          "x": 900,
+          "y": 175,
+          "name": "Phone",
+          "rotation": -6.000000000000001,
+          "width": 300,
+          "height": 620,
+          "fill": "#0A0F0C",
+          "cornerRadius": 52,
+          "stroke": "#3A4A40",
+          "strokeWidth": 2,
+          "strokeAlignment": "inner",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000080",
+            "offset": {
+              "x": 0,
+              "y": 30
+            },
+            "blur": 80
+          },
+          "layout": "vertical",
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "shbbH",
+              "name": "Screen",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#F4F7F5",
+              "cornerRadius": 40,
+              "layout": "vertical",
+              "gap": 14,
+              "padding": [
+                14,
+                16,
+                0,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "muN95",
+                  "name": "Dynamic Island",
+                  "width": 96,
+                  "height": 28,
+                  "fill": "#0A0F0C",
+                  "cornerRadius": 14
+                },
+                {
+                  "type": "frame",
+                  "id": "iB9h1",
+                  "layoutPosition": "absolute",
+                  "x": 26,
+                  "y": 20,
+                  "name": "Status Bar",
+                  "width": 224,
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "e7b1sf",
+                      "name": "Time",
+                      "fill": "#0F1F17",
+                      "content": "9:41",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Ay5Mm",
+                      "name": "Status Icons",
+                      "gap": 4,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "ZWqJh",
+                          "name": "signal",
+                          "width": 13,
+                          "height": 13,
+                          "icon": "signal",
+                          "library": "lucide",
+                          "fill": "#0F1F17"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "r34Z6y",
+                          "name": "wifi",
+                          "width": 13,
+                          "height": 13,
+                          "icon": "wifi",
+                          "library": "lucide",
+                          "fill": "#0F1F17"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "TIHrX",
+                          "name": "battery-full",
+                          "width": 13,
+                          "height": 13,
+                          "icon": "battery-full",
+                          "library": "lucide",
+                          "fill": "#0F1F17"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "bNFYo",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "padding": [
+                    6,
+                    0,
+                    0,
+                    0
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "r4WJHn",
+                      "name": "Greeting",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "xlxOF",
+                          "name": "Hi",
+                          "fill": "#0F1F17",
+                          "content": "Hola, María",
+                          "fontFamily": "Inter",
+                          "fontSize": 17,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "v7YqHH",
+                          "name": "Sub",
+                          "fill": "#5B6B63",
+                          "content": "Tu crédito al día",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "J4UgC",
+                      "name": "Avatar",
+                      "width": 34,
+                      "height": 34,
+                      "fill": "#D1FAE5",
+                      "cornerRadius": 17,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "iDDvp",
+                          "name": "Initials",
+                          "fill": "#047857",
+                          "content": "MR",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "RsRP3",
+                  "name": "Payment Card",
+                  "width": "fill_container",
+                  "fill": "#10B981",
+                  "cornerRadius": 18,
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "PFdJG",
+                      "name": "Label",
+                      "fill": "#ECFDF5",
+                      "content": "Próximo pago",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "hyGrb",
+                      "name": "Amount",
+                      "fill": "#FFFFFF",
+                      "content": "$2,450.00",
+                      "fontFamily": "Inter",
+                      "fontSize": 28,
+                      "fontWeight": "800",
+                      "letterSpacing": -0.8
+                    },
+                    {
+                      "type": "text",
+                      "id": "gM2uj",
+                      "name": "Due",
+                      "fill": "#ECFDF5",
+                      "content": "Vence el 15 de octubre · Cuota 4 de 12",
+                      "fontFamily": "Inter",
+                      "fontSize": 10,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "RGLPn",
+                      "name": "Pay Button",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 12,
+                      "padding": [
+                        10,
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Qt17C",
+                          "name": "Pay",
+                          "fill": "#047857",
+                          "content": "Pagar ahora",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "RXRve",
+                  "name": "Section",
+                  "fill": "#0F1F17",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Tu cuenta",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "fnsm0",
+                  "name": "Menu List",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 16,
+                  "layout": "vertical",
+                  "padding": [
+                    4,
+                    12
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "NKy8B",
+                      "name": "Row ¿Cómo realizar un pago?",
+                      "width": "fill_container",
+                      "stroke": "#E7EDEA",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "gap": 10,
+                      "padding": [
+                        10,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "E4idcy",
+                          "name": "Icon",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#ECFDF5",
+                          "cornerRadius": 10,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "yBC4w",
+                              "name": "wallet",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "wallet",
+                              "library": "lucide",
+                              "fill": "#059669"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "TY79X",
+                          "name": "Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 1,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "QfwSf",
+                              "name": "Title",
+                              "fill": "#0F1F17",
+                              "content": "¿Cómo realizar un pago?",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "CtbJL",
+                              "name": "Sub",
+                              "fill": "#6B7A72",
+                              "content": "Paga en minutos desde la app",
+                              "fontFamily": "Inter",
+                              "fontSize": 10,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "pT3EI",
+                          "name": "chevron",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "#9AA8A1"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "MBJ6Q",
+                      "name": "Row Solicitar un crédito",
+                      "width": "fill_container",
+                      "stroke": "#E7EDEA",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "gap": 10,
+                      "padding": [
+                        10,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "wfky6",
+                          "name": "Icon",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#ECFDF5",
+                          "cornerRadius": 10,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Wrkzd",
+                              "name": "file-text",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "file-text",
+                              "library": "lucide",
+                              "fill": "#059669"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Z6NvzQ",
+                          "name": "Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 1,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "VlljQ",
+                              "name": "Title",
+                              "fill": "#0F1F17",
+                              "content": "Solicitar un crédito",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "E1o8I",
+                              "name": "Sub",
+                              "fill": "#6B7A72",
+                              "content": "Respuesta el mismo día",
+                              "fontFamily": "Inter",
+                              "fontSize": 10,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "zywqk",
+                          "name": "chevron",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "#9AA8A1"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HkNZJ",
+                      "name": "Row Mejora tu historial",
+                      "width": "fill_container",
+                      "stroke": "#E7EDEA",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "gap": 10,
+                      "padding": [
+                        10,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "t9ljc",
+                          "name": "Icon",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#ECFDF5",
+                          "cornerRadius": 10,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "xglWb",
+                              "name": "trending-up",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "trending-up",
+                              "library": "lucide",
+                              "fill": "#059669"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "giqyU",
+                          "name": "Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 1,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "phYBy",
+                              "name": "Title",
+                              "fill": "#0F1F17",
+                              "content": "Mejora tu historial",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "TKLZq",
+                              "name": "Sub",
+                              "fill": "#6B7A72",
+                              "content": "Consejos para tu crédito",
+                              "fontFamily": "Inter",
+                              "fontSize": 10,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "MLj2X",
+                          "name": "chevron",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "#9AA8A1"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "hS3BJ",
+                      "name": "Row Mis cuotas",
+                      "width": "fill_container",
+                      "gap": 10,
+                      "padding": [
+                        10,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Etjo3",
+                          "name": "Icon",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#ECFDF5",
+                          "cornerRadius": 10,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "L9lZT",
+                              "name": "calendar",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "calendar",
+                              "library": "lucide",
+                              "fill": "#059669"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "sbQQ4",
+                          "name": "Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 1,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "p00oi",
+                              "name": "Title",
+                              "fill": "#0F1F17",
+                              "content": "Mis cuotas",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ERRoO",
+                              "name": "Sub",
+                              "fill": "#6B7A72",
+                              "content": "Calendario de pagos",
+                              "fontFamily": "Inter",
+                              "fontSize": 10,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "aoqdS",
+                          "name": "chevron",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "#9AA8A1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "DYFBB",
+      "x": 12245,
+      "y": -1660,
+      "name": "Partner Announcement · IG 4:5",
+      "clip": true,
+      "width": 810,
+      "height": 1012,
+      "fill": "#112317",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "e4pKAx",
+          "x": 114,
+          "y": 190,
+          "name": "Lockup",
+          "gap": 32,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "oHwFz",
+              "name": "QCobro",
+              "fill": "#FFFFFF",
+              "content": "QCobro",
+              "fontFamily": "Inter",
+              "fontSize": 76,
+              "fontWeight": "800",
+              "letterSpacing": -2.4
+            },
+            {
+              "type": "icon",
+              "id": "TKNRs",
+              "name": "Plus",
+              "width": 44,
+              "height": 44,
+              "icon": "plus",
+              "library": "lucide",
+              "fill": "#FFFFFF"
+            },
+            {
+              "type": "frame",
+              "id": "OsuIn",
+              "name": "Partner Placeholder",
+              "width": 200,
+              "height": 86,
+              "cornerRadius": 16,
+              "stroke": "#FFFFFF59",
+              "strokeWidth": 2,
+              "strokeAlignment": "inner",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "O3rO3X",
+                  "name": "Mystery",
+                  "fill": "#FFFFFF",
+                  "content": "?",
+                  "lineHeight": 1,
+                  "fontFamily": "Newsreader",
+                  "fontSize": 68,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "GXDZC",
+          "x": 288,
+          "y": 460,
+          "name": "Phone",
+          "rotation": -6.000000000000001,
+          "width": 300,
+          "height": 620,
+          "fill": "#0A0F0C",
+          "cornerRadius": 52,
+          "stroke": "#3A4A40",
+          "strokeWidth": 2,
+          "strokeAlignment": "inner",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000080",
+            "offset": {
+              "x": 0,
+              "y": 30
+            },
+            "blur": 80
+          },
+          "layout": "vertical",
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "BsuzX",
+              "name": "Screen",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#F4F7F5",
+              "cornerRadius": 40,
+              "layout": "vertical",
+              "gap": 14,
+              "padding": [
+                14,
+                16,
+                0,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "IGFjX",
+                  "name": "Dynamic Island",
+                  "width": 96,
+                  "height": 28,
+                  "fill": "#0A0F0C",
+                  "cornerRadius": 14
+                },
+                {
+                  "type": "frame",
+                  "id": "OSpc9",
+                  "layoutPosition": "absolute",
+                  "x": 26,
+                  "y": 20,
+                  "name": "Status Bar",
+                  "width": 224,
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "H9pM1I",
+                      "name": "Time",
+                      "fill": "#0F1F17",
+                      "content": "9:41",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pXMRT",
+                      "name": "Status Icons",
+                      "gap": 4,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "DSD8x",
+                          "name": "signal",
+                          "width": 13,
+                          "height": 13,
+                          "icon": "signal",
+                          "library": "lucide",
+                          "fill": "#0F1F17"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "FO4kL",
+                          "name": "wifi",
+                          "width": 13,
+                          "height": 13,
+                          "icon": "wifi",
+                          "library": "lucide",
+                          "fill": "#0F1F17"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "JvTKG",
+                          "name": "battery-full",
+                          "width": 13,
+                          "height": 13,
+                          "icon": "battery-full",
+                          "library": "lucide",
+                          "fill": "#0F1F17"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "weeq6",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "padding": [
+                    6,
+                    0,
+                    0,
+                    0
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Z2DJc",
+                      "name": "Greeting",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "U09Gl",
+                          "name": "Hi",
+                          "fill": "#0F1F17",
+                          "content": "Hola, María",
+                          "fontFamily": "Inter",
+                          "fontSize": 17,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "f6yeL",
+                          "name": "Sub",
+                          "fill": "#5B6B63",
+                          "content": "Tu crédito al día",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "NKtwP",
+                      "name": "Avatar",
+                      "width": 34,
+                      "height": 34,
+                      "fill": "#D1FAE5",
+                      "cornerRadius": 17,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ojdsP",
+                          "name": "Initials",
+                          "fill": "#047857",
+                          "content": "MR",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "riQk0",
+                  "name": "Payment Card",
+                  "width": "fill_container",
+                  "fill": "#10B981",
+                  "cornerRadius": 18,
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "JCibP",
+                      "name": "Label",
+                      "fill": "#ECFDF5",
+                      "content": "Próximo pago",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "R9Afpv",
+                      "name": "Amount",
+                      "fill": "#FFFFFF",
+                      "content": "$2,450.00",
+                      "fontFamily": "Inter",
+                      "fontSize": 28,
+                      "fontWeight": "800",
+                      "letterSpacing": -0.8
+                    },
+                    {
+                      "type": "text",
+                      "id": "qV5Ym",
+                      "name": "Due",
+                      "fill": "#ECFDF5",
+                      "content": "Vence el 15 de octubre · Cuota 4 de 12",
+                      "fontFamily": "Inter",
+                      "fontSize": 10,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nPwE2",
+                      "name": "Pay Button",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 12,
+                      "padding": [
+                        10,
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Iq5xB",
+                          "name": "Pay",
+                          "fill": "#047857",
+                          "content": "Pagar ahora",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "EJmsQ",
+                  "name": "Section",
+                  "fill": "#0F1F17",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Tu cuenta",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "oWPht",
+                  "name": "Menu List",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 16,
+                  "layout": "vertical",
+                  "padding": [
+                    4,
+                    12
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "WZZGu",
+                      "name": "Row ¿Cómo realizar un pago?",
+                      "width": "fill_container",
+                      "stroke": "#E7EDEA",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "gap": 10,
+                      "padding": [
+                        10,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "bAZYR",
+                          "name": "Icon",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#ECFDF5",
+                          "cornerRadius": 10,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "fVdun",
+                              "name": "wallet",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "wallet",
+                              "library": "lucide",
+                              "fill": "#059669"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "g8Rr6h",
+                          "name": "Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 1,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "pEIs1",
+                              "name": "Title",
+                              "fill": "#0F1F17",
+                              "content": "¿Cómo realizar un pago?",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "CGP6P",
+                              "name": "Sub",
+                              "fill": "#6B7A72",
+                              "content": "Paga en minutos desde la app",
+                              "fontFamily": "Inter",
+                              "fontSize": 10,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "xHypf",
+                          "name": "chevron",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "#9AA8A1"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ZPKAp",
+                      "name": "Row Solicitar un crédito",
+                      "width": "fill_container",
+                      "stroke": "#E7EDEA",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "gap": 10,
+                      "padding": [
+                        10,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "OiCPm",
+                          "name": "Icon",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#ECFDF5",
+                          "cornerRadius": 10,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "B5JB2",
+                              "name": "file-text",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "file-text",
+                              "library": "lucide",
+                              "fill": "#059669"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "gRoV9",
+                          "name": "Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 1,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "HYAVb",
+                              "name": "Title",
+                              "fill": "#0F1F17",
+                              "content": "Solicitar un crédito",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "gTkpT",
+                              "name": "Sub",
+                              "fill": "#6B7A72",
+                              "content": "Respuesta el mismo día",
+                              "fontFamily": "Inter",
+                              "fontSize": 10,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "Ak5xK",
+                          "name": "chevron",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "#9AA8A1"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "sfsko",
+                      "name": "Row Mejora tu historial",
+                      "width": "fill_container",
+                      "stroke": "#E7EDEA",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "gap": 10,
+                      "padding": [
+                        10,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "us7TM",
+                          "name": "Icon",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#ECFDF5",
+                          "cornerRadius": 10,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "aFvAa",
+                              "name": "trending-up",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "trending-up",
+                              "library": "lucide",
+                              "fill": "#059669"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "B4qab",
+                          "name": "Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 1,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Z9IZBJ",
+                              "name": "Title",
+                              "fill": "#0F1F17",
+                              "content": "Mejora tu historial",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "g4Egwo",
+                              "name": "Sub",
+                              "fill": "#6B7A72",
+                              "content": "Consejos para tu crédito",
+                              "fontFamily": "Inter",
+                              "fontSize": 10,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "QT1NJ",
+                          "name": "chevron",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "#9AA8A1"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zUUqZ",
+                      "name": "Row Mis cuotas",
+                      "width": "fill_container",
+                      "gap": 10,
+                      "padding": [
+                        10,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "yEZ8k",
+                          "name": "Icon",
+                          "width": 30,
+                          "height": 30,
+                          "fill": "#ECFDF5",
+                          "cornerRadius": 10,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "B9U5wL",
+                              "name": "calendar",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "calendar",
+                              "library": "lucide",
+                              "fill": "#059669"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "b9K8R",
+                          "name": "Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 1,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "yHLPt",
+                              "name": "Title",
+                              "fill": "#0F1F17",
+                              "content": "Mis cuotas",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "zIqtz",
+                              "name": "Sub",
+                              "fill": "#6B7A72",
+                              "content": "Calendario de pagos",
+                              "fontFamily": "Inter",
+                              "fontSize": 10,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "sqBB1",
+                          "name": "chevron",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "#9AA8A1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "sNUaQ",
+      "x": 13013,
+      "y": 22960,
+      "name": "QCobro — Sitio Web v3 · Modal Piloto · Mobile",
+      "fill": "$site3-paper",
+      "gap": 80,
+      "padding": 60,
+      "children": [
+        {
+          "type": "frame",
+          "id": "A5LPR",
+          "name": "1 · Formulario",
+          "clip": true,
+          "width": 390,
+          "height": 844,
+          "fill": "$site3-paper",
+          "layout": "vertical",
+          "padding": 16,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "ns76h",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "Backdrop",
+              "fill": "#11151380",
+              "width": 390,
+              "height": 844
+            },
+            {
+              "type": "frame",
+              "id": "ndvyX",
+              "name": "Dialog",
+              "width": "fill_container",
+              "fill": "$site3-surface",
+              "cornerRadius": 8,
+              "layout": "vertical",
+              "padding": [
+                28,
+                20
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "OZwm8",
+                  "name": "Eyebrow",
+                  "fill": "$site3-accent",
+                  "content": "PILOTO GRATUITO DE 15 DÍAS",
+                  "fontFamily": "$site3-mono",
+                  "fontSize": 12,
+                  "fontWeight": "normal",
+                  "letterSpacing": 1.6
+                },
+                {
+                  "type": "text",
+                  "id": "gHtvQ",
+                  "name": "Title",
+                  "fill": "$site3-ink",
+                  "content": "Pida su piloto",
+                  "fontFamily": "$site3-display",
+                  "fontSize": 40,
+                  "fontWeight": "normal",
+                  "letterSpacing": -0.8
+                },
+                {
+                  "type": "frame",
+                  "id": "NYUZL",
+                  "name": "Fields",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": [
+                    24,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "VCJG5",
+                      "name": "Field · Nombre",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "x2Ryj",
+                          "name": "Label",
+                          "fill": "$site3-ink",
+                          "content": "Nombre",
+                          "fontFamily": "$site3-sans",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "huLLk",
+                          "name": "Input",
+                          "width": "fill_container",
+                          "fill": "$site3-surface",
+                          "cornerRadius": 4,
+                          "stroke": "$site3-rule",
+                          "strokeWidth": 1,
+                          "padding": [
+                            11,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "MKqIk",
+                              "name": "Value",
+                              "fill": "$site3-ink",
+                              "content": "Guillermo",
+                              "fontFamily": "$site3-sans",
+                              "fontSize": 15,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nmh0b",
+                      "name": "Field · Correo de trabajo",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "V3JIAG",
+                          "name": "Label",
+                          "fill": "$site3-ink",
+                          "content": "Correo de trabajo",
+                          "fontFamily": "$site3-sans",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "PJFqq",
+                          "name": "Input",
+                          "width": "fill_container",
+                          "fill": "$site3-surface",
+                          "cornerRadius": 4,
+                          "stroke": "$site3-rule",
+                          "strokeWidth": 1,
+                          "padding": [
+                            11,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "nJB3C",
+                              "name": "Value",
+                              "fill": "$site3-ink",
+                              "content": "guillermo@aym.com.do",
+                              "fontFamily": "$site3-sans",
+                              "fontSize": 15,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "UzeM5",
+                      "name": "Field · Empresa",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ucuIG",
+                          "name": "Label",
+                          "fill": "$site3-ink",
+                          "content": "Empresa",
+                          "fontFamily": "$site3-sans",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Q1AiH",
+                          "name": "Input",
+                          "width": "fill_container",
+                          "fill": "$site3-surface",
+                          "cornerRadius": 4,
+                          "stroke": "$site3-rule",
+                          "strokeWidth": 1,
+                          "padding": [
+                            11,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "kHcuv",
+                              "name": "Value",
+                              "fill": "$site3-ink",
+                              "content": "AYM",
+                              "fontFamily": "$site3-sans",
+                              "fontSize": 15,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "tshQc",
+                      "name": "Field · Cuentas en cartera",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "c58VpU",
+                          "name": "Label",
+                          "fill": "$site3-ink",
+                          "content": "Cuentas en cartera",
+                          "fontFamily": "$site3-sans",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "X0tUA1",
+                          "name": "Input",
+                          "width": "fill_container",
+                          "fill": "$site3-surface",
+                          "cornerRadius": 4,
+                          "stroke": "$site3-rule",
+                          "strokeWidth": 1,
+                          "padding": [
+                            11,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "C337GN",
+                              "name": "Value",
+                              "fill": "$site3-ink",
+                              "content": "Menos de 1,000",
+                              "fontFamily": "$site3-sans",
+                              "fontSize": 15,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "E6c0dC",
+                      "name": "Submit",
+                      "opacity": 0.7,
+                      "width": "fill_container",
+                      "height": 52,
+                      "fill": "$site3-accent",
+                      "cornerRadius": 6,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Xy14u",
+                          "name": "Label",
+                          "fill": "#FFFFFF",
+                          "content": "Enviando…",
+                          "fontFamily": "$site3-sans",
+                          "fontSize": 17,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "kdV9n",
+          "name": "2 · Enviado",
+          "clip": true,
+          "width": 390,
+          "height": 844,
+          "fill": "$site3-paper",
+          "layout": "vertical",
+          "padding": 16,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "nhzfn",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "Backdrop",
+              "fill": "#11151380",
+              "width": 390,
+              "height": 844
+            },
+            {
+              "type": "frame",
+              "id": "D6RGCE",
+              "name": "Dialog",
+              "width": "fill_container",
+              "fill": "$site3-surface",
+              "cornerRadius": 8,
+              "layout": "vertical",
+              "padding": [
+                40,
+                20,
+                28,
+                20
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "yd99x",
+                  "name": "Mark",
+                  "width": 72,
+                  "height": 72,
+                  "fill": "$site3-accent-soft",
+                  "cornerRadius": 36,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "vPltf",
+                      "name": "Check",
+                      "width": 36,
+                      "height": 36,
+                      "icon": "check",
+                      "library": "lucide",
+                      "fill": "$site3-accent"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "FggJf",
+                  "name": "Gap",
+                  "width": 1,
+                  "height": 14
+                },
+                {
+                  "type": "text",
+                  "id": "H6r5W7",
+                  "name": "Title",
+                  "fill": "$site3-ink",
+                  "content": "Solicitud enviada",
+                  "fontFamily": "$site3-display",
+                  "fontSize": 40,
+                  "fontWeight": "normal",
+                  "letterSpacing": -0.8
+                },
+                {
+                  "type": "frame",
+                  "id": "sTFrs",
+                  "name": "Gap",
+                  "width": 1,
+                  "height": 12
+                },
+                {
+                  "type": "text",
+                  "id": "kSiSt",
+                  "name": "Text",
+                  "fill": "$site3-ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Gracias, Guillermo. Recibimos su solicitud y le escribiremos a guillermo@aym.com.do para coordinar su piloto.",
+                  "lineHeight": 1.55,
+                  "textAlign": "center",
+                  "fontFamily": "$site3-sans",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "b3KOUn",
+                  "name": "Gap",
+                  "width": 1,
+                  "height": 12
+                },
+                {
+                  "type": "text",
+                  "id": "L4mowb",
+                  "name": "Note",
+                  "fill": "$site3-ink",
+                  "content": "No hace falta enviarla de nuevo.",
+                  "fontFamily": "$site3-sans",
+                  "fontSize": 15,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "OYqNU",
+                  "name": "Gap",
+                  "width": 1,
+                  "height": 28
+                },
+                {
+                  "type": "frame",
+                  "id": "IRc6j",
+                  "name": "Cerrar",
+                  "width": "fill_container",
+                  "height": 52,
+                  "fill": "$site3-accent",
+                  "cornerRadius": 6,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "sboS7",
+                      "name": "Label",
+                      "fill": "#FFFFFF",
+                      "content": "Cerrar",
+                      "fontFamily": "$site3-sans",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xBkxq",
+                  "name": "Gap",
+                  "width": 1,
+                  "height": 16
+                },
+                {
+                  "type": "text",
+                  "id": "dI4yE",
+                  "name": "Again",
+                  "fill": "$site3-ink-2",
+                  "content": "Enviar otra solicitud",
+                  "fontFamily": "$site3-sans",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "note",
+      "id": "YQsPK",
+      "x": 3207,
+      "y": 18168,
+      "name": "Notas de diseño · v5 · Página 1",
+      "width": 816,
+      "height": 260,
+      "content": "OPCIONALES · PÁGINA 1 (quitar si Giro no lo aprueba)\n\n1. Subtítulo con [M8] — única mención a sus casas de cobranza en todo el documento. Respaldo: «Con los canales más prudentes —SMS, correo y voz pregrabada— y sin optimización automática todavía. Un punto de partida sólido para la siguiente etapa.»\n\n2. Celda MONTO ASIGNADO (RD$[M3]) en la franja de datos — si no se aprueba publicar montos, eliminarla y quedan 4 columnas.\n\n3. Bloque de resultado — si Giro aprueba publicar montos, empezar con «RD$[M4] recuperados: el [M1]% del monto asignado…».\n\nResaltados: los rectángulos amarillos «Resaltado […]» son capas absolutas detrás de cada código. Si cambia un texto, muévelos o bórralos; al recibir las cifras, borra todos los «Resaltado»."
+    },
+    {
+      "type": "note",
+      "id": "OhExC",
+      "x": 4103,
+      "y": 18168,
+      "name": "Notas de diseño · v5 · Página 2",
+      "width": 816,
+      "height": 260,
+      "content": "OPCIONALES · PÁGINA 2 (quitar si Giro no lo aprueba)\n\n1. Introducción del piloto: «, por un total de RD$[M3]». Si no se aprueba, terminar la frase en «…de atraso».\n\n2. Testimonio [T] — si no hay testimonio, eliminar el bloque «Quote» y dejar que «Lo que sigue» ocupe ese espacio.\n\nAjuste de alto: la tarjeta de la consola se recortó ~14% (619 → 535 px) reduciendo rellenos y espacios internos; la letra no cambió."
     }
   ],
   "themes": {
@@ -110085,6 +112229,14 @@
     "site3-mono": {
       "type": "string",
       "value": "IBM Plex Mono"
+    },
+    "site3-alert": {
+      "type": "color",
+      "value": "#B42318"
+    },
+    "site3-pending": {
+      "type": "color",
+      "value": "#F7E7A1"
     }
   },
   "fileToken": "47df1626-7bbd-402d-a9fc-e7864930aa06"
