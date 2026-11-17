@@ -46,7 +46,7 @@ All diagram color comes from `dgm-*` variables — change a token to re-skin eve
 ## Assets
 
 All assets are **hosted-product, customer-facing** — no internals, infra, or config files
-(see `../CLAUDE.md`).
+(see `../AGENTS.md`).
 
 | Slug                           | Type                   | Audience            | Preset   | Page                        | Pencil node | Kit | Build doc                      |
 | :----------------------------- | :--------------------- | :------------------ | :------- | :-------------------------- | :---------- | :-- | :----------------------------- |

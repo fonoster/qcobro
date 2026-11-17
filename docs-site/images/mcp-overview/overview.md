@@ -3,7 +3,7 @@
 **Artifact:** `overview.png` (this folder)
 **Used on:** `mcp/overview` (MCP server page)
 **Type:** diagram (component / architecture)
-**Audience:** Customer / MCP integrator — behavior only, no internals (see `docs-site/CLAUDE.md`)
+**Audience:** Customer / MCP integrator — behavior only, no internals (see `docs-site/AGENTS.md`)
 **Preset:** 16:9 `1600 × 900` (exported at 2× → `3200 × 1800`)
 **Diagram Kit version:** v1
 **Pencil node id:** `knSrg` (file: repo-root `pencil.pen`)

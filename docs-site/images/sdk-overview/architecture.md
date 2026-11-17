@@ -3,7 +3,7 @@
 **Artifact:** `architecture.png` (this folder)
 **Used on:** `sdk/overview` (SDK overview page)
 **Type:** diagram · component / architecture
-**Audience:** Customer / SDK consumer — behavior only, no internals (see `docs-site/CLAUDE.md`)
+**Audience:** Customer / SDK consumer — behavior only, no internals (see `docs-site/AGENTS.md`)
 **Preset:** 16:9 `1600 × 900` (exported at 2× → `3200 × 1800`)
 **Diagram Kit version:** v1
 **Pencil node id:** `H9oQOa` (file: repo-root `pencil.pen`)
@@ -16,7 +16,7 @@
 `@qcobro/sdk` is a typed client over the QCobro API: your code calls the SDK, the SDK
 calls the QCobro API over HTTPS and authenticates — the same hosted API the operator
 console uses. (Internals — DB, transport, internal services — are deliberately omitted;
-see `docs-site/CLAUDE.md`.)
+see `docs-site/AGENTS.md`.)
 
 ## Sources (ground truth)
 

@@ -3,7 +3,7 @@
 **Artifact:** `hero.png` (this folder)
 **Used on:** `index` (docs home page)
 **Type:** illustration · brand hero (artistic / technical)
-**Audience:** Customer — behavior/brand only, no internals (see `docs-site/CLAUDE.md`)
+**Audience:** Customer — behavior/brand only, no internals (see `docs-site/AGENTS.md`)
 **Preset:** 16:9 `1600 × 900` (exported at 2× → `3200 × 1800`)
 **Pencil node id:** `r0KBNV` (file: repo-root `pencil.pen`, named "Asset · Home Hero (artistic)")
 
