@@ -3,7 +3,7 @@
 **Artifact:** `flow.png` (this folder)
 **Used on:** `concepts/how-qcobro-works` (orientation page)
 **Type:** diagram · flow / pipeline
-**Audience:** Customer — behavior only, no internals (see `docs-site/CLAUDE.md`)
+**Audience:** Customer — behavior only, no internals (see `docs-site/AGENTS.md`)
 **Preset:** 16:9 `1600 × 900` (exported at 2× → `3200 × 1800`)
 **Diagram Kit version:** v1
 **Pencil node id:** `fjsng` (file: repo-root `pencil.pen`)
@@ -17,7 +17,7 @@ QCobro lleva una cuenta de deuda desde su cartera hasta una promesa de pago: org
 cuentas en carteras, defines agentes, contactas (por campaña o manualmente) a través de los
 canales (voz, SMS, correo) y cada intento queda como una gestión con análisis por IA, que puede
 originar una promesa de pago. (Sin internos — DB, servicios internos, motor — deliberadamente
-omitidos; ver `docs-site/CLAUDE.md`.)
+omitidos; ver `docs-site/AGENTS.md`.)
 
 ## Node / edge spec
 

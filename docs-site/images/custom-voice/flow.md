@@ -3,7 +3,7 @@
 **Artifact:** `flow.png` (this folder)
 **Used on:** `guides/custom-voice`
 **Type:** diagram · flow / pipeline
-**Audience:** Customer — behavior only, no internals (see `docs-site/CLAUDE.md`)
+**Audience:** Customer — behavior only, no internals (see `docs-site/AGENTS.md`)
 **Preset:** 16:9 `1600 × 900` (exported at 2× → `3200 × 1800`)
 **Diagram Kit version:** v1
 **Pencil node id:** `HqFVE` (file: repo-root `pencil.pen`)
