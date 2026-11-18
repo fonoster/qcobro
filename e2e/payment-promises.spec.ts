@@ -9,11 +9,14 @@ const API = "http://localhost:3000";
 /**
  * Payment Promises worklist golden path: create a portfolio, import one account, seed a
  * VOICE_AI gestión with a PAYMENT_PROMISE outcome (which creates a PaymentPromise), then
- * open the "Promesas de pago" worklist, verify the promise row + KPIs render, and resolve
- * it via the row menu (mark as paid). Assumes the dev stack is running.
+ * open the "Promesas de pago" worklist, verify the promise row + KPIs render, and cancel it
+ * via the row menu. There is no "Marcar pagada": promises are marked fulfilled from the sync.
+ * Assumes the dev stack is running.
  */
 test.describe("payment promises — worklist", () => {
-  test("seeded promise appears on the worklist and can be marked paid", async ({ page }) => {
+  test("seeded promise appears on the worklist and can be cancelled, not marked paid", async ({
+    page
+  }) => {
     const owner = newOwner("promesas");
     const stamp = Date.now();
     const portfolioName = `Cartera ${stamp}`;
@@ -72,11 +75,12 @@ test.describe("payment promises — worklist", () => {
     await expect(row).toBeVisible();
     await expect(row.getByText("Pendiente")).toBeVisible();
 
-    // --- Resolve it via the row menu: mark as paid ---------------------------
+    // --- Row menu: no "Marcar pagada"; "Cancelar" still resolves it ---------
     await row.getByRole("button", { name: "Acciones" }).click();
-    await page.getByRole("button", { name: "Marcar pagada" }).click();
+    await expect(page.getByRole("button", { name: "Marcar pagada" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Cancelar" }).click();
 
-    // The promise transitions to MET (shown as "Cumplida").
-    await expect(page.getByRole("row", { name: /María E2E/ }).getByText("Cumplida")).toBeVisible();
+    // The promise transitions to CANCELLED (shown as "Cancelada").
+    await expect(page.getByRole("row", { name: /María E2E/ }).getByText("Cancelada")).toBeVisible();
   });
 });

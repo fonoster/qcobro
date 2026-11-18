@@ -14,7 +14,7 @@ const API = "http://localhost:3000";
  *   operator's own page did not trigger) appears in an already-open Gestiones list.
  * - Detail: with that gestión's detail panel open, a second, independent page (same
  *   browser context — a stand-in for a second operator) resolves the linked payment
- *   promise through the normal UI; the first page's open panel reflects the change without
+ *   promise (cancels it) through the normal UI; the first page's open panel reflects the change without
  *   the operator reloading or re-navigating.
  *
  * Assumes the dev stack is running (see playwright.config.ts).
@@ -102,11 +102,11 @@ test.describe("gestiones — realtime streaming", () => {
     const row = page2.getByRole("row", { name: /María E2E/ });
     await expect(row).toBeVisible();
     await row.getByRole("button", { name: "Acciones" }).click();
-    await page2.getByRole("button", { name: "Marcar pagada" }).click();
-    await expect(row.getByText("Cumplida")).toBeVisible();
+    await page2.getByRole("button", { name: "Cancelar" }).click();
+    await expect(row.getByText("Cancelada")).toBeVisible();
 
     // --- The first page's still-open detail panel reflects the change in place ----------
-    await expect(panel.getByText("Cumplida", { exact: true })).toBeVisible();
+    await expect(panel.getByText("Cancelada", { exact: true })).toBeVisible();
     await expect(panel.getByText("Pendiente", { exact: true })).toHaveCount(0);
 
     await page2.close();
