@@ -38,7 +38,7 @@ $ npm install -g @qcobro/ctl
 $ qcobro COMMAND
 running command...
 $ qcobro (--version)
-@qcobro/ctl/2.1.0 darwin-arm64 node-v22.23.3
+@qcobro/ctl/2.2.0 darwin-arm64 node-v22.23.3
 $ qcobro --help [COMMAND]
 USAGE
   $ qcobro COMMAND
