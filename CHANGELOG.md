@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.1](https://github.com/fonoster/qcobro/compare/v4.1.0...v4.1.1) (2026-11-18)
+
+### Bug Fixes
+
+- **console:** show the channel in the Promesas Canal column ([#227](https://github.com/fonoster/qcobro/issues/227)) ([616fc2b](https://github.com/fonoster/qcobro/commit/616fc2bf27c9977d0d4a80e9af5a82ffb630c1d7))
+
+# [4.1.0](https://github.com/fonoster/qcobro/compare/v4.0.0...v4.1.0) (2026-11-18)
+
+### Features
+
+- **voice:** run pre-recorded calls as Fonoster 0.63 sessions ([#226](https://github.com/fonoster/qcobro/issues/226)) ([5183814](https://github.com/fonoster/qcobro/commit/5183814d7df91d3bd5cc00b278968ac818a13de3)), closes [#205](https://github.com/fonoster/qcobro/issues/205)
+
 # [4.0.0](https://github.com/fonoster/qcobro/compare/v3.2.0...v4.0.0) (2026-11-18)
 
 - feat(api)!: drop the undated recovered counter and manual promise MET (#225) ([237e67e](https://github.com/fonoster/qcobro/commit/237e67e0013986d4630b50fda82cab0fe0f99c6c)), closes [#225](https://github.com/fonoster/qcobro/issues/225) [#211](https://github.com/fonoster/qcobro/issues/211)

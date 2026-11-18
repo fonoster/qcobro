@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.1.0](https://github.com/fonoster/qcobro/compare/v4.0.0...v4.1.0) (2026-11-18)
+
+**Note:** Version bump only for package @qcobro/ctl
+
 # [4.0.0](https://github.com/fonoster/qcobro/compare/v3.2.0...v4.0.0) (2026-11-18)
 
 - feat(api)!: drop the undated recovered counter and manual promise MET (#225) ([237e67e](https://github.com/fonoster/qcobro/commit/237e67e0013986d4630b50fda82cab0fe0f99c6c)), closes [#225](https://github.com/fonoster/qcobro/issues/225) [#211](https://github.com/fonoster/qcobro/issues/211)
