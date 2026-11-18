@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.2.0](https://github.com/fonoster/qcobro/compare/v2.1.0...v2.2.0) (2026-11-18)
+
+### Features
+
+- **api:** read recoveries by period and classify exits through the API ([#215](https://github.com/fonoster/qcobro/issues/215)) ([ab8b155](https://github.com/fonoster/qcobro/commit/ab8b155ae5fca9298db2f8ddbeb5065448704162)), closes [#207](https://github.com/fonoster/qcobro/issues/207)
+
 # [2.1.0](https://github.com/fonoster/qcobro/compare/v2.0.0...v2.1.0) (2026-11-18)
 
 ### Features
