@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.3](https://github.com/fonoster/qcobro/compare/v4.1.2...v4.1.3) (2026-11-18)
+
+### Bug Fixes
+
+- **release:** publish the npm packages with trusted publishing ([#231](https://github.com/fonoster/qcobro/issues/231)) ([72c0ccb](https://github.com/fonoster/qcobro/commit/72c0ccb2eaa3584feabb324e23c2c9a2737ab11e))
+
 ## [4.1.2](https://github.com/fonoster/qcobro/compare/v4.1.1...v4.1.2) (2026-11-18)
 
 ### Bug Fixes
