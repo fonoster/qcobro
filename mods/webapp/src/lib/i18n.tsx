@@ -336,6 +336,7 @@ export const messages = {
     "portfolios.recovery.breakdown.col.count": "Accounts",
     "portfolios.recovery.breakdown.total": "Total",
     "portfolios.recovery.breakdown.none": "No activity",
+    "portfolios.recovery.breakdown.noOutcome": "No outcome",
     "portfolios.recovery.breakdown.daysNote":
       "Depends on how often the client syncs: with weekly syncs, a payment made yesterday can show up as 4–7.",
     "portfolios.recovery.breakdown.campaignNote":
@@ -1099,6 +1100,7 @@ export const messages = {
     "portfolios.recovery.breakdown.col.count": "Cuentas",
     "portfolios.recovery.breakdown.total": "Total",
     "portfolios.recovery.breakdown.none": "Sin gestión",
+    "portfolios.recovery.breakdown.noOutcome": "Sin resultado",
     "portfolios.recovery.breakdown.daysNote":
       "Depende de cada cuánto sincroniza el cliente: si sincroniza cada semana, un pago de ayer puede aparecer como 4–7.",
     "portfolios.recovery.breakdown.campaignNote":

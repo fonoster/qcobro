@@ -17,6 +17,8 @@ const DAY_BUCKETS = ["0-1", "2-3", "4-7", "8+"];
 type Translate = ReturnType<typeof useI18n>["t"];
 
 function rowLabel(t: Translate, by: RecoveryDimension, row: RecoveryBreakdownRow): string {
+  // Every row here had a gestión, so for Resultado NONE means no outcome and no path (an SMS).
+  if (row.key === "NONE" && by === "OUTCOME") return t("portfolios.recovery.breakdown.noOutcome");
   if (row.key === "NONE") return t("portfolios.recovery.breakdown.none");
   switch (by) {
     case "CAMPAIGN":

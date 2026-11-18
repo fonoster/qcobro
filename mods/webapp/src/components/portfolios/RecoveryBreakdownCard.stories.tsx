@@ -33,7 +33,8 @@ const DATA: Record<RecoveryDimension, RecoveryBreakdown> = {
     additive: true,
     rows: [
       { key: "PAYMENT_PROMISE", name: null, amount: 7500, count: 3 },
-      { key: "ABANDONED", name: null, amount: 2100, count: 1 }
+      { key: "ABANDONED", name: null, amount: 2100, count: 1 },
+      { key: "NONE", name: null, amount: 3000, count: 1 }
     ]
   }
 };
@@ -63,4 +64,5 @@ export default meta;
 export const Days: StoryObj = { render: () => <Interactive initial="DAYS_SINCE_TOUCH" /> };
 export const Campaign: StoryObj = { render: () => <Interactive initial="CAMPAIGN" /> };
 export const Channel: StoryObj = { render: () => <Interactive initial="CHANNEL" /> };
+export const Outcome: StoryObj = { render: () => <Interactive initial="OUTCOME" /> };
 export const Empty: StoryObj = { render: () => <Interactive initial="CHANNEL" empty /> };
