@@ -158,10 +158,8 @@ export function PaymentPromises() {
               r.status === "PENDING" ? (
                 <RowActionsMenu
                   items={[
-                    {
-                      label: t("paymentPromises.actions.markPaid"),
-                      onClick: () => resolve.mutate({ id: r.id as string, status: "MET" })
-                    },
+                    // No "Marcar pagada": a promise is kept when the sync shows the account
+                    // left the portfolio caught up or paid off.
                     ...followUpItems(r.id as string),
                     {
                       label: t("paymentPromises.actions.markCancelled"),

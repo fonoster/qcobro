@@ -1,10 +1,22 @@
 import { useRef, useState } from "react";
+import { TriangleAlert } from "lucide-react";
 import { trpc } from "../../lib/trpc.js";
 import { useI18n } from "../../lib/i18n.js";
 import { parseCsv } from "../../lib/csv.js";
-import type { AccountRowInput } from "@qcobro/common";
+import { useMoney } from "../../lib/useWorkspaceCurrency.js";
+import type { AccountRowInput, SyncResult } from "@qcobro/common";
 import { Button } from "../ui/button.js";
 import { Dialog } from "../ui/dialog.js";
+
+/** A muted warning, icon and words, for an import that won't detect what the operator expects. */
+function ImportWarning({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex items-start gap-1.5 text-xs text-fg-subtle">
+      <TriangleAlert className="mt-px h-4 w-4 shrink-0" aria-hidden="true" />
+      {children}
+    </p>
+  );
+}
 
 type SyncMode = "APPEND_ONLY" | "UPDATE_EXISTING" | "REPLACE";
 
@@ -24,16 +36,14 @@ export function CsvSyncModal({
   onSuccess: () => void;
 }) {
   const { t } = useI18n();
-  const [mode, setMode] = useState<SyncMode>("APPEND_ONLY");
+  const money = useMoney();
+  // UPDATE_EXISTING by default: APPEND_ONLY never updates an account, so it detects no payments.
+  const [mode, setMode] = useState<SyncMode>("UPDATE_EXISTING");
   const [rows, setRows] = useState<AccountRowInput[]>([]);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
+  const [columns, setColumns] = useState<string[]>([]);
   const [fileName, setFileName] = useState("");
-  const [result, setResult] = useState<{
-    created: number;
-    updated: number;
-    archived: number;
-    total: number;
-  } | null>(null);
+  const [result, setResult] = useState<SyncResult | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -56,9 +66,15 @@ export function CsvSyncModal({
       const parsed = parseCsv(ev.target?.result as string);
       setRows(parsed.rows);
       setParseErrors(parsed.errors);
+      setColumns(parsed.columns);
     };
     reader.readAsText(file);
   }
+
+  // Recoveries this import detected; the console shows no exits (classifying them is API-only).
+  const detected = result
+    ? result.recoveries.partial + result.recoveries.cured + result.recoveries.paidOff
+    : 0;
 
   const canSync = rows.length > 0 && parseErrors.length === 0 && !sync.isPending && !result;
 
@@ -125,6 +141,10 @@ export function CsvSyncModal({
               </p>
             )}
 
+            {rows.length > 0 && !columns.includes("missed_installments") && (
+              <ImportWarning>{t("portfolios.csv.warning.missedInstallments")}</ImportWarning>
+            )}
+
             <div>
               <p className="mb-2 text-xs font-medium text-fg-muted">
                 {t("portfolios.csv.mode.label")}
@@ -154,6 +174,11 @@ export function CsvSyncModal({
                   </label>
                 ))}
               </div>
+              {mode === "APPEND_ONLY" && (
+                <div className="mt-2">
+                  <ImportWarning>{t("portfolios.csv.warning.appendOnly")}</ImportWarning>
+                </div>
+              )}
             </div>
           </>
         ) : (
@@ -172,6 +197,20 @@ export function CsvSyncModal({
                 </div>
               ))}
             </div>
+            {detected > 0 && (
+              <div className="mt-3 flex items-center justify-between border-t border-primary/30 pt-3 text-[13px] text-fg">
+                <span className="font-medium">{t("portfolios.csv.paymentsDetected")}</span>
+                <span className="font-semibold">
+                  {money(result.recoveries.amount)} ·{" "}
+                  {detected === 1
+                    ? t("portfolios.recovery.accounts.one")
+                    : t("portfolios.recovery.accounts.other").replace(
+                        "{count}",
+                        detected.toLocaleString()
+                      )}
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>

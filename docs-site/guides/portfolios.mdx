@@ -43,6 +43,60 @@ Abre una cartera con **Ver detalle**. Dentro verás sus cuentas con **Nombre**, 
   voz o SMS, un correo para email. La consola te avisa si falta.
 </Note>
 
+## Recuperación de la cartera
+
+Arriba de las cuentas, la sección **Recuperación** muestra lo que la cartera recuperó y qué
+estaba pasando cuando la gente se puso al día. QCobro detecta los pagos al sincronizar la
+cartera: una cuenta con menos cuotas vencidas que en la sincronización anterior, o una salida
+informada como al día o saldada. Si aún no hay ninguno, la sección dice **Aún no hay pagos
+detectados. Se detectan al sincronizar la cartera.**
+
+### Resumen
+
+Elige el período en el selector de **Recuperado**: **Este mes** (por defecto), **Mes pasado**
+o **Este año**. Las fechas siguen la zona horaria de tu espacio de trabajo, y el período rige
+toda la sección.
+
+- **Recuperado**: el monto de los pagos detectados en cuentas que recibieron alguna gestión
+  desde la sincronización anterior, con el número de esas cuentas.
+- **Pagos sin gestión reciente**: los pagos detectados en cuentas que nadie gestionó entre las
+  dos sincronizaciones. Solo aparece cuando hay alguno.
+
+### Desglose
+
+El desglose reparte **Recuperado** según lo que pasó antes de cada pago. Cambia la vista con
+el selector:
+
+| Vista | Qué muestra |
+| --- | --- |
+| **Campaña** | Una fila por campaña que gestionó la cuenta. Una cuenta gestionada por varias campañas cuenta en cada una, así que las filas no se suman y no hay fila **Total**. |
+| **Canal** | El canal de la última gestión antes del pago. |
+| **Resultado** | El resultado de la última gestión antes del pago. |
+| **Días** | Los días entre la última gestión y la sincronización que detectó el pago: 0–1, 2–3, 4–7 y 8+. |
+
+En **Canal**, **Resultado** y **Días**, la fila **Total** es igual a **Recuperado**.
+
+<Note>
+  **Días** depende de cada cuánto sincronizas la cartera: si sincronizas cada semana, un pago de
+  ayer puede aparecer como 4–7.
+</Note>
+
+### Recuperaciones
+
+La lista **Recuperaciones** muestra cada pago detectado en el período, del más reciente al más
+antiguo, en páginas de 50. Cada fila trae la cuenta, el tipo y las cuotas, el monto y la fecha
+en que se detectó. Debajo del nombre verás el canal de la última gestión y cuántos días antes
+del pago ocurrió, o **Sin gestión**.
+
+| Tipo | Qué significa |
+| --- | --- |
+| **Pago parcial** | La cuenta sigue en la cartera con menos cuotas vencidas. |
+| **Al día** | La cuenta salió de la cartera al día. |
+| **Saldada** | La cuenta salió de la cartera saldada. |
+
+Filtra la lista por tipo y por **Con gestión** o **Sin gestión**. Para leer estas cifras por
+código, usa [Recuperado con el SDK](/sdk/recovery).
+
 ## Edita, archiva o elimina
 
 Cada fila de la lista de carteras ofrece estas acciones:
