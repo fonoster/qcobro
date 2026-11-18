@@ -1,11 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { sessionAgentSchema } from "@fonoster/common";
 import { DEFAULT_VOICE_IDLE_OPTIONS } from "@qcobro/common";
-import {
-  buildSpeechToTextConfig,
-  FonosterVoiceApplicationClient,
-  type AppsApi
-} from "./fonosterVoiceApplicationClient.js";
+import { FonosterVoiceApplicationClient, type AppsApi } from "./fonosterVoiceApplicationClient.js";
 
 /**
  * These exercise the request shape `FonosterVoiceApplicationClient` sends to Fonoster,
@@ -18,16 +15,21 @@ const SETTINGS = {
   apiKey: "key",
   apiSecret: "secret",
   autopilot: {
-    sttProductRef: "stt.deepgram",
-    sttModel: "nova-3",
-    llmProductRef: "llm.google",
     llmProvider: "google",
-    llmModel: "gemini-2.0-flash",
+    llmModel: "gemini-2.5-flash",
     maxTokens: 300,
-    temperature: 0,
+    temperature: 0.3,
     evalsModel: "gpt-4o-mini"
   },
-  voices: []
+  voices: [
+    {
+      id: "86V9x9hrQds83qf7zaGn",
+      name: "Sofía",
+      language: "es",
+      gender: "female",
+      provider: "elevenlabs"
+    }
+  ]
 } as unknown as ConstructorParameters<typeof FonosterVoiceApplicationClient>[0];
 
 interface Captured {
@@ -61,16 +63,12 @@ function seedFakeApps(client: FonosterVoiceApplicationClient): Captured {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const idleOf = (req: any) => req.intelligence.config.conversationSettings.idleOptions;
 
-const audioFiltersOf = (req: any) => req.intelligence.config.audioFilters;
-
-const sttOf = (req: any) => req.speechToText.config;
-
 const bargeInOf = (req: any) => req.intelligence.config.conversationSettings.allowUserBargeIn;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 const BASE_INPUT = {
   name: "Cobrador",
-  voice: "voice-x",
+  voice: "86V9x9hrQds83qf7zaGn",
   systemPrompt: "Be polite",
   firstMessage: "Hola",
   language: "es",
@@ -130,29 +128,79 @@ describe("FonosterVoiceApplicationClient.buildRequest (via createApplication)", 
     await client.updateApplication("app-xyz", input);
 
     const expected = [{ name: "aiCoustics", options: { enhancementLevel: 0.8 } }];
-    assert.deepEqual(audioFiltersOf(captured.create), expected);
-    assert.deepEqual(audioFiltersOf(captured.update), expected);
+    assert.deepEqual(captured.create?.filters, expected);
+    assert.deepEqual(captured.update?.filters, expected);
   });
 });
 
+describe("FonosterVoiceApplicationClient session app shape", () => {
+  const input = {
+    ...BASE_INPUT,
+    ...IDLE,
+    name: "qcobro-voz-ia-mora-8-30",
+    firstMessage: "Hola, le habla Clara de Credifácil.",
+    language: "es-419"
+  };
+
+  for (const op of ["create", "update"] as const) {
+    it(`sends a Fonoster 0.63 session app on ${op}`, async () => {
+      const client = new FonosterVoiceApplicationClient(SETTINGS);
+      const captured = seedFakeApps(client);
+
+      if (op === "create") await client.createApplication(input);
+      else await client.updateApplication("app-xyz", input);
+
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      const req = captured[op] as any;
+      /* eslint-enable @typescript-eslint/no-explicit-any */
+      const config = req.intelligence.config;
+      assert.doesNotThrow(() => sessionAgentSchema.parse(config));
+      assert.equal(config.languageModel.model, "google/gemini-2.5-flash");
+      assert.equal("provider" in config.languageModel, false);
+      assert.equal("eventsHook" in config, false);
+      assert.equal("audioFilters" in config, false);
+      assert.deepEqual(req.speech, {
+        voice: "elevenlabs/86V9x9hrQds83qf7zaGn",
+        ttsModel: "elevenlabs/eleven_flash_v2_5",
+        language: "es-419",
+        sttModel: "deepgram/nova-3"
+      });
+      assert.equal(req.recording, "on");
+      assert.equal(req.type, "AUTOPILOT");
+      assert.equal(req.name, "qcobro-voz-ia-mora-8-30");
+      assert.equal("speechToText" in req, false);
+      assert.equal("textToSpeech" in req, false);
+      assert.equal(config.conversationSettings.firstMessage, "Hola, le habla Clara de Credifácil.");
+      assert.equal(config.conversationSettings.goodbyeMessage, "Que tenga buen día.");
+      if (op === "update") assert.equal(req.ref, "app-xyz");
+    });
+  }
+});
+
 describe("FonosterVoiceApplicationClient speech options", () => {
-  it("sends the template language as the STT language, with no barge-in by default", async () => {
+  it("sends the template language as speech.language, with no barge-in by default", async () => {
     const client = new FonosterVoiceApplicationClient(SETTINGS);
     const captured = seedFakeApps(client);
 
     await client.createApplication({ ...BASE_INPUT, ...IDLE, language: "es-419" });
 
-    assert.deepEqual(sttOf(captured.create), { model: "nova-3", languageCode: "es-419" });
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    assert.equal((captured.create as any).speech.language, "es-419");
+    /* eslint-enable @typescript-eslint/no-explicit-any */
     assert.equal(bargeInOf(captured.create), false);
   });
 
-  it("sends Deepgram multi for a multilingual template", async () => {
+  it("sends language multi with deepgram/nova-3 for a multilingual template", async () => {
     const client = new FonosterVoiceApplicationClient(SETTINGS);
     const captured = seedFakeApps(client);
 
     await client.updateApplication("app-xyz", { ...BASE_INPUT, ...IDLE, language: "multi" });
 
-    assert.deepEqual(sttOf(captured.update), { model: "nova-3", languageCode: "multi" });
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const speech = (captured.update as any).speech;
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+    assert.equal(speech.language, "multi");
+    assert.equal(speech.sttModel, "deepgram/nova-3");
   });
 
   it("passes allowUserBargeIn through on create and update", async () => {
@@ -165,28 +213,6 @@ describe("FonosterVoiceApplicationClient speech options", () => {
 
     assert.equal(bargeInOf(captured.create), true);
     assert.equal(bargeInOf(captured.update), true);
-  });
-});
-
-describe("buildSpeechToTextConfig", () => {
-  it("keeps a deployment model that supports multi", () => {
-    for (const model of ["nova-3", "nova-2"]) {
-      assert.deepEqual(buildSpeechToTextConfig(model, "multi"), { model, languageCode: "multi" });
-    }
-  });
-
-  it("falls back to nova-3 for multi when the deployment model can't do it", () => {
-    assert.deepEqual(buildSpeechToTextConfig("nova-2-phonecall", "multi"), {
-      model: "nova-3",
-      languageCode: "multi"
-    });
-  });
-
-  it("leaves the deployment model alone for a single language", () => {
-    assert.deepEqual(buildSpeechToTextConfig("nova-2-phonecall", "es"), {
-      model: "nova-2-phonecall",
-      languageCode: "es"
-    });
   });
 });
 
@@ -219,6 +245,32 @@ describe("FonosterVoiceApplicationClient.evaluate", () => {
       maxTimeoutCount: DEFAULT_VOICE_IDLE_OPTIONS.maxTimeoutCount
     });
     assert.equal(bargeInOf(captured.evaluate), false);
+  });
+
+  it("sends a session agent that passes sessionAgentSchema, graded by OpenAI", async () => {
+    const client = new FonosterVoiceApplicationClient(SETTINGS);
+    const captured = seedFakeApps(client);
+
+    const stream = client.evaluate({
+      systemPrompt: "Be polite",
+      firstMessage: "Hola",
+      language: "es",
+      scenarios: [
+        {
+          ref: "s1",
+          account: {},
+          turns: [{ input: "Hola", expected: { text: { type: "SIMILAR", response: "Hola" } } }]
+        }
+      ]
+    });
+    for await (const _ of stream) void _;
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const config = (captured.evaluate as any).intelligence.config;
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+    assert.doesNotThrow(() => sessionAgentSchema.parse(config));
+    assert.equal(config.languageModel.model, "google/gemini-2.5-flash");
+    assert.equal(config.testCases.evalsLanguageModel.provider, "openai");
   });
 });
 

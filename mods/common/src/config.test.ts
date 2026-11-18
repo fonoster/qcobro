@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   fonosterConfigSchema,
   recordingFileNameForCall,
-  ttsProductRefForVoice,
+  voiceCatalogIdForVoice,
   twilioConfigSchema,
   type VoiceCatalogEntry
 } from "./config.js";
@@ -13,14 +13,30 @@ const voices: VoiceCatalogEntry[] = [
   { id: "v-google", name: "Andrés", language: "es", gender: "male", provider: "google" }
 ];
 
-describe("ttsProductRefForVoice", () => {
-  it("derives the TTS product ref from the voice's provider", () => {
-    assert.equal(ttsProductRefForVoice("v-eleven", voices), "tts.elevenlabs");
-    assert.equal(ttsProductRefForVoice("v-google", voices), "tts.google");
+describe("voiceCatalogIdForVoice", () => {
+  it("prefixes the voice id with its provider", () => {
+    assert.equal(voiceCatalogIdForVoice("v-eleven", voices), "elevenlabs/v-eleven");
+    assert.equal(voiceCatalogIdForVoice("v-google", voices), "google/v-google");
   });
 
-  it("falls back to tts.elevenlabs for an unknown voice", () => {
-    assert.equal(ttsProductRefForVoice("missing", voices), "tts.elevenlabs");
+  it("falls back to the elevenlabs provider for a voice outside the catalog", () => {
+    assert.equal(voiceCatalogIdForVoice("missing", voices), "elevenlabs/missing");
+  });
+
+  it("strips the removed autopilot product refs from an old config", () => {
+    const parsed = fonosterConfigSchema.parse({
+      accessKeyId: "ak",
+      apiKey: "key",
+      apiSecret: "secret",
+      autopilot: { sttProductRef: "stt.deepgram", sttModel: "nova-3", llmProductRef: "llm.google" }
+    });
+    assert.deepEqual(Object.keys(parsed?.autopilot ?? {}).sort(), [
+      "evalsModel",
+      "llmModel",
+      "llmProvider",
+      "maxTokens",
+      "temperature"
+    ]);
   });
 });
 
