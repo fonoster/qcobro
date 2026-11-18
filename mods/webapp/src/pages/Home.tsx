@@ -1,11 +1,18 @@
 import { useState } from "react";
 import { KeyRound } from "lucide-react";
-import { contactStatsPeriodSchema, type ContactStatsPeriod } from "@qcobro/common";
+import { skipToken } from "@tanstack/react-query";
+import {
+  contactStatsPeriodSchema,
+  RECOVERY_PERIODS,
+  recoveryPeriodRange,
+  type ContactStatsPeriod,
+  type RecoveryPeriod
+} from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { deliveryLabel, outcomeLabel } from "../lib/contactAxes.js";
 import { useI18n, type Language, type MessageId } from "../lib/i18n.js";
-import { useMoney } from "../lib/useWorkspaceCurrency.js";
+import { useMoney, useWorkspaceTimezone } from "../lib/useWorkspaceCurrency.js";
 import { Card } from "../components/ui/card.js";
 import { KpiCard, type KpiCardPeriodControl } from "../components/kpi-card.js";
 import { CopyField } from "../components/CopyField.js";
@@ -54,6 +61,8 @@ export function Home() {
   const wsAccessKeyId = active?.accessKeyId ?? workspace;
 
   const [contactRatePeriod, setContactRatePeriod] = useState<ContactStatsPeriod>("7d");
+  const [recoveryPeriod, setRecoveryPeriod] = useState<RecoveryPeriod>("thisMonth");
+  const timeZone = useWorkspaceTimezone();
 
   const portfolios = trpc.portfolios.list.useQuery();
   const recent = trpc.campaigns.contactLog.list.useQuery({ limit: 5 });
@@ -61,8 +70,13 @@ export function Home() {
   const contactStats = trpc.portfolios.contactStats.useQuery({ period: contactRatePeriod });
 
   const carteras = portfolios.data ?? [];
+  // Recuperado and Progreso por cartera read the same period: the one chosen on the card.
+  const range = timeZone ? recoveryPeriodRange(recoveryPeriod, timeZone) : undefined;
+  const recovery = trpc.recovery.summary.useQuery(range ?? skipToken);
+  const recoveryByPortfolio = trpc.useQueries((q) =>
+    range ? carteras.map((p) => q.recovery.summary({ ...range, portfolioId: p.id })) : []
+  );
   const accountsInManagement = carteras.reduce((sum, p) => sum + p.accountCount, 0);
-  const recoveredTotal = carteras.reduce((sum, p) => sum + (p.recoveredAmount ?? 0), 0);
   const outstandingTotal = carteras.reduce((sum, p) => sum + (p.totalOutstandingBalance ?? 0), 0);
   const promisesKept = (promises.data ?? []).filter(
     (p) => (p as { status: string }).status === "MET"
@@ -83,14 +97,45 @@ export function Home() {
         .replace("{sends}", String(cs?.totalSends ?? 0));
   const activity = (recent.data?.items ?? []) as RecentGestion[];
 
+  // "—" only when nothing at all was detected in the period; recoveries that came in without a
+  // gestión still show RD$ 0 next to them, so their line has a figure to qualify.
+  const rs = recovery.data;
+  const recoveredEmpty = !rs || (rs.count === 0 && rs.withoutGestionCount === 0);
+  const recoveredValue = recoveredEmpty ? t("home.recovered.emptyValue") : money(rs.recovered);
+  const recoveredSubtext = recoveredEmpty
+    ? t("home.recovered.empty")
+    : t("home.recovered.subline").replace("{count}", rs.count.toLocaleString());
+  const recoveredDetail =
+    rs && rs.withoutGestionCount > 0
+      ? t("home.recovered.withoutGestion")
+          .replace("{amount}", money(rs.withoutGestion))
+          .replace("{count}", rs.withoutGestionCount.toLocaleString())
+      : undefined;
+
   // All KPIs are sourced from live workspace data, and all five render through the same
-  // `KpiCard` so their notes share a baseline. Contact rate is the only one carrying a period
-  // control, which it declares here rather than being spliced into the row separately.
-  const kpis: { label: string; value: string; meta: string; period?: KpiCardPeriodControl }[] = [
+  // `KpiCard` so their notes share a baseline. Recuperado and Contacto carry a period control,
+  // which each declares here rather than being spliced into the row separately.
+  const kpis: {
+    label: string;
+    value: string;
+    meta: string;
+    detail?: string;
+    period?: KpiCardPeriodControl;
+  }[] = [
     {
       label: t("home.kpi.recovered"),
-      value: money(Math.trunc(recoveredTotal)),
-      meta: t("home.kpi.recoveredMeta")
+      value: recoveredValue,
+      meta: recoveredSubtext,
+      detail: recoveredDetail,
+      period: {
+        value: recoveryPeriod,
+        onChange: (value) => setRecoveryPeriod(value as RecoveryPeriod),
+        ariaLabel: t("home.recovered.periodAriaLabel"),
+        options: RECOVERY_PERIODS.map((p) => ({
+          value: p,
+          label: t(`home.recovered.period.${p}` as MessageId)
+        }))
+      }
     },
     {
       label: t("home.kpi.promisesKept"),
@@ -152,6 +197,7 @@ export function Home() {
             label={k.label}
             value={k.value}
             subtext={k.meta}
+            detail={k.detail}
             period={k.period}
           />
         ))}
@@ -196,21 +242,31 @@ export function Home() {
           )}
         </Card>
 
-        <Card className="rounded-xl border-border p-5 shadow-none">
-          <h2 className="mb-4 text-[15px] font-semibold text-fg">
-            {t("home.progressByPortfolio")}
+        <Card
+          role="region"
+          aria-labelledby="home-progress-by-portfolio"
+          className="rounded-xl border-border p-5 shadow-none"
+        >
+          <h2 id="home-progress-by-portfolio" className="mb-4 text-[15px] font-semibold text-fg">
+            {t("home.progressByPortfolio").replace(
+              "{period}",
+              t(`home.recovered.periodInline.${recoveryPeriod}` as MessageId)
+            )}
           </h2>
           {carteras.length === 0 ? (
             <p className="py-6 text-sm text-fg-subtle">{t("home.noPortfolios")}</p>
           ) : (
             <div className="flex flex-col gap-4">
-              {carteras.map((p) => {
-                const pct = recoveryPct(p.recoveredAmount ?? 0, p.totalOutstandingBalance ?? 0);
+              {carteras.map((p, i) => {
+                const recovered = recoveryByPortfolio[i]?.data?.recovered ?? 0;
+                const pct = recoveryPct(recovered, p.totalOutstandingBalance ?? 0);
                 return (
                   <div key={p.id} className="flex flex-col gap-1.5">
                     <div className="flex justify-between text-[13px]">
                       <span className="text-fg-muted">{p.name}</span>
-                      <span className="font-semibold text-fg-muted">{pct}%</span>
+                      <span className="font-semibold text-fg-muted">
+                        {pct}% · {money(recovered)}
+                      </span>
                     </div>
                     <div className="h-2 w-full rounded-full bg-elevated">
                       <div className="h-2 rounded-full bg-primary" style={{ width: `${pct}%` }} />

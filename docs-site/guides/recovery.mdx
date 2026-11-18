@@ -1,0 +1,75 @@
+---
+title: "Recuperado"
+description: "Lee en el Panel de control cuánto se recuperó en un período, con y sin gestión reciente, a partir de las sincronizaciones de tus carteras."
+---
+
+**Recuperado** es lo que tus cuentas pagaron en un período. QCobro lo calcula a partir de las
+sincronizaciones de tus carteras: cada vez que importas o sincronizas cuentas, compara lo que
+envías con lo que tenía y registra los pagos que detecta.
+
+## Lee la tarjeta Recuperado
+
+En el menú lateral, entra en **Panel**. La tarjeta **Recuperado** muestra:
+
+- **El monto recuperado con gestión**: la suma de los pagos detectados en el período en
+  cuentas que recibieron al menos una gestión desde la sincronización anterior.
+- **Cuántas cuentas con gestión**: por ejemplo, `13 cuentas con gestión`.
+- **Pagos sin gestión reciente**: la suma y el número de cuentas que pagaron sin haber
+  recibido ninguna gestión desde la sincronización anterior. Esta línea solo aparece cuando hay
+  al menos uno.
+
+Si en el período solo hubo pagos sin gestión, el monto principal es `RD$ 0` con
+`0 cuentas con gestión`, y la línea **Pagos sin gestión reciente** muestra esos pagos. Si no
+se detectó ningún pago, la tarjeta muestra `—` y **Sin pagos detectados en el período**.
+
+<Note>
+  Los montos usan la moneda del espacio de trabajo. Puedes cambiarla en la configuración del
+  espacio.
+</Note>
+
+## Elige un período
+
+Usa el selector de la tarjeta (con el icono de calendario) para cambiar el período. Las fechas
+se calculan en la zona horaria del espacio de trabajo, no en la de tu equipo.
+
+| Período | Qué cubre |
+| --- | --- |
+| **Este mes** | Del día 1 del mes en curso hasta hoy. Es el período por defecto. |
+| **Mes pasado** | El mes anterior completo. |
+| **Este año** | Del 1 de enero hasta hoy. |
+
+El mismo período se aplica a **Progreso por cartera**, junto a la tarjeta. Cada cartera muestra
+su monto recuperado con gestión y el porcentaje que representa sobre lo recuperado más su saldo
+pendiente.
+
+En **Carteras**, la columna **Recuperado · este mes** muestra el monto recuperado con gestión de
+cada cartera en el mes en curso.
+
+## Por qué la cifra viene de la sincronización
+
+QCobro no recibe los pagos de tus clientes: los deduce de los datos que le envías al
+sincronizar. Detecta un pago cuando:
+
+- Una cuenta sigue en el archivo con **menos cuotas vencidas** que en la sincronización
+  anterior (pago parcial). Esto requiere el modo **Agregar y actualizar** o **Reemplazar todo**.
+- Una cuenta sale de la cartera y se informa que salió **al día** o **saldada**. El motivo de
+  la salida se informa desde el [SDK](/sdk/sync-accounts#informa-las-salidas).
+
+El pago cuenta en el período en que la sincronización lo detectó, no en la fecha en que tu
+cliente pagó. Sincroniza con frecuencia para que Recuperado refleje lo más reciente.
+
+<Warning>
+  Si tus archivos no incluyen la columna `missed_installments`, o si las cuentas que salen no
+  llevan su motivo, QCobro no puede detectar los pagos y Recuperado queda vacío.
+</Warning>
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Importar cuentas" icon="file-csv" href="/guides/import-accounts">
+    Mantén tus carteras al día para que se detecten los pagos.
+  </Card>
+  <Card title="Carteras" icon="folder-open" href="/guides/portfolios">
+    Crea y organiza las carteras que trabajas.
+  </Card>
+</CardGroup>

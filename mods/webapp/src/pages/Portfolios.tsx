@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { recoveryPeriodRange } from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
-import { useMoney } from "../lib/useWorkspaceCurrency.js";
+import { useMoney, useWorkspaceTimezone } from "../lib/useWorkspaceCurrency.js";
 import { PageHeader } from "../components/page-header.js";
 import { DataTable } from "../components/ui/data-table.js";
 import { Dialog } from "../components/ui/dialog.js";
@@ -29,7 +30,6 @@ type Portfolio = {
   clientId: string;
   accountCount: number;
   totalOutstandingBalance: number;
-  recoveredAmount: number;
   lastSyncedAt: Date | string | null;
   archivedAt: Date | string | null;
   createdAt: Date | string;
@@ -52,8 +52,21 @@ export function Portfolios() {
   );
   const portfolios: Portfolio[] = (data ?? []) as Portfolio[];
 
+  // Recuperado · este mes: each portfolio's recoveries detected since the 1st, in the
+  // workspace's timezone.
+  const timeZone = useWorkspaceTimezone();
+  const thisMonth = timeZone ? recoveryPeriodRange("thisMonth", timeZone) : undefined;
+  const recoveries = trpc.useQueries((q) =>
+    thisMonth ? portfolios.map((p) => q.recovery.summary({ ...thisMonth, portfolioId: p.id })) : []
+  );
+  const recoveredThisMonth = new Map(
+    portfolios.map((p, i) => [p.id, recoveries[i]?.data?.recovered])
+  );
+
   function invalidate() {
     utils.portfolios.list.invalidate();
+    // A sync can detect recoveries, so this month's column refetches with the list.
+    utils.recovery.summary.invalidate();
   }
 
   const del = trpc.portfolios.delete.useMutation({
@@ -113,9 +126,12 @@ export function Portfolios() {
             render: (r) => money(r.totalOutstandingBalance as number)
           },
           {
-            key: "recoveredAmount",
+            key: "recoveredThisMonth",
             header: t("portfolios.col.recovered"),
-            render: (r) => money(r.recoveredAmount as number)
+            render: (r) => {
+              const recovered = recoveredThisMonth.get(r.id);
+              return recovered === undefined ? "" : money(recovered);
+            }
           },
           {
             key: "lastSyncedAt",

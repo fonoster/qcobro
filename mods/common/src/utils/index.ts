@@ -20,6 +20,7 @@ export {
   type ScheduleWindow
 } from "./time.js";
 export { buildThreadWithOpener } from "./threads.js";
+export { RECOVERY_PERIODS, recoveryPeriodRange, type RecoveryPeriod } from "./recoveryPeriod.js";
 export {
   calculateSmsSegments,
   normalizeForGsm7,
