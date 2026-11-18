@@ -47,17 +47,13 @@ export const fonosterConfigSchema = z
     apiSecret: z.string().min(1),
     /** Optional override for the Fonoster API endpoint (host:port). */
     endpoint: z.string().optional(),
-    /** Default products/model used when building the Autopilot application. The
-     * TTS product is NOT set here — it is derived per voice (see `voices`) for the
-     * Voz IA AUTOPILOT application's `productRef` (see {@link ttsProductRefForVoice}).
-     * Pre-recorded voice never goes through this: it speaks via the co-located
-     * VoiceServer's `res.say()`, against whatever TTS product the Fonoster-side
-     * EXTERNAL application is configured with. */
+    /** The language model every synced Voz IA agent uses; the agent's `languageModel.model`
+     * is the catalog id `<llmProvider>/<llmModel>`. The voice, its TTS model and the STT
+     * model are set per app (see {@link voiceCatalogIdForVoice}). The provider's key is the
+     * Fonoster workspace's vendor key, never sent with the agent. Pre-recorded voice never
+     * goes through this: it speaks via the co-located VoiceServer's `res.say()`. */
     autopilot: z
       .object({
-        sttProductRef: z.string().default("stt.deepgram"),
-        sttModel: z.string().default("nova-3"),
-        llmProductRef: z.string().default("llm.google"),
         llmProvider: z.string().default("google"),
         llmModel: z.string().default("gemini-2.0-flash"),
         maxTokens: z.number().default(300),
@@ -76,9 +72,6 @@ export const fonosterConfigSchema = z
         evalsModel: z.string().default("gpt-4o-mini")
       })
       .default({
-        sttProductRef: "stt.deepgram",
-        sttModel: "nova-3",
-        llmProductRef: "llm.google",
         llmProvider: "google",
         llmModel: "gemini-2.0-flash",
         maxTokens: 300,
@@ -88,8 +81,8 @@ export const fonosterConfigSchema = z
     /**
      * Selectable voice catalog for voice agent templates (Voz IA + pre-recorded).
      * Voices are Fonoster-only, so they live here. Seeded with three Spanish
-     * voices; deployments override in `qcobro.json`. The TTS product ref is
-     * derived from each voice's `provider` (see {@link ttsProductRefForVoice}).
+     * voices; deployments override in `qcobro.json`. The Fonoster voice catalog id is
+     * derived from each voice's `provider` (see {@link voiceCatalogIdForVoice}).
      */
     // Shape only — the actual catalog is supplied by qcobro.json (see config/*.json),
     // not defaulted in the schema.
@@ -174,16 +167,13 @@ export function recordingFileNameForCall(
 }
 
 /**
- * Derives the TTS product ref for a voice from its provider (e.g. an `elevenlabs`
- * voice → `tts.elevenlabs`), for the Fonoster AUTOPILOT application's `productRef`
- * (Voz IA calls only — pre-recorded dispatch never calls this: the co-located
- * VoiceServer speaks via `res.say()` against whatever TTS product the Fonoster-side
- * EXTERNAL application is configured with). Falls back to `tts.elevenlabs` when the
- * voice isn't in the catalog.
+ * The Fonoster voice catalog id for a voice, `<provider>/<id>` (e.g. an `elevenlabs` voice →
+ * `elevenlabs/86V9x9hrQds83qf7zaGn`), for a Voz IA app's `speech.voice`. Falls back to the
+ * `elevenlabs` provider when the voice isn't in the deployment's catalog.
  */
-export function ttsProductRefForVoice(voiceId: string, voices: VoiceCatalogEntry[]): string {
+export function voiceCatalogIdForVoice(voiceId: string, voices: VoiceCatalogEntry[]): string {
   const voice = voices.find((v) => v.id === voiceId);
-  return voice ? `tts.${voice.provider}` : "tts.elevenlabs";
+  return `${voice?.provider ?? "elevenlabs"}/${voiceId}`;
 }
 
 /**

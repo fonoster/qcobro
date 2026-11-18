@@ -556,6 +556,20 @@ accept-invite bridge (this file is install-once on the droplet, like the keys):
   receiver answers 503. After `fonoster webhooks:rotate <ref>`, Fonoster signs with both the
   old and the new secret for 24 hours: update `qcobro.json` and redeploy within that window.
 
+  Voz IA agents use the workspace's vendor keys, never a key from `qcobro.json`: add
+  `provider-key/<provider>` for `fonoster.autopilot.llmProvider` (for example
+  `provider-key/google`), plus `provider-key/openai` for agent evaluations. After deploying a
+  change to the agent format, re-sync every Voz IA template's app once, in place:
+
+  ```sh
+  npm run voice:resync --workspace=mods/apiserver
+  ```
+
+  It prints `resynced <n> VOICE_AI templates, <m> failed` and exits `1` if any failed; running
+  it again is safe. `fonoster.autopilot.sttProductRef`, `sttModel` and `llmProductRef` are no
+  longer read (old files still load): every app uses `deepgram/nova-3` and
+  `elevenlabs/eleven_flash_v2_5`.
+
 - **Twilio / Gemini** — credentials/keys only; no callbacks.
 
 **Known limitations** (as of this writing):

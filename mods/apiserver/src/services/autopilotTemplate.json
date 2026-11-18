@@ -3,7 +3,7 @@
     "goodbyeMessage": "Que tenga buen día.",
     "systemErrorMessage": "Ha ocurrido un error. Por favor contacte directamente a nuestra empresa."
   },
-  "audioFilters": [
+  "filters": [
     {
       "name": "aiCoustics",
       "options": {

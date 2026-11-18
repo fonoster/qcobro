@@ -2,9 +2,8 @@ import { getLogger } from "@fonoster/logger";
 import * as SDK from "@fonoster/sdk";
 import {
   DEFAULT_VOICE_IDLE_OPTIONS,
-  MULTILINGUAL_LANGUAGE,
   toCallMetadata,
-  ttsProductRefForVoice,
+  voiceCatalogIdForVoice,
   type FonosterConfig,
   type VoiceApplicationClient,
   type VoiceApplicationEvalInput,
@@ -26,23 +25,18 @@ const logger = getLogger({
 
 type FonosterSettings = NonNullable<FonosterConfig>;
 
-/** Deepgram models that accept `multi` (fonoster/fonoster#910); the phonecall and
- * conversationalai variants are English-only and Fonoster rejects them with `multi`. */
-const MULTILINGUAL_STT_MODELS = ["nova-3", "nova-2"];
+/**
+ * Speech-to-text model for every Voz IA app. Deepgram's nova-3 accepts both a single language
+ * and `multi`, so one model covers every template language.
+ */
+const STT_MODEL = "deepgram/nova-3";
 
-/** Speech-to-text config for one agent: the template's language as-is. A multilingual
- * (`multi`) agent keeps the deployment model if it can do `multi`, and otherwise falls back
- * to `nova-3` so the sync isn't rejected. */
-export function buildSpeechToTextConfig(
-  sttModel: string,
-  language: string
-): { model: string; languageCode: string } {
-  const model =
-    language === MULTILINGUAL_LANGUAGE && !MULTILINGUAL_STT_MODELS.includes(sttModel)
-      ? "nova-3"
-      : sttModel;
-  return { model, languageCode: language };
-}
+/**
+ * Text-to-speech model for every Voz IA app. Fonoster uses a voice its catalog doesn't list
+ * only when `speech.ttsModel` names a model of the voice's own provider, and every voice in the
+ * deployment catalog is an ElevenLabs voice.
+ */
+const TTS_MODEL = "elevenlabs/eleven_flash_v2_5";
 
 /** Cap provider calls so an unreachable Fonoster can't hang the request path. */
 const CALL_TIMEOUT_MS = 15_000;
@@ -76,9 +70,10 @@ export type CreateAppsApi = (settings: FonosterSettings) => Promise<AppsApi>;
 
 /**
  * Fonoster-backed {@link VoiceApplicationClient}. Syncs VOICE_AI agent templates
- * to Fonoster as AUTOPILOT applications: TTS voice, STT language, and the LLM
- * conversation settings (system prompt + first message) are assembled from the
- * template plus the deployment's Autopilot defaults (`qcobro.json`).
+ * to Fonoster 0.63 as AUTOPILOT session apps: the voice, language and models (`speech`),
+ * and the session agent (system prompt, first message, idle and barge-in settings, language
+ * model) are assembled from the template plus the deployment's Autopilot defaults
+ * (`qcobro.json`).
  *
  * Auth mirrors {@link FonosterOutboundCallClient}: a workspace access key, then an API
  * key/secret login. The login promise is memoized once it succeeds, so login only happens
@@ -137,68 +132,66 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
     this.appsPromise = null;
   }
 
-  /** Build the AUTOPILOT application request from the template + Autopilot defaults. */
+  /**
+   * The agent (`intelligence.config`) every Voz IA app and evaluation sends: Fonoster 0.63's
+   * session agent. Conversation defaults (goodbyeMessage, systemErrorMessage) come from the
+   * autopilot template; the template's own settings override them. The language model is the
+   * catalog id `<llmProvider>/<llmModel>`; its key is the workspace's vendor key.
+   */
+  private buildAgent(settings: {
+    systemPrompt: string;
+    firstMessage?: string;
+    allowUserBargeIn: boolean;
+    idleOptions: { message: string; timeout: number; maxTimeoutCount: number };
+  }) {
+    const { autopilot } = this.settings;
+    return {
+      conversationSettings: {
+        ...autopilotTemplate.conversationSettings,
+        allowUserBargeIn: settings.allowUserBargeIn,
+        // Only override the template's default greeting when the agent has a scripted first
+        // message; otherwise the autopilot default stands.
+        ...(settings.firstMessage ? { firstMessage: settings.firstMessage } : {}),
+        systemPrompt: settings.systemPrompt,
+        idleOptions: settings.idleOptions
+      },
+      languageModel: {
+        model: `${autopilot.llmProvider}/${autopilot.llmModel}`,
+        maxTokens: autopilot.maxTokens,
+        temperature: autopilot.temperature
+      }
+    };
+  }
+
+  /**
+   * The AUTOPILOT session app for a template: voice, language and models in `speech`, the
+   * call recorded, and the caller's audio filtered (in Fonoster's media server, before speech
+   * recognition, which keeps a television or a second person in the room out of the
+   * transcript). An update replaces the whole app, so update sends this same shape.
+   */
   private buildRequest(input: VoiceApplicationInput) {
-    const { autopilot, webhookBaseUrl } = this.settings;
-    // When a public base URL is configured, register the events-hook so the autopilot
-    // posts conversation events back to QCobro (correlated into the gestión). Subscribe
-    // to "all" so both conversation.started (partial capture) and conversation.ended
-    // (transcript + recording) arrive.
-    const eventsHook = webhookBaseUrl
-      ? {
-          url: `${webhookBaseUrl.replace(/\/+$/, "")}/api/voice/events`,
-          events: ["all"]
-        }
-      : undefined;
     return {
       name: input.name,
-      type: "AUTOPILOT",
-      speechToText: {
-        productRef: autopilot.sttProductRef,
-        config: buildSpeechToTextConfig(autopilot.sttModel, input.language)
+      type: SDK.ApplicationType.AUTOPILOT,
+      speech: {
+        voice: voiceCatalogIdForVoice(input.voice, this.settings.voices ?? []),
+        ttsModel: TTS_MODEL,
+        language: input.language,
+        sttModel: STT_MODEL
       },
-      textToSpeech: {
-        productRef: ttsProductRefForVoice(input.voice, this.settings.voices ?? []),
-        config: { voice: input.voice }
-      },
+      recording: "on" as const,
+      filters: autopilotTemplate.filters,
       intelligence: {
-        productRef: autopilot.llmProductRef,
-        credentials: {},
-        config: {
-          conversationSettings: {
-            // Static conversation defaults (goodbyeMessage, systemErrorMessage) come
-            // from the autopilot template (derived from autopilot.yaml; required by
-            // Fonoster). Per-agent firstMessage + systemPrompt + idleOptions +
-            // allowUserBargeIn override on top.
-            ...autopilotTemplate.conversationSettings,
-            allowUserBargeIn: input.allowUserBargeIn,
-            // Only override the template's default greeting when the agent has a
-            // scripted first message; otherwise the autopilot default stands.
-            ...(input.firstMessage ? { firstMessage: input.firstMessage } : {}),
-            systemPrompt: input.systemPrompt,
-            // Per-template idle options (the shared block was removed from the
-            // autopilot template — both call paths now set this explicitly).
-            idleOptions: {
-              message: input.idleMessage,
-              timeout: input.idleTimeout,
-              maxTimeoutCount: input.idleMaxTimeoutCount
-            }
-          },
-          languageModel: {
-            provider: autopilot.llmProvider,
-            model: autopilot.llmModel,
-            maxTokens: autopilot.maxTokens,
-            temperature: autopilot.temperature
-          },
-          // Audio filters run in Fonoster's media server, on the caller's audio,
-          // before speech recognition and voice activity detection — that is what
-          // keeps a television or a second person in the room out of the
-          // transcript. Comes from the template so every synced agent gets it.
-          ...(autopilotTemplate.audioFilters?.length
-            ? { audioFilters: autopilotTemplate.audioFilters }
-            : {}),
-          ...(eventsHook ? { eventsHook } : {})
-        }
+        config: this.buildAgent({
+          systemPrompt: input.systemPrompt,
+          firstMessage: input.firstMessage,
+          allowUserBargeIn: input.allowUserBargeIn,
+          idleOptions: {
+            message: input.idleMessage,
+            timeout: input.idleTimeout,
+            maxTimeoutCount: input.idleMaxTimeoutCount
+          }
+        })
       }
     };
   }
@@ -208,10 +201,7 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
     try {
       const apps = await withTimeout(appsPromise, "login");
       const request = this.buildRequest(input);
-      const { ref } = await withTimeout(
-        apps.createApplication(request as Parameters<SDK.Applications["createApplication"]>[0]),
-        "createApplication"
-      );
+      const { ref } = await withTimeout(apps.createApplication(request), "createApplication");
       return { ref };
     } catch (err) {
       this.invalidateOnAuthFailure(err, appsPromise);
@@ -224,10 +214,7 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
     try {
       const apps = await withTimeout(appsPromise, "login");
       const request = { ref, ...this.buildRequest(input) };
-      const result = await withTimeout(
-        apps.updateApplication(request as Parameters<SDK.Applications["updateApplication"]>[0]),
-        "updateApplication"
-      );
+      const result = await withTimeout(apps.updateApplication(request), "updateApplication");
       return { ref: result.ref };
     } catch (err) {
       this.invalidateOnAuthFailure(err, appsPromise);
@@ -294,7 +281,8 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
   /**
    * Evaluates a `VOICE_AI` agent's conversation logic via Fonoster's
    * `Applications.evaluateIntelligence` — no application ref required, ever: the request
-   * is just `{ intelligence: { productRef, config } }`, so an existing or ephemeral
+   * is just `{ intelligence: { config } }` (the same session agent an app gets, plus
+   * `testCases`), so an existing or ephemeral
    * YAML-defined agent are evaluated identically (see design.md). Relays Fonoster's
    * stream unchanged; this capability's runner is responsible for aggregating a
    * run-level summary, since Fonoster itself only summarizes per scenario.
@@ -305,30 +293,17 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
     const apps = await withTimeout(appsPromise, "login");
     const request = {
       intelligence: {
-        productRef: autopilot.llmProductRef,
         config: {
-          conversationSettings: {
-            ...autopilotTemplate.conversationSettings,
-            // Barge-in is a live-call behavior evaluateIntelligence never exercises, but
-            // Fonoster requires the field; off, like a template that never set it.
-            allowUserBargeIn: false,
-            ...(input.firstMessage ? { firstMessage: input.firstMessage } : {}),
+          ...this.buildAgent({
             systemPrompt: input.systemPrompt,
-            // No template row here (ephemeral eval agent) — use the deployment default.
-            // Idle timing is never exercised by evaluateIntelligence, but Fonoster
-            // requires a well-formed idleOptions in conversationSettings.
-            idleOptions: {
-              message: DEFAULT_VOICE_IDLE_OPTIONS.message,
-              timeout: DEFAULT_VOICE_IDLE_OPTIONS.timeout,
-              maxTimeoutCount: DEFAULT_VOICE_IDLE_OPTIONS.maxTimeoutCount
-            }
-          },
-          languageModel: {
-            provider: autopilot.llmProvider,
-            model: autopilot.llmModel,
-            maxTokens: autopilot.maxTokens,
-            temperature: autopilot.temperature
-          },
+            firstMessage: input.firstMessage,
+            // Barge-in is a live-call behavior evaluateIntelligence never exercises; off, like
+            // a template that never set it.
+            allowUserBargeIn: false,
+            // No template row here (ephemeral eval agent): the deployment default. Idle timing
+            // is never exercised by evaluateIntelligence either.
+            idleOptions: { ...DEFAULT_VOICE_IDLE_OPTIONS }
+          }),
           testCases: {
             evalsLanguageModel: { provider: "openai", model: autopilot.evalsModel },
             scenarios: input.scenarios.map((s) => this.buildEvalScenario(s))
@@ -337,9 +312,7 @@ export class FonosterVoiceApplicationClient implements VoiceApplicationClient {
       }
     };
     try {
-      const stream = apps.evaluateIntelligence(
-        request as Parameters<SDK.Applications["evaluateIntelligence"]>[0]
-      );
+      const stream = apps.evaluateIntelligence(request);
       for await (const event of stream) {
         yield event as VoiceApplicationEvalEvent;
       }
