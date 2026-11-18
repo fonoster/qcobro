@@ -1,6 +1,6 @@
 ---
 title: "Referencia del SDK"
-description: "Tipos y métodos exportados por @qcobro/sdk: Client, ClientOptions, Tokens, PortfoliosResource, AgentEvaluationsResource, ValidationError y FieldError."
+description: "Tipos y métodos exportados por @qcobro/sdk: Client, ClientOptions, Tokens, PortfoliosResource, RecoveryResource, AgentEvaluationsResource, ValidationError y FieldError."
 ---
 
 Resumen de lo que exporta `@qcobro/sdk`. Para las guías por tarea, empieza por
@@ -16,8 +16,15 @@ import {
   type Tokens,
   type FieldError,
   PortfoliosResource,
+  RecoveryResource,
   AgentTemplatesResource,
-  AgentEvaluationsResource
+  AgentEvaluationsResource,
+  type RecoverySummary,
+  type RecoveryBreakdown,
+  type RecoveryListItem,
+  type ExitListItem,
+  type ClassifyExitsResult,
+  type SyncResult
 } from "@qcobro/sdk";
 ```
 
@@ -27,10 +34,14 @@ import {
 | `ClientOptions` | interfaz | Opciones del constructor de `Client`. |
 | `Tokens` | interfaz | Tokens emitidos (`accessToken`, `refreshToken`, `idToken`). |
 | `PortfoliosResource` | clase | El recurso de carteras, accesible vía `client.portfolios`. |
+| `RecoveryResource` | clase | El recurso de recuperación, accesible vía `client.recovery`. |
 | `AgentTemplatesResource` | clase | El recurso de plantillas de agente, accesible vía `client.agentTemplates`. Incluye `preview` para canales sin conversación. |
 | `AgentEvaluationsResource` | clase | El recurso de evaluación de agentes, accesible vía `client.agentEvaluations`. |
 | `ValidationError` | clase | Error de validación en cliente, con detalle por campo. |
 | `FieldError` | interfaz | Un fallo de validación por campo (`field`, `message`, `code`). |
+| `RecoverySummary`, `RecoveryBreakdown`, `RecoveryListItem` | interfaces | Respuestas de `client.recovery.summary`, `breakdown` y de cada elemento de `list`. |
+| `ExitListItem`, `ClassifyExitsResult`, `SyncResult` | interfaces | Cada elemento de `listExits`, la respuesta de `classifyExits` y la de `syncAccounts`. |
+| `RecoverySummaryParams`, `RecoveryBreakdownParams`, `RecoveryListParams` | tipos | Entradas de los métodos de `client.recovery`. |
 
 ## Client
 
@@ -43,6 +54,7 @@ const client = new Client(options: ClientOptions);
 | Miembro | Firma | Descripción |
 | --- | --- | --- |
 | `portfolios` | `PortfoliosResource` | Operaciones de carteras (ver abajo). |
+| `recovery` | `RecoveryResource` | Importe recuperado en un período (ver abajo). |
 | `agentTemplates` | `AgentTemplatesResource` | Operaciones de plantillas de agente, incluida `preview` (ver [Evaluar y previsualizar agentes](/sdk/agent-evaluations)). |
 | `agentEvaluations` | `AgentEvaluationsResource` | Evaluación de agentes (ver abajo). |
 | `trpc` | proxy tipado | Acceso directo a la API tRPC subyacente, para procedimientos que el SDK aún no envuelve. Prefiere los recursos cuando existan. |
@@ -69,10 +81,26 @@ acotados al workspace activo y validan su entrada en el cliente.
 | `update` | `({ id, name?, archived? }) => Promise<...>` | Actualiza o archiva/restaura una cartera. |
 | `delete` | `({ id }) => Promise<...>` | Elimina una cartera. |
 | `listAccounts` | `({ portfolioId, limit?, offset? }) => Promise<...>` | Lista una página de cuentas de una cartera. |
-| `syncAccounts` | `({ portfolioId, mode, rows }) => Promise<...>` | Sincroniza un lote de cuentas en una cartera. |
+| `syncAccounts` | `({ portfolioId, mode, rows, exits? }) => Promise<SyncResult>` | Sincroniza un lote de cuentas en una cartera e informa las que salieron. |
+| `listExits` | `({ portfolioId, reason?, limit?, offset? }) => Promise<{ items: ExitListItem[]; total }>` | Lista las cuentas que salieron de una cartera y no han vuelto. |
+| `classifyExits` | `({ portfolioId, exits }) => Promise<ClassifyExitsResult>` | Da un motivo a las salidas registradas como `UNKNOWN`. |
 
 Detalle de cada método en [Gestionar carteras](/sdk/portfolios) y
 [Sincronizar cuentas](/sdk/sync-accounts).
+
+## RecoveryResource
+
+Accesible vía `client.recovery`. No se construye directamente. Todos los métodos están acotados
+al workspace activo y validan su entrada en el cliente. `from` y `to` son fechas `YYYY-MM-DD`,
+ambas incluidas, en la zona horaria del workspace.
+
+| Método | Firma | Descripción |
+| --- | --- | --- |
+| `summary` | `({ from, to, portfolioId? }) => Promise<RecoverySummary>` | Importe recuperado en un período, con y sin gestión, y las salidas por clasificar. |
+| `breakdown` | `({ by, from, to, portfolioId? }) => Promise<RecoveryBreakdown>` | Importe recuperado desglosado por `CAMPAIGN`, `CHANNEL`, `OUTCOME` o `DAYS_SINCE_TOUCH`. |
+| `list` | `({ from, to, portfolioId?, kind?, hasGestion?, limit?, offset? }) => Promise<{ items: RecoveryListItem[]; total }>` | Lista una página de las recuperaciones detectadas en un período. |
+
+Detalle de cada método y de sus respuestas en [Leer la recuperación](/sdk/recovery).
 
 ## AgentEvaluationsResource
 

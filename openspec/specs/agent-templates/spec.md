@@ -189,15 +189,14 @@ capability existed.
 
 - **WHEN** an operator opens the create form for a voice agent template
 - **THEN** the language is pre-selected as `es-419`
-- **AND** the synced Fonoster application's speech-to-text `languageCode` is `es-419` unless
-  the operator picks another language
+- **AND** the synced Fonoster application's `speech.language` is `es-419` unless the operator
+  picks another language, and its `speech.sttModel` is `deepgram/nova-3`
 
 #### Scenario: Multilingual language switches the synced application to Deepgram's multi mode
 
 - **WHEN** an operator saves a VOICE_AI template with `language` set to `multi`
-- **THEN** the synced Fonoster application's speech-to-text `languageCode` is `multi`
-- **AND** its speech-to-text `model` is the deployment's STT model if that model supports
-  `multi` (`nova-3` or `nova-2`), and `nova-3` otherwise
+- **THEN** the synced Fonoster application's `speech.language` is `multi`
+- **AND** its `speech.sttModel` is `deepgram/nova-3`, which accepts `multi`
 
 #### Scenario: Multilingual is not offered for pre-recorded templates
 

@@ -5,7 +5,12 @@ import {
   createPortfolioSchema,
   updatePortfolioSchema,
   deletePortfolioSchema,
-  syncAccountsInputSchema
+  syncAccountsInputSchema,
+  listExitsInputSchema,
+  classifyExitsInputSchema,
+  recoverySummaryInputSchema,
+  recoveryBreakdownInputSchema,
+  recoveryListInputSchema
 } from "@qcobro/common";
 import { createPortfoliosList } from "./portfoliosList.js";
 import { createPortfoliosGet } from "./portfoliosGet.js";
@@ -14,8 +19,13 @@ import { createPortfoliosUpdate } from "./portfoliosUpdate.js";
 import { createPortfoliosDelete } from "./portfoliosDelete.js";
 import { createPortfoliosListAccounts } from "./portfoliosListAccounts.js";
 import { createPortfoliosSyncAccounts } from "./portfoliosSyncAccounts.js";
+import { createPortfoliosListExits } from "./portfoliosListExits.js";
+import { createPortfoliosClassifyExits } from "./portfoliosClassifyExits.js";
+import { createRecoverySummary } from "./recoverySummary.js";
+import { createRecoveryBreakdown } from "./recoveryBreakdown.js";
+import { createRecoveryList } from "./recoveryList.js";
 
-/** Registers the portfolios tool surface with the MCP server. */
+/** Registers the portfolios and recovery tool surface with the MCP server. */
 export function registerTools(server: McpServer, client: Client): void {
   server.tool(
     "portfolios_list",
@@ -61,8 +71,43 @@ export function registerTools(server: McpServer, client: Client): void {
 
   server.tool(
     "portfolios_sync_accounts",
-    "Synchronizes a batch of account rows into a portfolio (APPEND_ONLY, UPDATE_EXISTING, or REPLACE mode).",
+    "Synchronizes a batch of account rows into a portfolio (APPEND_ONLY, UPDATE_EXISTING, or REPLACE mode). Pass exits to record accounts that left, with a reason; CURED and PAID_OFF exits also need missedInstallments and termsAmount.",
     syncAccountsInputSchema.shape,
     createPortfoliosSyncAccounts(client)
+  );
+
+  server.tool(
+    "portfolios_list_exits",
+    "Lists the accounts that left a portfolio and have not come back, optionally filtered by reason.",
+    listExitsInputSchema.shape,
+    createPortfoliosListExits(client)
+  );
+
+  server.tool(
+    "portfolios_classify_exits",
+    "Assigns a reason to exits recorded as UNKNOWN. CURED or PAID_OFF require missedInstallments and termsAmount and record a recovery of their product.",
+    classifyExitsInputSchema.shape,
+    createPortfoliosClassifyExits(client)
+  );
+
+  server.tool(
+    "recovery_summary",
+    "Gets the amount recovered in a period (from/to, YYYY-MM-DD, inclusive), optionally for one portfolio.",
+    recoverySummaryInputSchema.shape,
+    createRecoverySummary(client)
+  );
+
+  server.tool(
+    "recovery_breakdown",
+    "Breaks down the amount recovered in a period by CAMPAIGN, CHANNEL, OUTCOME or DAYS_SINCE_TOUCH. CAMPAIGN amounts are not additive.",
+    recoveryBreakdownInputSchema.shape,
+    createRecoveryBreakdown(client)
+  );
+
+  server.tool(
+    "recovery_list",
+    "Lists the recoveries detected in a period.",
+    recoveryListInputSchema.shape,
+    createRecoveryList(client)
   );
 }

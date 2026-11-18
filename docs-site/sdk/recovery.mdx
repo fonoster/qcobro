@@ -1,0 +1,228 @@
+---
+title: "Leer la recuperación"
+description: "Lee con client.recovery cuánto se recuperó en un período, su desglose por campaña, canal, resultado o días desde la última gestión, y la lista de recuperaciones detectadas."
+---
+
+El recurso `client.recovery` responde a una pregunta: **¿cuánto se recuperó en un período, y
+qué lo explica?** Expone tres métodos de solo lectura: `summary`, `breakdown` y `list`.
+
+Todos los métodos están **acotados al workspace activo** y validan su entrada en el cliente
+antes de enviar la petición: una entrada inválida lanza un `ValidationError` y nunca llega a la
+red. Un período son dos fechas `from` y `to` en formato `YYYY-MM-DD`, **ambas incluidas**, en la
+zona horaria del workspace. `from` debe ser igual o anterior a `to`.
+
+## Qué cuenta como una recuperación
+
+QCobro registra una recuperación cuando una sincronización de cuentas muestra que se pagaron
+cuotas vencidas. Hay tres tipos (`kind`):
+
+| `kind`     | Cuándo se registra                                                                            | Importe                                                 |
+| ---------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `PARTIAL`  | Una cuenta sigue en el lote con menos `missedInstallments` que en la sincronización anterior. | Las cuotas que bajaron × el `termsAmount` de la cuenta. |
+| `CURED`    | Envías la cuenta en `exits` con `reason: "CURED"` (se puso al día).                           | `missedInstallments × termsAmount` de la salida.        |
+| `PAID_OFF` | Envías la cuenta en `exits` con `reason: "PAID_OFF"` (saldó la deuda).                        | `missedInstallments × termsAmount` de la salida.        |
+
+En las salidas, `missedInstallments` son las cuotas que estaban vencidas y ahora están pagadas,
+y `termsAmount` es el importe de cada cuota. Consulta
+[Sincronizar cuentas](/sdk/sync-accounts#informa-las-salidas) para enviarlas.
+
+Al registrar una recuperación, QCobro guarda una **instantánea** de las gestiones que tuvo la
+cuenta entre la sincronización anterior y la que la detectó: canal, resultado, campañas activas
+y días desde la última gestión. Esa instantánea **nunca se recalcula**, aunque después edites o
+elimines las campañas que nombra.
+
+Una recuperación cuenta en el período en que se detectó. Hay una excepción: si das motivo
+`CURED` o `PAID_OFF` a una salida que se registró **sin motivo** (`UNKNOWN`), la recuperación
+cuenta en la fecha en que la cuenta salió. Por eso la cifra de un período ya cerrado puede
+subir al clasificar salidas (ver [Clasifica las salidas sin motivo](/sdk/portfolios#clasifica-las-salidas-sin-motivo)).
+
+<Note>
+  QCobro solo ve lo que le envían tus exportaciones. Si no envías `missedInstallments` en las filas
+  ni motivos en las salidas, no detecta ninguna recuperación.
+</Note>
+
+## Obtén el resumen de un período
+
+`summary` devuelve el importe recuperado en el período, separado según la cuenta tuviera o no
+una gestión entre sincronizaciones, y cuántas salidas esperan todavía un motivo.
+
+```ts
+const summary = await client.recovery.summary({
+  from: "2026-10-01",
+  to: "2026-10-31",
+  portfolioId: "f47ac10b-..." // opcional
+});
+// → { recovered: 48200, count: 31, withoutGestion: 13300, withoutGestionCount: 9, pendingExits: 7, currency: "DOP" }
+```
+
+<ParamField body="from" type="string" required>
+  Fecha de inicio, incluida (`YYYY-MM-DD`).
+</ParamField>
+<ParamField body="to" type="string" required>
+  Fecha de fin, incluida (`YYYY-MM-DD`).
+</ParamField>
+<ParamField body="portfolioId" type="string">
+  Limita el resultado a una cartera.
+</ParamField>
+
+<ResponseField name="recovered" type="number">
+  Suma de las recuperaciones detectadas en el período cuya cuenta tuvo al menos una gestión entre
+  sincronizaciones. Es la cifra de **Recuperado**.
+</ResponseField>
+<ResponseField name="count" type="number">
+  Número de esas recuperaciones.
+</ResponseField>
+<ResponseField name="withoutGestion" type="number">
+  Suma de las recuperaciones del período sin ninguna gestión entre sincronizaciones.
+</ResponseField>
+<ResponseField name="withoutGestionCount" type="number">
+  Número de esas recuperaciones.
+</ResponseField>
+<ResponseField name="pendingExits" type="number">
+  Salidas sin motivo (`UNKNOWN`) que siguen abiertas **ahora**, con el mismo filtro de cartera. No
+  depende del período.
+</ResponseField>
+<ResponseField name="currency" type="string">
+  La moneda del workspace (por ejemplo `DOP`).
+</ResponseField>
+
+## Desglosa lo recuperado
+
+`breakdown` reparte la cifra de **Recuperado** (solo las recuperaciones con gestión) según una
+dimensión `by`. Las filas vienen ordenadas de mayor a menor importe.
+
+```ts
+const breakdown = await client.recovery.breakdown({
+  by: "CHANNEL",
+  from: "2026-10-01",
+  to: "2026-10-31"
+});
+// → { additive: true, rows: [{ key: "VOICE_AI", name: null, amount: 30100, count: 18 }, …] }
+```
+
+<ParamField body="by" type="string" required>
+  Dimensión por la que agrupar. Ver la tabla de abajo.
+</ParamField>
+<ParamField body="from" type="string" required>
+  Fecha de inicio, incluida (`YYYY-MM-DD`).
+</ParamField>
+<ParamField body="to" type="string" required>
+  Fecha de fin, incluida (`YYYY-MM-DD`).
+</ParamField>
+<ParamField body="portfolioId" type="string">
+  Limita el resultado a una cartera.
+</ParamField>
+
+| `by`               | `key` de cada fila                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `CAMPAIGN`         | El id de cada campaña activa en la cuenta; `name` trae su nombre en ese momento.                              |
+| `CHANNEL`          | El canal de la última gestión (por ejemplo `VOICE_AI` o `WHATSAPP`).                                          |
+| `OUTCOME`          | El resultado de la última gestión o, si no tuvo resultado, su camino.                                         |
+| `DAYS_SINCE_TOUCH` | Días desde la última gestión hasta la sincronización que detectó la recuperación: `0-1`, `2-3`, `4-7` u `8+`. |
+
+<ResponseField name="additive" type="boolean">
+  `true` cuando la suma de las filas es el total recuperado. Es `false` solo con `CAMPAIGN`.
+</ResponseField>
+<ResponseField name="rows" type="array">
+  Una fila por valor de la dimensión, con `key`, `name` (el nombre de la campaña con `CAMPAIGN`,
+  `null` en las demás), `amount` (suma de importes) y `count` (número de recuperaciones).
+</ResponseField>
+
+<Warning>
+  Con `CAMPAIGN`, cada campaña activa en una cuenta recibe el importe **completo** de su
+  recuperación. Una recuperación con dos campañas cuenta en las dos filas, así que no sumes las
+  filas para obtener el total: usa `summary`.
+</Warning>
+
+## Lista las recuperaciones
+
+`list` devuelve una página de las recuperaciones detectadas en el período, de la más reciente a
+la más antigua, junto con el total.
+
+```ts
+const { items, total } = await client.recovery.list({
+  from: "2026-10-01",
+  to: "2026-10-31",
+  hasGestion: false,
+  limit: 50
+});
+```
+
+<ParamField body="from" type="string" required>
+  Fecha de inicio, incluida (`YYYY-MM-DD`).
+</ParamField>
+<ParamField body="to" type="string" required>
+  Fecha de fin, incluida (`YYYY-MM-DD`).
+</ParamField>
+<ParamField body="portfolioId" type="string">
+  Limita el resultado a una cartera.
+</ParamField>
+<ParamField body="kind" type="string">
+  Solo las recuperaciones de este tipo: `PARTIAL`, `CURED` o `PAID_OFF`.
+</ParamField>
+<ParamField body="hasGestion" type="boolean">
+  `true` para solo las que tuvieron una gestión entre sincronizaciones; `false` para solo las que
+  no. Omítelo para todas.
+</ParamField>
+<ParamField body="limit" type="number" default="50">
+  Número máximo de recuperaciones a devolver (1–200).
+</ParamField>
+<ParamField body="offset" type="number" default="0">
+  Número de recuperaciones a omitir desde el inicio (para paginar).
+</ParamField>
+
+Cada elemento de `items` describe una recuperación:
+
+<ResponseField name="id" type="string">
+  Id de la recuperación.
+</ResponseField>
+<ResponseField name="portfolioId" type="string">
+  Id de la cartera.
+</ResponseField>
+<ResponseField name="portfolioAccountId" type="string">
+  Id de la cuenta en QCobro.
+</ResponseField>
+<ResponseField name="externalId" type="string">
+  Tu identificador de la cuenta.
+</ResponseField>
+<ResponseField name="fullName" type="string">
+  Nombre completo del titular.
+</ResponseField>
+<ResponseField name="kind" type="string">
+  `PARTIAL`, `CURED` o `PAID_OFF`.
+</ResponseField>
+<ResponseField name="installments" type="number">
+  Cuotas recuperadas.
+</ResponseField>
+<ResponseField name="amount" type="number">
+  Importe recuperado: `installments × termsAmount`.
+</ResponseField>
+<ResponseField name="detectedAt" type="string">
+  Cuándo se detectó (ISO 8601). En una salida clasificada más tarde, la fecha en que la cuenta
+  salió.
+</ResponseField>
+<ResponseField name="previousSyncAt" type="string">
+  La sincronización anterior (ISO 8601): el inicio del intervalo de la instantánea.
+</ResponseField>
+<ResponseField name="context" type="object">
+  La instantánea de las gestiones entre `previousSyncAt` y `detectedAt`:
+
+- `hasGestion`: si hubo al menos una gestión.
+- `touches`: número de gestiones.
+- `activeCampaigns`: las campañas de esas gestiones, cada una con `id` y `name`.
+- `lastTouch`: la última gestión (`contactLogId`, `agentType`, `delivery`, `path`,
+  `outcome`, `contactedAt`), o `null` si no hubo ninguna.
+- `daysSinceLastTouch`: días enteros desde la última gestión hasta la sincronización, o
+  `null`.
+  </ResponseField>
+
+## Siguientes pasos
+
+<CardGroup cols={2}>
+  <Card title="Sincronizar cuentas" icon="arrows-rotate" href="/sdk/sync-accounts">
+    Envía las filas y las salidas de las que salen las recuperaciones.
+  </Card>
+  <Card title="Gestionar carteras" icon="folder-open" href="/sdk/portfolios">
+    Lista las salidas de una cartera y clasifica las que salieron sin motivo.
+  </Card>
+</CardGroup>

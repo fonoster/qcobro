@@ -21,8 +21,10 @@
     "prerecordedAppRef": "CHANGE_ME",
     "webhookSecret": "CHANGE_ME",
     "autopilot": {
+      "llmProvider": "google",
       "llmModel": "gemini-2.5-flash",
-      "temperature": 0.3
+      "temperature": 0.3,
+      "maxTokens": 300
     },
     "voices": [
       {
