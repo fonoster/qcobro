@@ -126,7 +126,9 @@ test.describe("portfolio recovery", () => {
     await expect(recovery.getByRole("row", { name: /^Total/ })).toBeVisible();
     await expect(recovery.getByText(/Depende de cada cuánto sincroniza el cliente/)).toBeVisible();
 
-    await breakdown.getByRole("radio", { name: "Campaña" }).check();
+    // The radios are visually hidden inside their labels, so click the label as a person would.
+    await breakdown.getByText("Campaña", { exact: true }).click();
+    await expect(breakdown.getByRole("radio", { name: "Campaña" })).toBeChecked();
     await expect(recovery.getByRole("row", { name: /^Total/ })).toHaveCount(0);
     await expect(
       recovery.getByText(
