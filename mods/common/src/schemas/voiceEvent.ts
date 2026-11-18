@@ -65,9 +65,7 @@ export type VoiceTranscriptInput = z.infer<typeof voiceTranscriptInputSchema>;
  * `scriptDurationSeconds` is the nominal length of the synthesized clip, stored so a
  * future report can compare it against the answered duration.
  *
- * `recordingFile` is the name Fonoster recorded the call under, derived from the voice
- * request (see `recordingFileNameForCall`). It is kept for reference only: the console
- * plays recordings from the call record (`GET /api/gestiones/:id/recording`).
+ * The console plays the recording from the call record (`GET /api/gestiones/:id/recording`).
  */
 export const prerecordedCompletionSchema = z.object({
   providerRef: z.string().min(1),
@@ -75,7 +73,6 @@ export const prerecordedCompletionSchema = z.object({
   scriptCompleted: z.boolean().default(false),
   answeredSeconds: z.number().int().nonnegative(),
   scriptDurationSeconds: z.number().int().nonnegative().optional(),
-  recordingFile: z.string().min(1).optional(),
   at: z.string().min(1)
 });
 export type PrerecordedCompletionInput = z.infer<typeof prerecordedCompletionSchema>;

@@ -2,7 +2,6 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   fonosterConfigSchema,
-  recordingFileNameForCall,
   voiceCatalogIdForVoice,
   twilioConfigSchema,
   type VoiceCatalogEntry
@@ -110,21 +109,5 @@ describe("callTimeoutSeconds", () => {
 
   it("rejects zero — a call that can never ring is a configuration mistake", () => {
     assert.throws(() => fonosterConfigSchema.parse({ ...fonoster, callTimeoutSeconds: 0 }));
-  });
-});
-
-describe("recordingFileNameForCall", () => {
-  it("names the file the way Fonoster's dialplan records it: appRef_mediaSessionRef.wav", () => {
-    assert.equal(
-      recordingFileNameForCall("7acb5d67-c660-49c4-af34-07bcc718683c", "1756742400.123"),
-      "7acb5d67-c660-49c4-af34-07bcc718683c_1756742400.123.wav"
-    );
-  });
-
-  it("returns undefined when either half is missing", () => {
-    assert.equal(recordingFileNameForCall(undefined, "1756742400.123"), undefined);
-    assert.equal(recordingFileNameForCall("app-ref", undefined), undefined);
-    assert.equal(recordingFileNameForCall("", "1756742400.123"), undefined);
-    assert.equal(recordingFileNameForCall("app-ref", ""), undefined);
   });
 });
