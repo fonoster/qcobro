@@ -79,7 +79,7 @@ test.describe("portfolio recovery", () => {
     await expect(missingColumn).toHaveCount(0);
     await dialog.getByRole("button", { name: "Importar 1 cuentas" }).click();
     await expect(dialog.getByText("Importación completada")).toBeVisible();
-    await expect(dialog.getByText("Pagos detectados")).toHaveCount(0);
+    await expect(dialog.getByText("Pagos detectados", { exact: true })).toHaveCount(0);
     await dialog.getByRole("button", { name: "Cerrar" }).click();
 
     // --- A gestión between the two syncs ------------------------------------------------
@@ -111,7 +111,7 @@ test.describe("portfolio recovery", () => {
     await page.getByRole("button", { name: "Importar cuentas" }).click();
     await page.locator('input[type="file"]').setInputFiles(accountsFile(1));
     await dialog.getByRole("button", { name: "Importar 1 cuentas" }).click();
-    await expect(dialog.getByText("Pagos detectados")).toBeVisible();
+    await expect(dialog.getByText("Pagos detectados", { exact: true })).toBeVisible();
     await expect(dialog.getByText(/5,000.* · 1 cuenta$/)).toBeVisible();
     await dialog.getByRole("button", { name: "Cerrar" }).click();
 
