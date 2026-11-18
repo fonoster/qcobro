@@ -27,6 +27,7 @@ import { createGenerateGestionInsight } from "../../functions/voice/generateGest
 import {
   contactLogEvents,
   CONTACT_LOG_CHANGED,
+  emitContactLogChanged,
   type ContactLogChangeEvent
 } from "../../services/contactLogEvents.js";
 
@@ -186,7 +187,11 @@ const paymentPromiseRouter = router({
         portfolioAccount: { portfolio: { workspaceRef: ctx.workspace.accessKeyId } }
       }
     });
-    return createResolvePaymentPromise(ctx.prisma as never)(input);
+    const promise = await createResolvePaymentPromise(ctx.prisma as never)(input);
+    // The extension's signal fires inside the still-open transaction, so a subscriber's
+    // refetch can read the pre-resolve row. Signal again now that the transaction committed.
+    emitContactLogChanged({ id: promise.contactLogId, workspaceRef: ctx.workspace.accessKeyId });
+    return promise;
   }),
 
   // Follow up via ad-hoc agent dispatch (no campaign attached).

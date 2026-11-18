@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.1.0](https://github.com/fonoster/qcobro/compare/v3.0.0...v3.1.0) (2026-11-18)
+
+### Bug Fixes
+
+- **api:** signal a resolved payment promise after its transaction commits ([#222](https://github.com/fonoster/qcobro/issues/222)) ([59e4e76](https://github.com/fonoster/qcobro/commit/59e4e7601d2f5ceee02648236d8fccb2587aa022)), closes [#221](https://github.com/fonoster/qcobro/issues/221)
+
+### Features
+
+- **console:** show Recuperado by period on Inicio and Carteras ([#219](https://github.com/fonoster/qcobro/issues/219)) ([5daabaf](https://github.com/fonoster/qcobro/commit/5daabaf1317c104c7cd4c374279d682785ffbc10)), closes [#209](https://github.com/fonoster/qcobro/issues/209) [#209](https://github.com/fonoster/qcobro/issues/209) [#209](https://github.com/fonoster/qcobro/issues/209)
+
 # [3.0.0](https://github.com/fonoster/qcobro/compare/v2.2.0...v3.0.0) (2026-11-18)
 
 - fix(voice)!: sync Voz IA templates as Fonoster 0.63 session agents (#217) ([3f6a8ae](https://github.com/fonoster/qcobro/commit/3f6a8ae11b36a0198f32e7623b72a52e06e33955)), closes [#217](https://github.com/fonoster/qcobro/issues/217) [#204](https://github.com/fonoster/qcobro/issues/204)
