@@ -51,6 +51,7 @@ interface StoredPortfolio {
 const portfolios: StoredPortfolio[] = [];
 const accounts: { portfolioId: string; externalId: string; fullName: string }[] = [];
 let seq = 0;
+let lastSyncExits: unknown;
 
 const appRouterStub = t.router({
   auth: t.router({
@@ -103,6 +104,7 @@ const appRouterStub = t.router({
         return { items, total: items.length };
       }),
     syncAccounts: workspaceProcedure.input(syncAccountsInputSchema).mutation(({ input }) => {
+      lastSyncExits = input.exits;
       let created = 0;
       for (const r of input.rows) {
         accounts.push({
@@ -164,18 +166,40 @@ function firstText(result: Awaited<ReturnType<McpClient["callTool"]>>): string {
   return content[0].text;
 }
 
-test("lists the registered portfolio tools", async () => {
+test("lists the registered portfolio and recovery tools", async () => {
   const { tools } = await mcpClient.listTools();
   const names = tools.map((tool) => tool.name).sort();
   assert.deepEqual(names, [
+    "portfolios_classify_exits",
     "portfolios_create",
     "portfolios_delete",
     "portfolios_get",
     "portfolios_list",
     "portfolios_list_accounts",
+    "portfolios_list_exits",
     "portfolios_sync_accounts",
-    "portfolios_update"
+    "portfolios_update",
+    "recovery_breakdown",
+    "recovery_list",
+    "recovery_summary"
   ]);
+});
+
+test("portfolios_sync_accounts accepts exits and forwards them to the API", async () => {
+  const exits = [
+    { externalId: "C-0877", reason: "CURED", missedInstallments: 2, termsAmount: 1500 },
+    { externalId: "C-0878", reason: "WRITTEN_OFF" }
+  ];
+  const { tools } = await mcpClient.listTools();
+  const sync = tools.find((tool) => tool.name === "portfolios_sync_accounts");
+  assert.ok(sync?.inputSchema.properties && "exits" in sync.inputSchema.properties);
+
+  const result = await mcpClient.callTool({
+    name: "portfolios_sync_accounts",
+    arguments: { portfolioId: "p_exits", mode: "UPDATE_EXISTING", rows: [], exits }
+  });
+  assert.notEqual(result.isError, true);
+  assert.deepEqual(lastSyncExits, exits);
 });
 
 test("portfolios_create delegates to the SDK and returns the created portfolio", async () => {

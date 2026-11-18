@@ -11,6 +11,7 @@ import type { LoginInput, ApiKeyLoginInput } from "@qcobro/common";
 import { PortfoliosResource } from "./resources/portfolios.js";
 import { AgentTemplatesResource } from "./resources/agentTemplates.js";
 import { AgentEvaluationsResource } from "./resources/agentEvaluations.js";
+import { RecoveryResource } from "./resources/recovery.js";
 
 /** Header the apiserver reads to scope a request to a workspace. */
 const WORKSPACE_HEADER = "x-workspace";
@@ -91,7 +92,7 @@ export class Client {
    */
   readonly trpc: CreateTRPCClient<AppRouter>;
 
-  /** Portfolio operations (list, get, create, update, delete, accounts, sync). */
+  /** Portfolio operations (list, get, create, update, delete, accounts, sync, exits). */
   readonly portfolios: PortfoliosResource;
 
   /** Agent template operations (list, get, create, sync, preview). */
@@ -99,6 +100,9 @@ export class Client {
 
   /** Agent evaluation operations (evaluate — streams over the WebSocket transport). */
   readonly agentEvaluations: AgentEvaluationsResource;
+
+  /** Recovery reads (summary, breakdown, list) for a period. */
+  readonly recovery: RecoveryResource;
 
   #accessToken?: string;
   #refreshToken?: string;
@@ -153,6 +157,7 @@ export class Client {
     this.portfolios = new PortfoliosResource(this.trpc, (fn) => this.request(fn));
     this.agentTemplates = new AgentTemplatesResource(this.trpc, (fn) => this.request(fn));
     this.agentEvaluations = new AgentEvaluationsResource(this.trpc);
+    this.recovery = new RecoveryResource(this.trpc, (fn) => this.request(fn));
   }
 
   /**

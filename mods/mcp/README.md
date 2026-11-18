@@ -4,8 +4,8 @@ A [Model Context Protocol](https://modelcontextprotocol.io) server for the [QCob
 API. It wraps [`@qcobro/sdk`](../sdk) so an MCP-capable client (Claude Desktop, or any other MCP
 host) can list, create, and manage portfolios on your behalf.
 
-This release covers the **portfolios** resource — the same one `@qcobro/sdk` wraps today. More
-tools land as the SDK grows more resources.
+This release covers the resources `@qcobro/sdk` wraps today: **portfolios**, with their exits, and
+the **recovery** read for a period. More tools land as the SDK grows more resources.
 
 ## Setup
 
@@ -71,7 +71,19 @@ server does nothing but authenticate with them and delegate every tool call to t
 6. `portfolios_list_accounts` — lists a page of a portfolio's accounts (`portfolioId`, optional
    `limit`/`offset`), with the total count.
 7. `portfolios_sync_accounts` — synchronizes a batch of account rows into a portfolio
-   (`portfolioId`, `mode`: `APPEND_ONLY` | `UPDATE_EXISTING` | `REPLACE`, `rows`).
+   (`portfolioId`, `mode`: `APPEND_ONLY` | `UPDATE_EXISTING` | `REPLACE`, `rows`, optional
+   `exits`: accounts that left, each with a `reason`; `CURED` and `PAID_OFF` exits also need
+   `missedInstallments` and `termsAmount`).
+8. `portfolios_list_exits` — lists the accounts that left a portfolio and have not come back
+   (`portfolioId`, optional `reason`, `limit`/`offset`), with the total count.
+9. `portfolios_classify_exits` — assigns a reason to exits recorded as `UNKNOWN` (`portfolioId`,
+   `exits`); `CURED` and `PAID_OFF` record a recovery of `missedInstallments × termsAmount`.
+10. `recovery_summary` — gets the amount recovered in a period (`from`/`to`, `YYYY-MM-DD`,
+    inclusive), optionally for one `portfolioId`.
+11. `recovery_breakdown` — breaks down the amount recovered in a period `by` `CAMPAIGN`,
+    `CHANNEL`, `OUTCOME` or `DAYS_SINCE_TOUCH`. `CAMPAIGN` amounts are not additive.
+12. `recovery_list` — lists a page of the recoveries detected in a period (optional
+    `portfolioId`, `kind`, `hasGestion`, `limit`/`offset`), with the total count.
 
 Every tool's input is validated against the exact same Zod schema the SDK method it delegates to
 already validates against — no separate rules to drift out of sync. Invalid input is rejected

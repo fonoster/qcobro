@@ -38,7 +38,7 @@ $ npm install -g @qcobro/ctl
 $ qcobro COMMAND
 running command...
 $ qcobro (--version)
-@qcobro/ctl/1.40.1 darwin-arm64 node-v22.17.0
+@qcobro/ctl/2.1.0 darwin-arm64 node-v22.23.3
 $ qcobro --help [COMMAND]
 USAGE
   $ qcobro COMMAND
@@ -56,9 +56,14 @@ USAGE
 - [`qcobro agents:preview`](#qcobro-agentspreview)
 - [`qcobro agents:sync TEMPLATEID`](#qcobro-agentssync-templateid)
 - [`qcobro mcp:configure`](#qcobro-mcpconfigure)
+- [`qcobro portfolios:classify-exits`](#qcobro-portfoliosclassify-exits)
 - [`qcobro portfolios:get ID`](#qcobro-portfoliosget-id)
 - [`qcobro portfolios:list`](#qcobro-portfolioslist)
+- [`qcobro portfolios:list-exits`](#qcobro-portfolioslist-exits)
 - [`qcobro portfolios:sync`](#qcobro-portfoliossync)
+- [`qcobro recovery:breakdown`](#qcobro-recoverybreakdown)
+- [`qcobro recovery:list`](#qcobro-recoverylist)
+- [`qcobro recovery:summary`](#qcobro-recoverysummary)
 - [`qcobro workspaces:active`](#qcobro-workspacesactive)
 - [`qcobro workspaces:list`](#qcobro-workspaceslist)
 - [`qcobro workspaces:login`](#qcobro-workspaceslogin)
@@ -210,6 +215,26 @@ EXAMPLES
   $ qcobro mcp:configure --access-key-id <id> --access-key-secret <secret> --workspace <workspaceAccessKeyId>
 ```
 
+## `qcobro portfolios:classify-exits`
+
+assign a reason to exits recorded as UNKNOWN, from a JSON file
+
+```
+USAGE
+  $ qcobro portfolios:classify-exits --portfolio-id <value> --file <value>
+
+FLAGS
+  --file=<value>          (required) path to a JSON file containing an array of { externalId, reason,
+                          missedInstallments, termsAmount } (the last two only for CURED and PAID_OFF)
+  --portfolio-id=<value>  (required) the portfolio id
+
+DESCRIPTION
+  assign a reason to exits recorded as UNKNOWN, from a JSON file
+
+EXAMPLES
+  $ qcobro portfolios:classify-exits --portfolio-id <id> --file classify.json
+```
+
 ## `qcobro portfolios:get ID`
 
 display a single portfolio
@@ -248,16 +273,44 @@ EXAMPLES
   $ qcobro portfolios:list --include-archived
 ```
 
+## `qcobro portfolios:list-exits`
+
+display the accounts that left a portfolio and have not come back
+
+```
+USAGE
+  $ qcobro portfolios:list-exits --portfolio-id <value> [--reason CURED|PAID_OFF|WRITTEN_OFF|OTHER|UNKNOWN] [--limit
+    <value>] [--offset <value>]
+
+FLAGS
+  --limit=<value>         [default: 50] rows per page
+  --offset=<value>        rows to skip
+  --portfolio-id=<value>  (required) the portfolio id
+  --reason=<option>       only exits with this reason
+                          <options: CURED|PAID_OFF|WRITTEN_OFF|OTHER|UNKNOWN>
+
+DESCRIPTION
+  display the accounts that left a portfolio and have not come back
+
+EXAMPLES
+  $ qcobro portfolios:list-exits --portfolio-id <id>
+
+  $ qcobro portfolios:list-exits --portfolio-id <id> --reason UNKNOWN
+```
+
 ## `qcobro portfolios:sync`
 
 synchronize a batch of account rows into a portfolio, from a JSON file
 
 ```
 USAGE
-  $ qcobro portfolios:sync --portfolio-id <value> --file <value> [--mode APPEND_ONLY|UPDATE_EXISTING|REPLACE]
+  $ qcobro portfolios:sync --portfolio-id <value> [--file <value>] [--exits <value>] [--mode
+    APPEND_ONLY|UPDATE_EXISTING|REPLACE]
 
 FLAGS
-  --file=<value>          (required) path to a JSON file containing an array of account rows
+  --exits=<value>         path to a JSON file containing an array of { externalId, reason, missedInstallments,
+                          termsAmount } (the last two only for CURED and PAID_OFF)
+  --file=<value>          path to a JSON file containing an array of account rows
   --mode=<option>         [default: APPEND_ONLY] merge strategy
                           <options: APPEND_ONLY|UPDATE_EXISTING|REPLACE>
   --portfolio-id=<value>  (required) the portfolio id
@@ -267,6 +320,83 @@ DESCRIPTION
 
 EXAMPLES
   $ qcobro portfolios:sync --portfolio-id <id> --file rows.json --mode APPEND_ONLY
+
+  $ qcobro portfolios:sync --portfolio-id <id> --file rows.json --exits exits.json --mode REPLACE
+```
+
+## `qcobro recovery:breakdown`
+
+break down the amount recovered in a period
+
+```
+USAGE
+  $ qcobro recovery:breakdown --by CAMPAIGN|CHANNEL|OUTCOME|DAYS_SINCE_TOUCH --from <value> --to <value> [--portfolio-id
+    <value>]
+
+FLAGS
+  --by=<option>           (required) dimension to group by
+                          <options: CAMPAIGN|CHANNEL|OUTCOME|DAYS_SINCE_TOUCH>
+  --from=<value>          (required) start date, inclusive (YYYY-MM-DD)
+  --portfolio-id=<value>  limit to one portfolio
+  --to=<value>            (required) end date, inclusive (YYYY-MM-DD)
+
+DESCRIPTION
+  break down the amount recovered in a period
+
+EXAMPLES
+  $ qcobro recovery:breakdown --by CHANNEL --from 2026-10-01 --to 2026-10-31
+
+  $ qcobro recovery:breakdown --by CAMPAIGN --from 2026-10-01 --to 2026-10-31 --portfolio-id <id>
+```
+
+## `qcobro recovery:list`
+
+list the recoveries detected in a period
+
+```
+USAGE
+  $ qcobro recovery:list --from <value> --to <value> [--portfolio-id <value>] [--kind PARTIAL|CURED|PAID_OFF]
+    [--has-gestion] [--limit <value>] [--offset <value>]
+
+FLAGS
+  --from=<value>          (required) start date, inclusive (YYYY-MM-DD)
+  --[no-]has-gestion      only recoveries with (or, with --no-has-gestion, without) a gestión
+  --kind=<option>         only recoveries of this kind
+                          <options: PARTIAL|CURED|PAID_OFF>
+  --limit=<value>         [default: 50] rows per page
+  --offset=<value>        rows to skip
+  --portfolio-id=<value>  limit to one portfolio
+  --to=<value>            (required) end date, inclusive (YYYY-MM-DD)
+
+DESCRIPTION
+  list the recoveries detected in a period
+
+EXAMPLES
+  $ qcobro recovery:list --from 2026-10-01 --to 2026-10-31
+
+  $ qcobro recovery:list --from 2026-10-01 --to 2026-10-31 --kind CURED --no-has-gestion
+```
+
+## `qcobro recovery:summary`
+
+display the amount recovered in a period
+
+```
+USAGE
+  $ qcobro recovery:summary --from <value> --to <value> [--portfolio-id <value>]
+
+FLAGS
+  --from=<value>          (required) start date, inclusive (YYYY-MM-DD)
+  --portfolio-id=<value>  limit to one portfolio
+  --to=<value>            (required) end date, inclusive (YYYY-MM-DD)
+
+DESCRIPTION
+  display the amount recovered in a period
+
+EXAMPLES
+  $ qcobro recovery:summary --from 2026-10-01 --to 2026-10-31
+
+  $ qcobro recovery:summary --from 2026-10-01 --to 2026-10-31 --portfolio-id <id>
 ```
 
 ## `qcobro workspaces:active`

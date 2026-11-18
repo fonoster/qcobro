@@ -6,6 +6,8 @@ import {
   updatePortfolioSchema,
   deletePortfolioSchema,
   syncAccountsInputSchema,
+  listExitsInputSchema,
+  classifyExitsInputSchema,
   ValidationError
 } from "@qcobro/common";
 import { listPortfoliosSchema, getPortfolioSchema, listAccountsSchema } from "../schemas.js";
@@ -21,6 +23,8 @@ type UpdateInput = Parameters<Portfolios["update"]["mutate"]>[0];
 type DeleteInput = Parameters<Portfolios["delete"]["mutate"]>[0];
 type ListAccountsInput = Parameters<Portfolios["listAccounts"]["query"]>[0];
 type SyncAccountsInput = Parameters<Portfolios["syncAccounts"]["mutate"]>[0];
+type ListExitsInput = Parameters<Portfolios["listExits"]["query"]>[0];
+type ClassifyExitsInput = Parameters<Portfolios["classifyExits"]["mutate"]>[0];
 
 /** Validate `input` against `schema`, throwing a structured {@link ValidationError} on failure. */
 function parse<TSchema extends z.ZodType>(schema: TSchema, input: unknown): z.infer<TSchema> {
@@ -93,9 +97,29 @@ export class PortfoliosResource {
    *
    * `mode` controls the merge strategy: `APPEND_ONLY` adds new rows,
    * `UPDATE_EXISTING` updates rows that already exist, `REPLACE` replaces the set.
+   * Pass `exits` to record accounts that left the portfolio, with a reason; `CURED` and
+   * `PAID_OFF` exits also carry `missedInstallments` and `termsAmount`.
    */
   async syncAccounts(input: SyncAccountsInput) {
     const parsed = parse(syncAccountsInputSchema, input) as SyncAccountsInput;
     return this.#request(() => this.#trpc.portfolios.syncAccounts.mutate(parsed));
+  }
+
+  /**
+   * List a page of the accounts that left a portfolio and have not come back, with the total
+   * count. Pass `reason` to filter, e.g. `UNKNOWN` for the exits still to classify.
+   */
+  async listExits(input: ListExitsInput) {
+    const parsed = parse(listExitsInputSchema, input) as ListExitsInput;
+    return this.#request(() => this.#trpc.portfolios.listExits.query(parsed));
+  }
+
+  /**
+   * Assign a reason to exits recorded as `UNKNOWN`. `CURED` and `PAID_OFF` exits carry
+   * `missedInstallments` and `termsAmount` and record a recovery of their product.
+   */
+  async classifyExits(input: ClassifyExitsInput) {
+    const parsed = parse(classifyExitsInputSchema, input) as ClassifyExitsInput;
+    return this.#request(() => this.#trpc.portfolios.classifyExits.mutate(parsed));
   }
 }
