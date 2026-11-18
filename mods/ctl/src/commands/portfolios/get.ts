@@ -24,7 +24,6 @@ export default class Get extends AuthenticatedCommand<typeof Get> {
         `CLIENT ID: \t${portfolio.clientId}\n` +
         `ACCOUNTS: \t${portfolio.accountCount}\n` +
         `OUTSTANDING BALANCE: \t${portfolio.totalOutstandingBalance}\n` +
-        `RECOVERED: \t${portfolio.recoveredAmount}\n` +
         `LAST SYNCED: \t${portfolio.lastSyncedAt ?? "never"}\n` +
         `ARCHIVED: \t${portfolio.archivedAt ? "yes" : "no"}\n`
     );

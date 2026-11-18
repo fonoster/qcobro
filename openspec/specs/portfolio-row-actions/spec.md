@@ -81,28 +81,20 @@ archived), and Eliminar. Eliminar SHALL require a confirmation dialog before exe
 
 ### Requirement: Recovered amount is system-computed, not manually entered
 
-The `recoveredAmount` field on a portfolio SHALL be computed automatically by the system
-and SHALL NOT be editable by the operator. The system estimates recovery based on:
-
-- Decreases in `outstandingBalance` on accounts since the previous CSV sync (indicating
-  a payment was received; estimated as the difference applied against the principal)
-- Accounts present in a previous sync but absent from a subsequent REPLACE-mode sync
-  (treated as fully recovered — meaning the customer has paid all installments that
-  were due up to that point, not necessarily the full outstanding principal of the loan)
-
-This field is currently stored as a manually entered value and displayed read-only.
-Auto-computation is deferred to a future change. Until then, the field SHALL remain
-in the data model but SHALL NOT be exposed in any edit form.
+A portfolio's recovered amount (Recuperado) SHALL come only from the `Recovery` rows a sync
+records (installments × `termsAmount`), read through `recovery.summary` for a period. A
+portfolio SHALL store no recovered-amount field, and no form SHALL let the operator enter or
+override a recovered amount.
 
 #### Scenario: Edit modal does not expose recovered amount
 
 - **WHEN** an operator opens the edit portfolio modal
 - **THEN** no recovered amount input field is visible
 
-#### Scenario: Recovered amount updates on sync
+#### Scenario: Recovered amount comes from the sync
 
-- **WHEN** a CSV sync completes (future implementation)
-- **THEN** the system updates `recoveredAmount` based on balance deltas and archived accounts
+- **WHEN** a sync records a `Recovery` for one of the portfolio's accounts
+- **THEN** `recovery.summary` for a period that includes it counts that recovery's amount
 - **AND** the operator cannot override this computed value
 
 ### Requirement: Delete action removed from edit modal

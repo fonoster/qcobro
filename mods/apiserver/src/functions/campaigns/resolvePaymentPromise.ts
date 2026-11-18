@@ -7,10 +7,9 @@ import {
 } from "@qcobro/common";
 
 /**
- * Resolve a payment promise by explicit operator action: `MET` (paid) or `CANCELLED`.
- * v1 is manual-only — there is no trusted payment signal, so a promise leaves `PENDING`
- * here, never automatically. A `MET` promise feeds the portfolio's `recoveredAmount` by
- * its amount. Idempotent: re-resolving an already-resolved promise does not re-credit.
+ * Resolve a payment promise by explicit operator action: the operator can only cancel it.
+ * A promise becomes `MET` only when a sync closes the account's episode as CURED or
+ * PAID_OFF, so nothing here touches the portfolio.
  */
 export async function resolvePaymentPromiseTx(
   tx: CampaignClient,
@@ -19,23 +18,6 @@ export async function resolvePaymentPromiseTx(
   const promise = await tx.paymentPromise.findFirst({ where: { id: input.id } });
   if (!promise) {
     throw new Error(`PaymentPromise ${input.id} not found`);
-  }
-
-  // Only credit recoveredAmount on a genuine PENDING → MET transition.
-  if (
-    input.status === "MET" &&
-    promise.status === "PENDING" &&
-    typeof promise.amount === "number"
-  ) {
-    const account = await tx.portfolioAccount.findFirst({
-      where: { id: promise.portfolioAccountId }
-    });
-    if (account) {
-      await tx.portfolio.update({
-        where: { id: account.portfolioId },
-        data: { recoveredAmount: { increment: promise.amount } }
-      });
-    }
   }
 
   return tx.paymentPromise.update({

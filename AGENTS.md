@@ -135,13 +135,15 @@ deploys over SSH to the DigitalOcean droplet with Docker Compose.
 ### database-engineer
 
 - `intentStatus` is a Prisma enum.
-- The recovered amount is a manual PaymentPromise counter, not a balance diff.
+- Recuperado comes from `Recovery` rows the sync records (installments × termsAmount), read
+  through `recovery.summary`.
 
 ## Decisions
 
 - 2026-06-06: Authentication, authorization and tenancy use Fonoster Identity as a gRPC service.
 - 2026-06-27: Outcomes are a universal record; PaymentPromise is the only tracked entity, an
-  operator worklist with no automation, marked paid by hand.
+  operator worklist with no automation, marked met by the sync when the episode closes CURED
+  or PAID_OFF (2026-11-17).
 - 2026-06-27: Ad-hoc outreach dispatches an agent template with `campaignId: null`.
 - 2026-06-28: Currency and timezone are per-workspace settings, not deployment config.
 - 2026-07-14: WhatsApp uses the Meta Cloud API directly; QCobro's camelCase context maps to

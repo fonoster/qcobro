@@ -168,7 +168,6 @@ model Portfolio {
   clientId                String
   accountCount            Int                 @default(0)
   totalOutstandingBalance Float               @default(0)
-  recoveredAmount         Float               @default(0)
   lastSyncedAt            DateTime?
   archivedAt              DateTime?
   createdAt               DateTime            @default(now())
