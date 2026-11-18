@@ -556,9 +556,10 @@ accept-invite bridge (this file is install-once on the droplet, like the keys):
   receiver answers 503. After `fonoster webhooks:rotate <ref>`, Fonoster signs with both the
   old and the new secret for 24 hours: update `qcobro.json` and redeploy within that window.
 
-  Voz IA agents use the workspace's vendor keys, never a key from `qcobro.json`: add
-  `provider-key/<provider>` for `fonoster.autopilot.llmProvider` (for example
-  `provider-key/google`), plus `provider-key/openai` for agent evaluations. After deploying a
+  Voz IA agents never use a key from `qcobro.json`: Fonoster uses the workspace's own vendor
+  key for a provider when one is set (`provider-key/<provider>`), and its platform key
+  otherwise. `fonoster.autopilot.llmModel` must be in Fonoster's catalog
+  (`google/gemini-3.1-flash-lite` by default). After deploying a
   change to the agent format, re-sync every Voz IA template's app once, in place:
 
   ```sh

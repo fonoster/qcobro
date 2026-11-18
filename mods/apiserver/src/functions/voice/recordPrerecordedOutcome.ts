@@ -155,12 +155,6 @@ export function createRecordPrerecordedOutcome(client: PrerecordedOutcomeClient)
     if (input.repeatCount != null) {
       channelData.repeatCount = input.repeatCount;
     }
-    // The recording's file name, not its URL: the console composes the URL on read from
-    // the deployment's recording base, so moving the recordings host fixes every
-    // historical gestión instead of only the ones recorded afterwards.
-    if (input.recordingFile) {
-      channelData.recordingFile = input.recordingFile;
-    }
 
     // Guarded at the database, not at this earlier read: `where.delivery: "DISPATCHED"` is
     // re-checked by Postgres against the row's live value when it applies the update, so

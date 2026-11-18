@@ -24,7 +24,7 @@
     "webhookSecret": "CHANGE_ME",
     "autopilot": {
       "llmProvider": "google",
-      "llmModel": "gemini-2.5-flash",
+      "llmModel": "gemini-3.1-flash-lite",
       "temperature": 0.3,
       "maxTokens": 300
     },

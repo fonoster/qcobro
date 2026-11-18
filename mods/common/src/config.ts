@@ -49,13 +49,14 @@ export const fonosterConfigSchema = z
     endpoint: z.string().optional(),
     /** The language model every synced Voz IA agent uses; the agent's `languageModel.model`
      * is the catalog id `<llmProvider>/<llmModel>`. The voice, its TTS model and the STT
-     * model are set per app (see {@link voiceCatalogIdForVoice}). The provider's key is the
-     * Fonoster workspace's vendor key, never sent with the agent. Pre-recorded voice never
-     * goes through this: it speaks via the co-located VoiceServer's `res.say()`. */
+     * model are set per app (see {@link voiceCatalogIdForVoice}). It must be in Fonoster's
+     * catalog. The provider's key is the workspace's own vendor key when one is set, else
+     * Fonoster's platform key; never sent with the agent. Pre-recorded voice never goes
+     * through this: it speaks through the co-located voice server's session. */
     autopilot: z
       .object({
         llmProvider: z.string().default("google"),
-        llmModel: z.string().default("gemini-2.0-flash"),
+        llmModel: z.string().default("gemini-3.1-flash-lite"),
         maxTokens: z.number().default(300),
         // Slight warmth so the Voz IA agent varies its phrasing and can react with a
         // brief human acknowledgement, without drifting from the scripted flows the
@@ -73,7 +74,7 @@ export const fonosterConfigSchema = z
       })
       .default({
         llmProvider: "google",
-        llmModel: "gemini-2.0-flash",
+        llmModel: "gemini-3.1-flash-lite",
         maxTokens: 300,
         temperature: 0.3,
         evalsModel: "gpt-4o-mini"
@@ -152,31 +153,6 @@ export const fonosterConfigSchema = z
   .optional();
 
 export type FonosterConfig = z.infer<typeof fonosterConfigSchema>;
-
-/** Container format Fonoster records calls in; the file name alone has no extension. */
-const RECORDING_FILE_EXTENSION = ".wav";
-
-/**
- * The file name Fonoster records a call under.
- *
- * Fonoster records every call from its Asterisk dialplan, before the call ever reaches a
- * voice application: `MixMonitor(${APP_REF}_${UNIQUEID}.wav)` (fonoster,
- * `asterisk/config/extensions.conf`). `UNIQUEID` is the channel the voice app is handed
- * as `mediaSessionRef`, so the pair a voice request already carries names the file
- * exactly. This is the same construction the autopilot uses for the recording URL it
- * reports on Voz IA calls (fonoster, `mods/autopilot/src/handleVoiceRequest.ts`), which
- * is why emulating it here yields URLs that resolve for pre-recorded calls too.
- *
- * The call ref is deliberately NOT part of the name: it is a Fonoster-side call
- * identifier that names no recording file, and a URL built from it 404s.
- */
-export function recordingFileNameForCall(
-  appRef: string | null | undefined,
-  mediaSessionRef: string | null | undefined
-): string | undefined {
-  if (!appRef || !mediaSessionRef) return undefined;
-  return `${appRef}_${mediaSessionRef}${RECORDING_FILE_EXTENSION}`;
-}
 
 /**
  * The Fonoster voice catalog id for a voice, `<provider>/<id>` (e.g. an `elevenlabs` voice →
