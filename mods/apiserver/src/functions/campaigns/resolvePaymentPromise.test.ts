@@ -32,30 +32,23 @@ function makeClient(promise: Record<string, unknown> | null) {
 }
 
 describe("resolvePaymentPromise", () => {
-  it("marks a PENDING promise MET and credits recoveredAmount", async () => {
+  it("rejects MET with a ValidationError, no mutation", async () => {
     const { client, cap } = makeClient({
       id: "pr-1",
       portfolioAccountId: "acc-1",
       amount: 500,
       status: "PENDING"
     });
-    await createResolvePaymentPromise(client as never)({ id: "pr-1", status: "MET" });
-    assert.equal(cap.promiseUpdate?.data.status, "MET");
-    assert.deepEqual(cap.portfolioUpdate, { recoveredAmount: { increment: 500 } });
+    await assert.rejects(
+      // A promise becomes MET only when a sync closes the account's episode.
+      () => createResolvePaymentPromise(client as never)({ id: "pr-1", status: "MET" } as never),
+      ValidationError
+    );
+    assert.equal(cap.promiseUpdate, undefined, "the promise is not changed");
+    assert.equal(cap.portfolioUpdate, undefined, "no portfolio is updated");
   });
 
-  it("does not re-credit a promise that is already MET", async () => {
-    const { client, cap } = makeClient({
-      id: "pr-1",
-      portfolioAccountId: "acc-1",
-      amount: 500,
-      status: "MET"
-    });
-    await createResolvePaymentPromise(client as never)({ id: "pr-1", status: "MET" });
-    assert.equal(cap.portfolioUpdate, undefined, "no double credit");
-  });
-
-  it("cancels without crediting recoveredAmount", async () => {
+  it("cancels a PENDING promise without updating any portfolio", async () => {
     const { client, cap } = makeClient({
       id: "pr-1",
       portfolioAccountId: "acc-1",
@@ -64,7 +57,7 @@ describe("resolvePaymentPromise", () => {
     });
     await createResolvePaymentPromise(client as never)({ id: "pr-1", status: "CANCELLED" });
     assert.equal(cap.promiseUpdate?.data.status, "CANCELLED");
-    assert.equal(cap.portfolioUpdate, undefined);
+    assert.equal(cap.portfolioUpdate, undefined, "no portfolio is updated");
   });
 
   it("rejects an unsupported status with a ValidationError before any work", async () => {

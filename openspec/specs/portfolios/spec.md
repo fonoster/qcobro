@@ -26,7 +26,7 @@ The apiserver SHALL allow authenticated operators to create, read, update, and d
 
 - **WHEN** an authenticated operator submits a name, clientId, and total amount
 - **THEN** a new portfolio is created in their workspace in the active (non-archived) state
-- **AND** account count and recovered amount default to zero
+- **AND** account count and total outstanding balance default to zero
 
 #### Scenario: Operator reads a portfolio
 

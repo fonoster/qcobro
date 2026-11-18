@@ -12,7 +12,6 @@ function record(): PortfolioRecord {
     clientId: "c",
     accountCount: 0,
     totalOutstandingBalance: 0,
-    recoveredAmount: 0,
     lastSyncedAt: null,
     archivedAt: null,
     createdAt: new Date(),

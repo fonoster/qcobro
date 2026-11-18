@@ -81,6 +81,10 @@ qcobro portfolios:list
 qcobro portfolios:get <id>
 ```
 
+`portfolios:get` muestra el id, el nombre, el cliente, las cuentas, el saldo pendiente, la
+última sincronización y si la cartera está archivada. El importe recuperado no aparece ahí:
+consúltalo por período con `recovery:summary --portfolio-id <id>`.
+
 `portfolios:sync` lee un archivo JSON con un arreglo de filas de cuenta (el mismo formato que
 acepta [`client.portfolios.syncAccounts`](/sdk/sync-accounts)) y aplica uno de los modos de
 fusión: `APPEND_ONLY`, `UPDATE_EXISTING` o `REPLACE`.

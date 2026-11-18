@@ -513,9 +513,11 @@ needing attention. It SHALL show KPIs: total pending count, total amount pending
 due this week, and fulfillment rate (`MET / (MET + overdue-unresolved)`, excluding
 `EXPIRED` and `CANCELLED`). All labels SHALL go through the i18n layer.
 
-From the worklist an operator SHALL be able to resolve a promise: **mark it paid** (`MET`),
-**cancel** it (`CANCELLED`), or **follow up** by selecting an agent template that is
-dispatched ad-hoc against the account (no campaign attached). `EXPIRED` promises SHALL
+From the worklist an operator SHALL be able to **cancel** a promise (`CANCELLED`) or
+**follow up** by selecting an agent template that is dispatched ad-hoc against the account
+(no campaign attached). The worklist SHALL NOT offer to mark a promise paid: a promise
+becomes `MET` only when a sync closes the account's episode as `CURED` or `PAID_OFF`.
+`EXPIRED` promises SHALL
 remain visible, flagged as no longer applicable (do-not-reach), and excluded from the
 fulfillment rate.
 
@@ -528,10 +530,11 @@ fulfillment rate.
 - **AND** the KPI strip shows total pending, total amount pending, promises due this week,
   and fulfillment rate
 
-#### Scenario: Operator marks a promise paid from the worklist
+#### Scenario: A promise met by the sync leaves the worklist
 
-- **WHEN** an operator marks a DUE promise as paid
+- **WHEN** a sync closes a DUE promise's account episode as `CURED` or `PAID_OFF`
 - **THEN** its status becomes `MET` and it leaves the active worklist
+- **AND** the worklist offers no action to mark a promise paid
 
 #### Scenario: Operator follows up via an agent template
 

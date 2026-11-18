@@ -29,7 +29,12 @@ const all = await client.portfolios.list({ includeArchived: true });
 
 ```ts
 const portfolio = await client.portfolios.get({ id: "f47ac10b-..." });
+// → { id, workspaceRef, name, clientId, accountCount, totalOutstandingBalance,
+//     lastSyncedAt, archivedAt, createdAt, updatedAt }
 ```
+
+Una cartera no trae el importe recuperado. Para saber cuánto se recuperó en un período, usa
+[`client.recovery.summary`](/sdk/recovery) con el `portfolioId` de la cartera.
 
 ## Crea una cartera
 

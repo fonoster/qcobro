@@ -145,7 +145,7 @@ describe("portfolios.classifyExits", () => {
     assert.equal(t.db.promises[0]!.status, "MET");
     assert.equal(t.db.promises[1]!.status, "EXPIRED", "an earlier episode's promise stays EXPIRED");
     assert.deepEqual(t.db.locks, ["p1"]);
-    assert.equal(t.db.portfolioWrites, 0, "the undated recoveredAmount counter is not touched");
+    assert.equal(t.db.portfolioWrites, 0, "the portfolio row is not written");
   });
 
   it("records PAID_OFF the same way", async () => {

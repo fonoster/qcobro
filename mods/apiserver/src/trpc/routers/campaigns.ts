@@ -178,7 +178,7 @@ const paymentPromiseRouter = router({
       })
     ),
 
-  // Operator resolution: MET (paid — feeds recoveredAmount) or CANCELLED. v1 manual-only.
+  // Operator resolution: CANCELLED only. A promise becomes MET only through a sync.
   resolve: workspaceProcedure.input(updatePaymentPromiseSchema).mutation(async ({ input, ctx }) => {
     // Workspace-scope the target before mutating.
     await ctx.prisma.paymentPromise.findFirstOrThrow({

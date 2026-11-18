@@ -12,8 +12,7 @@ export function createCreatePortfolio(client: PortfolioClient, workspaceRef: str
         name: params.name,
         clientId: params.clientId,
         totalOutstandingBalance: 0,
-        accountCount: 0,
-        recoveredAmount: 0
+        accountCount: 0
       }
     });
   };

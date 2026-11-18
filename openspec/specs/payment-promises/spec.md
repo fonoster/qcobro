@@ -3,8 +3,9 @@
 ## Purpose
 
 A **PaymentPromise** is the only outcome QCobro tracks with a lifecycle, because a payment
-is the only commitment it can verify. This capability defines the entity, its operator-driven
-lifecycle (`PENDING → MET | EXPIRED | CANCELLED`, with DUE derived), auto-expiry when an
+is the only commitment it can verify. This capability defines the entity, its lifecycle
+(`PENDING → MET | EXPIRED | CANCELLED`, with DUE derived; MET set by the sync, CANCELLED by
+the operator), auto-expiry when an
 account leaves its portfolio, and ad-hoc agent-template follow-up — surfaced to collectors as
 the Payment Promises worklist.
 
@@ -14,8 +15,9 @@ the Payment Promises worklist.
 
 A **PaymentPromise** SHALL be the system record of a debtor's commitment to pay a specific
 amount by a specific date. It is the ONLY outcome that QCobro tracks with a lifecycle,
-because a payment is the only commitment QCobro can verify (it knows `outstandingBalance`,
-observes payment events, and computes `recoveredAmount`).
+because a payment is the only commitment QCobro can verify (each portfolio sync records
+the account's installments, and a sync that closes the account's episode as CURED or
+PAID_OFF records a `Recovery`).
 
 A `PaymentPromise` SHALL have:
 
@@ -34,7 +36,8 @@ No other outcome SHALL create a `PaymentPromise`.
 
 A promise is **DUE** when `status` is `PENDING` and `dueDate` has passed. DUE SHALL be
 derived at read time; it SHALL NOT be a stored status, and no background job SHALL transition
-promises. A DUE promise remains on the worklist until an operator resolves it.
+promises. A DUE promise remains on the worklist until a sync meets it, it expires, or an
+operator cancels it.
 
 #### Scenario: PaymentPromise created from a payment outcome
 
@@ -60,30 +63,34 @@ promises. A DUE promise remains on the worklist until an operator resolves it.
 - **WHEN** the same inbound event that produced a `PaymentPromise` is delivered again
 - **THEN** no second `PaymentPromise` is created for the same gestión
 
-### Requirement: PaymentPromise resolution is operator-driven
+### Requirement: A promise is met by the sync, cancelled by the operator
 
-A `PaymentPromise` SHALL leave `PENDING` only by explicit resolution. An operator MAY mark
-it `MET` (paid) or `CANCELLED` (dismissed); a confirming payment event MAY also mark it
-`MET`. A met promise SHALL feed `PortfolioAccount.recoveredAmount`. Resolving a promise
-SHALL NOT require a new gestión entry. There SHALL be no "broken" status — an unpaid promise
-stays DUE on the worklist until resolved or expired.
+A `PaymentPromise` SHALL become `MET` only when a portfolio sync closes the account's
+episode as `CURED` or `PAID_OFF`: the account's `PENDING` promises, and the promises that
+same exit expired, become `MET`. An operator SHALL NOT be able to mark a promise `MET`; the
+only operator resolution is `CANCELLED` (dismissed), and `paymentPromise.resolve` SHALL
+reject any other status with a validation error. Meeting or cancelling a promise SHALL NOT
+update any portfolio and SHALL NOT require a new gestión entry. Recuperado is read from the
+`Recovery` rows the sync records, not from the promises. There SHALL be no "broken" status:
+an unpaid promise stays DUE on the worklist until met, expired or cancelled.
 
-#### Scenario: Operator marks a promise paid
+#### Scenario: A sync that closes the episode meets the promise
 
-- **WHEN** an operator marks a `PENDING` (or DUE) promise as paid
-- **THEN** its `status` becomes `MET`
-- **AND** the amount feeds `PortfolioAccount.recoveredAmount`
+- **WHEN** a sync closes an account's episode as `CURED` or `PAID_OFF`
+- **THEN** the account's `PENDING` promises become `MET`
 - **AND** no new gestión entry is required
 
-#### Scenario: Payment event confirms a promise
+#### Scenario: Operator cannot mark a promise met
 
-- **WHEN** a payment event confirms payment against a `PENDING` promise
-- **THEN** its `status` becomes `MET` and feeds `recoveredAmount`
+- **WHEN** a caller resolves a promise with `status` `MET`
+- **THEN** the call fails with a validation error
+- **AND** the promise and its portfolio are unchanged
 
 #### Scenario: Operator cancels a promise
 
 - **WHEN** an operator cancels a `PENDING` promise
 - **THEN** its `status` becomes `CANCELLED`
+- **AND** no portfolio is updated
 - **AND** it is excluded from the fulfillment-rate calculation
 
 ### Requirement: PaymentPromise expires when its account leaves the portfolio

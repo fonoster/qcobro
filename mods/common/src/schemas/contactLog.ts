@@ -237,13 +237,13 @@ export const reserveAttemptSchema = z.object({
 export type ReserveAttemptInput = z.infer<typeof reserveAttemptSchema>;
 
 /**
- * Operator resolution of a payment promise. A promise leaves PENDING only by explicit
- * action: `MET` (paid — v1 is manual-only, no trusted payment signal) or `CANCELLED`.
- * `EXPIRED` is set by the system when the account leaves its portfolio, not here.
+ * Operator resolution of a payment promise: the operator can only cancel it. A promise
+ * becomes `MET` only when a sync closes the account's episode as CURED or PAID_OFF, and
+ * `EXPIRED` when the account leaves its portfolio; neither is set here.
  */
 export const updatePaymentPromiseSchema = z.object({
   id: z.string().min(1),
-  status: z.enum(["MET", "CANCELLED"])
+  status: z.enum(["CANCELLED"])
 });
 export type UpdatePaymentPromiseInput = z.infer<typeof updatePaymentPromiseSchema>;
 
