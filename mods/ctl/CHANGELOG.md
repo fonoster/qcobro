@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.0.0](https://github.com/fonoster/qcobro/compare/v2.2.0...v3.0.0) (2026-11-18)
+
+### Features
+
+- **sdk:** send exits and read recoveries from the SDK, ctl and MCP ([#218](https://github.com/fonoster/qcobro/issues/218)) ([bcf54d8](https://github.com/fonoster/qcobro/commit/bcf54d8a47fa5c4c346c64c0d2058213ec1dc0b4)), closes [#208](https://github.com/fonoster/qcobro/issues/208)
+
 # [2.2.0](https://github.com/fonoster/qcobro/compare/v2.1.0...v2.2.0) (2026-11-18)
 
 **Note:** Version bump only for package @qcobro/ctl

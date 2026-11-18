@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.0.0](https://github.com/fonoster/qcobro/compare/v2.2.0...v3.0.0) (2026-11-18)
+
+- fix(voice)!: sync Voz IA templates as Fonoster 0.63 session agents (#217) ([3f6a8ae](https://github.com/fonoster/qcobro/commit/3f6a8ae11b36a0198f32e7623b72a52e06e33955)), closes [#217](https://github.com/fonoster/qcobro/issues/217) [#204](https://github.com/fonoster/qcobro/issues/204)
+
+### BREAKING CHANGES
+
+- fonoster.autopilot.sttProductRef, sttModel and llmProductRef
+  are removed from qcobro.json (stripped silently, so old files still load). Add
+  the LLM provider's vendor key to the Fonoster workspace (provider-key/<provider>,
+  plus provider-key/openai for evaluations), deploy, then run
+  `npm run voice:resync --workspace=mods/apiserver` once.
+
 # [2.2.0](https://github.com/fonoster/qcobro/compare/v2.1.0...v2.2.0) (2026-11-18)
 
 ### Features
