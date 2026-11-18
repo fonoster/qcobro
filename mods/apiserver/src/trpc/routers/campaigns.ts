@@ -12,11 +12,10 @@ import {
   createContactLogSchema,
   updatePaymentPromiseSchema,
   followUpPaymentPromiseSchema,
-  generateInsightInputSchema,
-  resolveRecordingUrl
+  generateInsightInputSchema
 } from "@qcobro/common";
 import { router, workspaceProcedure } from "../trpc.js";
-import { config } from "../../config.js";
+import { resolveGestionRecordingPath } from "../../functions/voice/resolveGestionRecordingPath.js";
 import { createCreateCampaign } from "../../functions/campaigns/createCampaign.js";
 import { createUpdateCampaign } from "../../functions/campaigns/updateCampaign.js";
 import { createUpdateCampaignStatus } from "../../functions/campaigns/updateCampaignStatus.js";
@@ -95,15 +94,11 @@ const contactLogRouter = router({
       }
     });
 
-    // Recordings live in Fonoster, so the console links to them rather than storing
-    // copies. Each voice channel reports a different half of the answer — see
-    // `resolveRecordingUrl`.
-    const recordingUrl = resolveRecordingUrl(
-      gestion.channelData as Record<string, unknown> | null,
-      config.fonoster?.recordingBaseUrl
-    );
+    // Recordings live in Fonoster's call records; the console plays them through
+    // `GET /api/gestiones/:id/recording`, offered only when the record has one.
+    const recordingUrl = await resolveGestionRecordingPath(gestion, ctx.callRecords);
 
-    return { ...gestion, recordingUrl: recordingUrl ?? null };
+    return { ...gestion, recordingUrl };
   }),
 
   create: workspaceProcedure

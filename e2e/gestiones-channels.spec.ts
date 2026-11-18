@@ -94,7 +94,7 @@ test.describe("gestiones — channels", () => {
         channelData: {
           to: "+525500000001",
           messageBody: script,
-          recordingUrl: "https://rec.example/prerecorded.wav"
+          e2eRecording: true
         }
       },
       {
@@ -123,7 +123,7 @@ test.describe("gestiones — channels", () => {
         channelData: {
           to: "+525500000099",
           providerRef: "call-voz-1",
-          recordingUrl: "https://rec.example/voz.wav",
+          e2eRecording: true,
           transcript: vozTranscript
         }
       }
@@ -144,6 +144,33 @@ test.describe("gestiones — channels", () => {
       });
       expect(res.ok()).toBeTruthy();
     }
+
+    // --- Recordings: Fonoster call records are stubbed --------------------------
+    // `contactLog.get` offers a recording only when the gestión's Fonoster call record has
+    // one, and there is no Fonoster here: stand in for that lookup on the rows seeded with
+    // `e2eRecording`, and for the recording endpoint the console then fetches.
+    const recordingRequests: { url: string; authorization: string | undefined }[] = [];
+    await page.route("**/trpc/*campaigns.contactLog.get*", async (route) => {
+      const response = await route.fetch();
+      const batch = (await response.json()) as { result?: { data?: unknown } }[];
+      for (const entry of batch) {
+        const data = entry.result?.data as Record<string, unknown> | undefined;
+        const gestion = ((data?.json as Record<string, unknown> | undefined) ?? data) as
+          | { id?: string; recordingUrl?: string | null; channelData?: { e2eRecording?: boolean } }
+          | undefined;
+        if (gestion?.channelData?.e2eRecording) {
+          gestion.recordingUrl = `/api/gestiones/${gestion.id}/recording`;
+        }
+      }
+      await route.fulfill({ response, json: batch });
+    });
+    await page.route("**/api/gestiones/*/recording", async (route) => {
+      recordingRequests.push({
+        url: route.request().url(),
+        authorization: route.request().headers()["authorization"]
+      });
+      await route.fulfill({ status: 200, contentType: "audio/wav", body: Buffer.from("RIFF") });
+    });
 
     // --- Gestiones list: refined columns + a row per channel -----------------
     await page.getByRole("link", { name: "Gestiones" }).click();
@@ -180,7 +207,9 @@ test.describe("gestiones — channels", () => {
     // contactedAt desc).
     panel = await openPanel("Voz pregrabada", 0);
     await expect(panel.locator("audio")).toHaveCount(1);
-    await expect(panel.locator("audio")).toHaveAttribute("src", /prerecorded\.wav/);
+    // Played from a blob: the recording endpoint needs the caller's Bearer token.
+    await expect(panel.locator("audio")).toHaveAttribute("src", /^blob:/);
+    expect(recordingRequests.at(-1)?.authorization).toMatch(/^Bearer /);
     await expect(panel.getByText("Guion reproducido")).toBeVisible();
     await expect(panel.getByText(script)).toBeVisible();
     // Voice renders DELIVERED as "Conectada": a call connects, it is not "delivered".
@@ -215,7 +244,7 @@ test.describe("gestiones — channels", () => {
     // Voz IA — audio player + transcript + full analysis + linked payment promise
     panel = await openPanel("Voz IA");
     await expect(panel.locator("audio")).toHaveCount(1);
-    await expect(panel.locator("audio")).toHaveAttribute("src", /voz\.wav/);
+    await expect(panel.locator("audio")).toHaveAttribute("src", /^blob:/);
     await expect(panel.getByText("Transcripción")).toBeVisible();
     await expect(
       panel.getByText("Buenas tardes, le llamo de QCobro respecto a su cuenta.")

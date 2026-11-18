@@ -15,9 +15,10 @@ call is `channel-dispatch`, the delivery/path/outcome axes it writes are
 ### Requirement: Pre-recorded call recording is played in the gestión detail
 
 The Pre-grabada gestión detail SHALL play the **actual call recording** — resolved the
-same way as Voz IA, from `channelData.recordingFile` (composed against the deployment's
-recording base URL) or a directly reported `channelData.recordingUrl` — never a
-synthesized stand-in for what was said on the call.
+same way as Voz IA, from the call's Fonoster call record (the redacted copy), streamed through
+`GET /api/gestiones/:id/recording` — never a synthesized stand-in for what was said on the
+call. A recording resolves when the gestión has a `providerRef` and its call record has a
+`recording` dialog entry the redacted copy doesn't withhold (`fonoster.recordingWithheld`).
 
 The player SHALL be shown whenever a recording resolves, **regardless of `delivery`**. A
 call that connected and played nothing (`delivery: FAILED`, `deliveryReason:
@@ -25,9 +26,9 @@ UNREACHABLE` — see "Pre-recorded call completion is recorded in-process") is e
 case an operator most needs to listen to; gating the player on `delivery: DELIVERED`
 would hide the one recording most worth reviewing.
 
-When no recording resolves (no `recordingFile`/`recordingUrl` on the gestión, or no
-`recordingBaseUrl` configured for the deployment), the detail SHALL show an explicit
-unavailable state rather than an empty or broken player.
+When no recording resolves (no `providerRef`, no call record, a record with no recording, or a
+failed lookup), the detail SHALL show an explicit unavailable state rather than an empty or
+broken player.
 
 The platform SHALL NOT synthesize audio to represent what was said on a call. This
 applies regardless of whether a recording is available — an unavailable recording is
@@ -35,20 +36,20 @@ shown as unavailable, never backfilled with a synthesized re-narration of the sc
 
 #### Scenario: Operator plays the pre-recorded call's real recording
 
-- **WHEN** the operator opens a pre-recorded gestión whose `recordingUrl` resolves
+- **WHEN** the operator opens a pre-recorded gestión whose call record has a recording
 - **THEN** an audio player is shown, playing the actual call recording
 
 #### Scenario: Player shows even when the call didn't deliver
 
 - **WHEN** the operator opens a pre-recorded gestión with `delivery: FAILED`,
-  `deliveryReason: UNREACHABLE` (answered but the script never played), and a
-  `recordingUrl` that resolves
+  `deliveryReason: UNREACHABLE` (answered but the script never played), and a call record
+  with a recording
 - **THEN** the audio player is shown and plays the recording, unconditional on `delivery`
 
 #### Scenario: No recording resolves
 
-- **WHEN** the operator opens a pre-recorded gestión with no `recordingFile`/`recordingUrl`
-  on the gestión, or no `recordingBaseUrl` configured for the deployment
+- **WHEN** the operator opens a pre-recorded gestión whose call record has no recording, or
+  whose call record can't be found
 - **THEN** the detail shows an explicit "recording unavailable" state instead of a player
 - **AND** no audio is synthesized to fill the gap
 
@@ -56,7 +57,8 @@ shown as unavailable, never backfilled with a synthesized re-narration of the sc
 
 The co-located pre-recorded VoiceServer (same container/process as the apiserver) SHALL record
 each pre-recorded call's result **in-process** on completion — without any HTTP callback endpoint,
-in contrast to the Voz IA autopilot, which posts to `/api/voice/events`. It SHALL correlate to the
+in contrast to Voz IA, whose results arrive through the workspace webhook at
+`/api/voice/events`. It SHALL correlate to the
 gestión created when the call was placed (by call ref) and:
 
 - setting the gestión `delivery` to `DELIVERED` when the call was **answered and the script played

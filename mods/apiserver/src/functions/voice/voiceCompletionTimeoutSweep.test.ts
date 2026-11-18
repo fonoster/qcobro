@@ -7,8 +7,7 @@ import { parseEndedAt } from "../../services/fonosterOutboundCallClient.js";
 const NOW = new Date("2026-08-24T12:00:00.000Z");
 const FLOOR_MINUTES = 2;
 const GRACE_SECONDS = 60;
-const NOT_ORIGINATED_MINUTES = 5;
-const BACKSTOP_MINUTES = 30;
+const BACKSTOP_MINUTES = 70;
 
 function makeClient(
   rows: {
@@ -67,7 +66,6 @@ function makeDeps(
         }),
       floorMinutes: FLOOR_MINUTES,
       graceSeconds: GRACE_SECONDS,
-      notOriginatedMinutes: NOT_ORIGINATED_MINUTES,
       backstopMinutes: BACKSTOP_MINUTES,
       now: () => NOW
     }
@@ -75,8 +73,8 @@ function makeDeps(
 }
 
 const JUST_PAST_FLOOR = new Date(NOW.getTime() - 3 * 60_000);
-const PAST_NOT_ORIGINATED = new Date(NOW.getTime() - 6 * 60_000);
-const PAST_BACKSTOP = new Date(NOW.getTime() - 31 * 60_000);
+const SIX_MINUTES_OLD = new Date(NOW.getTime() - 6 * 60_000);
+const PAST_BACKSTOP = new Date(NOW.getTime() - 71 * 60_000);
 // Well past GRACE_SECONDS (60s), so a terminal CDR using this as its endedAt behaves as it
 // did before the grace period existed — these back the pre-existing branch tests below.
 const WELL_PAST_GRACE = new Date(NOW.getTime() - 90_000);
@@ -115,7 +113,6 @@ describe("createVoiceCompletionTimeoutSweep", () => {
       recordPrerecordedOutcome: async () => undefined,
       floorMinutes: FLOOR_MINUTES,
       graceSeconds: GRACE_SECONDS,
-      notOriginatedMinutes: NOT_ORIGINATED_MINUTES,
       backstopMinutes: BACKSTOP_MINUTES,
       now: () => NOW
     });
@@ -296,6 +293,26 @@ describe("createVoiceCompletionTimeoutSweep", () => {
       ]);
     });
 
+    it("labels path ANSWERED_BY_MACHINE when the CDR reports amdStatus VOICEMAIL", async () => {
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
+        {
+          "call-1": {
+            found: true,
+            status: "NORMAL_CLEARING",
+            setupToClearSeconds: 45,
+            endedAt: WELL_PAST_GRACE,
+            amdStatus: "VOICEMAIL"
+          }
+        }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      await sweep();
+
+      assert.equal((aiCalls[0] as { path?: string }).path, "ANSWERED_BY_MACHINE");
+    });
+
     it("leaves path unset when the CDR reports no amdStatus at all", async () => {
       const { deps, aiCalls } = makeDeps(
         [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
@@ -461,17 +478,26 @@ describe("createVoiceCompletionTimeoutSweep", () => {
     });
   });
 
-  describe("branch: NOT_FOUND — the call never originated", () => {
-    it("finalizes FAILED / NOT_ORIGINATED once notOriginatedMinutes has passed", async () => {
+  describe("branch: NOT_FOUND — no call record yet", () => {
+    // Fonoster 0.63's GetCall reads the call-record index, which gets a row only when the
+    // record is sealed at hangup: a call still in progress is NOT_FOUND. Only the backstop
+    // may call it never-originated.
+    it("writes nothing for a 6-minute-old gestión", async () => {
       const { deps, aiCalls } = makeDeps(
-        [
-          {
-            id: "g-1",
-            providerRef: "call-1",
-            agentType: "VOICE_AI",
-            contactedAt: PAST_NOT_ORIGINATED
-          }
-        ],
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: SIX_MINUTES_OLD }],
+        { "call-1": { found: false } }
+      );
+      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
+
+      const count = await sweep();
+
+      assert.equal(count, 0);
+      assert.deepEqual(aiCalls, []);
+    });
+
+    it("finalizes FAILED / NOT_ORIGINATED at 71 minutes, past backstopMinutes", async () => {
+      const { deps, aiCalls } = makeDeps(
+        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: PAST_BACKSTOP }],
         { "call-1": { found: false } }
       );
       const sweep = createVoiceCompletionTimeoutSweep(deps as never);
@@ -488,21 +514,6 @@ describe("createVoiceCompletionTimeoutSweep", () => {
           at: NOW.toISOString()
         }
       ]);
-    });
-
-    it("does not finalize before notOriginatedMinutes has passed, even though it is past floorMinutes", async () => {
-      // The CDR's start record can lag dispatch; this irreversible write gets a longer,
-      // dedicated age gate than the floor the query itself uses.
-      const { deps, aiCalls } = makeDeps(
-        [{ id: "g-1", providerRef: "call-1", agentType: "VOICE_AI", contactedAt: JUST_PAST_FLOOR }],
-        { "call-1": { found: false } }
-      );
-      const sweep = createVoiceCompletionTimeoutSweep(deps as never);
-
-      const count = await sweep();
-
-      assert.equal(count, 0);
-      assert.deepEqual(aiCalls, []);
     });
   });
 

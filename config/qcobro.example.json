@@ -19,7 +19,7 @@
     "apiKey": "CHANGE_ME",
     "apiSecret": "CHANGE_ME",
     "prerecordedAppRef": "CHANGE_ME",
-    "webhookBaseUrl": "https://your-tunnel.ngrok-free.dev",
+    "webhookSecret": "CHANGE_ME",
     "autopilot": {
       "llmModel": "gemini-2.5-flash",
       "temperature": 0.3
@@ -49,8 +49,7 @@
     ],
     "numbers": ["50670000000"],
     "maxCallsPerMinute": 6,
-    "callTimeoutSeconds": 60,
-    "recordingBaseUrl": "https://app.fonoster.com/api/recordings"
+    "callTimeoutSeconds": 60
   },
   "twilio": {
     "accountSid": "CHANGE_ME",

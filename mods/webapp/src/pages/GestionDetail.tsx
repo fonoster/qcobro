@@ -19,6 +19,7 @@ import { useI18n } from "../lib/i18n.js";
 import { useMoney } from "../lib/useWorkspaceCurrency.js";
 import { channelIcon, type Channel } from "../lib/channelIcon.js";
 import { useContactLogRealtime } from "../lib/useContactLogRealtime.js";
+import { useRecordingBlobUrl } from "../lib/useRecordingBlobUrl.js";
 import { deliveryLabel, pathProgression, outcomeLabel } from "../lib/contactAxes.js";
 import { OutcomeRow } from "../components/OutcomeRow.js";
 
@@ -145,9 +146,8 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         aiResult: string | null;
         aiNextStep: string | null;
         channelData: Record<string, unknown> | null;
-        // Resolved server-side from the deployment's Fonoster recording base URL and the
-        // provider call ref, falling back to whatever URL the provider reported at
-        // completion. `null` when neither is available.
+        // The apiserver path that streams the call recording (Bearer-authenticated), set
+        // only when the call record has one. `null` otherwise.
         recordingUrl: string | null;
         portfolioAccount: { fullName: string; externalId: string; phone: string | null };
         campaign: { name: string } | null;
@@ -163,9 +163,10 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
   const messageBody = g?.channelData?.messageBody as string | undefined;
   const fromEmail = g?.channelData?.from as string | undefined;
   const subject = g?.channelData?.subject as string | undefined;
-  // Resolved server-side from the deployment's Fonoster recording template and the
-  // provider call ref, falling back to whatever URL the provider reported at completion.
-  const recordingUrl = g?.recordingUrl ?? undefined;
+  // The recording endpoint needs the caller's credentials, which `<audio src>` can't send:
+  // fetch it and play a blob URL instead.
+  const recording = useRecordingBlobUrl(g?.recordingUrl);
+  const hasRecording = !!g?.recordingUrl && !recording.failed;
   const transcript = (g?.channelData?.transcript as TranscriptLine[] | undefined) ?? [];
   const emailThread =
     (g?.channelData?.emailThread as { messages: EmailThreadMessage[] } | undefined) ?? null;
@@ -274,7 +275,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
             never a re-synthesized stand-in for what was said. */}
         {isVoiceChannel && (
           <Section icon={PhoneCall} iconClass="text-primary" title={t("gestiones.detail.call")}>
-            {recordingUrl ? (
+            {hasRecording ? (
               <div className="rounded-xl bg-brand-green p-4 text-white">
                 <div className="mb-3 flex items-center gap-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface/20">
@@ -288,7 +289,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                     </span>
                   </div>
                 </div>
-                <audio controls src={recordingUrl} className="w-full" />
+                <audio controls src={recording.src} className="w-full" />
               </div>
             ) : (
               <div className="flex items-center gap-3 rounded-xl border border-border bg-elevated p-4">

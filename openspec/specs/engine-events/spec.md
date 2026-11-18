@@ -92,18 +92,18 @@ an event stream can be evaluated without reading live campaign rows.
 
 ### Requirement: Inbound provider events are recorded on receipt
 
-The apiserver SHALL record every inbound provider signal it handles — voice conversation
-events, SMS delivery callbacks, WhatsApp statuses, inbound email webhooks — as a
+The apiserver SHALL record every inbound provider signal it handles — voice call events
+(Fonoster workspace webhooks), SMS delivery callbacks, WhatsApp statuses, inbound email webhooks — as a
 `provider.event` carrying the source, the provider ref, the provider-side timestamp when
 the payload includes one, the receipt time, and whether it matched a known gestión. An
 unmatched event SHALL still be recorded.
 
-#### Scenario: Voice conversation event is recorded and correlated
+#### Scenario: Voice call event is recorded and correlated
 
-- **WHEN** a `conversation.ended` event arrives at the voice events endpoint for a call the
-  engine placed
+- **WHEN** a signed `call.ended` workspace-webhook event arrives at the voice events endpoint
+  for a call the engine placed
 - **THEN** a `provider.event` is persisted with source `voice-events`, the call's provider
-  ref, provider and receipt timestamps, and matched = true
+  ref, the receipt timestamp, and matched = true
 
 #### Scenario: Unmatched provider event is still recorded
 
