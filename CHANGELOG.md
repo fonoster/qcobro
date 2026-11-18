@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0](https://github.com/fonoster/qcobro/compare/v2.0.0...v2.1.0) (2026-11-18)
+
+### Bug Fixes
+
+- **release:** ship the apiserver's nested node_modules in its image ([#214](https://github.com/fonoster/qcobro/issues/214)) ([1151be1](https://github.com/fonoster/qcobro/commit/1151be17ae1f244ed1bb9143db9b9ceefe6ff70c))
+
+### Features
+
+- **api:** record recoveries and exit reasons from the portfolio sync ([#213](https://github.com/fonoster/qcobro/issues/213)) ([e8f385a](https://github.com/fonoster/qcobro/commit/e8f385aa6ab03fae6f32964fcbc0f69517d1c656)), closes [#206](https://github.com/fonoster/qcobro/issues/206)
+
 # [2.0.0](https://github.com/fonoster/qcobro/compare/v1.52.2...v2.0.0) (2026-11-18)
 
 - fix(voice)!: receive call results from Fonoster's signed workspace webhooks (#212) ([8be08c7](https://github.com/fonoster/qcobro/commit/8be08c704580ad77466f423188335649834f3113)), closes [#212](https://github.com/fonoster/qcobro/issues/212) [#203](https://github.com/fonoster/qcobro/issues/203)
