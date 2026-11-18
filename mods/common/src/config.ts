@@ -109,22 +109,18 @@ export const fonosterConfigSchema = z
      */
     prerecordedAppRef: z.string().min(1).optional(),
     /**
-     * Externally reachable base URL of the apiserver for Fonoster callbacks (e.g. an
-     * ngrok URL). Syncing a Voz IA agent registers the autopilot events-hook at
-     * `${webhookBaseUrl}/api/voice/events` so conversation events return as gestiones.
-     *
-     * **Required whenever a `fonoster` section is present.** The section itself stays
-     * optional — omitting it disables the voice channels entirely. What is not allowed is
-     * the in-between: dispatching calls with no callback registered, which strands every
-     * gestión at `delivery: DISPATCHED` forever with no way to learn what happened.
+     * Signing secret of the Fonoster workspace webhook that delivers call results to
+     * `POST /api/voice/events` (`whsec_…`, shown once when the webhook is created). Without
+     * it the apiserver still boots, but the receiver answers 503 and no voice call result is
+     * received. Never logged.
      */
-    webhookBaseUrl: z.string().url({
-      message:
-        "fonoster.webhookBaseUrl is required. Voice dispatch without a callback URL strands " +
-        "every gestión at delivery=DISPATCHED with no way to learn the call result. Set it to " +
-        "the apiserver's externally reachable base URL, or remove the whole `fonoster` " +
-        "section to disable the voice channels."
-    }),
+    webhookSecret: z.string().min(1).optional(),
+    /**
+     * Externally reachable base URL of the apiserver. No longer required: call results
+     * arrive through the workspace webhook (`webhookSecret`). Its only reader is the Voz IA
+     * app sync, which still registers the retired autopilot events hook when it is set.
+     */
+    webhookBaseUrl: z.string().url().optional(),
     /**
      * Campaigns-engine pacing: the maximum number of voice calls the engine will
      * originate per minute, deployment-wide (the caller-ID pool is shared by all
@@ -146,22 +142,7 @@ export const fonosterConfigSchema = z
      *
      * Fonoster's validator caps this at 120.
      */
-    callTimeoutSeconds: z.number().int().positive().max(120).default(60),
-    /**
-     * Where call recordings are served from, e.g.
-     * `https://app.fonoster.com/api/recordings`. Recordings live in Fonoster, not here,
-     * so the console links to them rather than storing copies; the recording's file
-     * name is appended to this base (see {@link recordingUrlForFile}).
-     *
-     * Must match the deployment's `AUTOPILOT_RECORDING_BASE_URL`, since that is the base
-     * Voz IA reports its own recordings against.
-     *
-     * Used for PRE-RECORDED calls, whose file name we derive ourselves at call time
-     * ({@link recordingFileNameForCall}) and resolve on read, so changing this base fixes
-     * every historical pre-recorded gestión at once. Voz IA is unaffected: the autopilot
-     * reports a complete URL with the transcript, and that URL is used as reported.
-     */
-    recordingBaseUrl: z.string().url().optional()
+    callTimeoutSeconds: z.number().int().positive().max(120).default(60)
   })
   .optional();
 
@@ -190,52 +171,6 @@ export function recordingFileNameForCall(
 ): string | undefined {
   if (!appRef || !mediaSessionRef) return undefined;
   return `${appRef}_${mediaSessionRef}${RECORDING_FILE_EXTENSION}`;
-}
-
-/**
- * Resolves a recording's URL by appending its file name to the deployment's recording
- * base URL. Returns `undefined` when either is missing, so callers fall back to whatever
- * URL the provider reported.
- *
- * The name is percent-encoded so an odd value cannot break out of the path.
- */
-export function recordingUrlForFile(
-  fileName: string | null | undefined,
-  baseUrl: string | null | undefined
-): string | undefined {
-  if (!fileName || !baseUrl) return undefined;
-  const base = baseUrl.replace(/\/+$/, "");
-  return `${base}/${encodeURIComponent(fileName)}`;
-}
-
-/**
- * The recording URL for a gestión, from what its channel actually reported.
- *
- * The two voice channels report different halves, and the difference is not cosmetic:
- *
- * - Voz IA stores a whole `recordingUrl`, sent by the autopilot with the transcript.
- *   The autopilot runs inside Fonoster and builds that URL against its own recording
- *   base, so it is the provider's own answer about where the audio lives and is used
- *   verbatim.
- * - Pre-recorded stores only `recordingFile`, the name Fonoster recorded under (our
- *   voice server knows the name but not the deployment's public recordings host). The
- *   URL is composed here, on read, so moving that host fixes every historical gestión
- *   at once instead of only the ones recorded afterwards.
- *
- * Returns `undefined` when the gestión has neither — a channel with no recording, a
- * call that never connected, or a pre-recorded row on a deployment with no
- * `recordingBaseUrl` set. Nothing is ever derived from the call ref: it names no
- * recording file, and a URL built from it 404s.
- */
-export function resolveRecordingUrl(
-  channelData: Record<string, unknown> | null | undefined,
-  baseUrl: string | null | undefined
-): string | undefined {
-  const reportedUrl = channelData?.recordingUrl;
-  if (typeof reportedUrl === "string" && reportedUrl) return reportedUrl;
-
-  const fileName = channelData?.recordingFile;
-  return recordingUrlForFile(typeof fileName === "string" ? fileName : undefined, baseUrl);
 }
 
 /**
@@ -628,19 +563,13 @@ export const qcobroConfigSchema = z.object({
        */
       graceSeconds: z.number().int().nonnegative().default(60),
       /**
-       * Minutes past dispatch before a gestión with no CDR at all (Fonoster's `NOT_FOUND`)
-       * is finalized `deliveryReason: NOT_ORIGINATED`. Deliberately longer than
-       * `floorMinutes`: that write is irreversible, and while there's no live signal to
-       * race against here, the CDR's start record can lag dispatch (Influx read lag, a
-       * queueing hiccup) — finalizing too early risks recording a call that is still just
-       * about to exist as one that never happened.
-       */
-      notOriginatedMinutes: z.number().int().positive().default(5),
-      /**
        * Minutes past which a gestión whose CDR still carries no status (the provider lost
        * the end-of-call record, or never writes one) is finalized anyway — `deliveryReason:
        * OUTCOME_UNKNOWN`, or the CDR's own mapped reason if it has a terminal status but an
-       * unparseable `endedAt` — rather than polled forever. 70 is not a round default: the
+       * unparseable `endedAt` — rather than polled forever. Also the age at which a gestión
+       * with no CDR at all (`NOT_FOUND`) is finalized `NOT_ORIGINATED`: Fonoster's `GetCall`
+       * answers NOT_FOUND until the call record is sealed at hangup, so a call still in
+       * progress looks exactly like one that never happened. 70 is not a round default: the
        * platform's dialplan sets `TIMEOUT(absolute)=3600`, so no channel survives past 60
        * minutes — past that plus a margin, an uncleared CDR has genuinely lost its end
        * record rather than still being a live call.

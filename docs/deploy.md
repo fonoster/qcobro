@@ -228,11 +228,12 @@ docker compose up -d
 
 ## Secrets checklist
 
-| Secret                     | Where                                                                         |
-| -------------------------- | ----------------------------------------------------------------------------- |
-| `qcobro.json` secrets      | The file at `/opt/qcobro/config/qcobro.json` on the server (DB URL, API keys) |
-| DigitalOcean API token     | `/etc/letsencrypt/digitalocean/credentials.ini` (mode 600)                    |
-| `FONOSTER_REPO_TOKEN` (CI) | GitHub repo secret — PAT with `contents: read` on the fonoster repo           |
+| Secret                     | Where                                                                                                            |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `qcobro.json` secrets      | The file at `/opt/qcobro/config/qcobro.json` on the server (DB URL, API keys)                                    |
+| Fonoster webhook secret    | `fonoster.webhookSecret` in that file — the `whsec_…` value Fonoster shows only once when the webhook is created |
+| DigitalOcean API token     | `/etc/letsencrypt/digitalocean/credentials.ini` (mode 600)                                                       |
+| `FONOSTER_REPO_TOKEN` (CI) | GitHub repo secret — PAT with `contents: read` on the fonoster repo                                              |
 
 ---
 

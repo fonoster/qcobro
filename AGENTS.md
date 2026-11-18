@@ -116,8 +116,10 @@ deploys over SSH to the DigitalOcean droplet with Docker Compose.
 
 - Voice runs on Fonoster: outbound calls use `@fonoster/sdk` `Calls`, and voice agent templates
   sync to Fonoster AUTOPILOT applications.
-- Fonoster TrackCall never fired for API-originated calls, so the completion sweep finalizes calls
-  from the `GetCall` CDR. Recheck this when moving to Fonoster 0.60 or later.
+- Call results arrive by Fonoster's signed workspace webhooks at `POST /api/voice/events`
+  (`call.ended`, `call.failed`, `call_record.sealed`, secret in `fonoster.webhookSecret`); the
+  Voz IA transcript and the recording come from the call record. The completion sweep is only
+  a backstop: at 0.63 `GetCall` is NOT_FOUND until the record is sealed at hangup.
 - Barge-in is a per-template setting (`allowUserBargeIn`), off by default.
 
 ### security-engineer

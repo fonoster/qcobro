@@ -5,7 +5,8 @@ import type {
   Locale,
   OutboundCallClient,
   SmsClient,
-  VoiceApplicationClient
+  VoiceApplicationClient,
+  VoiceCallRecordsClient
 } from "@qcobro/common";
 import { DEFAULT_LOCALE, parseLocale } from "@qcobro/common";
 
@@ -13,6 +14,7 @@ import { prisma } from "../db.js";
 import { createIdentityClient } from "@fonoster/identity-client";
 import { FonosterVoiceApplicationClient } from "../services/fonosterVoiceApplicationClient.js";
 import { FonosterOutboundCallClient } from "../services/fonosterOutboundCallClient.js";
+import { FonosterCallRecordsClient } from "../services/fonosterCallRecordsClient.js";
 import { TwilioSmsClient } from "../services/twilioSmsClient.js";
 import { createStripeGateway } from "../services/stripeGateway.js";
 import { ResendEmailClient } from "../services/resendEmailClient.js";
@@ -61,6 +63,10 @@ const voiceApplications: VoiceApplicationClient | null = config.fonoster
 // error (mirroring the voice-template "saves locally when Fonoster absent" posture).
 const fonosterCallClient = config.fonoster ? new FonosterOutboundCallClient(config.fonoster) : null;
 const outboundCallClient: OutboundCallClient | null = fonosterCallClient;
+// Fonoster call records (transcripts and recordings); shared with the REST recording route.
+export const callRecords: VoiceCallRecordsClient | null = config.fonoster
+  ? new FonosterCallRecordsClient(config.fonoster)
+  : null;
 const smsClient: SmsClient | null = config.twilio ? new TwilioSmsClient(config.twilio) : null;
 const emailClient: EmailClient | null = config.resend ? new ResendEmailClient(config.resend) : null;
 const fonosterNumbers = config.fonoster?.numbers ?? [];
@@ -111,7 +117,7 @@ function headerValue(value: string | string[] | undefined): string | null {
  * since browsers cannot set custom headers on a WebSocket handshake) so the two
  * transports can never resolve auth differently.
  */
-async function resolveAuth(
+export async function resolveAuth(
   token: string | null,
   requestedWorkspace: string | null
 ): Promise<{ user: AuthedUser | null; workspace: ActiveWorkspace | null }> {
@@ -163,6 +169,7 @@ function assembleContext(
     identity,
     voiceApplications,
     outboundCallClient,
+    callRecords,
     smsClient,
     emailClient,
     emailFrom,

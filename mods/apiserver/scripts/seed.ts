@@ -335,13 +335,11 @@ const VOZ_SCENARIOS = [
   }
 ];
 
-// A short, publicly hosted sample so the detalle audio player actually plays.
-const SAMPLE_RECORDING = "https://download.samplelib.com/mp3/sample-6s.mp3";
-
 /**
  * Seed a few gestiones across all three channels. Voz IA is written in two steps —
- * the dispatch record, then the autopilot conversation.ended event correlated by
- * call ref (transcript + recording) — exactly as the live webhook does, but in-process.
+ * the dispatch record, then the transcript correlated by call ref — as the live
+ * `call_record.sealed` webhook does, but in-process. Seeded calls have no Fonoster call
+ * record, so the detail shows no recording.
  * SMS / Voz pregrabada are one-way: just the dispatch record with the sent content.
  */
 async function seedGestiones(
@@ -369,22 +367,15 @@ async function seedGestiones(
       debtAmountSnapshot: vozAccount.outstandingBalance,
       ...(s.intentMetadata ? { intentMetadata: s.intentMetadata } : {}),
       ...s.ai,
+      durationSeconds: s.durationSeconds,
       // Top-level, not inside channelData: `ingestVoiceEvent` correlates on the indexed
       // `providerRef` column and explicitly does not read `channelData.providerRef`. Nesting it
-      // meant the conversation.ended calls below matched nothing, so every seeded Voz IA
-      // gestión silently ended up with no transcript and no recording.
+      // meant the transcript below matched nothing, so every seeded Voz IA gestión silently
+      // ended up with no transcript.
       providerRef: callRef,
       channelData: { from: "+18297340812", to }
     });
-    await ingestVoiceEvent({
-      eventType: "conversation.ended",
-      appRef: "seed-app",
-      callRef,
-      phone: to,
-      chatHistory: s.transcript,
-      recordingUrl: SAMPLE_RECORDING,
-      durationSeconds: s.durationSeconds
-    });
+    await ingestVoiceEvent({ callRef, chatHistory: s.transcript });
     log(
       `Voz IA · ${s.axes.delivery}${"outcome" in s.axes ? ` · ${s.axes.outcome}` : ""} ` +
         `(${vozAccount.fullName})`
@@ -580,9 +571,8 @@ async function main() {
 
   // 6. Gestiones ------------------------------------------------------------
   // A handful of contact logs across all three channels so the Gestiones list +
-  // detalle card have content. Voz IA mirrors scripts/seed-voz-gestiones.ts: the
-  // dispatch record plus the autopilot conversation.ended event (transcript +
-  // recording), but driven in-process instead of over HTTP.
+  // detalle card have content. Voz IA is the dispatch record plus its transcript,
+  // driven in-process instead of through the webhook.
   console.log("Gestiones");
   const accounts = await prisma.portfolioAccount.findMany({
     where: { portfolioId: portfolio.id, archivedAt: null },

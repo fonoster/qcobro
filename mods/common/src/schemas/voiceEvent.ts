@@ -1,29 +1,49 @@
 import { z } from "zod";
 
 /**
- * Events emitted by the Fonoster autopilot events-hook for a Voz IA call.
- * `conversation.started` lets us capture partial data even if the call never ends
- * cleanly; `conversation.ended` carries the transcript and recording.
+ * The envelope of a Fonoster workspace webhook delivery (`POST /api/voice/events`). Fonoster
+ * signs the raw body; the receiver checks that before parsing it. `data` depends on `type`
+ * and is parsed with the matching schema below; any other `type` is acknowledged and ignored.
  */
-export const voiceEventTypeSchema = z.enum(["conversation.started", "conversation.ended"]);
-export type VoiceEventType = z.infer<typeof voiceEventTypeSchema>;
+export const fonosterWebhookEventSchema = z.object({
+  id: z.string().min(1),
+  type: z.string().min(1),
+  createdAt: z.string().min(1),
+  workspaceRef: z.string().min(1),
+  data: z.record(z.string(), z.unknown())
+});
+export type FonosterWebhookEvent = z.infer<typeof fonosterWebhookEventSchema>;
+
+/** `call.ended`: the call reached an app and hung up. */
+export const callEndedDataSchema = z.object({
+  callRef: z.string().min(1),
+  durationSeconds: z.number().int().nonnegative()
+});
+
+/** `call.failed`: the call never reached an app (busy, no answer, rejected, …). */
+export const callFailedDataSchema = z.object({
+  callRef: z.string().min(1),
+  reason: z.string().min(1)
+});
+
+/** `call_record.sealed`: a version of the call's record was sealed (version 1 at hangup). */
+export const callRecordSealedDataSchema = z.object({
+  callRef: z.string().min(1),
+  version: z.number().int().positive()
+});
 
 /**
- * A raw chat-history entry from the autopilot: `{ ai: text }` (our agent) or
- * `{ human: text }` (the customer). Kept permissive — only the ai/human keys are read.
+ * A raw chat-history entry: `{ ai: text }` (our agent) or `{ human: text }` (the customer).
+ * Kept permissive — only the ai/human keys are read.
  */
 export const voiceChatMessageSchema = z.record(z.string(), z.unknown());
 
-export const voiceConversationEventSchema = z.object({
-  eventType: voiceEventTypeSchema,
-  appRef: z.string().min(1),
+/** A Voz IA call's transcript, taken from its call record, stored on its gestión. */
+export const voiceTranscriptInputSchema = z.object({
   callRef: z.string().min(1),
-  phone: z.string().min(1),
-  chatHistory: z.array(voiceChatMessageSchema).optional(),
-  recordingUrl: z.string().optional(),
-  durationSeconds: z.number().int().nonnegative().optional()
+  chatHistory: z.array(voiceChatMessageSchema)
 });
-export type VoiceConversationEvent = z.infer<typeof voiceConversationEventSchema>;
+export type VoiceTranscriptInput = z.infer<typeof voiceTranscriptInputSchema>;
 
 /**
  * In-process completion signal for a PRE-RECORDED call, reported by the co-located
@@ -46,11 +66,8 @@ export type VoiceConversationEvent = z.infer<typeof voiceConversationEventSchema
  * future report can compare it against the answered duration.
  *
  * `recordingFile` is the name Fonoster recorded the call under, derived from the voice
- * request (see `recordingFileNameForCall`). Only the name is carried, not a URL: the
- * console composes the URL on read from the deployment's `recordingBaseUrl`, so moving
- * the recordings host fixes every historical gestión rather than only later ones. Voz IA
- * reports a whole URL instead — the autopilot runs inside Fonoster and already knows the
- * base; here we do not, so we report the half we do know.
+ * request (see `recordingFileNameForCall`). It is kept for reference only: the console
+ * plays recordings from the call record (`GET /api/gestiones/:id/recording`).
  */
 export const prerecordedCompletionSchema = z.object({
   providerRef: z.string().min(1),
@@ -86,7 +103,7 @@ export interface TranscriptLine {
   text: string;
 }
 
-/** Normalize autopilot chatHistory into ordered console transcript lines. */
+/** Normalize a chat history into ordered console transcript lines. */
 export function normalizeChatHistory(
   chatHistory: ReadonlyArray<Record<string, unknown>> | undefined
 ): TranscriptLine[] {

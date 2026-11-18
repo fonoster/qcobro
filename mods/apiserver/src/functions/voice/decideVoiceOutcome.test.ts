@@ -17,6 +17,7 @@ function gestion(over: Partial<VoiceDecisionGestionView> = {}): VoiceDecisionGes
     campaignId: "camp-1",
     debtAmountSnapshot: 500,
     providerRef: "call-ref-1",
+    path: null,
     channelData: { transcript: [{ role: "customer", text: "Puedo pagar el viernes." }] },
     agentSystemPrompt: "Eres un agente de cobranza.",
     accountContext: { customerName: "Ana", outstandingBalance: 500 },
@@ -110,6 +111,18 @@ describe("decideVoiceOutcome", () => {
 
     assert.deepEqual(result, { decided: false, reason: "no_transcript" });
     assert.equal(decideReqs.length, 0, "autopilot is never called");
+    assert.equal(outcomes.length, 0);
+  });
+
+  it("does not decide again once the gestión carries a path (already decided)", async () => {
+    const { deps, outcomes, decideReqs } = harness(gestion({ path: "ENGAGED" }), {
+      action: "resolve",
+      outcome: "PAYMENT_PROMISE"
+    });
+    const result = await createDecideVoiceOutcome(deps)("log-1");
+
+    assert.deepEqual(result, { decided: false, reason: "already_decided" });
+    assert.equal(decideReqs.length, 0);
     assert.equal(outcomes.length, 0);
   });
 
