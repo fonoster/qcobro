@@ -10,6 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # npm trusted publishing (OIDC): no NPM_TOKEN. Each package trusts this repo and
+      # this workflow file on npmjs.com (Settings → Trusted Publisher), so renaming this
+      # file breaks publishing until the trusted publisher is updated there too.
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -33,6 +37,10 @@ jobs:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
 
+      # Trusted publishing needs npm 11.5.1 or later; Node 22 ships npm 10.
+      - name: Upgrade npm
+        run: npm install -g npm@11
+
       - name: Install dependencies
         run: npm ci
 
@@ -51,8 +59,6 @@ jobs:
           else
             npm publish --workspace=mods/common
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @qcobro/sdk (if version changed)
         run: |
@@ -62,8 +68,6 @@ jobs:
           else
             npm publish --workspace=mods/sdk
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @qcobro/ctl (if version changed)
         run: |
@@ -73,5 +77,3 @@ jobs:
           else
             npm publish --workspace=mods/ctl
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
