@@ -1,4 +1,5 @@
 export * from "./portfolios.js";
+export * from "./recovery.js";
 export * from "./workspaceSettings.js";
 export * from "./userSettings.js";
 export * from "./agentTemplates.js";

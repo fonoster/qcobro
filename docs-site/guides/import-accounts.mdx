@@ -51,13 +51,22 @@ El modo decide qué pasa con las cuentas existentes al importar.
 | --- | --- |
 | **Solo agregar nuevas** | Agrega cuentas nuevas. No modifica ni elimina las existentes. |
 | **Agregar y actualizar** | Agrega cuentas nuevas y actualiza los campos de las existentes. No elimina. |
-| **Reemplazar todo** | Agrega nuevas, actualiza existentes y **archiva** las que no estén en el archivo. |
+| **Reemplazar todo** | Agrega nuevas, actualiza existentes y **archiva** las que no estén en el archivo, como salidas sin motivo. |
 
 <Warning>
   **Reemplazar todo** archiva toda cuenta que falte en el archivo, así que envía siempre una
   instantánea completa de la cartera. Un archivo parcial archivará las cuentas que dejaste
-  fuera (y expira sus promesas de pago pendientes).
+  fuera. Esas cuentas salen **sin motivo** y sus promesas de pago pendientes expiran hasta que
+  se clasifique por qué salieron.
 </Warning>
+
+<Note>
+  Es normal que una cuenta que se puso al día desaparezca de tu exportación de cuentas en mora.
+  QCobro la cuenta como recuperada solo cuando se informa el motivo de su salida (al día o
+  saldada), lo que se hace desde el [SDK](/sdk/sync-accounts#informa-las-salidas). Una cuenta que
+  sigue en el archivo con menos cuotas vencidas que antes se registra como pago parcial, con
+  **Agregar y actualizar** o **Reemplazar todo**.
+</Note>
 
 ## Si el archivo tiene errores
 
