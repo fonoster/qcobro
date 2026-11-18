@@ -645,14 +645,15 @@ describe("syncAccounts", () => {
     });
 
     it("stores the snapshot on an exit, from the account's previous sync", async () => {
+      const lastSyncedAt = at(7);
       const t = makeDb({
-        accounts: [account("A", { lastSyncedAt: at(7) })],
+        accounts: [account("A", { lastSyncedAt })],
         logs: [log("in-1", 3, "c1")]
       });
       await sync(t, { mode: "REPLACE", rows: [] });
       const ctx = t.db.exits[0]!.context as Record<string, unknown>;
       assert.equal(ctx.touches, 1);
-      assert.equal((t.db.exits[0]!.previousSyncAt as Date).getTime(), at(7).getTime());
+      assert.equal((t.db.exits[0]!.previousSyncAt as Date).getTime(), lastSyncedAt.getTime());
     });
 
     it("records no gestión when there were none", async () => {
