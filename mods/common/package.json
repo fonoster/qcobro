@@ -1,6 +1,11 @@
 {
   "name": "@qcobro/common",
   "version": "4.1.2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fonoster/qcobro.git",
+    "directory": "mods/common"
+  },
   "type": "module",
   "files": [
     "dist",

@@ -2,6 +2,11 @@
   "name": "@qcobro/ctl",
   "version": "4.1.2",
   "description": "Command-line tool for QCobro developers, built on @qcobro/sdk.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fonoster/qcobro.git",
+    "directory": "mods/ctl"
+  },
   "type": "module",
   "bin": {
     "qcobro": "./bin/run.js"
