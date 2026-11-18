@@ -235,7 +235,7 @@ for (const signal of ["SIGTERM", "SIGINT"] as const) {
   process.on(signal, () => wss.close());
 }
 
-// External voice application for pre-recorded agents (own port). On call completion
+// Voice server for pre-recorded agents (own port, sessions on /voice/session through Envoy). On call completion
 // the co-located server reports the answered duration IN-PROCESS (no HTTP callback):
 // record DELIVERED + duration on the gestión, then settle usage to the answered
 // duration (idempotent per call ref). Both are best-effort and never break the call.
@@ -247,7 +247,7 @@ const recordPrerecordedOutcome = createRecordPrerecordedOutcome(prisma as never)
 const settlePrerecordedUsage = config.billing?.enabled
   ? createSettleVoiceUsage(prisma as never)
   : null;
-startVoiceServer({
+void startVoiceServer({
   onCompleted: (completion) => {
     void recordPrerecordedOutcome(completion).catch((err: unknown) =>
       logger.error(
@@ -266,7 +266,11 @@ startVoiceServer({
       );
     }
   }
-});
+}).catch((err: unknown) =>
+  logger.error(
+    `[voice] pre-recorded voice server failed to start: ${err instanceof Error ? err.message : err}`
+  )
+);
 
 // Campaigns engine — the autonomous tick that originates outreach (only when
 // engine.enabled; off in dev). Stopped gracefully so an in-flight tick can settle.

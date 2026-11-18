@@ -572,11 +572,22 @@ accept-invite bridge (this file is install-once on the droplet, like the keys):
 
 - **Twilio / Gemini** — credentials/keys only; no callbacks.
 
-**Known limitations** (as of this writing):
+- **Pre-recorded voice** — every pre-recorded call runs on one shared Fonoster STREAM app.
+  For each answered call, Fonoster opens a signed WebSocket session to
+  `wss://<host>/voice/session` (Envoy routes it to the apiserver's voice server) and the
+  script plays from the call metadata. Create the app once:
 
-- **Voz IA only.** Pre-recorded voice needs the embedded VoiceServer on gRPC `:50061`,
-  which Envoy/compose do not expose publicly yet. `prerecordedAppRef` can be set, but
-  only the autopilot (Voz IA) path functions.
+  ```sh
+  fonoster applications:create --name qcobro-prerecorded \
+    --url wss://<host>/voice/session --recording on --amd-window 2000
+  ```
+
+  Fonoster shows the app's signing secret only once. Set `fonoster.prerecordedAppRef` to the
+  new app's ref, `fonoster.prerecordedAppUrl` to the URL above (exactly as given to
+  Fonoster: the signature covers it), and `fonoster.prerecordedSigningSecret` to the secret,
+  then redeploy. Without both the URL and the secret the apiserver still boots and logs
+  `pre-recorded voice server disabled: set fonoster.prerecordedAppUrl and fonoster.prerecordedSigningSecret`.
+  The old EXTERNAL (gRPC) app and host port `50061` are no longer used.
 
 ## More
 

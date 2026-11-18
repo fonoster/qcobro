@@ -19,6 +19,8 @@
     "apiKey": "CHANGE_ME",
     "apiSecret": "CHANGE_ME",
     "prerecordedAppRef": "CHANGE_ME",
+    "prerecordedAppUrl": "wss://app.qcobro.com/voice/session",
+    "prerecordedSigningSecret": "CHANGE_ME",
     "webhookSecret": "CHANGE_ME",
     "autopilot": {
       "llmProvider": "google",

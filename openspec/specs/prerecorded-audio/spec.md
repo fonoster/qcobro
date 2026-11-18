@@ -55,7 +55,8 @@ shown as unavailable, never backfilled with a synthesized re-narration of the sc
 
 ### Requirement: Pre-recorded call completion is recorded in-process
 
-The co-located pre-recorded VoiceServer (same container/process as the apiserver) SHALL record
+The co-located pre-recorded VoiceServer (same container/process as the apiserver) SHALL speak
+the script **non-interruptibly** (a callee talking over it never cuts it), and SHALL record
 each pre-recorded call's result **in-process** on completion — without any HTTP callback endpoint,
 in contrast to Voz IA, whose results arrive through the workspace webhook at
 `/api/voice/events`. It SHALL correlate to the
@@ -196,15 +197,15 @@ and `optOutMessage` are the complete, operator-authored spoken text for each opt
 
 ### Requirement: Pre-recorded call hangs up when an answering machine is detected
 
-The co-located pre-recorded VoiceServer SHALL consult Fonoster's answering-machine
-detection (AMD) verdict on the live call (`req.amd?.status`) before playing the script.
-When the verdict is `MACHINE` and the dispatched template's
-`hangupOnMachineDetected` (see `agent-templates`) is `true` — the default — the
-VoiceServer SHALL hang up immediately, without speaking the script or offering any DTMF
-menu. When the verdict is anything else (`HUMAN`, `UNKNOWN`, or absent because AMD was
-not enabled for the call), or `hangupOnMachineDetected` is `false`, the call proceeds
-exactly as before this capability — the script plays, followed by the DTMF menu if one
-is configured.
+The pre-recorded app runs answering-machine detection (AMD) with a 2000 ms window. When
+the dispatched template's `hangupOnMachineDetected` (see `agent-templates`) is `true` —
+the default — the co-located pre-recorded VoiceServer SHALL wait for the session's
+`amd.result` (or the session's end) before speaking, for up to 9000 ms from session
+start. When the verdict is `voicemail`, `machine` or `ivr`, the VoiceServer SHALL hang
+up without speaking the script or offering any DTMF menu, so no part of the message is
+left on a machine. When the verdict is anything else (`human`, `unknown`), or none
+arrives within 9000 ms, the script plays, followed by the DTMF menu if one is
+configured. When `hangupOnMachineDetected` is `false`, the script plays at once.
 
 An AMD-detected hang-up SHALL be recorded through the same in-process completion path as
 every other pre-recorded outcome (see "Pre-recorded call completion is recorded
@@ -222,7 +223,7 @@ existing template to be edited first.
 
 #### Scenario: A detected machine hangs up before the script plays
 
-- **WHEN** a `VOICE_PRERECORDED` call's live AMD verdict is `MACHINE` and the template's
+- **WHEN** a `VOICE_PRERECORDED` call's `amd.result` is `voicemail`, `machine` or `ivr` and the template's
   `hangupOnMachineDetected` is `true` (the default)
 - **THEN** the VoiceServer hangs up without speaking the script or gathering DTMF
 - **AND** the gestión records `delivery: FAILED`, `deliveryReason: UNREACHABLE`,
@@ -231,23 +232,21 @@ existing template to be edited first.
 
 #### Scenario: A human-answered call is unaffected
 
-- **WHEN** a `VOICE_PRERECORDED` call's live AMD verdict is `HUMAN`
+- **WHEN** a `VOICE_PRERECORDED` call's `amd.result` is `human`, or none arrives within 9000 ms
 - **THEN** the script plays and any configured DTMF menu is offered, exactly as before
   this capability existed
 
 #### Scenario: No AMD verdict is available
 
-- **WHEN** AMD was not enabled for the call, so the live request carries no `amd` field
-  at all
+- **WHEN** no `amd.result` arrives within 9000 ms of session start
 - **THEN** the script plays and any configured DTMF menu is offered, exactly as before
   this capability existed
 
 #### Scenario: A template opts out of hanging up on a detected machine
 
-- **WHEN** a `VOICE_PRERECORDED` call's live AMD verdict is `MACHINE`, but the
-  dispatched template's `hangupOnMachineDetected` is `false`
-- **THEN** the script plays (and any configured DTMF menu is offered) despite the
-  `MACHINE` verdict
+- **WHEN** the dispatched template's `hangupOnMachineDetected` is `false`
+- **THEN** the script plays at once, without waiting for an `amd.result` (and any
+  configured DTMF menu is offered)
 
 #### Scenario: A machine-answered call remains eligible for retry
 

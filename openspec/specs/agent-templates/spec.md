@@ -124,8 +124,8 @@ did before.
   acknowledgment; required exactly when `optOutDigit` is set
 - `hangupOnMachineDetected Boolean` — when `true` (the default), the call hangs up instead
   of playing the script if Fonoster's answering-machine detection reports the call was
-  picked up by a machine (see `prerecorded-audio`). Has no observable effect unless AMD is
-  enabled upstream for the call.
+  picked up by a machine (see `prerecorded-audio`). It works because AMD is enabled on the
+  shared pre-recorded app (`--amd-window 2000`).
 
 `VOICE_PRERECORDED` SHALL NOT carry a `firstMessage` field — the `script` is the
 complete spoken content.
