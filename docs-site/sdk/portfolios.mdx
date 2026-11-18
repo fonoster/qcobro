@@ -1,6 +1,6 @@
 ---
 title: "Gestionar carteras"
-description: "Lista, obtén, crea, actualiza, archiva y elimina carteras, y lista sus cuentas con client.portfolios."
+description: "Lista, obtén, crea, actualiza, archiva y elimina carteras, lista sus cuentas y clasifica sus salidas con client.portfolios."
 ---
 
 Una **cartera** agrupa las cuentas de deuda que QCobro gestiona para un cliente. El recurso
@@ -112,11 +112,116 @@ const { accounts, total } = await client.portfolios.listAccounts({
   Número de cuentas a omitir desde el inicio (para paginar).
 </ParamField>
 
+## Lista las salidas de una cartera
+
+`listExits` devuelve una página de las cuentas que salieron de una cartera y no han vuelto,
+de la más reciente a la más antigua, junto con el total. Filtra por `reason`; por ejemplo,
+`UNKNOWN` lista las salidas que aún esperan un motivo.
+
+```ts
+const { items, total } = await client.portfolios.listExits({
+  portfolioId: "f47ac10b-...",
+  reason: "UNKNOWN",
+  limit: 50
+});
+```
+
+<ParamField body="portfolioId" type="string" required>
+  Id de la cartera cuyas salidas listar.
+</ParamField>
+<ParamField body="reason" type="string">
+  Solo las salidas con este motivo: `CURED`, `PAID_OFF`, `WRITTEN_OFF`, `OTHER` o `UNKNOWN`
+  (sin motivo).
+</ParamField>
+<ParamField body="limit" type="number" default="50">
+  Número máximo de salidas a devolver (1–200).
+</ParamField>
+<ParamField body="offset" type="number" default="0">
+  Número de salidas a omitir desde el inicio (para paginar).
+</ParamField>
+
+Cada elemento de `items` describe una salida:
+
+<ResponseField name="id" type="string">
+  Id de la salida.
+</ResponseField>
+<ResponseField name="externalId" type="string">
+  Tu identificador de la cuenta.
+</ResponseField>
+<ResponseField name="fullName" type="string">
+  Nombre completo del titular.
+</ResponseField>
+<ResponseField name="reason" type="string">
+  Motivo de la salida, o `UNKNOWN` si salió sin motivo.
+</ResponseField>
+<ResponseField name="exitedAt" type="string">
+  Cuándo salió la cuenta (ISO 8601).
+</ResponseField>
+<ResponseField name="missedInstallments" type="number">
+  Cuotas vencidas guardadas en la salida: las de la cuenta al salir, o las que enviaste al darle
+  motivo `CURED` o `PAID_OFF`.
+</ResponseField>
+<ResponseField name="termsAmount" type="number">
+  Importe de cada cuota guardado en la salida, con el mismo criterio.
+</ResponseField>
+<ResponseField name="amountIfRecovered" type="number">
+  `missedInstallments × termsAmount`. En una salida `UNKNOWN` es una estimación de lo que se
+  registraría si la clasificas como `CURED` o `PAID_OFF`.
+</ResponseField>
+<ResponseField name="classifiedAt" type="string | null">
+  Cuándo se dio el motivo a una salida que había salido sin él, o `null`.
+</ResponseField>
+
+## Clasifica las salidas sin motivo
+
+Una cuenta que desaparece de un lote `REPLACE` sale **sin motivo** (`UNKNOWN`). `classifyExits`
+le da el motivo después, sin tener que esperar a la siguiente sincronización. Las entradas
+siguen las mismas reglas que `exits` en [Sincronizar cuentas](/sdk/sync-accounts#informa-las-salidas):
+`CURED` y `PAID_OFF` llevan `missedInstallments` (las cuotas vencidas que ahora están pagadas)
+y `termsAmount` (el importe de cada cuota), y registran una recuperación de su producto.
+
+```ts
+const result = await client.portfolios.classifyExits({
+  portfolioId: "f47ac10b-...",
+  exits: [
+    { externalId: "C-0877", reason: "CURED", missedInstallments: 2, termsAmount: 1500 },
+    { externalId: "C-0878", reason: "WRITTEN_OFF" }
+  ]
+});
+// → { classified: 2, recoveries: { cured: 1, paidOff: 0, amount: 3000 }, promisesMet: 1 }
+```
+
+<ParamField body="portfolioId" type="string" required>
+  Id de la cartera.
+</ParamField>
+<ParamField body="exits" type="array" required>
+  Entre 1 y 1000 salidas, cada una con su `externalId` y su `reason` (`CURED`, `PAID_OFF`,
+  `WRITTEN_OFF` u `OTHER`). Un `externalId` no puede repetirse.
+</ParamField>
+
+La llamada es de todo o nada: si una entrada no corresponde a una salida que espera motivo, no
+se clasifica ninguna y la API responde con el error. La recuperación cuenta en la fecha en que
+la cuenta salió, así que la cifra de un período ya cerrado puede subir. En `CURED` y `PAID_OFF`,
+las promesas de pago que esa salida había expirado pasan a **Cumplida**.
+
+<ResponseField name="classified" type="number">
+  Salidas que recibieron su motivo.
+</ResponseField>
+<ResponseField name="recoveries" type="object">
+  Recuperaciones registradas: `cured`, `paidOff`, y `amount`, la suma de sus importes.
+</ResponseField>
+<ResponseField name="promisesMet" type="number">
+  Promesas de pago que pasaron a **Cumplida**.
+</ResponseField>
+
 ## Siguientes pasos
 
 <CardGroup cols={2}>
   <Card title="Sincronizar cuentas" icon="arrows-rotate" href="/sdk/sync-accounts">
     Carga y mantiene las cuentas de una cartera por lotes desde tu sistema de origen.
+  </Card>
+  <Card title="Leer la recuperación" icon="sack-dollar" href="/sdk/recovery">
+    Lee cuánto se recuperó en un período y qué lo explica.
   </Card>
   <Card title="Validación y errores" icon="triangle-exclamation" href="/sdk/errors">
     Captura los fallos de validación del cliente y lee el detalle por campo.

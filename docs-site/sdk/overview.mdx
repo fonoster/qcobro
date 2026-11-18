@@ -49,8 +49,8 @@ tener un workspace activo seleccionado antes de llamarlos. Seleccionar un worksp
 ## Qué puedes hacer hoy
 
 El SDK expone los recursos de la API como espacios de nombres con métodos tipados y cómodos.
-Las carteras ya están envueltas; todo lo demás de la API es accesible por el escape hatch
-`client.trpc`.
+Las carteras y la recuperación ya están envueltas; todo lo demás de la API es accesible por el
+escape hatch `client.trpc`.
 
 <CardGroup cols={2}>
   <Card title="Gestionar carteras" icon="folder-open" href="/sdk/portfolios">
@@ -60,6 +60,10 @@ Las carteras ya están envueltas; todo lo demás de la API es accesible por el e
   <Card title="Sincronizar cuentas" icon="arrows-rotate" href="/sdk/sync-accounts">
     `client.portfolios.syncAccounts`: carga por lotes filas de cuentas desde tu sistema de
     origen con los modos de fusión `APPEND_ONLY`, `UPDATE_EXISTING` o `REPLACE`.
+  </Card>
+  <Card title="Leer la recuperación" icon="sack-dollar" href="/sdk/recovery">
+    `client.recovery`: el importe recuperado en un período, su desglose y la lista de
+    recuperaciones detectadas.
   </Card>
   <Card title="Escape hatch" icon="plug" href="/sdk/reference">
     `client.trpc`: el proxy tRPC tipado subyacente, para cualquier procedimiento que el SDK
@@ -106,6 +110,9 @@ y restáuralos con `client.setTokens(...)`.
   </Card>
   <Card title="Gestionar carteras" icon="folder-open" href="/sdk/portfolios">
     Crea, actualiza, archiva y lista las carteras de un workspace.
+  </Card>
+  <Card title="Leer la recuperación" icon="sack-dollar" href="/sdk/recovery">
+    Lee cuánto se recuperó en un período y qué lo explica.
   </Card>
   <Card title="Validación y errores" icon="triangle-exclamation" href="/sdk/errors">
     Captura los fallos de validación del cliente y lee el detalle por campo.
