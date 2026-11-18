@@ -56,7 +56,8 @@ test.describe("portfolio recovery", () => {
 
     // --- Import modal: default mode, the APPEND_ONLY warning, the missing column ---------
     await page.getByRole("button", { name: "Importar cuentas" }).click();
-    const dialog = page.getByRole("dialog");
+    // The import modal has no dialog role, so its controls are found on the page.
+    const dialog = page;
     const appendOnlyWarning = dialog.getByText(
       "Este modo no actualiza cuentas existentes: no se detectarán pagos."
     );
