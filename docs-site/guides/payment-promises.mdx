@@ -1,6 +1,6 @@
 ---
 title: "Promesas de pago"
-description: "Trabaja la lista de promesas de pago surgidas de las gestiones: marca como pagadas, da seguimiento y cancela."
+description: "Trabaja la lista de promesas de pago surgidas de las gestiones: da seguimiento y cancela."
 ---
 
 Una **promesa de pago** es el compromiso de una cuenta de pagar para una fecha. Es el único
@@ -16,7 +16,8 @@ propia lista.
 
 En el menú lateral, entra en **Promesas de pago**. Arriba verás los indicadores del espacio de
 trabajo: **Pendientes**, **Monto pendiente**, **Vencen esta semana** y **Tasa de
-cumplimiento**. La tabla muestra cada promesa con **Cuenta**, **Canal**, **Monto**, **Fecha
+cumplimiento**. La tasa de cumplimiento depende de la sincronización: una promesa solo cuenta
+como cumplida cuando la sincronización muestra la cuenta al día o saldada. La tabla muestra cada promesa con **Cuenta**, **Canal**, **Monto**, **Fecha
 límite** y **Estado**.
 
 ## Estados de una promesa
@@ -25,27 +26,26 @@ límite** y **Estado**.
 | --- | --- |
 | **Pendiente** | Comprometida y aún dentro de plazo. |
 | **Vencida** | Pendiente y pasada su fecha límite. Es un estado derivado, no marcado a mano. |
-| **Cumplida** | Pagada (la marcas tú). |
+| **Cumplida** | Se cumple cuando la sincronización muestra la cuenta al día o saldada. |
 | **Cancelada** | Anulada por un operador. |
-| **Expirada** | La fija el sistema cuando la cuenta sale de su cartera. |
+| **Expirada** | La fija el sistema cuando la cuenta sale de su cartera. Pasa a **Cumplida** si después se informa por la API que la cuenta salió al día o saldada. |
 
 <Note>
   No existe un estado de "incumplida": una promesa sin pagar permanece en la lista de trabajo
-  hasta que un operador la resuelve.
+  hasta que la sincronización la cumple o un operador la cancela.
 </Note>
 
 ## Trabaja una promesa
 
 Cada promesa ofrece estas acciones:
 
-- **Marcar pagada**: registra que la cuenta pagó. La promesa pasa a **Cumplida**.
 - **Seguimiento con**: contacta a la cuenta con un agente para recordar o renegociar el pago.
   Queda registrado como una gestión de seguimiento sobre esa promesa.
 - **Cancelar**: anula la promesa cuando ya no aplica.
 
 <Warning>
-  Marcar una promesa como pagada es una acción **manual**: QCobro no confirma el pago por su
-  cuenta. Márcala como pagada cuando tu sistema confirme el cobro.
+  QCobro marca las promesas como cumplidas a partir de tu sincronización, así que mantenla al
+  día. Consulta [Importar cuentas](/guides/import-accounts).
 </Warning>
 
 ## Siguientes pasos

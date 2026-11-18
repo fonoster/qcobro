@@ -20,7 +20,9 @@ modo que elijas. Así mantienes la cartera al día con tu sistema de origen.
   </Step>
   <Step title="Selecciona el archivo">
     Pulsa **Seleccionar archivo** y elige tu CSV. La consola valida el archivo y muestra
-    cuántas cuentas están listas para importar.
+    cuántas cuentas están listas para importar. Si el archivo no trae la columna
+    `missed_installments`, verás el aviso **Falta la columna missed_installments: no se
+    detectarán pagos parciales en este archivo.**
 
     <Accordion title="Ver un CSV de ejemplo">
       ¿No tienes un CSV a mano? Copia estas líneas en un archivo `.csv` y úsalo para probar
@@ -35,11 +37,14 @@ modo que elijas. Así mantienes la cartera al día con tu sistema de origen.
     </Accordion>
   </Step>
   <Step title="Elige el modo de sincronización">
-    Selecciona cómo tratar las cuentas existentes (ver la tabla de abajo).
+    Selecciona cómo tratar las cuentas existentes (ver la tabla de abajo). **Agregar y
+    actualizar** viene seleccionado. Si eliges **Solo agregar nuevas**, verás el aviso **Este
+    modo no actualiza cuentas existentes: no se detectarán pagos.**
   </Step>
   <Step title="Importa">
     Pulsa **Importar**. Al terminar verás el resumen: **Agregadas**, **Actualizadas**,
-    **Archivadas** y **Total activas**.
+    **Archivadas** y **Total activas**. Si la importación detectó pagos, una línea más muestra
+    **Pagos detectados** con el monto y el número de cuentas.
   </Step>
 </Steps>
 
@@ -63,9 +68,11 @@ El modo decide qué pasa con las cuentas existentes al importar.
 <Note>
   Es normal que una cuenta que se puso al día desaparezca de tu exportación de cuentas en mora.
   QCobro la cuenta como recuperada solo cuando se informa el motivo de su salida (al día o
-  saldada), lo que se hace desde el [SDK](/sdk/sync-accounts#informa-las-salidas). Una cuenta que
+  saldada). La importación desde la consola no puede informar ese motivo: hazlo con `exits`
+  desde el [SDK](/sdk/sync-accounts#informa-las-salidas), la [CLI](/cli/overview) o el [servidor MCP](/mcp/overview). Una cuenta que
   sigue en el archivo con menos cuotas vencidas que antes se registra como pago parcial, con
-  **Agregar y actualizar** o **Reemplazar todo**.
+  **Agregar y actualizar** o **Reemplazar todo**. Si solo importas desde la consola,
+  **Recuperado** cuenta únicamente esos pagos parciales.
 </Note>
 
 ## Si el archivo tiene errores

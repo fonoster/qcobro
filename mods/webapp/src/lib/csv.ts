@@ -17,14 +17,23 @@ function int(v: string): number {
   return isNaN(n) ? 0 : n;
 }
 
-export function parseCsv(text: string): { rows: AccountRowInput[]; errors: string[] } {
+/** The parsed rows, the problems found, and the file's header columns (lowercased). */
+export function parseCsv(text: string): {
+  rows: AccountRowInput[];
+  errors: string[];
+  columns: string[];
+} {
   const lines = text
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean);
 
   if (lines.length < 2) {
-    return { rows: [], errors: ["El archivo debe tener encabezado y al menos una fila de datos."] };
+    return {
+      rows: [],
+      errors: ["El archivo debe tener encabezado y al menos una fila de datos."],
+      columns: []
+    };
   }
 
   const header = lines[0]
@@ -39,7 +48,8 @@ export function parseCsv(text: string): { rows: AccountRowInput[]; errors: strin
       rows: [],
       errors: [
         `Columnas requeridas faltantes: ${missing.join(", ")}. Se esperaban: loan_id, full_name, outstanding_balance`
-      ]
+      ],
+      columns: header
     };
   }
 
@@ -101,7 +111,7 @@ export function parseCsv(text: string): { rows: AccountRowInput[]; errors: strin
     });
   }
 
-  return { rows, errors };
+  return { rows, errors, columns: header };
 }
 
 function splitCsvLine(line: string): string[] {

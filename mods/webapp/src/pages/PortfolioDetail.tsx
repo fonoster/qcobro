@@ -10,6 +10,7 @@ import { PageHeader } from "../components/page-header.js";
 import { Dialog } from "../components/ui/dialog.js";
 import { Accordion } from "../components/ui/accordion.js";
 import { CsvSyncModal } from "../components/portfolios/CsvSyncModal.js";
+import { PortfolioRecoverySection } from "../components/portfolios/PortfolioRecoverySection.js";
 import { ReachOutModal } from "../components/portfolios/ReachOutModal.js";
 import { BulkReachOutModal } from "../components/portfolios/BulkReachOutModal.js";
 import { RowActionsMenu, type RowAction } from "../components/ui/row-actions-menu.js";
@@ -53,6 +54,8 @@ export function PortfolioDetail() {
       </div>
 
       <PageHeader title={portfolio.data?.name ?? "…"} description={portfolio.data?.clientId} />
+
+      <PortfolioRecoverySection portfolioId={id!} />
 
       <DataTable
         data={items as Record<string, unknown>[]}
@@ -209,6 +212,7 @@ export function PortfolioDetail() {
             setShowSync(false);
             utils.portfolios.get.invalidate({ id: id! });
             utils.portfolios.listAccounts.invalidate({ portfolioId: id! });
+            utils.recovery.invalidate();
           }}
         />
       )}
