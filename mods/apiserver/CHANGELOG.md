@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.2](https://github.com/fonoster/qcobro/compare/v4.1.1...v4.1.2) (2026-11-18)
+
+### Bug Fixes
+
+- **voice:** default Voz IA to a catalog model and drop the dead recording name ([#230](https://github.com/fonoster/qcobro/issues/230)) ([1b56a2f](https://github.com/fonoster/qcobro/commit/1b56a2f8654dfa93d1ed7ed3aab29941b4e16c54))
+
 # [4.1.0](https://github.com/fonoster/qcobro/compare/v4.0.0...v4.1.0) (2026-11-18)
 
 ### Features
