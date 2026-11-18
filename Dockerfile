@@ -58,9 +58,12 @@ ENV QCOBRO_CONFIG=/config/qcobro.json
 
 # Node modules, copied from build-apiserver so they include the generated
 # Prisma client (the entrypoint runs migrate deploy but not generate) plus the
-# prisma CLI. npm hoists all workspace deps to the root node_modules, so there
-# is no per-workspace node_modules to copy.
+# prisma CLI. npm hoists most workspace deps to the root node_modules, but nests
+# a package under the workspace when its version conflicts with the root one
+# (@fonoster/sdk 0.63 sits under mods/apiserver, beside @fonoster/voice's older
+# @fonoster/common), so the apiserver's own node_modules is copied too.
 COPY --from=build-apiserver /app/node_modules ./node_modules
+COPY --from=build-apiserver /app/mods/apiserver/node_modules ./mods/apiserver/node_modules
 
 # Built artifacts — package.json is needed alongside dist so the workspace
 # symlink node_modules/@qcobro/common → mods/common resolves correctly.
