@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.1](https://github.com/fonoster/qcobro/compare/v4.1.0...v4.1.1) (2026-11-18)
+
+### Bug Fixes
+
+- **console:** show the channel in the Promesas Canal column ([#227](https://github.com/fonoster/qcobro/issues/227)) ([616fc2b](https://github.com/fonoster/qcobro/commit/616fc2bf27c9977d0d4a80e9af5a82ffb630c1d7))
+
 # [4.1.0](https://github.com/fonoster/qcobro/compare/v4.0.0...v4.1.0) (2026-11-18)
 
 **Note:** Version bump only for package @qcobro/webapp
