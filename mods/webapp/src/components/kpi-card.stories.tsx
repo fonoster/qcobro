@@ -75,6 +75,58 @@ export const ContactRateEmpty: StoryObj = {
   )
 };
 
+const RECOVERY_PERIOD_OPTIONS = [
+  { value: "thisMonth", label: "Este mes" },
+  { value: "lastMonth", label: "Mes pasado" },
+  { value: "thisYear", label: "Este año" }
+];
+
+const recoveryPeriod = (value: string) => ({
+  value,
+  ariaLabel: "Período de recuperado",
+  onChange: () => {},
+  options: RECOVERY_PERIOD_OPTIONS
+});
+
+/** Recuperado for the period: recoveries with a gestión, plus the payments that came in
+ *  without one on their own line. */
+export const RecoveredWithPeriod: StoryObj = {
+  render: () => (
+    <KpiCard
+      label="Recuperado"
+      value="RD$ 61,500"
+      subtext="13 cuentas con gestión"
+      detail="Pagos sin gestión reciente: RD$ 9,800 · 3 cuentas"
+      period={recoveryPeriod("thisMonth")}
+    />
+  )
+};
+
+/** Only payments without a gestión: the main value is RD$ 0 and the line still shows. */
+export const RecoveredOnlyWithoutGestion: StoryObj = {
+  render: () => (
+    <KpiCard
+      label="Recuperado"
+      value="RD$ 0"
+      subtext="0 cuentas con gestión"
+      detail="Pagos sin gestión reciente: RD$ 9,800 · 3 cuentas"
+      period={recoveryPeriod("thisMonth")}
+    />
+  )
+};
+
+/** No payments detected in the period: "—", like the contact-rate card. */
+export const RecoveredEmpty: StoryObj = {
+  render: () => (
+    <KpiCard
+      label="Recuperado"
+      value="—"
+      subtext="Sin pagos detectados en el período"
+      period={recoveryPeriod("lastMonth")}
+    />
+  )
+};
+
 /**
  * The Panel de control row at its real proportions: five cards across the width a 1280px
  * viewport leaves after the sidebar and page padding (~976px). This is the case that catches
@@ -85,7 +137,13 @@ export const DashboardRowAtNarrowWidth: StoryObj = {
   render: () => (
     <div className="w-[976px]">
       <div className="grid grid-cols-5 gap-4">
-        <KpiCard label="Recuperado" value="$287,430" subtext="acumulado" />
+        <KpiCard
+          label="Recuperado"
+          value="RD$ 61,500"
+          subtext="13 cuentas con gestión"
+          detail="Pagos sin gestión reciente: RD$ 9,800 · 3 cuentas"
+          period={recoveryPeriod("thisMonth")}
+        />
         <KpiCard label="Promesas cumplidas" value="312" subtext="cumplidas" />
         <KpiCard
           label="Contacto"
