@@ -92,3 +92,18 @@ export function isWithinScheduleWindow(w: ScheduleWindow, at: Date, timeZone: st
   if (time < w.startTime || time > w.endTime) return false;
   return true;
 }
+
+/**
+ * The instant local midnight starts `date` (`YYYY-MM-DD`) in the timezone. Used to turn a
+ * calendar period into a half-open UTC range. Two passes converge across DST changes.
+ */
+export function startOfLocalDay(date: string, timeZone: string): Date {
+  const target = Date.parse(`${date}T00:00:00Z`);
+  let guess = target;
+  for (let i = 0; i < 2; i++) {
+    const { date: d, time } = localParts(new Date(guess), timeZone);
+    const shown = Date.parse(`${d}T${time}:00Z`);
+    guess += target - shown;
+  }
+  return new Date(guess);
+}

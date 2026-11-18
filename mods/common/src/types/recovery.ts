@@ -125,3 +125,86 @@ export interface RecoveryTx {
     updateMany(args: { where: Where; data: Where }): Promise<{ count: number }>;
   };
 }
+
+export interface RecoverySummary {
+  /** Σ amount of recoveries with a gestión between syncs, detected in the period. */
+  recovered: number;
+  count: number;
+  withoutGestion: number;
+  withoutGestionCount: number;
+  /** Open UNKNOWN exits now (not bound to the period), with the same portfolio filter. */
+  pendingExits: number;
+  currency: string;
+}
+
+export interface RecoveryBreakdownRow {
+  key: string;
+  /** Campaign name for CAMPAIGN rows; null otherwise. */
+  name: string | null;
+  amount: number;
+  count: number;
+}
+
+export interface RecoveryBreakdown {
+  /** False only for CAMPAIGN: a recovery counts in full for every campaign that touched it. */
+  additive: boolean;
+  rows: RecoveryBreakdownRow[];
+}
+
+export interface RecoveryListItem {
+  id: string;
+  portfolioId: string;
+  portfolioAccountId: string;
+  externalId: string;
+  fullName: string;
+  kind: RecoveryKind;
+  installments: number;
+  amount: number;
+  detectedAt: Date;
+  previousSyncAt: Date;
+  context: RecoveryContext;
+}
+
+export interface ExitListItem {
+  id: string;
+  externalId: string;
+  fullName: string;
+  reason: ExitReason;
+  exitedAt: Date;
+  missedInstallments: number;
+  termsAmount: number;
+  /** Stored missedInstallments × termsAmount at exit: an estimate until the exit is classified. */
+  amountIfRecovered: number;
+  classifiedAt: Date | null;
+}
+
+export interface ClassifyExitsResult {
+  classified: number;
+  recoveries: { cured: number; paidOff: number; amount: number };
+  promisesMet: number;
+}
+
+/** The Prisma surface the recovery read procedures query. */
+export interface RecoveryReadClient {
+  recovery: {
+    findMany(args: {
+      where: Where;
+      select?: Where;
+      include?: Where;
+      orderBy?: Where;
+      take?: number;
+      skip?: number;
+    }): Promise<Record<string, unknown>[]>;
+    count(args: { where: Where }): Promise<number>;
+  };
+  accountExit: {
+    findMany(args: {
+      where: Where;
+      include?: Where;
+      orderBy?: Where;
+      take?: number;
+      skip?: number;
+    }): Promise<Record<string, unknown>[]>;
+    count(args: { where: Where }): Promise<number>;
+  };
+}
