@@ -120,7 +120,7 @@ export function PaymentPromises() {
               const ch = (r.contactLog as { agentType: string } | undefined)?.agentType;
               return ch ? (
                 <span className="text-sm text-fg-muted">
-                  {t(`gestiones.agentType.${ch}` as Parameters<typeof t>[0])}
+                  {t(`agents.type.${ch}` as Parameters<typeof t>[0])}
                 </span>
               ) : (
                 "—"
