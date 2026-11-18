@@ -7,6 +7,11 @@ import { createSettleVoiceUsage } from "../billing/settleVoiceUsage.js";
 import { createRecordVoiceAiCallStatus } from "./recordVoiceAiCallStatus.js";
 import { createRecordPrerecordedOutcome } from "./recordPrerecordedOutcome.js";
 import { createVoiceCompletionTimeoutSweep } from "./voiceCompletionTimeoutSweep.js";
+import { createVoiceAiDecisionRecovery } from "./voiceAiDecisionRecovery.js";
+import { createDecideVoiceOutcome, createPrismaVoiceDecisionClient } from "./decideVoiceOutcome.js";
+import { createRecordOutcome } from "../campaigns/recordOutcome.js";
+import { createInsightGenerator } from "../../services/insightGenerator.js";
+import { createVoiceAutopilot } from "../../services/voiceAutopilot.js";
 
 const logger = getLogger({ service: "voice-completion-sweep", filePath: import.meta.url });
 
@@ -85,8 +90,23 @@ export function startVoiceCompletionSweep(): VoiceCompletionSweepRunner | null {
     ),
     floorMinutes: config.voiceCompletionSweep.floorMinutes,
     graceSeconds: config.voiceCompletionSweep.graceSeconds,
-    notOriginatedMinutes: config.voiceCompletionSweep.notOriginatedMinutes,
     backstopMinutes: config.voiceCompletionSweep.backstopMinutes,
+    now: () => new Date()
+  });
+
+  // Work a webhook's 200 left owed: Voz IA gestiones with a stored transcript and no decision
+  // (the insight or decision failed after the response, or the process stopped).
+  const recoverDecisions = createVoiceAiDecisionRecovery({
+    client: prisma as never,
+    generator: createInsightGenerator(config.ai),
+    generation: config.ai?.generation ?? "onDemand",
+    decideOutcome: createDecideVoiceOutcome({
+      client: createPrismaVoiceDecisionClient(prisma),
+      autopilot: createVoiceAutopilot(config.ai),
+      recordOutcome: createRecordOutcome(prisma as never),
+      now: () => new Date()
+    }),
+    graceMinutes: config.voiceCompletionSweep.floorMinutes,
     now: () => new Date()
   });
 
@@ -106,6 +126,8 @@ export function startVoiceCompletionSweep(): VoiceCompletionSweepRunner | null {
       }
       const n = await sweep();
       if (n > 0) logger.verbose(`voice completion sweep: finalized ${n} gestión(es)`);
+      const decided = await recoverDecisions();
+      if (decided > 0) logger.verbose(`voice completion sweep: decided ${decided} gestión(es)`);
     } catch (err) {
       logger.error("voice completion sweep failed", err);
     } finally {

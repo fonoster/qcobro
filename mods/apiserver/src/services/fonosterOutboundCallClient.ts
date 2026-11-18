@@ -64,15 +64,7 @@ export function parseEndedAt(value: unknown): Date | null {
   return new Date(ms);
 }
 
-const VALID_AMD_STATUSES = new Set<AmdStatus>(["HUMAN", "MACHINE", "UNKNOWN"]);
-
-// TODO(voice-amd-detection): drop this local cast once fonoster/fonoster#897 lands —
-// `calls.proto`'s `CallDetailRecord` (returned by `Calls.getCall()`) does not carry an AMD
-// verdict at all as of @fonoster/sdk 0.23.0 (confirmed by inspecting the published package;
-// PR #893 only added `amd` to `voice.proto`'s `CreateSessionRequest`, not to `calls.proto`).
-// This read is forward-compatible dead code until Fonoster exposes the field: `parseAmdStatus`
-// always returns `undefined` today, so no `path` is ever set from this path yet.
-type CallDetailRecordWithAmd = { amdStatus?: unknown };
+const VALID_AMD_STATUSES = new Set<AmdStatus>(["HUMAN", "MACHINE", "VOICEMAIL", "IVR", "UNKNOWN"]);
 
 /**
  * Reads the CDR's `amdStatus` (Fonoster's answering-machine detection verdict), treating
@@ -264,7 +256,8 @@ export class FonosterOutboundCallClient implements OutboundCallClient {
       if (status !== "UNKNOWN" && endedAt === null) {
         warnUnparseableEndedAt(record.endedAt);
       }
-      const amdStatus = parseAmdStatus((record as unknown as CallDetailRecordWithAmd).amdStatus);
+      // Read as unknown, like status/endedAt: the wire is not trusted at the declared type.
+      const amdStatus = parseAmdStatus(record.amdStatus as unknown);
       return {
         found: true,
         status,

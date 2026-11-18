@@ -1,200 +1,294 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Request, Response } from "express";
 import { getLogger } from "@fonoster/logger";
-import { ValidationError, type AiConfig, type InsightGenerator } from "@qcobro/common";
+import {
+  callEndedDataSchema,
+  callFailedDataSchema,
+  callRecordSealedDataSchema,
+  fonosterWebhookEventSchema,
+  type AiConfig,
+  type DeliveryReason,
+  type FonosterWebhookEvent,
+  type InsightGenerator,
+  type VoiceCallRecordsClient
+} from "@qcobro/common";
 import {
   createIngestVoiceEvent,
   type VoiceEventClient
 } from "../functions/voice/ingestVoiceEvent.js";
-import {
-  createGenerateGestionInsight,
-  type GenerateInsightClient
-} from "../functions/voice/generateGestionInsight.js";
+import type { GenerateInsightClient } from "../functions/voice/generateGestionInsight.js";
 import type { DecideVoiceOutcomeResult } from "../functions/voice/decideVoiceOutcome.js";
+import { createCompleteVoiceAiConversation } from "../functions/voice/completeVoiceAiConversation.js";
+import { chatHistoryFromCallRecord } from "../functions/voice/callRecordTranscript.js";
+import { mapCallFailedReason } from "../functions/voice/mapCallFailedReason.js";
 import type { ProviderEventRecorder } from "../engine/eventSink.js";
 
 const logger = getLogger({ service: "voice-events", filePath: import.meta.url });
 
+const TIMESTAMP_HEADER = "x-fonoster-timestamp";
+const SIGNATURE_HEADER = "x-fonoster-signature";
+/** A delivery signed more than this far from the server clock is rejected (replay window). */
+const MAX_SKEW_SECONDS = 300;
+/** Fonoster waits 10 s for the 2xx; the record fetch must give up well before that. */
+const DEFAULT_RECORD_FETCH_TIMEOUT_MS = 8_000;
+
+type VoiceOutcomeRecorder = (input: {
+  providerRef: string;
+  answered: boolean;
+  deliveryReason?: DeliveryReason;
+  answeredSeconds: number;
+  at: string;
+}) => Promise<unknown>;
+
 export interface VoiceEventsDeps {
+  /** `fonoster.webhookSecret`; null when unset, and the receiver then answers 503. */
+  webhookSecret: string | null;
+  /** Fonoster call records (the redacted copy), for the transcript on `call_record.sealed`. */
+  callRecords: Pick<VoiceCallRecordsClient, "getRecord">;
   /** Insight generator (null when AI insights are disabled). */
   generator: InsightGenerator | null;
   /** Generation mode from the `ai` config. */
   generation: NonNullable<AiConfig>["generation"];
-  /** Flight recorder; each conversation event is recorded best-effort. */
+  /** Flight recorder; each call event is recorded best-effort. */
   recordEvent?: ProviderEventRecorder | null;
-  /**
-   * Voice usage settlement (billing; null when billing is disabled). Called
-   * fire-and-forget on `conversation.ended` with the call's answered duration —
-   * idempotent per call ref, so webhook replays settle once.
-   */
+  /** Voice usage settlement (null when billing is disabled). Idempotent per call ref. */
   settleUsage?:
     | ((input: { providerRef: string; answeredSeconds: number; at: string }) => Promise<unknown>)
     | null;
-  /**
-   * Voz IA payment-promise capture: runs the autopilot decision once over the final
-   * transcript and records outcome/Objective (payment-promises capability). Always
-   * provided — the underlying autopilot falls back to a deterministic mock when `ai`
-   * is absent/disabled, same as EMAIL/WhatsApp.
-   */
+  /** Finalizes a VOICE_AI gestión's delivery; guarded on DISPATCHED, so it applies once. */
+  recordVoiceAiCallStatus: VoiceOutcomeRecorder;
+  /** Finalizes a VOICE_PRERECORDED gestión's delivery (only `call.failed` reaches it here). */
+  recordPrerecordedOutcome: VoiceOutcomeRecorder;
+  /** Voz IA payment-promise capture: the autopilot decision over the final transcript. */
   decideOutcome: (id: string) => Promise<DecideVoiceOutcomeResult>;
-  /**
-   * Finalizes delivery DISPATCHED -> DELIVERED for a VOICE_AI gestión once the autopilot
-   * reports the conversation ended. Fonoster's conversation.ended payload carries no
-   * duration, so the answered duration is derived here from the gestión's own dispatch
-   * timestamp (`contactedAt`, returned by `ingest`) to now — a best-effort local measure
-   * until Fonoster's webhook carries real timing. Idempotent (delivery only ever
-   * advances) — safe on webhook replay. Optional only so tests that don't exercise this
-   * path can omit it, same as settleUsage.
-   */
-  recordVoiceAiCallStatus?:
-    | ((input: {
-        providerRef: string;
-        answered: boolean;
-        answeredSeconds: number;
-        at: string;
-      }) => Promise<unknown>)
-    | null;
+  recordFetchTimeoutMs?: number;
+  now?: () => Date;
+}
+
+/** The gestión a call event is about, as far as this receiver needs to know it. */
+export interface VoiceCallLookupClient {
+  accountContactLog: {
+    findFirst(args: {
+      where: { providerRef: string };
+      select: { id: true; agentType: true; path: true; channelData: true };
+    }): Promise<{
+      id: string;
+      agentType: string;
+      path: string | null;
+      channelData: unknown;
+    } | null>;
+  };
+}
+
+/** A signed event whose `data` doesn't match its `type`: answered 400, not retried. */
+class BadEventError extends Error {}
+
+/**
+ * Checks Fonoster's webhook signature over the raw body bytes: `X-Fonoster-Signature` holds
+ * one or more comma-separated hex HMAC-SHA256 values (several during a secret rotation) of
+ * `<X-Fonoster-Timestamp>.<raw body>`, keyed with the secret as issued. Any match passes,
+ * compared in constant time after a length check. Fails closed on a missing or malformed
+ * header and on a timestamp more than {@link MAX_SKEW_SECONDS} from `nowSeconds`.
+ */
+export function verifyFonosterSignature(
+  raw: Buffer,
+  headers: Record<string, string | string[] | undefined>,
+  secret: string,
+  nowSeconds: number
+): boolean {
+  const timestamp = headers[TIMESTAMP_HEADER];
+  const signature = headers[SIGNATURE_HEADER];
+  if (typeof timestamp !== "string" || !/^\d{1,12}$/.test(timestamp)) return false;
+  if (typeof signature !== "string" || signature.length === 0) return false;
+  if (Math.abs(nowSeconds - Number(timestamp)) > MAX_SKEW_SECONDS) return false;
+
+  const expected = createHmac("sha256", secret).update(`${timestamp}.`).update(raw).digest();
+  return signature.split(",").some((candidate) => {
+    const given = Buffer.from(candidate.trim(), "hex");
+    return given.length === expected.length && timingSafeEqual(given, expected);
+  });
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: NodeJS.Timeout | undefined;
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms} ms`)), ms);
+    })
+  ]).finally(() => clearTimeout(timer));
+}
+
+function parseData<T>(
+  schema: { safeParse(v: unknown): { success: true; data: T } | { success: false } },
+  data: unknown
+): T {
+  const parsed = schema.safeParse(data);
+  if (!parsed.success) throw new BadEventError("event data does not match its type");
+  return parsed.data;
 }
 
 /**
- * Builds the `POST /api/voice/events` handler for the Fonoster autopilot events-hook
- * (conversation.started / conversation.ended). It correlates the event to the gestión
- * created at call placement and updates it with transcript, recording, and duration.
- * When `ai.generation` is `onIngestion`, it also generates the analysis inline once the
- * transcript has been stored. On `conversation.ended` it also runs the Voz IA autopilot
- * decision once over the full transcript (`deps.decideOutcome`), capturing a
- * `PaymentPromise` the same way EMAIL/WhatsApp do per reply — see the
- * voice-payment-promise-capture change.
+ * Builds the `POST /api/voice/events` receiver for Fonoster's signed workspace webhooks,
+ * QCobro's source of voice call results. Mount it with a raw body parser: the signature is
+ * checked over the raw bytes before anything is parsed or read from the database.
  *
- * FIXME(security): this endpoint is UNAUTHENTICATED and must be secured very soon —
- * the autopilot should sign requests (or carry a shared secret / workspace credential),
- * and correlation must be workspace-scoped. Until then, anyone who can reach this port
- * can write transcript/recording data onto any Voz IA gestión by guessing a call ref.
+ * - `call.ended` (VOICE_AI): finalizes DELIVERED with the call's `durationSeconds` and
+ *   settles usage with it.
+ * - `call.failed` (VOICE_AI or VOICE_PRERECORDED): finalizes FAILED with the mapped reason
+ *   and settles usage to zero.
+ * - `call_record.sealed` (VOICE_AI): fetches the call record and stores its transcript
+ *   before answering, then runs the insight and the decision after answering.
+ * - Anything else, a pre-recorded `call.ended`/`call_record.sealed` (its outcome is
+ *   recorded in-process by the voice server), and an unknown `callRef`: acknowledged.
+ *
+ * Every side effect checks the gestión's persisted state, so redeliveries, any event order,
+ * later record versions and restarts apply each once. Responses: 200, 401 (bad signature),
+ * 400 (signed but malformed), 503 (no secret configured), 500 (Fonoster retries).
  */
 export function createVoiceEventsHandler(
-  prisma: VoiceEventClient & GenerateInsightClient,
+  prisma: VoiceCallLookupClient & VoiceEventClient & GenerateInsightClient,
   deps: VoiceEventsDeps
 ) {
-  const ingest = createIngestVoiceEvent(prisma);
-  const generate = createGenerateGestionInsight({ prisma, generator: deps.generator });
+  const now = deps.now ?? (() => new Date());
+  const ingest = createIngestVoiceEvent(prisma, now);
+  const complete = createCompleteVoiceAiConversation({
+    prisma,
+    generator: deps.generator,
+    generation: deps.generation,
+    decideOutcome: deps.decideOutcome
+  });
+  const recordFetchTimeoutMs = deps.recordFetchTimeoutMs ?? DEFAULT_RECORD_FETCH_TIMEOUT_MS;
+
+  const findGestion = (callRef: string) =>
+    prisma.accountContactLog.findFirst({
+      where: { providerRef: callRef },
+      select: { id: true, agentType: true, path: true, channelData: true }
+    });
+
+  /** Handles one event; returns the work owed after the response, if any. */
+  async function handle(
+    event: FonosterWebhookEvent
+  ): Promise<{ matched?: boolean; after?: () => Promise<unknown> }> {
+    const at = now().toISOString();
+
+    if (event.type === "call.ended") {
+      const { callRef, durationSeconds } = parseData(callEndedDataSchema, event.data);
+      const gestion = await findGestion(callRef);
+      if (gestion?.agentType !== "VOICE_AI") return { matched: !!gestion };
+      await deps.recordVoiceAiCallStatus({
+        providerRef: callRef,
+        answered: true,
+        answeredSeconds: durationSeconds,
+        at
+      });
+      await deps.settleUsage?.({ providerRef: callRef, answeredSeconds: durationSeconds, at });
+      return { matched: true };
+    }
+
+    if (event.type === "call.failed") {
+      const { callRef, reason } = parseData(callFailedDataSchema, event.data);
+      const gestion = await findGestion(callRef);
+      const record =
+        gestion?.agentType === "VOICE_AI"
+          ? deps.recordVoiceAiCallStatus
+          : gestion?.agentType === "VOICE_PRERECORDED"
+            ? deps.recordPrerecordedOutcome
+            : null;
+      if (!record) return { matched: !!gestion };
+      await record({
+        providerRef: callRef,
+        answered: false,
+        deliveryReason: mapCallFailedReason(reason),
+        answeredSeconds: 0,
+        at
+      });
+      await deps.settleUsage?.({ providerRef: callRef, answeredSeconds: 0, at });
+      return { matched: true };
+    }
+
+    if (event.type === "call_record.sealed") {
+      const { callRef } = parseData(callRecordSealedDataSchema, event.data);
+      const gestion = await findGestion(callRef);
+      if (gestion?.agentType !== "VOICE_AI") return { matched: !!gestion };
+      // Decided already: a later version, a redelivery, or a restart. Nothing is owed.
+      if (gestion.path) return { matched: true };
+
+      const stored = (gestion.channelData as Record<string, unknown> | null)?.transcriptStoredAt;
+      if (!stored) {
+        const record = await withTimeout(
+          deps.callRecords.getRecord(callRef),
+          recordFetchTimeoutMs,
+          "call record fetch"
+        );
+        const result = await ingest({ callRef, chatHistory: chatHistoryFromCallRecord(record) });
+        // A record with no spoken turns produces no outcome.
+        if (!result.matched || !result.stored) return { matched: result.matched };
+      }
+      return { matched: true, after: () => complete(gestion.id) };
+    }
+
+    // call.started, provider.deprecated, and any type added later.
+    return {};
+  }
 
   return async (req: Request, res: Response): Promise<void> => {
-    // Receipt log: this is currently the ONLY server-side evidence that Fonoster
-    // reached this endpoint at all (no access-log middleware is mounted, and a
-    // schema-validation failure below would otherwise leave zero trace).
-    logger.verbose(
-      `received eventType=${req.body?.eventType} appRef=${req.body?.appRef} callRef=${req.body?.callRef}`
-    );
+    if (!deps.webhookSecret) {
+      res.status(503).json({ error: "Voice webhook secret is not configured" });
+      return;
+    }
+    const raw = Buffer.isBuffer(req.body) ? req.body : null;
+    const nowSeconds = Math.floor(now().getTime() / 1000);
+    if (!raw || !verifyFonosterSignature(raw, req.headers, deps.webhookSecret, nowSeconds)) {
+      logger.warn("rejected a voice event with a missing or invalid signature");
+      res.status(401).json({ error: "Invalid signature" });
+      return;
+    }
+
+    let event: FonosterWebhookEvent;
     try {
-      const result = await ingest(req.body);
-      res.status(200).json(result);
+      event = fonosterWebhookEventSchema.parse(JSON.parse(raw.toString("utf8")));
+    } catch {
+      res.status(400).json({ error: "Malformed event" });
+      return;
+    }
+    logger.verbose(`received type=${event.type} id=${event.id}`);
 
-      if (!result.matched) {
-        logger.warn(`no gestión matched callRef=${req.body?.callRef} — event dropped`);
-      }
-
-      deps.recordEvent?.({
-        providerRef: typeof req.body?.callRef === "string" ? req.body.callRef : undefined,
-        matched: result.matched,
-        summary:
-          typeof req.body?.eventType === "string" ? { eventType: req.body.eventType } : undefined
-      });
-
-      // Billing settlement: the call ended, so replace the dispatch-time estimate
-      // with the increment-billed amount for the answered duration. Best-effort
-      // after responding; idempotent per call ref (usage-ledger spec).
-      if (
-        deps.settleUsage &&
-        req.body?.eventType === "conversation.ended" &&
-        typeof req.body?.callRef === "string"
-      ) {
-        // Settle ONLY when the event carries a numeric duration. Defaulting a
-        // missing field to 0 would refund the whole estimate for a call that
-        // was actually answered — a silent revenue leak. Skipping leaves the
-        // estimate standing and lets a later/redelivered event (settlement is
-        // idempotent and unfired) supply the real duration.
-        if (typeof req.body?.durationSeconds === "number") {
-          deps
-            .settleUsage({
-              providerRef: req.body.callRef,
-              answeredSeconds: req.body.durationSeconds,
-              at: new Date().toISOString()
-            })
-            .catch((err: unknown) =>
-              console.error(
-                "[billing] voice settlement failed:",
-                err instanceof Error ? err.message : err
-              )
-            );
-        } else {
-          console.warn(
-            `[billing] conversation.ended for ${req.body.callRef} carried no durationSeconds — estimate left unsettled`
-          );
-        }
-      }
-
-      // delivery finalization: DISPATCHED -> DELIVERED. conversation.ended only ever
-      // fires for a call that was actually routed into the autopilot (i.e. answered),
-      // so `answered` is always true here — a call that never connects never reaches
-      // this webhook at all and is instead closed out by the timeout sweep. Duration is
-      // derived locally (Fonoster's payload carries none) from the gestión's own
-      // dispatch timestamp, so ring time is included — a best-effort approximation.
-      if (
-        result.matched &&
-        deps.recordVoiceAiCallStatus &&
-        req.body?.eventType === "conversation.ended" &&
-        typeof req.body?.callRef === "string"
-      ) {
-        const answeredSeconds = Math.max(
-          0,
-          Math.round((Date.now() - result.contactedAt.getTime()) / 1000)
-        );
-        deps
-          .recordVoiceAiCallStatus({
-            providerRef: req.body.callRef,
-            answered: true,
-            answeredSeconds,
-            at: new Date().toISOString()
-          })
-          .catch((err: unknown) =>
-            logger.error(
-              `delivery finalize failed for callRef=${req.body?.callRef}: ${err instanceof Error ? err.message : err}`
-            )
-          );
-      }
-
-      // On-ingestion analysis: best-effort, after responding (the autopilot does not
-      // wait for our response). Failures must not affect ingestion.
-      if (
-        result.matched &&
-        deps.generation === "onIngestion" &&
-        deps.generator &&
-        req.body?.eventType === "conversation.ended"
-      ) {
-        generate({ id: result.id }).catch(() => undefined);
-      }
-
-      // Payment-promise capture: best-effort, after responding — a decision failure
-      // (LLM error, malformed output) must not fail the webhook or affect the
-      // transcript/recording/billing work already done above.
-      if (result.matched && req.body?.eventType === "conversation.ended") {
-        deps
-          .decideOutcome(result.id)
-          .catch((err: unknown) =>
-            logger.error(
-              `voice outcome decision failed for callRef=${req.body?.callRef}: ${err instanceof Error ? err.message : err}`
-            )
-          );
-      }
+    let outcome: Awaited<ReturnType<typeof handle>>;
+    try {
+      outcome = await handle(event);
     } catch (err) {
-      if (err instanceof ValidationError) {
-        logger.error(
-          `400 validation failed: ${JSON.stringify(err.toJSON())} body_keys=${Object.keys(req.body ?? {}).join(",")}`
-        );
-        res.status(400).json(err.toJSON());
+      if (err instanceof BadEventError) {
+        logger.error(`400 ${event.type} id=${event.id}: ${err.message}`);
+        res.status(400).json({ error: "Malformed event" });
         return;
       }
-      logger.error(`unexpected error: ${err instanceof Error ? err.message : err}`);
-      res.status(500).json({ error: "Failed to ingest voice event" });
+      logger.error(
+        `failed to handle ${event.type} id=${event.id}: ${err instanceof Error ? err.message : err}`
+      );
+      res.status(500).json({ error: "Failed to handle voice event" });
+      return;
     }
+
+    res.status(200).json({ received: true });
+
+    const callRef = typeof event.data.callRef === "string" ? event.data.callRef : undefined;
+    if (callRef) {
+      deps.recordEvent?.({
+        providerRef: callRef,
+        matched: outcome.matched,
+        summary: { eventType: event.type }
+      });
+    }
+
+    // Insight and decision run after the response; a failure leaves the gestión undecided
+    // and the sweep's recovery runs them again.
+    outcome
+      .after?.()
+      .catch((err: unknown) =>
+        logger.error(
+          `voice insight/decision failed for callRef=${callRef}: ${err instanceof Error ? err.message : err}`
+        )
+      );
   };
 }

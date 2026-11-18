@@ -59,20 +59,14 @@ export interface VoiceCompletionTimeoutSweepDeps {
    */
   graceSeconds: number;
   /**
-   * Minutes past dispatch before a gestión with no CDR at all is finalized `NOT_ORIGINATED`.
-   * Deliberately its own, longer threshold rather than `floorMinutes`: `NOT_ORIGINATED` is
-   * irreversible and there's no live signal to race, but the CDR's start record can lag
-   * dispatch (Influx read lag, a queueing hiccup) — finalizing too early risks recording a
-   * call that is still just about to exist as one that never happened at all.
-   */
-  notOriginatedMinutes: number;
-  /**
    * Minutes past which a gestión whose CDR still carries no status (the provider lost the
    * end-of-call record, or never writes one) is finalized anyway, `deliveryReason:
    * OUTCOME_UNKNOWN`, rather than polled forever. Also the fallback for a terminal CDR whose
    * `endedAt` can't be parsed — see {@link classify}. Sized well above any call the platform
    * allows: the dialplan's `TIMEOUT(absolute)` caps every channel at 60 minutes, so a CDR
-   * still showing no status past that has lost its end record, not one still talking.
+   * still showing no status past that has lost its end record, not one still talking. Also
+   * the age at which a gestión with no CDR at all is finalized `NOT_ORIGINATED` (see
+   * {@link classify}).
    */
   backstopMinutes: number;
   now: () => Date;
@@ -81,9 +75,10 @@ export interface VoiceCompletionTimeoutSweepDeps {
 
 /**
  * Finalizes VOICE_AI / VOICE_PRERECORDED gestiones stuck at `delivery: DISPATCHED` past
- * `floorMinutes` with no completion signal — the autopilot `conversation.ended` webhook
- * never arrived, or the pre-recorded VoiceServer's answer/say/hangup verb chain never
- * resolved (neither has a timeout of its own). Classifies each one from Fonoster's call
+ * `floorMinutes` with no completion signal — the Fonoster workspace webhook
+ * (`call.ended`/`call.failed`) was lost, or the pre-recorded VoiceServer's answer/say/hangup
+ * verb chain never resolved (neither has a timeout of its own). It is the backstop: call
+ * results normally arrive through the webhook. Classifies each one from Fonoster's call
  * detail record (CDR, `Calls.getCall`) instead of always guessing `PROVIDER_ERROR`:
  *
  * - The CDR has a terminal status (the call has cleared, one way or another) AND has been
@@ -102,17 +97,20 @@ export interface VoiceCompletionTimeoutSweepDeps {
  *   call is still in progress): leave the gestión at DISPATCHED. A later sweep pass
  *   decides once the call actually ends, or the backstop below fires. This is not a
  *   failure and must not be treated as one.
- * - No CDR at all (Fonoster's `NOT_FOUND`): finalize `FAILED` / `NOT_ORIGINATED` once
- *   `notOriginatedMinutes` have passed since dispatch — longer than `floorMinutes`, since
- *   this write is irreversible and the CDR's start record can lag dispatch.
+ * - No CDR at all (Fonoster's `NOT_FOUND`): finalize `FAILED` / `NOT_ORIGINATED` only once
+ *   `backstopMinutes` have passed since dispatch. Fonoster's `GetCall` reads the call-record
+ *   index, which gets a row only when the record is sealed at hangup, so a call still in
+ *   progress is NOT_FOUND too; only past the longest possible call does NOT_FOUND mean the
+ *   call never happened.
  * - Backstop: a gestión still with no status past `backstopMinutes` is finalized `FAILED` /
  *   `OUTCOME_UNKNOWN` rather than polled forever — the provider can lose the end record.
  *
- * Whenever the CDR also reports `amdStatus: MACHINE` (Fonoster's answering-machine
- * detection), the same finalization additionally sets `path: ANSWERED_BY_MACHINE` —
+ * Whenever the CDR also reports `amdStatus: MACHINE` or `VOICEMAIL` (Fonoster's
+ * answering-machine detection), the same finalization additionally sets
+ * `path: ANSWERED_BY_MACHINE` —
  * alongside whichever `deliveryReason` applies above, never instead of one. This is the
- * only place a `VOICE_AI` gestión's `path` is ever set from AMD: the autopilot's own live
- * `conversation.ended` decision never consults the CDR (see `decideVoiceOutcome.ts`), so a
+ * only place a `VOICE_AI` gestión's `path` is ever set from AMD: the live decision over the
+ * call record's transcript never consults the CDR (see `decideVoiceOutcome.ts`), so a
  * call that reaches a live conversation keeps `path: ENGAGED` regardless of `amdStatus`.
  *
  * Never passes the CDR's own duration (measured from call setup and including ring time)
@@ -189,7 +187,7 @@ export function createVoiceCompletionTimeoutSweep(
  * also reports a detected answering machine), or `null` when nothing should be written yet
  * — either because the call is still in progress, because it has cleared too recently to
  * rule out a live completion signal still being in flight for it, or because there's no CDR
- * yet and it's too soon to call that irreversible.
+ * yet and the call may still be running.
  */
 async function classify(
   deps: VoiceCompletionTimeoutSweepDeps,
@@ -200,15 +198,18 @@ async function classify(
   const lookup = await deps.outboundCallClient.getCall(row.providerRef);
 
   if (!lookup.found) {
-    // No grace against a live signal here — there isn't one to race, the call never
-    // originated. But the write is irreversible, and the CDR's start record can lag
-    // dispatch, so this gets its own (longer) age gate rather than firing at floorMinutes.
-    return ageMinutes >= deps.notOriginatedMinutes ? { deliveryReason: "NOT_ORIGINATED" } : null;
+    // At Fonoster 0.63 a call in progress has no CDR yet (its record is sealed at hangup),
+    // so NOT_FOUND alone doesn't mean the call never originated. Only past the backstop,
+    // longer than any call can last, is that the remaining explanation.
+    return ageMinutes >= deps.backstopMinutes ? { deliveryReason: "NOT_ORIGINATED" } : null;
   }
 
   // Fonoster's answering-machine detection only ever runs on an answered call, so it rides
   // alongside whichever deliveryReason the CDR maps to below — never in place of one.
-  const path: Path | undefined = lookup.amdStatus === "MACHINE" ? "ANSWERED_BY_MACHINE" : undefined;
+  const path: Path | undefined =
+    lookup.amdStatus === "MACHINE" || lookup.amdStatus === "VOICEMAIL"
+      ? "ANSWERED_BY_MACHINE"
+      : undefined;
 
   const terminal = mapVoiceCallStatusToDeliveryReason(lookup.status);
   if (terminal !== null) {

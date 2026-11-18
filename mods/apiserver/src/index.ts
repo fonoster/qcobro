@@ -6,11 +6,12 @@ import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { createIdentityClient } from "@fonoster/identity-client";
 import { getLogger } from "@fonoster/logger";
 import { appRouter } from "./trpc/index.js";
-import { createContext, createWSContext } from "./trpc/context.js";
+import { callRecords, createContext, createWSContext, resolveAuth } from "./trpc/context.js";
 import { config } from "./config.js";
 import { prisma } from "./db.js";
 import { createContactLogHandler } from "./rest/contactLogs.js";
 import { createVoiceEventsHandler } from "./rest/voiceEvents.js";
+import { createGestionRecordingHandler } from "./rest/gestionRecording.js";
 import { createSmsEventsHandler } from "./rest/smsEvents.js";
 import { createSettleVoiceUsage } from "./functions/billing/settleVoiceUsage.js";
 import { createRecordPrerecordedOutcome } from "./functions/voice/recordPrerecordedOutcome.js";
@@ -53,6 +54,41 @@ const providerEvents = (source: Parameters<typeof createProviderEventRecorder>[2
   createProviderEventRecorder(prisma as unknown as ProviderEventPrisma, engineEventSink, source);
 
 app.use(cors());
+// Fonoster workspace webhooks: QCobro's source of voice call results (call.ended,
+// call.failed, call_record.sealed). Registered before the JSON parser so the receiver gets the
+// raw bytes its signature is computed over. Without fonoster.webhookSecret it answers 503.
+const fonosterWebhookSecret = config.fonoster?.webhookSecret ?? null;
+if (config.fonoster && !fonosterWebhookSecret) {
+  logger.warn("fonoster.webhookSecret is not set; voice call results will not be received");
+}
+app.post(
+  "/api/voice/events",
+  express.raw({ type: () => true, limit: "1mb" }),
+  createVoiceEventsHandler(prisma as never, {
+    webhookSecret: fonosterWebhookSecret,
+    callRecords: callRecords ?? {
+      getRecord: () => Promise.reject(new Error("Fonoster is not configured"))
+    },
+    generator: createInsightGenerator(config.ai),
+    generation: config.ai?.generation ?? "onDemand",
+    recordEvent: providerEvents("voice-events"),
+    // Billing settlement: replace the dispatch-time voice estimate with the
+    // increment-billed amount for the answered duration (idempotent per ref).
+    settleUsage: config.billing?.enabled ? createSettleVoiceUsage(prisma as never) : null,
+    recordVoiceAiCallStatus: createRecordVoiceAiCallStatus(prisma as never),
+    recordPrerecordedOutcome: createRecordPrerecordedOutcome(prisma as never),
+    // Payment-promise capture: the Voz IA autopilot decision, run once over the call
+    // record's transcript. Falls back to a deterministic mock when `ai` is absent/disabled,
+    // same as EMAIL/WhatsApp.
+    decideOutcome: createDecideVoiceOutcome({
+      client: createPrismaVoiceDecisionClient(prisma),
+      autopilot: createVoiceAutopilot(config.ai),
+      recordOutcome: createRecordOutcome(prisma as never),
+      now: () => new Date()
+    })
+  })
+);
+
 app.use(
   express.json({
     verify: (req, _res, buf) => {
@@ -72,35 +108,21 @@ app.post(
   createContactLogHandler(prisma, config, providerEvents("contact-logs"))
 );
 
-// Fonoster autopilot events-hook for Voz IA calls (conversation.started / .ended).
-// FIXME(security): UNAUTHENTICATED — must be secured very soon (see handler note).
-app.post(
-  "/api/voice/events",
-  createVoiceEventsHandler(prisma as never, {
-    generator: createInsightGenerator(config.ai),
-    generation: config.ai?.generation ?? "onDemand",
-    recordEvent: providerEvents("voice-events"),
-    // Billing settlement: replace the dispatch-time voice estimate with the
-    // increment-billed amount for the answered duration (idempotent per ref).
-    settleUsage: config.billing?.enabled ? createSettleVoiceUsage(prisma as never) : null,
-    // delivery finalization (DISPATCHED -> DELIVERED) — not billing-gated, this is the
-    // core correctness fix, independent of whether billing is enabled.
-    recordVoiceAiCallStatus: createRecordVoiceAiCallStatus(prisma as never),
-    // Payment-promise capture: the Voz IA autopilot decision, run once over the final
-    // transcript on conversation.ended (payment-promises capability). Falls back to a
-    // deterministic mock when `ai` is absent/disabled, same as EMAIL/WhatsApp.
-    decideOutcome: createDecideVoiceOutcome({
-      client: createPrismaVoiceDecisionClient(prisma),
-      autopilot: createVoiceAutopilot(config.ai),
-      recordOutcome: createRecordOutcome(prisma as never),
-      now: () => new Date()
+// A gestión's call recording (the redacted copy), streamed from Fonoster to the console.
+// Bearer token + x-workspace, like tRPC; the call ref comes only from the workspace's gestión.
+if (callRecords) {
+  app.get(
+    "/api/gestiones/:id/recording",
+    createGestionRecordingHandler({
+      authenticate: async (token, workspace) => (await resolveAuth(token, workspace)).workspace,
+      prisma: prisma as never,
+      callRecords
     })
-  })
-);
+  );
+}
 
 // Twilio SMS status callback (sms-events-hook capability): delivery status returns as a
-// gestión update. Signature-verified against X-Twilio-Signature from the start (unlike
-// /api/voice/events above). Registered only when both authToken and webhookBaseUrl are
+// gestión update. Signature-verified against X-Twilio-Signature. Registered only when both authToken and webhookBaseUrl are
 // configured — without a webhookBaseUrl, TwilioSmsClient never registers a statusCallback
 // with Twilio in the first place, so there is nothing for this route to receive.
 if (config.twilio?.webhookBaseUrl) {

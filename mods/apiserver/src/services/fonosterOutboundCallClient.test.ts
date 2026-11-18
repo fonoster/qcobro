@@ -4,6 +4,7 @@ import { fonosterConfigSchema } from "@qcobro/common";
 import {
   classifyVoiceError,
   FonosterOutboundCallClient,
+  parseAmdStatus,
   parseEndedAt,
   type CallsApi
 } from "./fonosterOutboundCallClient.js";
@@ -165,5 +166,18 @@ describe("parseEndedAt", () => {
     assert.equal(parseEndedAt(null), null);
     assert.equal(parseEndedAt(-1), null);
     assert.equal(parseEndedAt(Number.NaN), null);
+  });
+});
+
+describe("parseAmdStatus", () => {
+  it("accepts every verdict Fonoster 0.63's CDR reports", () => {
+    for (const status of ["HUMAN", "MACHINE", "VOICEMAIL", "IVR", "UNKNOWN"]) {
+      assert.equal(parseAmdStatus(status), status);
+    }
+  });
+
+  it("rejects anything else", () => {
+    assert.equal(parseAmdStatus("FAX"), undefined);
+    assert.equal(parseAmdStatus(undefined), undefined);
   });
 });

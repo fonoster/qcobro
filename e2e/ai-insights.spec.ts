@@ -58,7 +58,6 @@ test.describe("ai-insights", () => {
         notes: "Seed",
         channelData: {
           providerRef: `voz-${stamp}`,
-          recordingUrl: "https://rec.example/x.wav",
           transcript: [
             { role: "agent", text: "Buenas tardes, le llamo de QCobro." },
             { role: "customer", text: "Sí, dígame." }

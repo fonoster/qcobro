@@ -3,8 +3,6 @@ import assert from "node:assert/strict";
 import {
   fonosterConfigSchema,
   recordingFileNameForCall,
-  recordingUrlForFile,
-  resolveRecordingUrl,
   ttsProductRefForVoice,
   twilioConfigSchema,
   type VoiceCatalogEntry
@@ -27,30 +25,33 @@ describe("ttsProductRefForVoice", () => {
 });
 
 /**
- * A channel section is all-or-nothing. Omitting it disables the channel, which is fine; what
- * is rejected is the in-between — dispatching with no callback registered, which strands every
- * gestión at `delivery: DISPATCHED` with no way to ever learn what happened to it.
+ * Twilio's section is all-or-nothing: dispatching with no status callback strands every
+ * gestión at `delivery: DISPATCHED`. Fonoster's call results arrive through the signed
+ * workspace webhook instead, so its `webhookBaseUrl` is optional and `webhookSecret` is what
+ * the receiver needs.
  */
-describe("webhookBaseUrl is required within its section", () => {
-  const fonoster = {
-    accessKeyId: "ak",
-    apiKey: "key",
-    apiSecret: "secret",
-    webhookBaseUrl: "https://qcobro.example.com"
-  };
+describe("channel webhook settings", () => {
+  const fonoster = { accessKeyId: "ak", apiKey: "key", apiSecret: "secret" };
   const twilio = {
     accountSid: "AC1",
     authToken: "tok",
     webhookBaseUrl: "https://qcobro.example.com"
   };
 
-  it("accepts a fonoster section carrying a webhook base URL", () => {
-    assert.equal(fonosterConfigSchema.parse(fonoster)?.webhookBaseUrl, fonoster.webhookBaseUrl);
+  it("accepts a fonoster section with neither webhookBaseUrl nor webhookSecret", () => {
+    const parsed = fonosterConfigSchema.parse(fonoster);
+    assert.equal(parsed?.webhookBaseUrl, undefined);
+    assert.equal(parsed?.webhookSecret, undefined);
   });
 
-  it("rejects a fonoster section without one", () => {
-    const withoutWebhook = { ...fonoster, webhookBaseUrl: undefined };
-    assert.throws(() => fonosterConfigSchema.parse(withoutWebhook));
+  it("keeps fonoster.webhookSecret and strips the removed recordingBaseUrl", () => {
+    const parsed = fonosterConfigSchema.parse({
+      ...fonoster,
+      webhookSecret: "whsec_abc",
+      recordingBaseUrl: "https://app.fonoster.com/api/recordings"
+    });
+    assert.equal(parsed?.webhookSecret, "whsec_abc");
+    assert.equal("recordingBaseUrl" in (parsed ?? {}), false);
   });
 
   it("accepts a twilio section carrying a webhook base URL", () => {
@@ -109,83 +110,5 @@ describe("recordingFileNameForCall", () => {
     assert.equal(recordingFileNameForCall("app-ref", undefined), undefined);
     assert.equal(recordingFileNameForCall("", "1756742400.123"), undefined);
     assert.equal(recordingFileNameForCall("app-ref", ""), undefined);
-  });
-});
-
-describe("recordingUrlForFile", () => {
-  const baseUrl = "https://app.fonoster.com/api/recordings";
-
-  it("appends the recording's file name to the base URL", () => {
-    assert.equal(
-      recordingUrlForFile("app-ref_1756742400.123.wav", baseUrl),
-      "https://app.fonoster.com/api/recordings/app-ref_1756742400.123.wav"
-    );
-  });
-
-  it("tolerates a trailing slash on the configured base", () => {
-    assert.equal(
-      recordingUrlForFile("rec1.wav", "https://app.fonoster.com/api/recordings/"),
-      "https://app.fonoster.com/api/recordings/rec1.wav"
-    );
-  });
-
-  it("returns undefined when no base URL is configured, so callers can fall back", () => {
-    assert.equal(recordingUrlForFile("rec1.wav", undefined), undefined);
-    assert.equal(recordingUrlForFile("rec1.wav", null), undefined);
-  });
-
-  it("returns undefined when the gestión recorded no file name", () => {
-    assert.equal(recordingUrlForFile(null, baseUrl), undefined);
-    assert.equal(recordingUrlForFile("", baseUrl), undefined);
-  });
-
-  it("percent-encodes the name so an odd one cannot break out of the path", () => {
-    assert.equal(
-      recordingUrlForFile("a b/../c.wav", baseUrl),
-      "https://app.fonoster.com/api/recordings/a%20b%2F..%2Fc.wav"
-    );
-  });
-});
-
-describe("resolveRecordingUrl", () => {
-  const baseUrl = "https://app.fonoster.com/api/recordings";
-
-  it("uses the URL Voz IA reported, exactly as reported", () => {
-    const reported = "https://rec.example/api/recordings/app-1_1756742400.123.wav";
-    assert.equal(resolveRecordingUrl({ recordingUrl: reported }, baseUrl), reported);
-  });
-
-  it("never overrides a reported URL with a locally composed one", () => {
-    // The regression this guards: a configured base URL used to win over the provider's
-    // own answer, replacing a working Voz IA recording link with one that 404s.
-    const reported = "https://rec.example/api/recordings/app-1_1756742400.123.wav";
-    assert.equal(
-      resolveRecordingUrl({ recordingUrl: reported, recordingFile: "other.wav" }, baseUrl),
-      reported
-    );
-  });
-
-  it("composes a pre-recorded gestión's URL from its file name and the deployment base", () => {
-    assert.equal(
-      resolveRecordingUrl({ recordingFile: "app-1_1756742400.123.wav" }, baseUrl),
-      "https://app.fonoster.com/api/recordings/app-1_1756742400.123.wav"
-    );
-  });
-
-  it("returns undefined when the gestión reported no recording at all", () => {
-    assert.equal(resolveRecordingUrl({}, baseUrl), undefined);
-    assert.equal(resolveRecordingUrl(null, baseUrl), undefined);
-    assert.equal(resolveRecordingUrl(undefined, baseUrl), undefined);
-  });
-
-  it("returns undefined for a pre-recorded gestión when no base URL is configured", () => {
-    assert.equal(resolveRecordingUrl({ recordingFile: "app-1_x.wav" }, undefined), undefined);
-  });
-
-  it("ignores non-string channelData values rather than rendering them", () => {
-    assert.equal(
-      resolveRecordingUrl({ recordingUrl: 42, recordingFile: null }, baseUrl),
-      undefined
-    );
   });
 });

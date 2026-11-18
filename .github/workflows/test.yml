@@ -45,6 +45,13 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Unit tests need no database or provider; the committed example config is enough.
+      # Lerna runs each package's tests from its own directory, so the path is absolute.
+      - name: Test
+        run: npm test
+        env:
+          QCOBRO_CONFIG: ${{ github.workspace }}/config/qcobro.example.json
+
       - name: Typecheck
         run: npm run typecheck
 

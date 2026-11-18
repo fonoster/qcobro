@@ -67,9 +67,9 @@ export type VoiceCallStatus =
 /**
  * Fonoster's answering-machine detection (AMD) verdict, read off the CDR's `amdStatus`
  * field. Only ever present when AMD was enabled upstream for the call (`undefined`
- * otherwise — always null-check); `MACHINE` is the only value the sweep acts on.
+ * otherwise — always null-check); the sweep acts on `MACHINE` and `VOICEMAIL`.
  */
-export type AmdStatus = "HUMAN" | "MACHINE" | "UNKNOWN";
+export type AmdStatus = "HUMAN" | "MACHINE" | "VOICEMAIL" | "IVR" | "UNKNOWN";
 
 /**
  * Result of looking up a call's CDR by provider ref. `found: false` is Fonoster's own
@@ -107,6 +107,28 @@ export interface OutboundCallClient {
   createCall(input: OutboundCallInput): Promise<{ ref: string }>;
   /** Look up a call's CDR by provider ref (the voice completion sweep's only consumer). */
   getCall(ref: string): Promise<VoiceCallLookupResult>;
+}
+
+/**
+ * One call record (a vCon) as Fonoster's records API returns it: only the parts QCobro
+ * reads. `vcon.dialog` holds the recording entry (`type: "recording"`) and one text entry per
+ * spoken turn, `originator` indexing into `vcon.parties` (role `caller` or `agent`);
+ * `vcon.fonoster.recordingWithheld` is set when the redacted copy holds the recording back.
+ */
+export interface VoiceCallRecord {
+  vcon: {
+    parties?: ReadonlyArray<Record<string, unknown>>;
+    dialog?: ReadonlyArray<Record<string, unknown>>;
+    fonoster?: Record<string, unknown>;
+  };
+}
+
+/** Fonoster call records, always the redacted copy (never the original). */
+export interface VoiceCallRecordsClient {
+  /** The latest version of a call's record. Rejects when it isn't found or the lookup fails. */
+  getRecord(callRef: string): Promise<VoiceCallRecord>;
+  /** The call's recording (WAV). Rejects when there is none. */
+  getRecording(callRef: string): Promise<{ data: ArrayBuffer; contentType: string }>;
 }
 
 export interface SmsClient {

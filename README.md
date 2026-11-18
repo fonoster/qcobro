@@ -511,18 +511,18 @@ verification/invite emails, sent via Resend SMTP — see below).
 
 **`config/qcobro.json`** — production-specific fields beyond the Email block above:
 
-| Field                                   | Production value         | Notes                                                        |
-| --------------------------------------- | ------------------------ | ------------------------------------------------------------ |
-| `identity.endpoint`                     | `identity:50051`         | internal gRPC over the Docker network                        |
-| `identity.httpBridgeUrl`                | `http://identity:9110`   | internal — the apiserver calls the accept-invite bridge here |
-| `fonoster.webhookBaseUrl`               | `https://app.qcobro.com` | Voz IA events-hook auto-registers at `…/api/voice/events`    |
-| `fonoster.accessKeyId/apiKey/apiSecret` | from Fonoster workspace  | authenticates the autopilot sync                             |
-| `fonoster.numbers`                      | provisioned caller-IDs   | carrier format (no leading `+` for the current pool)         |
-| `twilio.*`                              | from Twilio              | **outbound-only — no Twilio webhook exists**                 |
-| `resend.inboundDomain`                  | `notices.qcobro.com`     | must match the `MX` record                                   |
-| `ai.apiKey`                             | Gemini key               | no callbacks                                                 |
-| `engine.enabled`                        | `true`                   | the autonomous outreach loop (off by default)                |
-| `apiserver.contactLogAuth.enabled`      | `true`                   | enforces workspace Basic auth on `POST /api/contact-logs`    |
+| Field                                   | Production value        | Notes                                                        |
+| --------------------------------------- | ----------------------- | ------------------------------------------------------------ |
+| `identity.endpoint`                     | `identity:50051`        | internal gRPC over the Docker network                        |
+| `identity.httpBridgeUrl`                | `http://identity:9110`  | internal — the apiserver calls the accept-invite bridge here |
+| `fonoster.webhookSecret`                | `whsec_…` from Fonoster | signs the workspace webhook at `…/api/voice/events`          |
+| `fonoster.accessKeyId/apiKey/apiSecret` | from Fonoster workspace | authenticates the autopilot sync                             |
+| `fonoster.numbers`                      | provisioned caller-IDs  | carrier format (no leading `+` for the current pool)         |
+| `twilio.*`                              | from Twilio             | **outbound-only — no Twilio webhook exists**                 |
+| `resend.inboundDomain`                  | `notices.qcobro.com`    | must match the `MX` record                                   |
+| `ai.apiKey`                             | Gemini key              | no callbacks                                                 |
+| `engine.enabled`                        | `true`                  | the autonomous outreach loop (off by default)                |
+| `apiserver.contactLogAuth.enabled`      | `true`                  | enforces workspace Basic auth on `POST /api/contact-logs`    |
 
 **`config/identity/identity.json`** — URLs used by the verification/invite emails and the
 accept-invite bridge (this file is install-once on the droplet, like the keys):
@@ -536,13 +536,26 @@ accept-invite bridge (this file is install-once on the droplet, like the keys):
 | `smtp.sender`                          | `QCobro <no-reply@notices.qcobro.com>`                                         |
 | `security.contactVerificationRequired` | `true`                                                                         |
 
-**External dashboards** — only Resend needs a hand-created webhook:
+**External dashboards** — Resend and Fonoster each need a hand-created webhook:
 
 - **Resend** — verify both sender domains; add the inbound `MX`; create the
   `email.received` webhook → `https://<host>/api/email/inbound` and copy its signing
   secret into `resend.inboundSigningSecret`.
-- **Fonoster** — no manual webhook. Set `webhookBaseUrl` + credentials + caller-ID
-  numbers; the apiserver registers the Voz IA events-hook when an agent is synced.
+- **Fonoster** — set credentials and caller-ID numbers, then create the workspace webhook
+  that delivers call results. Check for an existing one with `fonoster webhooks:list`, then
+  create it (or `webhooks:update <ref>` the existing one) for the three events QCobro reads:
+
+  ```sh
+  fonoster webhooks:create --url https://<host>/api/voice/events \
+    -e call.ended -e call.failed -e call_record.sealed
+  ```
+
+  Fonoster shows the `whsec_…` secret only once: paste it into `fonoster.webhookSecret` and
+  redeploy. Without it the apiserver logs
+  `fonoster.webhookSecret is not set; voice call results will not be received` and the
+  receiver answers 503. After `fonoster webhooks:rotate <ref>`, Fonoster signs with both the
+  old and the new secret for 24 hours: update `qcobro.json` and redeploy within that window.
+
 - **Twilio / Gemini** — credentials/keys only; no callbacks.
 
 **Known limitations** (as of this writing):
@@ -550,8 +563,6 @@ accept-invite bridge (this file is install-once on the droplet, like the keys):
 - **Voz IA only.** Pre-recorded voice needs the embedded VoiceServer on gRPC `:50061`,
   which Envoy/compose do not expose publicly yet. `prerecordedAppRef` can be set, but
   only the autopilot (Voz IA) path functions.
-- **`POST /api/voice/events` is unauthenticated** (tracked `FIXME(security)` in the
-  handler) — secure it before relying on it in production.
 
 ## More
 

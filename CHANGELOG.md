@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0](https://github.com/fonoster/qcobro/compare/v1.52.2...v2.0.0) (2026-11-18)
+
+- fix(voice)!: receive call results from Fonoster's signed workspace webhooks (#212) ([8be08c7](https://github.com/fonoster/qcobro/commit/8be08c704580ad77466f423188335649834f3113)), closes [#212](https://github.com/fonoster/qcobro/issues/212) [#203](https://github.com/fonoster/qcobro/issues/203)
+
+### Reverts
+
+- **site:** drop the pilot-form attribution columns ([#197](https://github.com/fonoster/qcobro/issues/197)) ([#199](https://github.com/fonoster/qcobro/issues/199)) ([bb275f0](https://github.com/fonoster/qcobro/commit/bb275f0a0d16e84c667c1804ca8d87872d91f4f2))
+
+### BREAKING CHANGES
+
+- POST /api/voice/events accepts only Fonoster's signed
+  workspace-webhook envelope. Create the webhook (fonoster webhooks:create --url
+  https://<host>/api/voice/events -e call.ended -e call.failed -e
+  call_record.sealed) and put its secret in fonoster.webhookSecret.
+  fonoster.recordingBaseUrl and voiceCompletionSweep.notOriginatedMinutes are
+  removed; fonoster.webhookBaseUrl is no longer required.
+
 ## [1.52.2](https://github.com/fonoster/qcobro/compare/v1.52.1...v1.52.2) (2026-09-28)
 
 ### Bug Fixes

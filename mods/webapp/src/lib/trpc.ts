@@ -17,6 +17,16 @@ export const REFRESH_TOKEN_KEY = "refreshToken";
 export const ID_TOKEN_KEY = "idToken";
 export const WORKSPACE_KEY = "workspace";
 
+/** The caller's Bearer token and active workspace, as the apiserver expects them. */
+export function authHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {};
+  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+  const workspace = localStorage.getItem(WORKSPACE_KEY);
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (workspace) headers["x-workspace"] = workspace;
+  return headers;
+}
+
 // Realtime-streaming capability (Gestiones list / Gestión detail): a WebSocket client used
 // only for `subscription`-type operations (see splitLink below). `connectionParams` carries
 // the same auth the HTTP link sends as headers — browsers can't set custom headers on a
@@ -41,14 +51,7 @@ export const trpcClient = trpc.createClient({
       true: wsLink({ client: wsClient }),
       false: httpBatchLink({
         url: "/trpc",
-        headers() {
-          const headers: Record<string, string> = {};
-          const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-          const workspace = localStorage.getItem(WORKSPACE_KEY);
-          if (token) headers.Authorization = `Bearer ${token}`;
-          if (workspace) headers["x-workspace"] = workspace;
-          return headers;
-        }
+        headers: authHeaders
       })
     })
   ]

@@ -20,6 +20,8 @@ export interface VoiceDecisionGestionView {
   /** The gestión's own correlation ref (the Fonoster call ref) — reused so `recordOutcome`
    *  enriches this same row instead of inserting a duplicate. */
   providerRef: string | null;
+  /** Set once the decision has run (it always records a path), so a later call skips it. */
+  path: string | null;
   channelData: unknown;
   agentSystemPrompt: string;
   /** Render context (account fields) for the autopilot. */
@@ -40,7 +42,7 @@ export interface DecideVoiceOutcomeDeps {
 }
 
 export type DecideVoiceOutcomeResult =
-  | { decided: false; reason: "not_found" | "no_transcript" }
+  | { decided: false; reason: "not_found" | "already_decided" | "no_transcript" }
   | { decided: true; outcome: Outcome | null };
 
 /** `outcome` values this decision step may record. `OTHER`/`WRONG_NUMBER` no longer
@@ -78,8 +80,11 @@ export function decidePath(): Path {
  * path/outcome/Objective through the same {@link CreateContactLogInput} path
  * EMAIL/WhatsApp use.
  *
- * No-ops (without calling the autopilot) when the gestión is missing or its transcript is
- * empty — mirrors {@link createGenerateGestionInsight}'s `no_transcript` guard. Once the
+ * No-ops (without calling the autopilot) when the gestión is missing, already decided (its
+ * `path` is set; the decision always records one), or its transcript is empty — mirrors
+ * {@link createGenerateGestionInsight}'s `cached` and `no_transcript` guards. The `path` check
+ * is what keeps redelivered webhooks, later record versions and the sweep's recovery from
+ * deciding the same call twice. Once the
  * autopilot has decided, the call was answered and conversational, so `path: ENGAGED` is
  * always recorded — whether or not the decision also carries an `outcome`.
  */
@@ -87,6 +92,7 @@ export function createDecideVoiceOutcome(deps: DecideVoiceOutcomeDeps) {
   return async (id: string): Promise<DecideVoiceOutcomeResult> => {
     const g = await deps.client.loadById(id);
     if (!g) return { decided: false, reason: "not_found" };
+    if (g.path) return { decided: false, reason: "already_decided" };
 
     const transcript = buildTranscript(g.channelData);
     if (transcript.length === 0) return { decided: false, reason: "no_transcript" };
@@ -162,6 +168,7 @@ export function createPrismaVoiceDecisionClient(prisma: PrismaClient): VoiceDeci
         campaignId: log.campaignId,
         debtAmountSnapshot: log.debtAmountSnapshot,
         providerRef: log.providerRef,
+        path: log.path,
         channelData: log.channelData,
         agentSystemPrompt: voiceCfg?.systemPrompt ?? "",
         accountContext: buildOutreachContext(

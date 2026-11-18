@@ -154,15 +154,13 @@ The channel physically bounds which axes are reachable:
 - `VOICE_AI` MAY produce the full set, including `path` of `ANSWERED_BY_MACHINE` or
   `ABANDONED`. `ANSWERED_BY_MACHINE` on this channel would be derived from the CDR's
   `amdStatus` and set only by the voice completion sweep (see "Voice gestións stuck at
-  DISPATCHED are finalized by the voice completion sweep"), for a gestión that never reached
-  the autopilot's own `conversation.ended` webhook — **not yet reachable in practice**:
-  Fonoster's `Calls.getCall()` does not expose an AMD verdict as of `@fonoster/sdk` 0.23.0
-  (tracked upstream as fonoster/fonoster#897); the sweep-side plumbing is written
-  defensively so it activates with no further QCobro change once that field ships. A call
-  that reaches `conversation.ended` SHALL record `path: ENGAGED` regardless of `amdStatus`
-  even once the CDR path is live — Fonoster's answering-machine detection does not stop the
-  call from reaching the autopilot, and nothing yet exposes the verdict to the autopilot's
-  own decision loop (tracked separately, issue #180).
+  DISPATCHED are finalized by the voice completion sweep"), for a gestión whose call result
+  never arrived through the workspace webhook (`call.ended`/`call.failed`), when the CDR
+  reports `MACHINE` or `VOICEMAIL`. A call whose transcript is decided (its sealed call record
+  arrived through `call_record.sealed`) SHALL record `path: ENGAGED` regardless of
+  `amdStatus` — Fonoster's answering-machine detection does not stop the call from reaching
+  the agent, and nothing yet exposes the verdict to the decision (tracked separately, issue
+  #180).
 - `EMAIL` and `WHATSAPP` MAY produce any `outcome`, but `path` SHALL only be `ENGAGED` —
   a threaded channel has no observable voicemail or abandonment.
 
@@ -235,11 +233,11 @@ The channel physically bounds which axes are reachable:
 - **THEN** the gestión `delivery` is `DELIVERED` and `path` is `ENGAGED`
 - **AND** `outcome` is null
 
-#### Scenario: A Voz IA call that reaches conversation.ended is never labeled ANSWERED_BY_MACHINE
+#### Scenario: A decided Voz IA call is never labeled ANSWERED_BY_MACHINE
 
-- **WHEN** a `VOICE_AI` call's CDR reports `amdStatus: MACHINE`, but the autopilot still
-  exchanges enough words with the greeting/IVR to produce a transcript and the
-  `conversation.ended` webhook fires
+- **WHEN** a `VOICE_AI` call's CDR reports `amdStatus: MACHINE`, but the agent still
+  exchanges enough words with the greeting/IVR to produce a transcript, and its sealed call
+  record arrives through `call_record.sealed`
 - **THEN** the gestión `path` is `ENGAGED`, decided from the transcript as usual
 - **AND** the CDR's `amdStatus` has no effect on this gestión, because the live decision path
   does not consult the CDR
@@ -362,8 +360,8 @@ configuration in which SMS dispatches but no status callback is ever registered.
 
 A `VOICE_PRERECORDED` or `VOICE_AI` gestión at `delivery` `DISPATCHED` SHALL be finalized by a
 periodic sweep when the channel's own normal completion path (the co-located VoiceServer's
-in-process completion for `VOICE_PRERECORDED`; the autopilot `conversation.ended` webhook for
-`VOICE_AI`) does not resolve it — most commonly because the call was never answered, or because
+in-process completion for `VOICE_PRERECORDED`; the workspace webhook's `call.ended` /
+`call.failed` for both) does not resolve it — most commonly because the call was never answered, or because
 it connected but the completion signal was lost.
 
 The sweep runs on its own interval, independent of whether the campaigns engine is running:
@@ -380,7 +378,7 @@ Fonoster's call detail record (CDR, `Calls.getCall`):
   reach the destination, and `OUTCOME_UNKNOWN` when the CDR shows a normal call clearing — the
   call itself was fine, but QCobro's own completion signal never arrived, so it cannot say what
   happened during the call. The grace exists because the CDR write and the channel's own live
-  completion signal (the autopilot webhook, the co-located VoiceServer) are triggered by the
+  completion signal (the workspace webhook, the co-located VoiceServer) are triggered by the
   same event and race; the sweep's guarded write is final for whichever side lands first, so
   finalizing the instant the CDR clears could permanently discard a real answered outcome that
   was merely still in flight. A terminal CDR still inside its grace window SHALL be treated
@@ -394,31 +392,26 @@ Fonoster's call detail record (CDR, `Calls.getCall`):
   still in progress), **or a terminal CDR still inside its `graceSeconds` window** — the
   gestión SHALL NOT be finalized. It is left at `DISPATCHED` for a later sweep pass to decide,
   unless the backstop below applies. This is not a failure.
-- **No CDR at all** (the provider has no record of the call — Fonoster's `Calls.getCall` returns
-  `NOT_FOUND`) — the gestión is finalized `delivery` `FAILED` with `deliveryReason`
-  `NOT_ORIGINATED` once `notOriginatedMinutes` (default 5) have passed since dispatch. No live
-  signal races this write, but it is irreversible and the CDR's start record can lag dispatch
-  (Influx read lag, a queueing hiccup), so it gets its own age gate rather than firing at
-  `floorMinutes`.
+- **No CDR at all** (Fonoster's `Calls.getCall` returns `NOT_FOUND`) — the gestión is finalized
+  `delivery` `FAILED` with `deliveryReason` `NOT_ORIGINATED` only once `backstopMinutes`
+  (default 70) have passed since dispatch. Fonoster's `GetCall` reads the call-record index,
+  which gets a row only when the record is sealed at hangup, so a call still in progress is
+  `NOT_FOUND` too; only past the longest possible call does `NOT_FOUND` mean the call never
+  originated. The sweep is a backstop for lost webhook events, not the primary result path.
 - **Backstop** — a gestión that still has no clearing status past `backstopMinutes` (default 70) is finalized `delivery` `FAILED` with `deliveryReason` `OUTCOME_UNKNOWN` (or, for a
   terminal CDR with an unparseable end time, its mapped reason — see above) rather than polled
   forever. 70 is not a round number: the platform's dialplan sets `TIMEOUT(absolute)=3600`, so
   no channel survives past 60 minutes: past that plus a margin, an uncleared CDR has genuinely
   lost its end record rather than still being a live call.
 
-Additionally, whenever the CDR the sweep reads carries an `amdStatus` of `MACHINE`
-(Fonoster's answering-machine detection — only present when enabled upstream, and only ever
-reported for a call that was answered), the sweep SHALL set the gestión's `path` to
+Additionally, whenever the CDR the sweep reads carries an `amdStatus` of `MACHINE` or
+`VOICEMAIL` (Fonoster's answering-machine detection — only present when enabled for the call,
+and only ever reported for a call that was answered; the CDR may also report `HUMAN`, `IVR` or
+`UNKNOWN`, which set nothing), the sweep SHALL set the gestión's `path` to
 `ANSWERED_BY_MACHINE` at the same finalization that writes the `delivery`/`deliveryReason`
-above, regardless of which `deliveryReason` applies. **As of `@fonoster/sdk` 0.23.0, this
-branch is written but not yet reachable**: `Calls.getCall()`'s `CallDetailRecord` carries no
-AMD field at all (only `voice.proto`'s live `CreateSessionRequest.amd` shipped in #893/0.23.0
-— `calls.proto` is untouched), so `amdStatus` is always absent and this requirement's
-`path`-setting clause never fires in production yet. It's written defensively so it starts
-working the moment Fonoster exposes the field (tracked upstream as fonoster/fonoster#897),
-with no further QCobro change required. This is the **only** place `amdStatus` reaches a
-`VOICE_AI` gestión's `path` — it is never consulted on the autopilot's live
-`conversation.ended` path — so it only labels gestións this sweep itself finalizes; a
+above, regardless of which `deliveryReason` applies. This is the **only** place `amdStatus`
+reaches a `VOICE_AI` gestión's `path` — it is never consulted when the call's transcript is
+decided — so it only labels gestións this sweep itself finalizes; a
 `VOICE_AI` call that instead completes a live conversation keeps `path: ENGAGED` regardless of
 `amdStatus` (see the primary Gestión requirement). For `VOICE_PRERECORDED`, this is a
 secondary path to the same label the co-located VoiceServer already sets in real time (see
@@ -434,8 +427,15 @@ Finalization via the sweep SHALL be idempotent per gestión: once a gestión's `
 later sweep finalization SHALL NOT overwrite it, and SHALL NOT overwrite `durationSeconds`,
 `channelData`, or `path` either.
 
-`fonoster.webhookBaseUrl` SHALL be **required whenever a `fonoster` section is configured**. The
-`fonoster` section itself remains optional; omitting it disables the voice channels entirely.
+The sweep SHALL also run, on each pass, the work a webhook's `200` left owed: a `VOICE_AI`
+gestión dispatched within the last 24 hours whose transcript was stored from its call record at
+least `floorMinutes` ago and that has no decision yet (`path` unset) — because the insight or
+the decision failed after the response, or the process stopped — gets the insight and the
+decision run for it, once (see `voice-events-hook`).
+
+The `fonoster` section remains optional; omitting it disables the voice channels entirely.
+`fonoster.webhookBaseUrl` is not required: call results arrive through the workspace webhook,
+signed with `fonoster.webhookSecret`.
 
 #### Scenario: Unanswered pre-recorded call is finalized from the CDR
 
@@ -446,9 +446,8 @@ later sweep finalization SHALL NOT overwrite it, and SHALL NOT overwrite `durati
 
 #### Scenario: Unanswered Voz IA call is finalized from the CDR
 
-- **WHEN** a `VOICE_AI` call is dispatched, no `conversation.started`/`conversation.ended` event
-  is ever received for that call, and once past `floorMinutes` the call's CDR shows the call
-  rang out
+- **WHEN** a `VOICE_AI` call is dispatched, no `call.ended`/`call.failed` event is ever
+  received for that call, and once past `floorMinutes` the call's CDR shows the call rang out
 - **THEN** the gestión `delivery` is set to `FAILED` with `deliveryReason` `NO_ANSWER` and
   `durationSeconds` is left unset
 
@@ -500,18 +499,23 @@ later sweep finalization SHALL NOT overwrite it, and SHALL NOT overwrite `durati
   not `OUTCOME_UNKNOWN` — the CDR does say how the call cleared, even without a trustworthy
   timestamp for it
 
-#### Scenario: A call with no CDR at all is not finalized before notOriginatedMinutes
+#### Scenario: A call with no CDR yet is not finalized before the backstop
 
-- **WHEN** the sweep looks up a call's CDR, Fonoster reports `NOT_FOUND`, and the gestión has
-  not yet passed `notOriginatedMinutes` since dispatch
-- **THEN** the gestión is not finalized from that pass — the CDR's start record may simply not
-  have landed yet
+- **WHEN** the sweep looks up the CDR of a gestión dispatched 6 minutes ago and Fonoster
+  reports `NOT_FOUND`
+- **THEN** the gestión is not finalized from that pass — the call may still be in progress
 
-#### Scenario: A call with no CDR at all never originated
+#### Scenario: A call with no CDR past the backstop never originated
 
-- **WHEN** the sweep looks up a call's CDR, Fonoster reports `NOT_FOUND`, and `notOriginatedMinutes`
-  have passed since dispatch
+- **WHEN** the sweep looks up the CDR of a gestión dispatched 71 minutes ago and Fonoster
+  reports `NOT_FOUND`
 - **THEN** the gestión is finalized `delivery` `FAILED` with `deliveryReason` `NOT_ORIGINATED`
+
+#### Scenario: Owed insight and decision are run by the sweep
+
+- **WHEN** a `VOICE_AI` gestión's transcript was stored from its call record and the insight
+  failed after the webhook answered `200`
+- **THEN** the sweep's next run runs the insight and the decision exactly once
 
 #### Scenario: A gestión with no CDR status past the backstop is finalized anyway
 
@@ -528,9 +532,9 @@ later sweep finalization SHALL NOT overwrite it, and SHALL NOT overwrite `durati
 
 #### Scenario: The sweep labels a machine-answered Voz IA call that never produced a transcript
 
-- **WHEN** a `VOICE_AI` call is dispatched, no `conversation.started`/`conversation.ended`
-  event is ever received for it, and once past `floorMinutes` its CDR shows a normal call
-  clearing with `amdStatus: MACHINE`
+- **WHEN** a `VOICE_AI` call is dispatched, no `call.ended`/`call.failed` event is ever
+  received for it, and once past `floorMinutes` its CDR shows a normal call clearing with
+  `amdStatus: MACHINE` or `VOICEMAIL`
 - **THEN** the gestión is finalized `delivery: FAILED`, `deliveryReason: OUTCOME_UNKNOWN`
 - **AND** `path` is set to `ANSWERED_BY_MACHINE`
 
