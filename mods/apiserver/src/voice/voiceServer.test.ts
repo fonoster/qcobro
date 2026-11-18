@@ -1,28 +1,85 @@
-import { describe, it } from "node:test";
+import { afterEach, describe, it, mock } from "node:test";
 import assert from "node:assert/strict";
+import { EventEmitter } from "node:events";
 import {
+  AMD_WAIT_MS,
   handlePrerecordedCall,
   readDtmfMenu,
   runPrerecordedCall,
-  type PrerecordedCallVerbs
+  startVoiceServer,
+  type PrerecordedSession
 } from "./voiceServer.js";
 
-/** Fakes the verb surface `handlePrerecordedCall` drives, queuing gather() responses in
- * call order and recording every verb invocation for assertions. */
-function makeVerbs(gatherResponses: (string | undefined)[]) {
+class SessionEnded extends Error {}
+
+/**
+ * A fake of the session surface the handler drives. `gather()` answers from a queue in call
+ * order; `say()` resolves at once unless `holdSays` is set, in which case it waits until the
+ * test ends the session (and then rejects, as the real Session does).
+ */
+function makeSession(
+  metadata: Record<string, unknown>,
+  opts: { gather?: (string | undefined)[]; holdSays?: boolean } = {}
+) {
+  const events = new EventEmitter();
   const calls: string[] = [];
-  const queue = [...gatherResponses];
-  const verbs: PrerecordedCallVerbs = {
-    answer: async () => calls.push("answer"),
-    say: async (text: string) => calls.push(`say:${text}`),
-    hangup: async () => calls.push("hangup"),
-    gather: async () => {
+  const sayOptions: unknown[] = [];
+  const gatherOptions: unknown[] = [];
+  const queue = [...(opts.gather ?? [])];
+  let ended = false;
+  const session: PrerecordedSession = {
+    metadata,
+    say: async (text, options) => {
+      calls.push(`say:${text}`);
+      sayOptions.push(options);
+      if (ended) throw new SessionEnded("ended");
+      if (opts.holdSays) {
+        await new Promise((_, reject) => events.once("end", () => reject(new SessionEnded())));
+      }
+      return { interrupted: false };
+    },
+    gather: async (options) => {
       calls.push("gather");
+      gatherOptions.push(options);
       return { digits: queue.shift() };
+    },
+    hangup: async () => {
+      calls.push("hangup");
+    },
+    on: (event, cb) => {
+      events.on(event, cb);
+    },
+    off: (event, cb) => {
+      events.off(event, cb);
     }
   };
-  return { verbs, calls };
+  return {
+    session,
+    calls,
+    sayOptions,
+    gatherOptions,
+    amd: (status: string) => events.emit("amd.result", { status }),
+    end: () => {
+      ended = true;
+      events.emit("end", { reason: "caller_hangup" });
+    }
+  };
 }
+
+const SCRIPT = "Su saldo es...";
+const menuMetadata = {
+  message: SCRIPT,
+  repeatDigit: "1",
+  repeatMessage: "Presione 1.",
+  maxRepeats: "2",
+  optOutDigit: "9",
+  optOutMessage: "Presione 9.",
+  optOutConfirmationMessage: "Hemos registrado su solicitud.",
+  hangupOnMachineDetected: "false"
+};
+
+/** Lets pending promise callbacks run between timer ticks. */
+const flush = () => new Promise((resolve) => setImmediate(resolve));
 
 describe("readDtmfMenu", () => {
   it("returns null when neither digit is configured", () => {
@@ -38,293 +95,231 @@ describe("readDtmfMenu", () => {
     assert.equal(readDtmfMenu({ repeatDigit: "1", maxRepeats: "3" })?.maxRepeats, 3);
   });
 
-  it("reads a menu configured with only the opt-out digit", () => {
-    const menu = readDtmfMenu({ optOutDigit: "9", optOutMessage: "Presione 9." });
-    assert.equal(menu?.repeatDigit, undefined);
-    assert.equal(menu?.optOutDigit, "9");
-  });
-
-  it("reads the opt-out confirmation message", () => {
+  it("reads a menu configured with only the opt-out digit and its confirmation", () => {
     const menu = readDtmfMenu({
       optOutDigit: "9",
       optOutMessage: "Presione 9.",
       optOutConfirmationMessage: "Hemos registrado su solicitud."
     });
+    assert.equal(menu?.repeatDigit, undefined);
+    assert.equal(menu?.optOutDigit, "9");
     assert.equal(menu?.optOutConfirmationMessage, "Hemos registrado su solicitud.");
   });
 });
 
-describe("handlePrerecordedCall", () => {
-  it("no menu: plays the script once and hangs up, path defaults to ENGAGED", async () => {
-    const { verbs, calls } = makeVerbs([]);
+describe("handlePrerecordedCall: script and menu", () => {
+  it("no menu: one non-interruptible say of the message, then hangup, scriptCompleted", async () => {
+    const s = makeSession({ message: SCRIPT, hangupOnMachineDetected: "false" });
 
-    const result = await handlePrerecordedCall("Su saldo es...", null, verbs);
+    const result = await handlePrerecordedCall(s.session);
 
-    assert.deepEqual(calls, ["answer", "say:Su saldo es...", "hangup"]);
-    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 0 });
-  });
-
-  it("menu configured but the caller presses nothing (timeout): hangs up, path still ENGAGED, no outcome", async () => {
-    const { verbs, calls } = makeVerbs([undefined]);
-    const menu = { repeatDigit: "1", repeatMessage: "Presione 1.", maxRepeats: 2 };
-
-    const result = await handlePrerecordedCall("Su saldo es...", menu, verbs);
-
-    assert.deepEqual(calls, [
-      "answer",
-      "say:Su saldo es...",
-      "say:Presione 1.",
-      "gather",
-      "hangup"
-    ]);
-    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 0 });
-  });
-
-  it("an unrecognized digit hangs up, path still ENGAGED, no outcome", async () => {
-    const { verbs } = makeVerbs(["5"]);
-    const menu = { repeatDigit: "1", optOutDigit: "9", maxRepeats: 2 };
-
-    const result = await handlePrerecordedCall("Su saldo es...", menu, verbs);
-
-    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 0 });
-  });
-
-  it("a detected machine hangs up immediately without playing the script (toggle on, the default)", async () => {
-    const { verbs, calls } = makeVerbs([]);
-    const menu = { repeatDigit: "1", repeatMessage: "Presione 1.", maxRepeats: 2 };
-
-    const result = await handlePrerecordedCall("Su saldo es...", menu, verbs, "MACHINE");
-
-    assert.deepEqual(calls, ["answer", "hangup"]);
-    assert.deepEqual(result, {
-      path: "ANSWERED_BY_MACHINE",
-      outcome: undefined,
-      repeatCount: 0
-    });
-  });
-
-  it("a detected machine plays the script anyway when the template's toggle is off", async () => {
-    const { verbs, calls } = makeVerbs([]);
-
-    const result = await handlePrerecordedCall("Su saldo es...", null, verbs, "MACHINE", false);
-
-    assert.deepEqual(calls, ["answer", "say:Su saldo es...", "hangup"]);
-    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 0 });
-  });
-
-  it("a HUMAN verdict plays the script normally", async () => {
-    const { verbs, calls } = makeVerbs([]);
-
-    const result = await handlePrerecordedCall("Su saldo es...", null, verbs, "HUMAN");
-
-    assert.deepEqual(calls, ["answer", "say:Su saldo es...", "hangup"]);
-    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 0 });
-  });
-
-  it("no AMD verdict (undefined) plays the script normally", async () => {
-    const { verbs, calls } = makeVerbs([]);
-
-    const result = await handlePrerecordedCall("Su saldo es...", null, verbs);
-
-    assert.deepEqual(calls, ["answer", "say:Su saldo es...", "hangup"]);
-    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 0 });
-  });
-
-  it("repeat digit replays the script and gathers again, setting path ENGAGED", async () => {
-    const { verbs, calls } = makeVerbs(["1", undefined]);
-    const menu = { repeatDigit: "1", maxRepeats: 2 };
-
-    const result = await handlePrerecordedCall("Script", menu, verbs);
-
-    assert.deepEqual(calls, [
-      "answer",
-      "say:Script",
-      "gather",
-      "say:Script", // replay
-      "gather",
-      "hangup"
-    ]);
-    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 1 });
-  });
-
-  it("repeating past the cap hangs up without a further replay, path still ENGAGED", async () => {
-    const { verbs, calls } = makeVerbs(["1", "1", "1"]);
-    const menu = { repeatDigit: "1", maxRepeats: 2 };
-
-    const result = await handlePrerecordedCall("Script", menu, verbs);
-
-    // answer, say(script), then 2 replays (2 gathers consumed "1","1"), then the 3rd "1"
-    // hits the cap and hangs up without a 3rd replay.
-    assert.deepEqual(calls, [
-      "answer",
-      "say:Script",
-      "gather",
-      "say:Script",
-      "gather",
-      "say:Script",
-      "gather",
-      "hangup"
-    ]);
-    assert.deepEqual(result, { path: "ENGAGED", outcome: undefined, repeatCount: 2 });
-  });
-
-  it("opt-out digit ends the call immediately with no further gather", async () => {
-    const { verbs, calls } = makeVerbs(["9"]);
-    const menu = { repeatDigit: "1", optOutDigit: "9", maxRepeats: 2 };
-
-    const result = await handlePrerecordedCall("Script", menu, verbs);
-
-    assert.deepEqual(calls, ["answer", "say:Script", "gather", "hangup"]);
-    assert.deepEqual(result, { path: "ENGAGED", outcome: "OPT_OUT", repeatCount: 0 });
-  });
-
-  it("opt-out plays the confirmation message before hanging up, when configured", async () => {
-    const { verbs, calls } = makeVerbs(["9"]);
-    const menu = {
-      repeatDigit: "1",
-      optOutDigit: "9",
-      optOutConfirmationMessage: "Hemos registrado su solicitud.",
-      maxRepeats: 2
-    };
-
-    const result = await handlePrerecordedCall("Script", menu, verbs);
-
-    assert.deepEqual(calls, [
-      "answer",
-      "say:Script",
-      "gather",
-      "say:Hemos registrado su solicitud.",
-      "hangup"
-    ]);
-    assert.deepEqual(result, { path: "ENGAGED", outcome: "OPT_OUT", repeatCount: 0 });
-  });
-
-  it("opt-out with no confirmation message configured hangs up straight away (unchanged)", async () => {
-    const { verbs, calls } = makeVerbs(["9"]);
-    const menu = { repeatDigit: "1", optOutDigit: "9", maxRepeats: 2 };
-
-    await handlePrerecordedCall("Script", menu, verbs);
-
-    assert.deepEqual(calls, ["answer", "say:Script", "gather", "hangup"]);
-  });
-
-  it("plays the configured menu messages once, before the first gather", async () => {
-    const { calls, verbs } = makeVerbs(["9"]);
-    const menu = {
-      repeatDigit: "1",
-      repeatMessage: "Presione 1 para repetir.",
-      optOutDigit: "9",
-      optOutMessage: "Presione 9 para darse de baja.",
-      maxRepeats: 2
-    };
-
-    await handlePrerecordedCall("Script", menu, verbs);
-
-    assert.deepEqual(calls, [
-      "answer",
-      "say:Script",
-      "say:Presione 1 para repetir.",
-      "say:Presione 9 para darse de baja.",
-      "gather",
-      "hangup"
-    ]);
-  });
-});
-
-describe("runPrerecordedCall", () => {
-  it("clean completion: delegates to handlePrerecordedCall and reports elapsed answeredSeconds", async () => {
-    const { verbs } = makeVerbs([]);
-    let clock = 1_000;
-    const now = () => clock;
-
-    clock = 1_000;
-    const resultPromise = runPrerecordedCall("Su saldo es...", null, verbs, now);
-    clock = 4_500; // 3.5s elapsed by the time the (synchronous, in this fake) call resolves
-    const result = await resultPromise;
-
+    assert.deepEqual(s.calls, [`say:${SCRIPT}`, "hangup"]);
+    assert.deepEqual(s.sayOptions, [{ interruptible: false }]);
     assert.deepEqual(result, {
       path: "ENGAGED",
       outcome: undefined,
       repeatCount: 0,
-      answeredSeconds: 4,
       scriptCompleted: true
     });
   });
 
-  it("a detected machine returns cleanly but scriptCompleted is false — it never heard anything", async () => {
-    const { verbs, calls } = makeVerbs([]);
+  it("every say is non-interruptible, and the menu messages play once before a DTMF-only 5000 ms gather", async () => {
+    const s = makeSession(menuMetadata, { gather: [undefined] });
 
-    const result = await runPrerecordedCall(
-      "Su saldo es...",
-      null,
-      verbs,
-      Date.now,
-      "MACHINE",
-      true
-    );
+    await handlePrerecordedCall(s.session);
 
-    assert.deepEqual(calls, ["answer", "hangup"]);
+    assert.deepEqual(s.calls, [
+      `say:${SCRIPT}`,
+      "say:Presione 1.",
+      "say:Presione 9.",
+      "gather",
+      "hangup"
+    ]);
+    for (const o of s.sayOptions) assert.deepEqual(o, { interruptible: false });
+    assert.deepEqual(s.gatherOptions, [{ source: "dtmf", maxDigits: 1, timeout: 5000 }]);
+  });
+
+  it("a gather timeout hangs up: path ENGAGED, no outcome", async () => {
+    const s = makeSession(menuMetadata, { gather: [undefined] });
+
+    const result = await handlePrerecordedCall(s.session);
+
+    assert.equal(s.calls.at(-1), "hangup");
+    assert.equal(result.path, "ENGAGED");
+    assert.equal(result.outcome, undefined);
+  });
+
+  it("an unknown digit hangs up", async () => {
+    const s = makeSession(menuMetadata, { gather: ["5"] });
+
+    const result = await handlePrerecordedCall(s.session);
+
+    assert.deepEqual(s.calls.slice(-2), ["gather", "hangup"]);
+    assert.equal(result.outcome, undefined);
+  });
+
+  it("the repeat digit replays the script and gathers again, up to maxRepeats", async () => {
+    const s = makeSession(menuMetadata, { gather: ["1", "1", "1"] });
+
+    const result = await handlePrerecordedCall(s.session);
+
+    assert.equal(s.calls.filter((c) => c === `say:${SCRIPT}`).length, 3);
+    assert.equal(s.calls.filter((c) => c === "gather").length, 3);
+    assert.equal(s.calls.at(-1), "hangup");
+    assert.equal(result.repeatCount, 2);
+    assert.equal(result.path, "ENGAGED");
+  });
+
+  it("the opt-out digit plays the confirmation, hangs up and reports the opt-out", async () => {
+    const s = makeSession(menuMetadata, { gather: ["9"] });
+
+    const result = await handlePrerecordedCall(s.session);
+
+    assert.deepEqual(s.calls.slice(-3), ["gather", "say:Hemos registrado su solicitud.", "hangup"]);
+    assert.equal(result.outcome, "OPT_OUT");
+    assert.equal(result.path, "ENGAGED");
+  });
+});
+
+describe("handlePrerecordedCall: answering-machine detection", () => {
+  afterEach(() => mock.timers.reset());
+
+  it("toggle on, voicemail 8000 ms after session start: hangup with no say, ANSWERED_BY_MACHINE", async () => {
+    mock.timers.enable({ apis: ["setTimeout", "Date"] });
+    const s = makeSession({ message: SCRIPT });
+    const running = handlePrerecordedCall(s.session);
+
+    mock.timers.tick(8000);
+    s.amd("voicemail");
+    const result = await running;
+
+    assert.deepEqual(s.calls, ["hangup"]);
     assert.equal(result.path, "ANSWERED_BY_MACHINE");
     assert.equal(result.scriptCompleted, false);
   });
 
-  it("early hangup mid-script (say() throws on the dead channel) still reports answered — not lost", async () => {
-    let clock = 1_000;
-    const now = () => clock;
-    const calls: string[] = [];
-    const verbs: PrerecordedCallVerbs = {
-      answer: async () => {
-        calls.push("answer");
-      },
-      say: async () => {
-        calls.push("say");
-        clock = 1_000 + 12_000; // caller listened 12s before hanging up
-        throw new Error("channel not found (hangup)");
-      },
-      hangup: async () => {
-        calls.push("hangup");
-      },
-      gather: async () => ({ digits: undefined })
-    };
+  for (const status of ["machine", "ivr"]) {
+    it(`toggle on, ${status}: hangup with no say`, async () => {
+      const s = makeSession({ message: SCRIPT });
+      const running = handlePrerecordedCall(s.session);
 
-    // Must not reject: the completion signal has to reach onCompleted either way. Before
-    // this was caught, the throw from say() propagated straight out of
-    // handlePrerecordedCall (and out of the request handler), so `onCompleted` was never
-    // invoked — the gestión was left at DISPATCHED and later swept into
-    // FAILED/PROVIDER_ERROR/duration 0, indistinguishable from a call that never connected.
-    const result = await runPrerecordedCall("Su saldo es...", null, verbs, now);
+      s.amd(status);
 
-    assert.deepEqual(calls, ["answer", "say"]); // hangup() from handlePrerecordedCall never ran
-    // Reported, but NOT as a delivery: the callee picked up and heard nothing, so the
-    // elapsed time is real while scriptCompleted stays false.
-    assert.deepEqual(result, {
-      repeatCount: 0,
-      answeredSeconds: 12,
-      scriptCompleted: false
+      assert.equal((await running).path, "ANSWERED_BY_MACHINE");
+      assert.deepEqual(s.calls, ["hangup"]);
     });
+  }
+
+  it("toggle on, human: waits for the verdict, then the script plays", async () => {
+    const s = makeSession({ message: SCRIPT });
+    const running = handlePrerecordedCall(s.session);
+
+    await flush();
+    assert.deepEqual(s.calls, [], "waits for the verdict before speaking");
+    s.amd("human");
+    const result = await running;
+
+    assert.deepEqual(s.calls, [`say:${SCRIPT}`, "hangup"]);
+    assert.equal(result.scriptCompleted, true);
+  });
+
+  it(`toggle on, no verdict within ${AMD_WAIT_MS} ms: the script plays`, async () => {
+    mock.timers.enable({ apis: ["setTimeout", "Date"] });
+    const s = makeSession({ message: SCRIPT });
+    const running = handlePrerecordedCall(s.session);
+
+    mock.timers.tick(AMD_WAIT_MS - 1);
+    await flush();
+    assert.deepEqual(s.calls, []);
+    mock.timers.tick(1);
+    const result = await running;
+
+    assert.equal(AMD_WAIT_MS, 9000);
+    assert.deepEqual(s.calls, [`say:${SCRIPT}`, "hangup"]);
+    assert.equal(result.path, "ENGAGED");
+  });
+
+  it("toggle off: the script plays at once, without waiting for a verdict", async () => {
+    const s = makeSession({ message: SCRIPT, hangupOnMachineDetected: "false" });
+
+    const result = await handlePrerecordedCall(s.session);
+
+    assert.deepEqual(s.calls, [`say:${SCRIPT}`, "hangup"]);
+    assert.equal(result.scriptCompleted, true);
+  });
+});
+
+describe("runPrerecordedCall", () => {
+  it("clean completion reports elapsed answeredSeconds and scriptCompleted", async () => {
+    const s = makeSession({ message: SCRIPT, hangupOnMachineDetected: "false" });
+    let t = 1_000_000;
+    const now = () => (t += 4000);
+
+    const result = await runPrerecordedCall(s.session, now);
+
+    assert.equal(result.scriptCompleted, true);
+    assert.equal(result.answeredSeconds, 4);
+    assert.equal(result.path, "ENGAGED");
+  });
+
+  it("a detected machine is not a delivery: scriptCompleted false", async () => {
+    const s = makeSession({ message: SCRIPT });
+    const running = runPrerecordedCall(s.session);
+    s.amd("voicemail");
+
+    const result = await running;
+
+    assert.equal(result.path, "ANSWERED_BY_MACHINE");
+    assert.equal(result.scriptCompleted, false);
+  });
+
+  it("session.end during the script resolves with scriptCompleted false and the elapsed seconds", async () => {
+    const s = makeSession(
+      { message: SCRIPT, hangupOnMachineDetected: "false" },
+      { holdSays: true }
+    );
+    let t = 0;
+    const now = () => t;
+
+    const running = runPrerecordedCall(s.session, now);
+    await flush();
+    t = 7000;
+    s.end();
+    const result = await running;
+
+    assert.equal(result.scriptCompleted, false);
+    assert.equal(result.answeredSeconds, 7);
     assert.equal(result.path, undefined);
     assert.equal(result.outcome, undefined);
   });
+});
 
-  it("a verb that rejects because the session died reports scriptCompleted false with real elapsed time", async () => {
-    // What Fonoster #880 now surfaces: instead of hanging forever, a verb rejects when the
-    // session ends under it. The call still occupied the line — 110 seconds of silence in
-    // the 2026-08-30 incident — but nothing played.
-    const { verbs, calls } = makeVerbs([]);
-    let clock = 1_000;
-    const now = () => clock;
-    verbs.answer = async () => {
-      calls.push("answer");
-      clock = 111_000;
-      throw new Error("voice session ended before the Answer verb completed");
-    };
+describe("startVoiceServer", () => {
+  it("without a signing secret, does not start and logs that the voice server is disabled", async () => {
+    const lines: string[] = [];
 
-    const result = await runPrerecordedCall("Su saldo es...", null, verbs, now);
-
-    assert.deepEqual(result, {
-      repeatCount: 0,
-      answeredSeconds: 110,
-      scriptCompleted: false
+    const server = await startVoiceServer({
+      fonoster: { prerecordedAppUrl: "wss://app.qcobro.com/voice/session" },
+      port: 0,
+      log: (line) => lines.push(line)
     });
+
+    assert.equal(server, null);
+    assert.deepEqual(lines, [
+      "pre-recorded voice server disabled: set fonoster.prerecordedAppUrl and fonoster.prerecordedSigningSecret"
+    ]);
+  });
+
+  it("without an app URL, does not start either", async () => {
+    const lines: string[] = [];
+
+    const server = await startVoiceServer({
+      fonoster: { prerecordedSigningSecret: "s3cret" },
+      port: 0,
+      log: (line) => lines.push(line)
+    });
+
+    assert.equal(server, null);
+    assert.equal(lines.length, 1);
   });
 });

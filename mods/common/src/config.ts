@@ -95,12 +95,24 @@ export const fonosterConfigSchema = z
      */
     numbers: z.array(z.string().min(1)).default([]),
     /**
-     * The Fonoster EXTERNAL application ref used for ALL pre-recorded voice
-     * dispatch (one shared app pointing at the embedded VoiceServer). The
+     * The Fonoster STREAM application ref used for ALL pre-recorded voice
+     * dispatch (one shared session app pointing at the embedded voice server). The
      * per-customer script is passed as call metadata; this ref is deployment-wide,
      * not per agent. Voz IA uses each template's own AUTOPILOT app ref instead.
      */
     prerecordedAppRef: z.string().min(1).optional(),
+    /**
+     * The pre-recorded STREAM app's URL exactly as configured in Fonoster
+     * (`wss://<host>/voice/session`). The voice server checks AppBridge's signature against
+     * it, since Envoy rewrites the host and scheme. Without it (or the signing secret) the
+     * pre-recorded voice server does not start.
+     */
+    prerecordedAppUrl: z.string().url().optional(),
+    /**
+     * The pre-recorded STREAM app's signing secret (shown once when the app is created).
+     * Only sessions signed with it are accepted. Never logged.
+     */
+    prerecordedSigningSecret: z.string().min(1).optional(),
     /**
      * Signing secret of the Fonoster workspace webhook that delivers call results to
      * `POST /api/voice/events` (`whsec_…`, shown once when the webhook is created). Without
@@ -430,9 +442,9 @@ export const qcobroConfigSchema = z.object({
     .object({
       port: z.number().default(3000),
       /**
-       * Port for the embedded Fonoster VoiceServer (external voice application).
-       * Pre-recorded voice agents are EXTERNAL Fonoster apps that call back into
-       * this server; it answers and plays the rendered script via the Say verb.
+       * Port for the embedded pre-recorded voice server. Fonoster's AppBridge opens a
+       * signed WebSocket session to it, through Envoy's `/voice/session` route, for every
+       * answered pre-recorded call; it speaks the rendered script.
        */
       voicePort: z.number().default(50061),
       /** External contact-log ingress (`POST /api/contact-logs`) auth gate. */
