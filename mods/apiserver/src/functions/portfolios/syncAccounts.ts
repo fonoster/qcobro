@@ -347,13 +347,13 @@ export function createSyncAccounts(client: SyncAccountsClient) {
         let classified = 0;
         const lateRecoveries: RecoveryCreate[] = [];
         for (const { exit, entry } of lateClassifications) {
-          const recovery = await classifyOpenExit(tx, exit, entry, now);
-          if (recovery === false) {
+          const outcome = await classifyOpenExit(tx, exit, entry, now);
+          if (outcome === false) {
             skipped++;
             continue;
           }
           classified++;
-          if (recovery) lateRecoveries.push(recovery);
+          if (outcome.recovery) lateRecoveries.push(outcome.recovery);
         }
 
         const [total, balanceAgg] = await Promise.all([

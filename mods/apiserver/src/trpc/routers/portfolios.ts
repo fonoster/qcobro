@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
 import {
-  ValidationError,
+  classifyExitsInputSchema,
+  listExitsInputSchema,
   createPortfolioSchema,
   updatePortfolioSchema,
   deletePortfolioSchema,
@@ -14,26 +14,9 @@ import { createUpdatePortfolio } from "../../functions/portfolios/updatePortfoli
 import { createDeletePortfolio } from "../../functions/portfolios/deletePortfolio.js";
 import { createSyncAccounts } from "../../functions/portfolios/syncAccounts.js";
 import { createContactStats } from "../../functions/portfolios/contactStats.js";
-
-/**
- * Throws NOT_FOUND unless the portfolio belongs to the caller's workspace. Procedures that take
- * a `portfolioId` and read or write its accounts call this first: account queries are keyed by
- * `portfolioId` alone, so without it a caller who knows another tenant's portfolio id could
- * read or change its accounts.
- */
-async function assertPortfolioInWorkspace(
-  prisma: { portfolio: { findFirst(args: unknown): Promise<unknown> } },
-  portfolioId: string,
-  workspaceRef: string
-): Promise<void> {
-  const portfolio = await prisma.portfolio.findFirst({
-    where: { id: portfolioId, workspaceRef },
-    select: { id: true }
-  });
-  if (!portfolio) {
-    throw new TRPCError({ code: "NOT_FOUND", message: `Portfolio ${portfolioId} not found` });
-  }
-}
+import { createListExits } from "../../functions/portfolios/listExits.js";
+import { createClassifyExits } from "../../functions/portfolios/classifyExits.js";
+import { asBadRequest, assertPortfolioInWorkspace } from "../portfolioScope.js";
 
 export const portfoliosRouter = router({
   list: workspaceProcedure
@@ -110,15 +93,20 @@ export const portfoliosRouter = router({
     .input(syncAccountsInputSchema)
     .mutation(async ({ input, ctx }) => {
       await assertPortfolioInWorkspace(ctx.prisma, input.portfolioId, ctx.workspace.accessKeyId);
-      try {
-        return await createSyncAccounts(ctx.prisma as never)(input);
-      } catch (err) {
-        // Rejections that depend on the database (an exit for an externalId that isn't in
-        // this portfolio) are the caller's error, like a schema failure.
-        if (err instanceof ValidationError) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: err.message, cause: err });
-        }
-        throw err;
-      }
+      return asBadRequest(() => createSyncAccounts(ctx.prisma as never)(input));
+    }),
+
+  // Accounts that left the portfolio and haven't come back, newest first.
+  listExits: workspaceProcedure.input(listExitsInputSchema).query(async ({ input, ctx }) => {
+    await assertPortfolioInWorkspace(ctx.prisma, input.portfolioId, ctx.workspace.accessKeyId);
+    return createListExits(ctx.prisma as never, ctx.workspace.accessKeyId)(input);
+  }),
+
+  // Gives exits that left without a reason (UNKNOWN) their reason. All or nothing.
+  classifyExits: workspaceProcedure
+    .input(classifyExitsInputSchema)
+    .mutation(async ({ input, ctx }) => {
+      await assertPortfolioInWorkspace(ctx.prisma, input.portfolioId, ctx.workspace.accessKeyId);
+      return asBadRequest(() => createClassifyExits(ctx.prisma as never)(input));
     })
 });

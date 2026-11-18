@@ -5,6 +5,7 @@ import { workspacesRouter } from "./routers/workspaces.js";
 import { apiKeysRouter } from "./routers/apiKeys.js";
 import { profileRouter } from "./routers/profile.js";
 import { portfoliosRouter } from "./routers/portfolios.js";
+import { recoveryRouter } from "./routers/recovery.js";
 import { agentTemplatesRouter } from "./routers/agentTemplates.js";
 import { agentEvaluationsRouter } from "./routers/agentEvaluations.js";
 import { campaignsRouter } from "./routers/campaigns.js";
@@ -21,6 +22,7 @@ export const appRouter = router({
   apiKeys: apiKeysRouter,
   profile: profileRouter,
   portfolios: portfoliosRouter,
+  recovery: recoveryRouter,
   agentTemplates: agentTemplatesRouter,
   agentEvaluations: agentEvaluationsRouter,
   campaigns: campaignsRouter,

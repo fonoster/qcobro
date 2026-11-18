@@ -16,6 +16,7 @@ export {
   localWeekdayISO,
   localTimeHHMM,
   isWithinScheduleWindow,
+  startOfLocalDay,
   type ScheduleWindow
 } from "./time.js";
 export { buildThreadWithOpener } from "./threads.js";
