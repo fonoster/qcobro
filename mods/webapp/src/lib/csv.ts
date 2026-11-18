@@ -87,12 +87,14 @@ export function parseCsv(text: string): { rows: AccountRowInput[]; errors: strin
       bestTimeToCall: c("best_time_to_call") || undefined,
       customerSegment: c("customer_segment") || undefined,
       principalAmount: num(c("principal_amount")),
-      termsAmount: num(c("terms_amount")),
+      // Sent only when present: an omitted value keeps the stored one, while 0 would read as
+      // every account catching up on all its installments.
+      termsAmount: c("terms_amount") ? num(c("terms_amount")) : undefined,
       termsFrequency: c("terms_frequency") || undefined,
       termsLength: int(c("terms_length")),
       outstandingBalance: num(rawBalance),
       daysPastDue: int(c("days_past_due")),
-      missedInstallments: int(c("missed_installments")),
+      missedInstallments: c("missed_installments") ? int(c("missed_installments")) : undefined,
       lastPaymentDate: c("last_payment_date") || undefined,
       lastPaymentAmount: c("last_payment_amount") ? num(c("last_payment_amount")) : undefined,
       negotiationOptions

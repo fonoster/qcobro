@@ -1,3 +1,4 @@
+import type { RecoveryTx } from "./recovery.js";
 import type {
   AccountRowInput,
   CreatePortfolioInput,
@@ -38,16 +39,10 @@ export interface PortfolioAccountRecord {
   lastPaymentDate: Date | null;
   lastPaymentAmount: number | null;
   negotiationOptions: string | null;
+  lastSyncedAt: Date | null;
   archivedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface SyncResult {
-  created: number;
-  updated: number;
-  archived: number;
-  total: number;
 }
 
 export interface PortfolioClient {
@@ -85,7 +80,7 @@ export interface PortfolioClient {
   portfolioAccount: {
     findMany(args: {
       where: { portfolioId: string; archivedAt?: null };
-      select?: { externalId: boolean };
+      select?: Record<string, boolean>;
       orderBy?: { fullName: "asc" | "desc" };
       take?: number;
       skip?: number;
@@ -115,21 +110,22 @@ export interface PortfolioClient {
     }): Promise<PortfolioAccountRecord>;
 
     updateMany(args: {
-      where: { portfolioId: string; externalId: { in: string[] } };
+      where: { portfolioId: string; id: { in: string[] } };
       data: { archivedAt: Date };
     }): Promise<{ count: number }>;
   };
 
-  // When accounts leave a portfolio, their PENDING payment promises are expired so
-  // collectors do not chase an account that is no longer theirs.
-  paymentPromise: {
-    updateMany(args: {
-      where: Record<string, unknown>;
-      data: { status: "EXPIRED" };
-    }): Promise<{ count: number }>;
-  };
-
   $transaction<T>(fn: (tx: PortfolioClient) => Promise<T>): Promise<T>;
+}
+
+/** The transaction the sync runs in: the portfolio surface plus recovery tracking. */
+export type SyncAccountsTx = Omit<PortfolioClient, "$transaction"> & RecoveryTx;
+
+export interface SyncAccountsClient {
+  $transaction<T>(
+    fn: (tx: SyncAccountsTx) => Promise<T>,
+    options?: { timeout?: number }
+  ): Promise<T>;
 }
 
 export type { CreatePortfolioInput, UpdatePortfolioInput, DeletePortfolioInput, AccountRowInput };

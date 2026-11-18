@@ -33,6 +33,7 @@ export const SAMPLE_ACCOUNT: PortfolioAccountRecord = {
   lastPaymentDate: EPOCH,
   lastPaymentAmount: 1250,
   negotiationOptions: null,
+  lastSyncedAt: null,
   archivedAt: null,
   createdAt: EPOCH,
   updatedAt: EPOCH

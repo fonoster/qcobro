@@ -45,6 +45,7 @@ export function buildSyntheticAccountContext(
     lastPaymentDate: account.lastPaymentDate ? new Date(account.lastPaymentDate) : null,
     lastPaymentAmount: account.lastPaymentAmount ?? null,
     negotiationOptions: null,
+    lastSyncedAt: null,
     archivedAt: null,
     createdAt: EPOCH,
     updatedAt: EPOCH

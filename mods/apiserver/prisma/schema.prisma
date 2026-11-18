@@ -138,6 +138,22 @@ enum IntentStatus {
   INTENT_MET
 }
 
+// Why an account left a portfolio. UNKNOWN is never sent by a caller: REPLACE writes it for
+// accounts that vanish from the batch, and a later exit entry or classifyExits replaces it.
+enum ExitReason {
+  CURED
+  PAID_OFF
+  WRITTEN_OFF
+  OTHER
+  UNKNOWN
+}
+
+enum RecoveryKind {
+  PARTIAL
+  CURED
+  PAID_OFF
+}
+
 enum PaymentPromiseStatus {
   PENDING
   MET
@@ -159,6 +175,7 @@ model Portfolio {
   updatedAt               DateTime            @updatedAt
   accounts                PortfolioAccount[]
   campaignLinks           CampaignPortfolio[]
+  recoveries              Recovery[]
 
   @@index([workspaceRef, archivedAt])
   @@map("portfolios")
@@ -189,12 +206,17 @@ model PortfolioAccount {
   suppressUntil      DateTime?
   intentStatus       IntentStatus?
   totalAttempts      Int                    @default(0)
+  // The last sync that wrote this account from its rows: the start of the next recovery
+  // snapshot range. Null for accounts never written by a sync since recovery tracking began.
+  lastSyncedAt       DateTime?
   createdAt          DateTime               @default(now())
   updatedAt          DateTime               @updatedAt
   portfolio          Portfolio              @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
   campaignStates     CampaignAccountState[]
   contactLogs        AccountContactLog[]
   paymentPromises    PaymentPromise[]
+  exits              AccountExit[]
+  recoveries         Recovery[]
 
   @@unique([portfolioId, externalId])
   @@index([portfolioId, archivedAt])
@@ -487,15 +509,72 @@ model PaymentPromise {
   dueDate            DateTime
   status             PaymentPromiseStatus @default(PENDING)
   notes              String?
+  // The exit that expired this promise, so a later CURED/PAID_OFF classification of that
+  // exit turns exactly these promises MET (not EXPIRED promises of an earlier episode).
+  expiredByExitId    String?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
   contactLog         AccountContactLog    @relation(fields: [contactLogId], references: [id], onDelete: Cascade)
   portfolioAccount   PortfolioAccount     @relation(fields: [portfolioAccountId], references: [id], onDelete: Cascade)
+  expiredByExit      AccountExit?         @relation(fields: [expiredByExitId], references: [id], onDelete: SetNull)
 
   // One promise per gestión: a re-delivered outcome callback cannot duplicate it.
   @@unique([contactLogId])
   @@index([portfolioAccountId, dueDate])
   @@map("payment_promises")
+}
+
+// One account leaving a portfolio during a sync. An episode is the time between an account's
+// entry (or re-entry) and its exit; the open exit is the latest one with reenteredAt null.
+model AccountExit {
+  id                 String           @id @default(uuid())
+  portfolioId        String
+  portfolioAccountId String
+  reason             ExitReason
+  exitedAt           DateTime
+  previousSyncAt     DateTime
+  // Sent values for CURED/PAID_OFF; otherwise the account's values before archiving.
+  missedInstallments Int
+  termsAmount        Float
+  // RecoveryContext, computed once at exit and never recomputed.
+  context            Json
+  classifiedAt       DateTime?
+  reenteredAt        DateTime?
+  createdAt          DateTime         @default(now())
+  portfolioAccount   PortfolioAccount @relation(fields: [portfolioAccountId], references: [id], onDelete: Cascade)
+  recovery           Recovery?
+  expiredPromises    PaymentPromise[]
+
+  @@index([portfolioId, reason, reenteredAt])
+  @@index([portfolioAccountId, exitedAt])
+  @@map("account_exits")
+}
+
+// Overdue installments an account caught up on, detected from a sync (PARTIAL) or from a
+// CURED/PAID_OFF exit. The context snapshot is stored once and never recomputed.
+model Recovery {
+  id                 String           @id @default(uuid())
+  portfolioId        String
+  portfolioAccountId String
+  exitId             String?          @unique
+  kind               RecoveryKind
+  installments       Int
+  amount             Float
+  detectedAt         DateTime
+  previousSyncAt     DateTime
+  hasGestion         Boolean
+  lastTouchAgentType AgentType?
+  lastTouchOutcome   Outcome?
+  daysSinceLastTouch Int?
+  campaignIds        String[]
+  context            Json
+  createdAt          DateTime         @default(now())
+  portfolio          Portfolio        @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  portfolioAccount   PortfolioAccount @relation(fields: [portfolioAccountId], references: [id], onDelete: Cascade)
+  exit               AccountExit?     @relation(fields: [exitId], references: [id])
+
+  @@index([portfolioId, detectedAt])
+  @@map("recoveries")
 }
 
 enum EngineEventKind {
