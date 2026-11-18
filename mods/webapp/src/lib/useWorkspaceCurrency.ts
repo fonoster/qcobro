@@ -9,6 +9,15 @@ export function useWorkspaceCurrency(): string {
 }
 
 /**
+ * The active workspace's IANA timezone, or `undefined` while the settings load: a date range
+ * computed from a guessed timezone could fetch the wrong day's figures for a moment.
+ */
+export function useWorkspaceTimezone(): string | undefined {
+  const q = trpc.workspaceSettings.get.useQuery();
+  return q.data?.timezone;
+}
+
+/**
  * The active workspace's number-formatting locale (defaults while loading/unset).
  *
  * The reach-out preview renders templates client-side, so it has to format amounts the same

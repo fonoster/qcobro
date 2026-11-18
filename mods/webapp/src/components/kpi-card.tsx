@@ -17,6 +17,8 @@ export interface KpiCardProps {
   label: string;
   value: string | number;
   subtext?: string;
+  /** A second note under `subtext`, for a figure that qualifies the main one. */
+  detail?: string;
   trend?: { value: string; positive: boolean };
   className?: string;
   /** Optional in-card period pill, right-aligned next to the label (the "KPI Card Period"
@@ -62,9 +64,14 @@ function KpiCardPeriodSelect({ value, options, onChange, ariaLabel }: KpiCardPer
   );
 }
 
-export function KpiCard({ label, value, subtext, trend, className, period }: KpiCardProps) {
+export function KpiCard({ label, value, subtext, detail, trend, className, period }: KpiCardProps) {
   return (
-    <div className={cn("flex flex-col gap-2 border border-border bg-surface p-5", className)}>
+    // A named group so the value and its notes are announced (and found) with their label.
+    <div
+      role="group"
+      aria-label={label}
+      className={cn("flex flex-col gap-2 border border-border bg-surface p-5", className)}
+    >
       {period ? (
         // `min-w-0` + `truncate` on the label so it yields space to the control instead of
         // crowding it: at five cards across a narrow viewport there isn't room for both at
@@ -81,7 +88,7 @@ export function KpiCard({ label, value, subtext, trend, className, period }: Kpi
           same baseline across the row. Without it the notes float directly under their values,
           and any card with a taller header — the contact-rate card, whose label row carries the
           period control — pushes its note out of line with the rest. */}
-      {(trend || subtext) && (
+      {(trend || subtext || detail) && (
         <div className="mt-auto flex flex-col gap-1">
           {trend && (
             <p
@@ -93,6 +100,7 @@ export function KpiCard({ label, value, subtext, trend, className, period }: Kpi
           {/* slate-400, matching the sibling KPI cards Home renders inline — the contact-rate
               card sits in that same row and a 100-level difference reads as a mistake. */}
           {subtext && <p className="text-xs font-normal text-fg-subtle">{subtext}</p>}
+          {detail && <p className="text-xs font-normal text-fg-subtle">{detail}</p>}
         </div>
       )}
     </div>
