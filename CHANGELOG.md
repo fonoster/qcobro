@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.2.0](https://github.com/fonoster/qcobro/compare/v3.1.1...v3.2.0) (2026-11-18)
+
+### Features
+
+- **console:** show a portfolio's recoveries and import with recovery detection by default ([#220](https://github.com/fonoster/qcobro/issues/220)) ([16e8bf0](https://github.com/fonoster/qcobro/commit/16e8bf0691874c6e33c8a8ce31707b2aa48fd570)), closes [#210](https://github.com/fonoster/qcobro/issues/210)
+
 ## [3.1.1](https://github.com/fonoster/qcobro/compare/v3.1.0...v3.1.1) (2026-11-18)
 
 **Note:** Version bump only for package qcobro
