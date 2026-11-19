@@ -71,7 +71,7 @@ export function registerTools(server: McpServer, client: Client): void {
 
   server.tool(
     "portfolios_sync_accounts",
-    "Synchronizes a batch of account rows into a portfolio (APPEND_ONLY, UPDATE_EXISTING, or REPLACE mode). Pass exits to record accounts that left, with a reason; CURED and PAID_OFF exits also need missedInstallments and termsAmount.",
+    "Synchronizes a batch of account rows into a portfolio (APPEND_ONLY, UPDATE_EXISTING, or REPLACE mode). Pass exits to record accounts that left, with a reason; CAUGHT_UP and PAID_OFF exits also need missedInstallments and termsAmount.",
     syncAccountsInputSchema.shape,
     createPortfoliosSyncAccounts(client)
   );
@@ -85,7 +85,7 @@ export function registerTools(server: McpServer, client: Client): void {
 
   server.tool(
     "portfolios_classify_exits",
-    "Assigns a reason to exits recorded as UNKNOWN. CURED or PAID_OFF require missedInstallments and termsAmount and record a recovery of their product.",
+    "Assigns a reason to exits recorded as UNKNOWN. CAUGHT_UP or PAID_OFF require missedInstallments and termsAmount and record a recovery of their product.",
     classifyExitsInputSchema.shape,
     createPortfoliosClassifyExits(client)
   );

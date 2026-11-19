@@ -352,7 +352,13 @@ describe("syncAccounts", () => {
       const t = makeDb({
         accounts: [account("A", { missedInstallments: 3, archivedAt: exitedAt })],
         exits: [
-          { id: "ex-1", portfolioAccountId: "acc-A", reason: "CURED", exitedAt, reenteredAt: null }
+          {
+            id: "ex-1",
+            portfolioAccountId: "acc-A",
+            reason: "CAUGHT_UP",
+            exitedAt,
+            reenteredAt: null
+          }
         ]
       });
       await sync(t, { mode: "UPDATE_EXISTING", rows: [row("A", { missedInstallments: 1 })] });
@@ -363,7 +369,7 @@ describe("syncAccounts", () => {
   });
 
   describe("exits", () => {
-    it("records a CURED recovery from the exit's own values and marks PENDING promises MET", async () => {
+    it("records a CAUGHT_UP recovery from the exit's own values and marks PENDING promises MET", async () => {
       const t = makeDb({
         accounts: [account("A", { missedInstallments: 3, termsAmount: 100 }), account("B")],
         promises: [promise("A"), promise("B")]
@@ -371,10 +377,10 @@ describe("syncAccounts", () => {
       const result = await sync(t, {
         mode: "UPDATE_EXISTING",
         rows: [],
-        exits: [{ externalId: "A", reason: "CURED", missedInstallments: 4, termsAmount: 150 }]
+        exits: [{ externalId: "A", reason: "CAUGHT_UP", missedInstallments: 4, termsAmount: 150 }]
       });
       const rec = t.db.recoveries[0]!;
-      assert.equal(rec.kind, "CURED");
+      assert.equal(rec.kind, "CAUGHT_UP");
       assert.equal(rec.installments, 4);
       assert.equal(rec.amount, 600);
       assert.equal(rec.exitId, t.db.exits[0]!.id);
@@ -383,8 +389,8 @@ describe("syncAccounts", () => {
       assert.equal(t.db.promises[1]!.status, "PENDING");
       assert.ok(t.db.accounts[0]!.archivedAt instanceof Date);
       assert.equal(result.archived, 1);
-      assert.equal(result.exitsByReason.CURED, 1);
-      assert.deepEqual(result.recoveries, { partial: 0, cured: 1, paidOff: 0, amount: 600 });
+      assert.equal(result.exitsByReason.CAUGHT_UP, 1);
+      assert.deepEqual(result.recoveries, { partial: 0, caughtUp: 1, paidOff: 0, amount: 600 });
     });
 
     it("records PAID_OFF the same way", async () => {
@@ -404,13 +410,13 @@ describe("syncAccounts", () => {
       await sync(t, {
         mode: "UPDATE_EXISTING",
         rows: [],
-        exits: [{ externalId: "A", reason: "CURED", missedInstallments: 1, termsAmount: 100 }]
+        exits: [{ externalId: "A", reason: "CAUGHT_UP", missedInstallments: 1, termsAmount: 100 }]
       });
       assert.deepEqual(
         t.db.recoveries.map((r) => [r.kind, r.installments, r.amount]),
         [
           ["PARTIAL", 2, 200],
-          ["CURED", 1, 100]
+          ["CAUGHT_UP", 1, 100]
         ]
       );
     });
@@ -457,11 +463,11 @@ describe("syncAccounts", () => {
         await sync(t, {
           mode,
           rows: [row("A")],
-          exits: [{ externalId: "C", reason: "CURED", missedInstallments: 1, termsAmount: 100 }]
+          exits: [{ externalId: "C", reason: "CAUGHT_UP", missedInstallments: 1, termsAmount: 100 }]
         });
         assert.deepEqual(
           t.db.exits.map((e) => [e.portfolioAccountId, e.reason]),
-          [["acc-C", "CURED"]]
+          [["acc-C", "CAUGHT_UP"]]
         );
         assert.equal(t.db.accounts[1]!.archivedAt, null);
         assert.equal(t.db.promises[0]!.status, "PENDING");
@@ -484,7 +490,7 @@ describe("syncAccounts", () => {
       const result = await sync(t, {
         mode: "UPDATE_EXISTING",
         rows: [],
-        exits: [{ externalId: "B", reason: "CURED", missedInstallments: 2, termsAmount: 100 }]
+        exits: [{ externalId: "B", reason: "CAUGHT_UP", missedInstallments: 2, termsAmount: 100 }]
       });
       assert.equal(t.db.exits.length, 0);
       assert.equal(t.db.recoveries.length, 0);
@@ -532,7 +538,7 @@ describe("syncAccounts", () => {
       const result = await sync(t, {
         mode: "UPDATE_EXISTING",
         rows: [],
-        exits: [{ externalId: "A", reason: "CURED", missedInstallments: 2, termsAmount: 100 }]
+        exits: [{ externalId: "A", reason: "CAUGHT_UP", missedInstallments: 2, termsAmount: 100 }]
       });
       const rec = t.db.recoveries[0]!;
       assert.equal((rec.detectedAt as Date).getTime(), exitedAt.getTime());
@@ -540,14 +546,14 @@ describe("syncAccounts", () => {
       assert.equal(rec.exitId, "ex-1");
       assert.deepEqual(rec.context, context);
       assert.deepEqual(rec.campaignIds, ["c1"]);
-      assert.equal(t.db.exits[0]!.reason, "CURED");
+      assert.equal(t.db.exits[0]!.reason, "CAUGHT_UP");
       assert.equal(t.db.exits[0]!.missedInstallments, 2);
       assert.ok(t.db.exits[0]!.classifiedAt instanceof Date);
       assert.equal(t.db.promises[0]!.status, "MET");
       assert.equal(t.db.promises[1]!.status, "EXPIRED");
       assert.equal(result.exitsByReason.classified, 1);
-      assert.equal(result.exitsByReason.CURED, 0);
-      assert.equal(result.recoveries.cured, 1);
+      assert.equal(result.exitsByReason.CAUGHT_UP, 0);
+      assert.equal(result.recoveries.caughtUp, 1);
     });
 
     it("is a no-op, counted as skipped, when the same exit is sent again", async () => {
@@ -555,7 +561,7 @@ describe("syncAccounts", () => {
       const input = {
         mode: "UPDATE_EXISTING",
         rows: [],
-        exits: [{ externalId: "A", reason: "CURED", missedInstallments: 2, termsAmount: 100 }]
+        exits: [{ externalId: "A", reason: "CAUGHT_UP", missedInstallments: 2, termsAmount: 100 }]
       };
       await sync(t, input);
       const second = await sync(t, input);

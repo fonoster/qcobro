@@ -3,7 +3,7 @@ import type { AccountExitRecord, ExitEntryInput, RecoveryCreate, RecoveryTx } fr
 import { contextColumns } from "./recoveryContext.js";
 
 /**
- * Gives an open UNKNOWN exit its reason. CURED and PAID_OFF store the sent installments and
+ * Gives an open UNKNOWN exit its reason. CAUGHT_UP and PAID_OFF store the sent installments and
  * amount on the exit, record a Recovery on the exit's own date with the snapshot taken at
  * exit time, and turn MET the promises that exit expired (not those of an earlier episode).
  *
@@ -17,7 +17,7 @@ export async function classifyOpenExit(
   entry: ExitEntryInput,
   now: Date
 ): Promise<{ recovery: RecoveryCreate | null; promisesMet: number } | false> {
-  const recovers = entry.reason === "CURED" || entry.reason === "PAID_OFF";
+  const recovers = entry.reason === "CAUGHT_UP" || entry.reason === "PAID_OFF";
   const values = recovers
     ? { missedInstallments: entry.missedInstallments!, termsAmount: entry.termsAmount! }
     : {};
@@ -34,7 +34,7 @@ export async function classifyOpenExit(
     portfolioId: exit.portfolioId,
     portfolioAccountId: exit.portfolioAccountId,
     exitId: exit.id,
-    kind: entry.reason as "CURED" | "PAID_OFF",
+    kind: entry.reason as "CAUGHT_UP" | "PAID_OFF",
     installments: entry.missedInstallments!,
     amount: entry.missedInstallments! * entry.termsAmount!,
     detectedAt: exit.exitedAt,

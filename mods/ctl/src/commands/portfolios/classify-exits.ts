@@ -13,7 +13,7 @@ export default class ClassifyExits extends AuthenticatedCommand<typeof ClassifyE
     "portfolio-id": Flags.string({ description: "the portfolio id", required: true }),
     file: Flags.string({
       description:
-        "path to a JSON file containing an array of { externalId, reason, missedInstallments, termsAmount } (the last two only for CURED and PAID_OFF)",
+        "path to a JSON file containing an array of { externalId, reason, missedInstallments, termsAmount } (the last two only for CAUGHT_UP and PAID_OFF)",
       required: true
     })
   };
@@ -34,9 +34,9 @@ export default class ClassifyExits extends AuthenticatedCommand<typeof ClassifyE
       exits: exits as ClassifyExitsInput["exits"]
     });
 
-    const { cured, paidOff, amount } = result.recoveries;
+    const { caughtUp, paidOff, amount } = result.recoveries;
     this.log(
-      `Classified ${result.classified}: ${cured} cured, ${paidOff} paid off (amount ${amount}); ${result.promisesMet} promises met.`
+      `Classified ${result.classified}: ${caughtUp} caught up, ${paidOff} paid off (amount ${amount}); ${result.promisesMet} promises met.`
     );
   }
 }

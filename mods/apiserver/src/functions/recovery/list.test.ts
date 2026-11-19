@@ -28,7 +28,7 @@ describe("recovery.list", () => {
       recoveries: [
         recovery({ kind: "PARTIAL" }),
         recovery({ kind: "PARTIAL", hasGestion: false }),
-        recovery({ kind: "CURED" })
+        recovery({ kind: "CAUGHT_UP" })
       ]
     });
     const partial = await createRecoveryList(

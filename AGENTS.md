@@ -142,7 +142,7 @@ deploys over SSH to the DigitalOcean droplet with Docker Compose.
 
 - 2026-06-06: Authentication, authorization and tenancy use Fonoster Identity as a gRPC service.
 - 2026-06-27: Outcomes are a universal record; PaymentPromise is the only tracked entity, an
-  operator worklist with no automation, marked met by the sync when the episode closes CURED
+  operator worklist with no automation, marked met by the sync when the episode closes CAUGHT_UP
   or PAID_OFF (2026-11-17).
 - 2026-06-27: Ad-hoc outreach dispatches an agent template with `campaignId: null`.
 - 2026-06-28: Currency and timezone are per-workspace settings, not deployment config.

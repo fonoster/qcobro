@@ -90,8 +90,8 @@ await client.portfolios.delete({ id: "f47ac10b-..." });
 ```
 
 <Tip>
-  Para retirar una cartera de la vista operativa conservando su historial, prefiere
-  **archivarla** (`update` con `archived: true`) en lugar de eliminarla.
+  Para retirar una cartera de la vista operativa conservando su historial, prefiere **archivarla**
+  (`update` con `archived: true`) en lugar de eliminarla.
 </Tip>
 
 ## Lista las cuentas de una cartera
@@ -135,8 +135,8 @@ const { items, total } = await client.portfolios.listExits({
   Id de la cartera cuyas salidas listar.
 </ParamField>
 <ParamField body="reason" type="string">
-  Solo las salidas con este motivo: `CURED`, `PAID_OFF`, `WRITTEN_OFF`, `OTHER` o `UNKNOWN`
-  (sin motivo).
+  Solo las salidas con este motivo: `CAUGHT_UP`, `PAID_OFF`, `WRITTEN_OFF`, `OTHER` o `UNKNOWN` (sin
+  motivo).
 </ParamField>
 <ParamField body="limit" type="number" default="50">
   Número máximo de salidas a devolver (1–200).
@@ -164,14 +164,14 @@ Cada elemento de `items` describe una salida:
 </ResponseField>
 <ResponseField name="missedInstallments" type="number">
   Cuotas vencidas guardadas en la salida: las de la cuenta al salir, o las que enviaste al darle
-  motivo `CURED` o `PAID_OFF`.
+  motivo `CAUGHT_UP` o `PAID_OFF`.
 </ResponseField>
 <ResponseField name="termsAmount" type="number">
   Importe de cada cuota guardado en la salida, con el mismo criterio.
 </ResponseField>
 <ResponseField name="amountIfRecovered" type="number">
   `missedInstallments × termsAmount`. En una salida `UNKNOWN` es una estimación de lo que se
-  registraría si la clasificas como `CURED` o `PAID_OFF`.
+  registraría si la clasificas como `CAUGHT_UP` o `PAID_OFF`.
 </ResponseField>
 <ResponseField name="classifiedAt" type="string | null">
   Cuándo se dio el motivo a una salida que había salido sin él, o `null`.
@@ -182,38 +182,38 @@ Cada elemento de `items` describe una salida:
 Una cuenta que desaparece de un lote `REPLACE` sale **sin motivo** (`UNKNOWN`). `classifyExits`
 le da el motivo después, sin tener que esperar a la siguiente sincronización. Las entradas
 siguen las mismas reglas que `exits` en [Sincronizar cuentas](/sdk/sync-accounts#informa-las-salidas):
-`CURED` y `PAID_OFF` llevan `missedInstallments` (las cuotas vencidas que ahora están pagadas)
+`CAUGHT_UP` y `PAID_OFF` llevan `missedInstallments` (las cuotas vencidas que ahora están pagadas)
 y `termsAmount` (el importe de cada cuota), y registran una recuperación de su producto.
 
 ```ts
 const result = await client.portfolios.classifyExits({
   portfolioId: "f47ac10b-...",
   exits: [
-    { externalId: "C-0877", reason: "CURED", missedInstallments: 2, termsAmount: 1500 },
+    { externalId: "C-0877", reason: "CAUGHT_UP", missedInstallments: 2, termsAmount: 1500 },
     { externalId: "C-0878", reason: "WRITTEN_OFF" }
   ]
 });
-// → { classified: 2, recoveries: { cured: 1, paidOff: 0, amount: 3000 }, promisesMet: 1 }
+// → { classified: 2, recoveries: { caughtUp: 1, paidOff: 0, amount: 3000 }, promisesMet: 1 }
 ```
 
 <ParamField body="portfolioId" type="string" required>
   Id de la cartera.
 </ParamField>
 <ParamField body="exits" type="array" required>
-  Entre 1 y 1000 salidas, cada una con su `externalId` y su `reason` (`CURED`, `PAID_OFF`,
+  Entre 1 y 1000 salidas, cada una con su `externalId` y su `reason` (`CAUGHT_UP`, `PAID_OFF`,
   `WRITTEN_OFF` u `OTHER`). Un `externalId` no puede repetirse.
 </ParamField>
 
 La llamada es de todo o nada: si una entrada no corresponde a una salida que espera motivo, no
 se clasifica ninguna y la API responde con el error. La recuperación cuenta en la fecha en que
-la cuenta salió, así que la cifra de un período ya cerrado puede subir. En `CURED` y `PAID_OFF`,
+la cuenta salió, así que la cifra de un período ya cerrado puede subir. En `CAUGHT_UP` y `PAID_OFF`,
 las promesas de pago que esa salida había expirado pasan a **Cumplida**.
 
 <ResponseField name="classified" type="number">
   Salidas que recibieron su motivo.
 </ResponseField>
 <ResponseField name="recoveries" type="object">
-  Recuperaciones registradas: `cured`, `paidOff`, y `amount`, la suma de sus importes.
+  Recuperaciones registradas: `caughtUp`, `paidOff`, y `amount`, la suma de sus importes.
 </ResponseField>
 <ResponseField name="promisesMet" type="number">
   Promesas de pago que pasaron a **Cumplida**.

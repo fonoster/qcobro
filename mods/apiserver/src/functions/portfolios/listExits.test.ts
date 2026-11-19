@@ -26,7 +26,7 @@ describe("portfolios.listExits", () => {
     const client = readClient({
       exits: [
         exit("e1"),
-        exit("e2", { reason: "CURED", classifiedAt: new Date() }),
+        exit("e2", { reason: "CAUGHT_UP", classifiedAt: new Date() }),
         exit("e3", { reenteredAt: new Date() }),
         exit("e4", { portfolioId: "p2" })
       ]

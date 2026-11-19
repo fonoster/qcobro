@@ -188,7 +188,7 @@ export function createSyncAccounts(client: SyncAccountsClient) {
           reason: ExitReason,
           entry: ExitEntryInput | null
         ) => {
-          const recovers = reason === "CURED" || reason === "PAID_OFF";
+          const recovers = reason === "CAUGHT_UP" || reason === "PAID_OFF";
           newExits.push({
             id: randomUUID(),
             portfolioId,
@@ -289,14 +289,16 @@ export function createSyncAccounts(client: SyncAccountsClient) {
           });
           await tx.accountExit.createMany({ data: exitRows });
 
-          const recovered = exitRows.filter((e) => e.reason === "CURED" || e.reason === "PAID_OFF");
+          const recovered = exitRows.filter(
+            (e) => e.reason === "CAUGHT_UP" || e.reason === "PAID_OFF"
+          );
           for (const exit of recovered) {
             recoveries.push({
               id: randomUUID(),
               portfolioId,
               portfolioAccountId: exit.portfolioAccountId,
               exitId: exit.id,
-              kind: exit.reason as "CURED" | "PAID_OFF",
+              kind: exit.reason as "CAUGHT_UP" | "PAID_OFF",
               installments: exit.missedInstallments,
               amount: exit.missedInstallments * exit.termsAmount,
               detectedAt: now,
@@ -316,9 +318,9 @@ export function createSyncAccounts(client: SyncAccountsClient) {
           }
 
           // Accounts that left without recovering: their PENDING promises expire, tagged with
-          // the exit so a later CURED/PAID_OFF classification can turn exactly these MET.
+          // the exit so a later CAUGHT_UP/PAID_OFF classification can turn exactly these MET.
           const notRecovered = exitRows.filter(
-            (e) => e.reason !== "CURED" && e.reason !== "PAID_OFF"
+            (e) => e.reason !== "CAUGHT_UP" && e.reason !== "PAID_OFF"
           );
           if (notRecovered.length > 0) {
             const withPending = await tx.paymentPromise.findMany({
@@ -375,7 +377,7 @@ export function createSyncAccounts(client: SyncAccountsClient) {
 
         const allRecoveries = [...recoveries, ...lateRecoveries];
         const exitsByReason: SyncResult["exitsByReason"] = {
-          CURED: 0,
+          CAUGHT_UP: 0,
           PAID_OFF: 0,
           WRITTEN_OFF: 0,
           OTHER: 0,
@@ -393,7 +395,7 @@ export function createSyncAccounts(client: SyncAccountsClient) {
           exitsByReason,
           recoveries: {
             partial: allRecoveries.filter((r) => r.kind === "PARTIAL").length,
-            cured: allRecoveries.filter((r) => r.kind === "CURED").length,
+            caughtUp: allRecoveries.filter((r) => r.kind === "CAUGHT_UP").length,
             paidOff: allRecoveries.filter((r) => r.kind === "PAID_OFF").length,
             amount: allRecoveries.reduce((sum, r) => sum + r.amount, 0)
           }

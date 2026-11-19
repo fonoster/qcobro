@@ -44,17 +44,17 @@ export const accountRowSchema = z.object({
 });
 export type AccountRowInput = z.infer<typeof accountRowSchema>;
 
-export const EXIT_REASONS = ["CURED", "PAID_OFF", "WRITTEN_OFF", "OTHER"] as const;
+export const EXIT_REASONS = ["CAUGHT_UP", "PAID_OFF", "WRITTEN_OFF", "OTHER"] as const;
 export type ExitReasonInput = (typeof EXIT_REASONS)[number];
 
-// Why an account left a portfolio. CURED and PAID_OFF record a recovery of
+// Why an account left a portfolio. CAUGHT_UP and PAID_OFF record a recovery of
 // missedInstallments (the installments that were overdue and are now paid) × termsAmount, so
 // both are required for those reasons; WRITTEN_OFF and OTHER need only the reason. The
 // reason-dependent rules are checked by the enclosing schema so this stays a plain object.
 export const exitEntrySchema = z.object({
   externalId: z.string().min(1),
   reason: z.enum(EXIT_REASONS, {
-    error: "reason must be one of CURED, PAID_OFF, WRITTEN_OFF, OTHER"
+    error: "reason must be one of CAUGHT_UP, PAID_OFF, WRITTEN_OFF, OTHER"
   }),
   missedInstallments: z.number().int().optional(),
   termsAmount: z.number().optional()
@@ -67,14 +67,14 @@ export function checkExitEntry(
   path: (string | number)[],
   ctx: z.RefinementCtx
 ): void {
-  if (entry.reason !== "CURED" && entry.reason !== "PAID_OFF") return;
+  if (entry.reason !== "CAUGHT_UP" && entry.reason !== "PAID_OFF") return;
   for (const field of ["missedInstallments", "termsAmount"] as const) {
     const value = entry[field];
     if (value === undefined) {
       ctx.addIssue({
         code: "custom",
         path: [...path, field],
-        message: "required when reason is CURED or PAID_OFF"
+        message: "required when reason is CAUGHT_UP or PAID_OFF"
       });
     } else if (value <= 0) {
       ctx.addIssue({ code: "custom", path: [...path, field], message: "must be greater than 0" });

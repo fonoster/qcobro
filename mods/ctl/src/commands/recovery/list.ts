@@ -8,13 +8,13 @@ export default class List extends AuthenticatedCommand<typeof List> {
   static override readonly description = "list the recoveries detected in a period";
   static override readonly examples = [
     "<%= config.bin %> <%= command.id %> --from 2026-10-01 --to 2026-10-31",
-    "<%= config.bin %> <%= command.id %> --from 2026-10-01 --to 2026-10-31 --kind CURED --no-has-gestion"
+    "<%= config.bin %> <%= command.id %> --from 2026-10-01 --to 2026-10-31 --kind CAUGHT_UP --no-has-gestion"
   ];
   static override readonly flags = {
     ...periodFlags,
     kind: Flags.string({
       description: "only recoveries of this kind",
-      options: ["PARTIAL", "CURED", "PAID_OFF"]
+      options: ["PARTIAL", "CAUGHT_UP", "PAID_OFF"]
     }),
     "has-gestion": Flags.boolean({
       description: "only recoveries with (or, with --no-has-gestion, without) a gestión",

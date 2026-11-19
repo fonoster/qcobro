@@ -187,7 +187,7 @@ test("lists the registered portfolio and recovery tools", async () => {
 
 test("portfolios_sync_accounts accepts exits and forwards them to the API", async () => {
   const exits = [
-    { externalId: "C-0877", reason: "CURED", missedInstallments: 2, termsAmount: 1500 },
+    { externalId: "C-0877", reason: "CAUGHT_UP", missedInstallments: 2, termsAmount: 1500 },
     { externalId: "C-0878", reason: "WRITTEN_OFF" }
   ];
   const { tools } = await mcpClient.listTools();

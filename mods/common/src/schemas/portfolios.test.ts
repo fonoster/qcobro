@@ -76,12 +76,12 @@ describe("syncAccountsInputSchema", () => {
     });
   }
 
-  it("accepts a CURED exit with missedInstallments and termsAmount", () => {
+  it("accepts a CAUGHT_UP exit with missedInstallments and termsAmount", () => {
     const result = syncAccountsInputSchema.safeParse({
       portfolioId: "p1",
       mode: "UPDATE_EXISTING",
       rows: [],
-      exits: [{ externalId: "C9", reason: "CURED", missedInstallments: 3, termsAmount: 1500 }]
+      exits: [{ externalId: "C9", reason: "CAUGHT_UP", missedInstallments: 3, termsAmount: 1500 }]
     });
     assert.equal(result.success, true);
   });
@@ -97,14 +97,14 @@ describe("syncAccountsInputSchema", () => {
     return result.error!.issues.map((i) => ({ path: i.path.join("."), message: i.message }));
   }
 
-  for (const reason of ["CURED", "PAID_OFF"] as const) {
+  for (const reason of ["CAUGHT_UP", "PAID_OFF"] as const) {
     it(`requires missedInstallments and termsAmount on a ${reason} exit`, () => {
       assert.deepEqual(issuesFor([{ externalId: "C9", reason }]), [
         {
           path: "exits.0.missedInstallments",
-          message: "required when reason is CURED or PAID_OFF"
+          message: "required when reason is CAUGHT_UP or PAID_OFF"
         },
-        { path: "exits.0.termsAmount", message: "required when reason is CURED or PAID_OFF" }
+        { path: "exits.0.termsAmount", message: "required when reason is CAUGHT_UP or PAID_OFF" }
       ]);
     });
 
@@ -124,7 +124,7 @@ describe("syncAccountsInputSchema", () => {
       assert.deepEqual(issuesFor([{ externalId: "C9", reason }]), [
         {
           path: "exits.0.reason",
-          message: "reason must be one of CURED, PAID_OFF, WRITTEN_OFF, OTHER"
+          message: "reason must be one of CAUGHT_UP, PAID_OFF, WRITTEN_OFF, OTHER"
         }
       ]);
     }

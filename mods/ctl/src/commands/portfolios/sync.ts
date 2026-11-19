@@ -17,7 +17,7 @@ export default class Sync extends AuthenticatedCommand<typeof Sync> {
     }),
     exits: Flags.string({
       description:
-        "path to a JSON file containing an array of { externalId, reason, missedInstallments, termsAmount } (the last two only for CURED and PAID_OFF)"
+        "path to a JSON file containing an array of { externalId, reason, missedInstallments, termsAmount } (the last two only for CAUGHT_UP and PAID_OFF)"
     }),
     mode: Flags.string({
       description: "merge strategy",
@@ -54,17 +54,17 @@ export default class Sync extends AuthenticatedCommand<typeof Sync> {
       `Synced: ${result.created} created, ${result.updated} updated, ${result.archived} archived (total ${result.total}).`
     );
 
-    const { partial, cured, paidOff, amount } = result.recoveries;
-    if (partial + cured + paidOff > 0) {
+    const { partial, caughtUp, paidOff, amount } = result.recoveries;
+    if (partial + caughtUp + paidOff > 0) {
       this.log(
-        `Recovered: ${partial} partial, ${cured} cured, ${paidOff} paid off (amount ${amount}).`
+        `Recovered: ${partial} partial, ${caughtUp} caught up, ${paidOff} paid off (amount ${amount}).`
       );
     }
 
     const byReason = result.exitsByReason;
     const extra = byReason.classified + byReason.skipped > 0;
     const exitCounts = [
-      byReason.CURED,
+      byReason.CAUGHT_UP,
       byReason.PAID_OFF,
       byReason.WRITTEN_OFF,
       byReason.OTHER,
@@ -72,7 +72,7 @@ export default class Sync extends AuthenticatedCommand<typeof Sync> {
     ];
     if (extra || exitCounts.some((n) => n > 0)) {
       this.log(
-        `Exits: ${byReason.CURED} cured, ${byReason.PAID_OFF} paid off, ${byReason.WRITTEN_OFF} written off, ${byReason.OTHER} other, ${byReason.UNKNOWN} unknown` +
+        `Exits: ${byReason.CAUGHT_UP} caught up, ${byReason.PAID_OFF} paid off, ${byReason.WRITTEN_OFF} written off, ${byReason.OTHER} other, ${byReason.UNKNOWN} unknown` +
           (extra ? `, ${byReason.classified} classified, ${byReason.skipped} skipped` : "") +
           "."
       );

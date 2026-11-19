@@ -25,7 +25,7 @@ describe("recovery.summary", () => {
         },
         {
           portfolioId: "p1",
-          reason: "CURED",
+          reason: "CAUGHT_UP",
           reenteredAt: null,
           exitedAt: new Date(),
           portfolioAccount: { portfolio: { workspaceRef: "ws" } }

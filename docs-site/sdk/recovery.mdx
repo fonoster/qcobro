@@ -16,11 +16,11 @@ zona horaria del workspace. `from` debe ser igual o anterior a `to`.
 QCobro registra una recuperación cuando una sincronización de cuentas muestra que se pagaron
 cuotas vencidas. Hay tres tipos (`kind`):
 
-| `kind`     | Cuándo se registra                                                                            | Importe                                                 |
-| ---------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `PARTIAL`  | Una cuenta sigue en el lote con menos `missedInstallments` que en la sincronización anterior. | Las cuotas que bajaron × el `termsAmount` de la cuenta. |
-| `CURED`    | Envías la cuenta en `exits` con `reason: "CURED"` (se puso al día).                           | `missedInstallments × termsAmount` de la salida.        |
-| `PAID_OFF` | Envías la cuenta en `exits` con `reason: "PAID_OFF"` (saldó la deuda).                        | `missedInstallments × termsAmount` de la salida.        |
+| `kind`      | Cuándo se registra                                                                            | Importe                                                 |
+| ----------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `PARTIAL`   | Una cuenta sigue en el lote con menos `missedInstallments` que en la sincronización anterior. | Las cuotas que bajaron × el `termsAmount` de la cuenta. |
+| `CAUGHT_UP` | Envías la cuenta en `exits` con `reason: "CAUGHT_UP"` (se puso al día).                       | `missedInstallments × termsAmount` de la salida.        |
+| `PAID_OFF`  | Envías la cuenta en `exits` con `reason: "PAID_OFF"` (saldó la deuda).                        | `missedInstallments × termsAmount` de la salida.        |
 
 En las salidas, `missedInstallments` son las cuotas que estaban vencidas y ahora están pagadas,
 y `termsAmount` es el importe de cada cuota. Consulta
@@ -32,7 +32,7 @@ y días desde la última gestión. Esa instantánea **nunca se recalcula**, aunq
 elimines las campañas que nombra.
 
 Una recuperación cuenta en el período en que se detectó. Hay una excepción: si das motivo
-`CURED` o `PAID_OFF` a una salida que se registró **sin motivo** (`UNKNOWN`), la recuperación
+`CAUGHT_UP` o `PAID_OFF` a una salida que se registró **sin motivo** (`UNKNOWN`), la recuperación
 cuenta en la fecha en que la cuenta salió. Por eso la cifra de un período ya cerrado puede
 subir al clasificar salidas (ver [Clasifica las salidas sin motivo](/sdk/portfolios#clasifica-las-salidas-sin-motivo)).
 
@@ -158,7 +158,7 @@ const { items, total } = await client.recovery.list({
   Limita el resultado a una cartera.
 </ParamField>
 <ParamField body="kind" type="string">
-  Solo las recuperaciones de este tipo: `PARTIAL`, `CURED` o `PAID_OFF`.
+  Solo las recuperaciones de este tipo: `PARTIAL`, `CAUGHT_UP` o `PAID_OFF`.
 </ParamField>
 <ParamField body="hasGestion" type="boolean">
   `true` para solo las que tuvieron una gestión entre sincronizaciones; `false` para solo las que
@@ -189,7 +189,7 @@ Cada elemento de `items` describe una recuperación:
   Nombre completo del titular.
 </ResponseField>
 <ResponseField name="kind" type="string">
-  `PARTIAL`, `CURED` o `PAID_OFF`.
+  `PARTIAL`, `CAUGHT_UP` o `PAID_OFF`.
 </ResponseField>
 <ResponseField name="installments" type="number">
   Cuotas recuperadas.

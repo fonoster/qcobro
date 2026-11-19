@@ -65,11 +65,11 @@ describe("recovery period schemas", () => {
 });
 
 describe("classifyExitsInputSchema", () => {
-  it("accepts CURED with the recovery fields and WRITTEN_OFF without them", () => {
+  it("accepts CAUGHT_UP with the recovery fields and WRITTEN_OFF without them", () => {
     const result = classifyExitsInputSchema.safeParse({
       portfolioId: "p1",
       exits: [
-        { externalId: "C-0877", reason: "CURED", missedInstallments: 2, termsAmount: 1500 },
+        { externalId: "C-0877", reason: "CAUGHT_UP", missedInstallments: 2, termsAmount: 1500 },
         { externalId: "C-0878", reason: "WRITTEN_OFF" }
       ]
     });
@@ -80,12 +80,12 @@ describe("classifyExitsInputSchema", () => {
     const result = classifyExitsInputSchema.safeParse({
       portfolioId: "p1",
       exits: [
-        { externalId: "C-0877", reason: "CURED", missedInstallments: 2 },
+        { externalId: "C-0877", reason: "CAUGHT_UP", missedInstallments: 2 },
         { externalId: "C-0877", reason: "OTHER" }
       ]
     });
     assert.deepEqual(messages(result), [
-      { path: "exits.0.termsAmount", message: "required when reason is CURED or PAID_OFF" },
+      { path: "exits.0.termsAmount", message: "required when reason is CAUGHT_UP or PAID_OFF" },
       { path: "exits.1.externalId", message: 'externalId "C-0877" appears twice in exits' }
     ]);
   });

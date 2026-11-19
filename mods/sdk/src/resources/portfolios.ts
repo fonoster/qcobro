@@ -97,7 +97,7 @@ export class PortfoliosResource {
    *
    * `mode` controls the merge strategy: `APPEND_ONLY` adds new rows,
    * `UPDATE_EXISTING` updates rows that already exist, `REPLACE` replaces the set.
-   * Pass `exits` to record accounts that left the portfolio, with a reason; `CURED` and
+   * Pass `exits` to record accounts that left the portfolio, with a reason; `CAUGHT_UP` and
    * `PAID_OFF` exits also carry `missedInstallments` and `termsAmount`.
    */
   async syncAccounts(input: SyncAccountsInput) {
@@ -115,7 +115,7 @@ export class PortfoliosResource {
   }
 
   /**
-   * Assign a reason to exits recorded as `UNKNOWN`. `CURED` and `PAID_OFF` exits carry
+   * Assign a reason to exits recorded as `UNKNOWN`. `CAUGHT_UP` and `PAID_OFF` exits carry
    * `missedInstallments` and `termsAmount` and record a recovery of their product.
    */
   async classifyExits(input: ClassifyExitsInput) {

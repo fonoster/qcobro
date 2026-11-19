@@ -46,7 +46,7 @@ function item(
 }
 
 const ITEMS = [
-  item("1", "Ana Pérez", "LN-54091", "CURED", 3, 4500, { agentType: "VOICE_AI", days: 1 }),
+  item("1", "Ana Pérez", "LN-54091", "CAUGHT_UP", 3, 4500, { agentType: "VOICE_AI", days: 1 }),
   item("2", "Luis Gómez", "LN-23174", "PARTIAL", 2, 3000, { agentType: "SMS", days: 3 }),
   item("3", "Sofía Méndez", "LN-67438", "PAID_OFF", 1, 2100, { agentType: "WHATSAPP", days: 5 }),
   item("4", "Carlos Ruiz", "LN-19863", "PARTIAL", 1, 1500, null)

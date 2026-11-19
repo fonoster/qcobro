@@ -238,7 +238,7 @@ export type ReserveAttemptInput = z.infer<typeof reserveAttemptSchema>;
 
 /**
  * Operator resolution of a payment promise: the operator can only cancel it. A promise
- * becomes `MET` only when a sync closes the account's episode as CURED or PAID_OFF, and
+ * becomes `MET` only when a sync closes the account's episode as CAUGHT_UP or PAID_OFF, and
  * `EXPIRED` when the account leaves its portfolio; neither is set here.
  */
 export const updatePaymentPromiseSchema = z.object({

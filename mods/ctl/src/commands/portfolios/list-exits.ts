@@ -15,7 +15,7 @@ export default class ListExits extends AuthenticatedCommand<typeof ListExits> {
     "portfolio-id": Flags.string({ description: "the portfolio id", required: true }),
     reason: Flags.string({
       description: "only exits with this reason",
-      options: ["CURED", "PAID_OFF", "WRITTEN_OFF", "OTHER", "UNKNOWN"]
+      options: ["CAUGHT_UP", "PAID_OFF", "WRITTEN_OFF", "OTHER", "UNKNOWN"]
     }),
     ...pagingFlags
   };

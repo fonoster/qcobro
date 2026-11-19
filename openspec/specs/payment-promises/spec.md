@@ -16,7 +16,7 @@ the Payment Promises worklist.
 A **PaymentPromise** SHALL be the system record of a debtor's commitment to pay a specific
 amount by a specific date. It is the ONLY outcome that QCobro tracks with a lifecycle,
 because a payment is the only commitment QCobro can verify (each portfolio sync records
-the account's installments, and a sync that closes the account's episode as CURED or
+the account's installments, and a sync that closes the account's episode as CAUGHT_UP or
 PAID_OFF records a `Recovery`).
 
 A `PaymentPromise` SHALL have:
@@ -66,7 +66,7 @@ operator cancels it.
 ### Requirement: A promise is met by the sync, cancelled by the operator
 
 A `PaymentPromise` SHALL become `MET` only when a portfolio sync closes the account's
-episode as `CURED` or `PAID_OFF`: the account's `PENDING` promises, and the promises that
+episode as `CAUGHT_UP` or `PAID_OFF`: the account's `PENDING` promises, and the promises that
 same exit expired, become `MET`. An operator SHALL NOT be able to mark a promise `MET`; the
 only operator resolution is `CANCELLED` (dismissed), and `paymentPromise.resolve` SHALL
 reject any other status with a validation error. Meeting or cancelling a promise SHALL NOT
@@ -76,7 +76,7 @@ an unpaid promise stays DUE on the worklist until met, expired or cancelled.
 
 #### Scenario: A sync that closes the episode meets the promise
 
-- **WHEN** a sync closes an account's episode as `CURED` or `PAID_OFF`
+- **WHEN** a sync closes an account's episode as `CAUGHT_UP` or `PAID_OFF`
 - **THEN** the account's `PENDING` promises become `MET`
 - **AND** no new gestión entry is required
 

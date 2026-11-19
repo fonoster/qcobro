@@ -1,7 +1,7 @@
 import type { ExitReasonInput } from "../schemas/portfolios.js";
 
 export type ExitReason = ExitReasonInput | "UNKNOWN";
-export type RecoveryKind = "PARTIAL" | "CURED" | "PAID_OFF";
+export type RecoveryKind = "PARTIAL" | "CAUGHT_UP" | "PAID_OFF";
 
 /**
  * What was happening with an account between two syncs: the gestiones with `contactedAt` in
@@ -39,7 +39,7 @@ export interface SyncResult {
    */
   exitsByReason: Record<ExitReason, number> & { classified: number; skipped: number };
   /** Every Recovery this call created, including those from late classifications. */
-  recoveries: { partial: number; cured: number; paidOff: number; amount: number };
+  recoveries: { partial: number; caughtUp: number; paidOff: number; amount: number };
 }
 
 /** The account fields the sync reads to detect recoveries and exits. */
@@ -180,7 +180,7 @@ export interface ExitListItem {
 
 export interface ClassifyExitsResult {
   classified: number;
-  recoveries: { cured: number; paidOff: number; amount: number };
+  recoveries: { caughtUp: number; paidOff: number; amount: number };
   promisesMet: number;
 }
 
