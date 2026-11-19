@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
-export const MAILPIT = "http://localhost:8025";
+export const MAILPIT = "http://mailpit:8025";
 
 export interface Credentials {
   name: string;

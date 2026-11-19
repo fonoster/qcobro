@@ -8,7 +8,8 @@ on:
       - "e2e/**"
       - "package.json"
       - "package-lock.json"
-      - "compose.dev.yaml"
+      - ".devcontainer/**"
+      - "scripts/dev-config.mjs"
       - "playwright.config.ts"
       - ".github/workflows/e2e.yml"
   pull_request:
@@ -20,132 +21,31 @@ jobs:
     # otherwise re-run e2e for nothing (mirrors the guard in test.yml).
     if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
     runs-on: ubuntu-latest
+    env:
+      # `devcontainer build` builds the workspace through Compose, whose Bake builder refuses
+      # the Dockerfile the dev container CLI writes outside the build context unless allowed.
+      BUILDX_BAKE_ENTITLEMENTS_FS: "0"
 
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v6
+      # The same dev container developers use (.devcontainer/): initialize.sh writes .dev/
+      # (config, keys, secrets) and builds the workspace image, which already has Chromium;
+      # post-create.sh installs, migrates and seeds. ci-e2e.sh then starts the API and the
+      # console and runs Playwright inside it.
+      # devcontainers/ci runs `devcontainer build` before `up`, and build skips the
+      # initializeCommand, so write .dev/ (Compose reads it) and build the image first.
+      - name: Prepare the dev container
+        run: sh .devcontainer/initialize.sh
+
+      - name: Run e2e in the dev container
+        uses: devcontainers/ci@v0.3
         with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      # qcobro.json and the Identity service config are gitignored (they hold
-      # deployment secrets), so generate CI-local copies. Values point at the
-      # services compose.dev.yaml publishes on localhost; the Identity container
-      # reaches Postgres/Mailpit by service name on the compose network.
-      - name: Generate config and Identity keys
-        run: |
-          mkdir -p config/identity/keys
-          openssl genrsa -out config/identity/keys/private.pem 2048
-          openssl rsa -in config/identity/keys/private.pem -pubout \
-            -out config/identity/keys/public.pem
-
-          cat > config/identity/identity.json <<'JSON'
-          {
-            "server": { "bindAddr": "0.0.0.0:50051", "httpBridgePort": 9110 },
-            "database": { "url": "postgresql://qcobro:qcobro@db:5432/identity?schema=public" },
-            "encryptionKey": "k1.aesgcm256.cWpIPDjly8s0Y1UIKPhV2LDs-mJDkxpHQjOWnLiXK_E",
-            "issuer": "qcobro",
-            "audience": "qcobro",
-            "keys": {
-              "privateKeyPath": "/service/config/keys/private.pem",
-              "publicKeyPath": "/service/config/keys/public.pem"
-            },
-            "appUrl": "http://localhost:5173",
-            "invite": {
-              "url": "http://localhost:5173/accept-invite",
-              "failUrl": "http://localhost:5173/invite-failed"
-            },
-            "smtp": {
-              "host": "mailpit", "port": 1025, "secure": false,
-              "sender": "QCobro <no-reply@qcobro.local>"
-            }
-          }
-          JSON
-
-          # Derive qcobro.json from the committed example so CI carries the same
-          # fonoster.voices catalog as a real deployment (placeholder creds are fine —
-          # e2e never dials), overriding only the env-specific db/identity/ai bits.
-          node -e '
-            const fs = require("fs");
-            const c = require("./config/qcobro.example.json");
-            c.database.url = "postgresql://qcobro:qcobro@localhost:5432/qcobro?schema=public";
-            c.identity = { endpoint: "localhost:50051", httpBridgeUrl: "http://localhost:9110" };
-            c.ai = { enabled: true, provider: "mock", model: "mock" };
-            // The example ships a non-decodable placeholder ("CHANGE_ME_..."), which
-            // makes prisma-field-encryption throw at boot ("Unknown key format") and
-            // crashes the apiserver before it can serve /health. Swap in a throwaway
-            // (but validly-formatted, 32-byte) key — CI never stores a real WABA secret.
-            c.security = { cloakEncryptionKey: "k1.aesgcm256.S3va8kWoKh1r5v0u465_BaTt2L5kVdP6ZDWpSYmkfcM" };
-            // Keep fonoster (its voice catalog) but drop SMS/email — their SDKs validate
-            // placeholder creds eagerly at startup. e2e never dials/sends.
-            delete c.twilio;
-            delete c.resend;
-            // Drop apiserver overrides (the example enables contactLogAuth); e2e seeds via
-            // unauthenticated POST /api/contact-logs, so keep the default (auth off).
-            delete c.apiserver;
-            fs.writeFileSync("config/qcobro.json", JSON.stringify(c, null, 2));
-          '
-
-      # Backing services (db + identity + mailpit) from the dev compose file.
-      # db-init creates the `identity` database; Identity migrates its own schema
-      # on startup. The apiserver and webapp run on the host (below).
-      - name: Start backing services
-        run: docker compose -f compose.dev.yaml up -d --wait
-
-      - name: Build and provision the apiserver database
-        run: |
-          npm run build --workspace=mods/common
-          npm run db:generate --workspace=mods/apiserver
-          npm run db:migrate:deploy --workspace=mods/apiserver
-
-      - name: Wait for Identity
-        run: |
-          for i in $(seq 1 60); do
-            if (echo > /dev/tcp/localhost/50051) 2>/dev/null; then
-              echo "identity ready"; exit 0
-            fi
-            sleep 2
-          done
-          echo "identity failed to start"
-          docker compose -f compose.dev.yaml logs identity
-          exit 1
-
-      - name: Start apiserver and webapp
-        run: |
-          npm run start:dev > /tmp/apiserver.log 2>&1 &
-          npm run start:webapp > /tmp/webapp.log 2>&1 &
-          for i in $(seq 1 60); do
-            if curl -sf localhost:3000/health >/dev/null \
-               && curl -sf localhost:5173 >/dev/null; then
-              echo "stack ready"; exit 0
-            fi
-            sleep 2
-          done
-          echo "stack failed to start"; tail -n 50 /tmp/apiserver.log /tmp/webapp.log; exit 1
-
-      # Cache the Chromium download (~120MB) across runs, keyed on the lockfile so it
-      # re-fetches only when dependencies (incl. Playwright) change.
-      - name: Cache Playwright browsers
-        id: pw-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-
-      - name: Install Playwright browser
-        run: |
-          if [ "${{ steps.pw-cache.outputs.cache-hit }}" = "true" ]; then
-            npx playwright install-deps chromium   # cached browser; just OS deps
-          else
-            npx playwright install --with-deps chromium
-          fi
-
-      - name: Run e2e
-        run: npm run test:e2e
+          push: never
+          runCmd: bash .devcontainer/ci-e2e.sh
+          # Playwright's CI settings (retries, forbidOnly) inside the container.
+          env: |
+            CI
 
       - name: Upload report
         uses: actions/upload-artifact@v6

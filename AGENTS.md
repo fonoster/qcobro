@@ -16,18 +16,19 @@ archive. The previous implementation is archived on the `demo` branch.
 
 ## Commands
 
-- Install: `npm ci`. Backing services: `docker compose -f compose.dev.yaml up -d`.
-- Config: `cp config/qcobro.example.json config/qcobro.json`, then set `database.url`.
-- Database: `npm run db:generate`, `npm run db:migrate`, `npm run db:seed --workspace=mods/apiserver`.
+- The dev container is the only supported environment: Docker plus VS Code Dev Containers or
+  `npx @devcontainers/cli`. Opening it writes `.dev/` (keys, `qcobro.json`, secrets;
+  git-ignored) and installs, migrates and seeds. Every command below, and `git commit`, runs
+  inside it.
 - Build, typecheck, lint: `npm run build`, `npm run typecheck`, `npm run lint`.
 - Unit tests: `npm test`, or one package with `npm test --workspace=mods/<pkg>`.
-- E2E: `npm run test:e2e` (Playwright, needs the compose stack).
+- E2E: `bash .devcontainer/ci-e2e.sh` in the container starts the API and the console, then
+  runs `npm run test:e2e` (Playwright), as CI's `e2e` job does.
 - Run: `npm run start:dev` (API on :3000), `npm run start:webapp` (console on :5173),
   `npm run storybook`.
-- In a worktree, use `--workspace` scripts: `lerna` resolves to the main checkout. A worktree
-  needs its own `npm install` and its own `config/` files.
-- Default Verify: `npm run typecheck && npm test --workspace=mods/<pkg>` for the package
-  touched; add `npm run test:e2e` for `area: console`.
+- Default Verify, through `npx @devcontainers/cli exec --workspace-folder <checkout>`:
+  `npm run typecheck && npm test --workspace=mods/<pkg>` for the package touched; add
+  `bash .devcontainer/ci-e2e.sh` for `area: console`.
 
 ## Conventions
 
@@ -39,7 +40,7 @@ Overrides:
 - Procedures reach services (DB, telephony, providers) through the tRPC context, never through
   imports inside a procedure.
 - Configuration is a mounted, Zod-validated `qcobro.json`, not env vars;
-  `config/qcobro-prod.json` is the committed example. Zod strips unknown keys, so a renamed field
+  `config/qcobro.example.json` is the committed example. Zod strips unknown keys, so a renamed field
   fails silently: check scripts and seeds outside `src/`, and verify against the database.
 - All console text goes through `mods/webapp/src/lib/i18n.tsx`. There is no default language.
 - Form fields are a label, the control, and an error only while something is wrong; the field
@@ -54,8 +55,13 @@ Overrides:
   change into the branch.
 - Commits use Conventional Commits (`type(scope): subject`); a Husky `commit-msg` hook runs
   commitlint. No AI attribution lines on commits, PRs or issues; keep the DCO sign-off.
-- Start every change in its own worktree. Once it merges, remove the worktree and the branch
-  (`git branch -D` after a squash merge) and `git fetch --prune`.
+- Start every change in its own worktree (`git worktree add ../qcobro-<n> -b <branch>`) and
+  open it in its own dev container: `npx @devcontainers/cli up --workspace-folder ../qcobro-<n>`,
+  then run every command with
+  `npx @devcontainers/cli exec --workspace-folder ../qcobro-<n> <command>`. Each worktree has
+  its own stack, database, `.dev/` and `node_modules`; commit inside the container so the Git
+  hooks run. Once it merges, run `docker compose -p qcobro-qcobro-<n> down -v`, remove the
+  worktree and the branch (`git branch -D` after a squash merge) and `git fetch --prune`.
 
 ## Areas
 
