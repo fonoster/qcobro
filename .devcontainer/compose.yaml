@@ -1,0 +1,110 @@
+# The QCobro dev container (devcontainer.json). Opening it starts the `workspace`, where you run
+# the apiserver and the webapp from source, and what they talk to: Postgres, Fonoster Identity,
+# Mailpit and the Fonoster fake (mods/fonoster-fake). Development only: no production file uses it.
+#
+# Values come from .env here, a link to ../.dev/.env that initialize.sh writes before the
+# containers start. Every checkout (a worktree too) gets its own project, so stacks run side by
+# side; no service publishes a host port.
+name: ${COMPOSE_PROJECT_NAME:?run .devcontainer/initialize.sh}
+
+services:
+  workspace:
+    # Built by initialize.sh from ./Dockerfile.
+    image: qcobro-dev-workspace
+    pull_policy: never
+    # A real PID 1 that reaps the processes test runs and `exec` sessions leave behind.
+    init: true
+    command: sleep infinity
+    environment:
+      QCOBRO_CONFIG: ${QCOBRO_CHECKOUT}/.dev/qcobro.json
+      FONOSTER_CA_FILE: ${QCOBRO_CHECKOUT}/.dev/tls/ca.pem
+      # Lerna's Nx keeps its data in this checkout's node_modules. Its default in a worktree is
+      # the main checkout's, which is not mounted here.
+      NX_CACHE_DIRECTORY: ${QCOBRO_CHECKOUT}/node_modules/.cache/nx
+      NX_WORKSPACE_DATA_DIRECTORY: ${QCOBRO_CHECKOUT}/node_modules/.cache/nx-workspace-data
+      # Commits are made inside (the hooks need node_modules), as you.
+      GIT_AUTHOR_NAME: ${GIT_AUTHOR_NAME:-}
+      GIT_AUTHOR_EMAIL: ${GIT_AUTHOR_EMAIL:-}
+      GIT_COMMITTER_NAME: ${GIT_AUTHOR_NAME:-}
+      GIT_COMMITTER_EMAIL: ${GIT_AUTHOR_EMAIL:-}
+    volumes:
+      # The same absolute paths as on the host, so a worktree's .git file (which names the main
+      # checkout's .git/worktrees/<name>) resolves inside.
+      - ${QCOBRO_CHECKOUT}:${QCOBRO_CHECKOUT}
+      - ${QCOBRO_GIT_COMMON_DIR}:${QCOBRO_GIT_COMMON_DIR}
+      # Linux node_modules stay out of the host checkout (native binaries differ), one set per
+      # checkout. A workspace package that gets its own node_modules needs a line here.
+      - node-modules:${QCOBRO_CHECKOUT}/node_modules
+      - node-modules-apiserver:${QCOBRO_CHECKOUT}/mods/apiserver/node_modules
+      - node-modules-ctl:${QCOBRO_CHECKOUT}/mods/ctl/node_modules
+      - node-modules-fonoster-fake:${QCOBRO_CHECKOUT}/mods/fonoster-fake/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      identity:
+        condition: service_started
+      mailpit:
+        condition: service_started
+      fonoster-fake:
+        condition: service_started
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: qcobro
+      POSTGRES_PASSWORD: qcobro
+      POSTGRES_DB: qcobro
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Creates Identity's own `identity` database on first start.
+      - ../config/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qcobro -d qcobro"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  identity:
+    image: fonoster/identity:0.22.7
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../.dev/identity:/service/config:ro
+      # QCobro's email templates over Identity's stock ones (see compose.yaml at the root).
+      - ../config/identity/templates/verifyEmail.hbs:/service/mods/identity/dist/templates/verifyEmail.hbs:ro
+      - ../config/identity/templates/verifyPhone.hbs:/service/mods/identity/dist/templates/verifyPhone.hbs:ro
+      - ../config/identity/templates/inviteNewUser.hbs:/service/mods/identity/dist/templates/inviteNewUser.hbs:ro
+      - ../config/identity/templates/inviteExistingUser.hbs:/service/mods/identity/dist/templates/inviteExistingUser.hbs:ro
+      - ../config/identity/templates/resetPassword.hbs:/service/mods/identity/dist/templates/resetPassword.hbs:ro
+
+  # Identity's verification and invite emails; its web UI is on 8025.
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+
+  # The Fonoster QCobro talks to in development (fonoster.endpoint fonoster-fake:50052 in
+  # .dev/qcobro.json). Calls complete only through its control API, on fonoster-fake:8080.
+  fonoster-fake:
+    build:
+      context: ..
+      dockerfile: mods/fonoster-fake/Dockerfile
+    image: qcobro-dev-fonoster-fake
+    restart: unless-stopped
+    # Credentials, numbers and models equal to .dev/qcobro.json's (scripts/dev-config.mjs).
+    env_file: ../.dev/fonoster-fake.env
+    environment:
+      FONOSTER_FAKE_WEBHOOK_URL: http://workspace:3000/api/voice/events
+      FONOSTER_FAKE_TLS_CERT: /certs/server.pem
+      FONOSTER_FAKE_TLS_KEY: /certs/server-key.pem
+    volumes:
+      - ../.dev/tls:/certs:ro
+
+volumes:
+  postgres-data:
+  node-modules:
+  node-modules-apiserver:
+  node-modules-ctl:
+  node-modules-fonoster-fake:

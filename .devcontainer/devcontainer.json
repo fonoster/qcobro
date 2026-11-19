@@ -1,0 +1,41 @@
+// The QCobro dev container: the only supported way to develop QCobro. README `## Local
+// development` has the steps.
+//
+// compose.yaml runs the `workspace` (Node 22 and Chromium: you run the apiserver, the webapp and
+// the e2e tests here from source) with Postgres, Fonoster Identity, Mailpit and the Fonoster fake.
+// The apiserver reads .dev/qcobro.json (QCOBRO_CONFIG), never config/qcobro.json, and talks to the
+// fake, so nothing dials a real number.
+{
+  "name": "QCobro",
+  "dockerComposeFile": ["compose.yaml"],
+  "service": "workspace",
+  "runServices": ["workspace", "postgres", "identity", "mailpit", "fonoster-fake"],
+  // The checkout is mounted at its own host path (compose.yaml), so worktrees work.
+  "workspaceFolder": "${localWorkspaceFolder}",
+  // On the host, before the containers exist: writes what is missing in .dev/ (git-ignored) and
+  // builds the workspace image. To regenerate .dev/, delete it and open the container again.
+  "initializeCommand": "sh .devcontainer/initialize.sh",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  // Closing the editor leaves the stack running. Stop it with
+  // `docker compose -p qcobro-<checkout dir name> stop`.
+  "shutdownAction": "none",
+  "remoteUser": "node",
+  // The API, the console and Mailpit's web UI, on free local ports. Nothing else.
+  "forwardPorts": [3000, 5173, "mailpit:8025"],
+  "portsAttributes": {
+    "3000": { "label": "API" },
+    "5173": { "label": "Console" },
+    "mailpit:8025": { "label": "Mailpit" }
+  },
+  "otherPortsAttributes": { "onAutoForward": "ignore" },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "Prisma.prisma",
+        "ms-playwright.playwright"
+      ]
+    }
+  }
+}
