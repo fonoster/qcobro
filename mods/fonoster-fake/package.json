@@ -1,0 +1,29 @@
+{
+  "name": "@qcobro/fonoster-fake",
+  "version": "4.1.4",
+  "private": true,
+  "description": "A stateful fake of the Fonoster surface QCobro uses, for development and tests only.",
+  "type": "module",
+  "bin": {
+    "qcobro-fonoster-fake": "./dist/main.js"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "postbuild": "chmod +x ./dist/main.js",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test \"src/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@fonoster/common": "0.63.0",
+    "@fonoster/sdk": "0.63.0",
+    "@grpc/grpc-js": "~1.14.6",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@qcobro/common": "^4.1.4",
+    "tsx": "^4.0.0",
+    "typescript": "^5.9.0"
+  }
+}

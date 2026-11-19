@@ -5,7 +5,8 @@
   "packages": ["mods/*"],
   "command": {
     "version": {
-      "message": "chore(release): publish %s"
+      "message": "chore(release): publish %s",
+      "ignoreChanges": ["mods/fonoster-fake/**"]
     }
   }
 }
