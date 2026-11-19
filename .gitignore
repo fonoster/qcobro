@@ -40,3 +40,6 @@ playwright/.cache/
 
 # Customer case studies (real customer metrics; never commit)
 design/case-studies/
+
+# Dev container config and secrets (.devcontainer/initialize.sh, scripts/dev-config.mjs).
+.dev/
