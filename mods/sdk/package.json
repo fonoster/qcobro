@@ -1,6 +1,6 @@
 {
   "name": "@qcobro/sdk",
-  "version": "4.1.4",
+  "version": "4.1.5",
   "description": "Developer-friendly TypeScript SDK for the QCobro API.",
   "repository": {
     "type": "git",
@@ -31,7 +31,7 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@qcobro/apiserver": "^4.1.4",
+    "@qcobro/apiserver": "^4.1.5",
     "@trpc/server": "^11.0.0",
     "@types/express": "^5.0.0",
     "express": "^5.0.0",

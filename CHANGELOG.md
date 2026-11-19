@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.5](https://github.com/fonoster/qcobro/compare/v4.1.4...v4.1.5) (2026-11-19)
+
+### Bug Fixes
+
+- **docs:** close the recovery context field outside its list so the docs deploy ([#239](https://github.com/fonoster/qcobro/issues/239)) ([f1434aa](https://github.com/fonoster/qcobro/commit/f1434aa5bcf41c79fba35092c447dc70bbf019d3))
+- **docs:** republish the pages two failed deployments left stale ([#240](https://github.com/fonoster/qcobro/issues/240)) ([4de4e11](https://github.com/fonoster/qcobro/commit/4de4e117f2bdc419c467591e3a49b1214c444b68)), closes [#218](https://github.com/fonoster/qcobro/issues/218) [#233](https://github.com/fonoster/qcobro/issues/233)
+
+### Features
+
+- **devcontainer:** develop QCobro in a dev container against the Fonoster fake ([#242](https://github.com/fonoster/qcobro/issues/242)) ([a2eb88b](https://github.com/fonoster/qcobro/commit/a2eb88be0b7d180f6a773ae83a66cb3897a71dd4)), closes [#235](https://github.com/fonoster/qcobro/issues/235)
+- **fonoster-fake:** run QCobro's Fonoster integration against a local fake ([#241](https://github.com/fonoster/qcobro/issues/241)) ([ee6d81c](https://github.com/fonoster/qcobro/commit/ee6d81cd8ac8070c0fc7dc38bcac53a17abe7ce6)), closes [#234](https://github.com/fonoster/qcobro/issues/234)
+
 ## [4.1.4](https://github.com/fonoster/qcobro/compare/v4.1.3...v4.1.4) (2026-11-19)
 
 **Note:** Version bump only for package qcobro
