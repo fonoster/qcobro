@@ -22,9 +22,9 @@ jobs:
     if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
     runs-on: ubuntu-latest
     env:
-      # Compose's Bake builder refuses the Dockerfile the dev container CLI writes outside the
-      # build context (`devcontainer build` builds the workspace through Compose).
-      COMPOSE_BAKE: "false"
+      # `devcontainer build` builds the workspace through Compose, whose Bake builder refuses
+      # the Dockerfile the dev container CLI writes outside the build context unless allowed.
+      BUILDX_BAKE_ENTITLEMENTS_FS: "0"
 
     steps:
       - uses: actions/checkout@v6
