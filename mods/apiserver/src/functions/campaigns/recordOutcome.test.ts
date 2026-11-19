@@ -5,6 +5,8 @@ import { createRecordOutcome } from "./recordOutcome.js";
 interface Cap {
   created?: Record<string, unknown>;
   updated?: { id: string; data: Record<string, unknown> };
+  /** The stored row after the update applied (a single UPDATE merges only the named columns). */
+  row?: Record<string, unknown>;
   promiseCreated?: Record<string, unknown>;
 }
 
@@ -22,7 +24,8 @@ function makeClient(opts: {
       },
       update: async (args: { where: { id: string }; data: Record<string, unknown> }) => {
         cap.updated = { id: args.where.id, data: args.data };
-        return { id: args.where.id, ...args.data } as never;
+        cap.row = { ...(opts.existing ?? {}), ...args.data };
+        return { ...cap.row } as never;
       }
     },
     portfolioAccount: {
@@ -83,14 +86,14 @@ describe("recordOutcome", () => {
     });
     assert.equal(cap.created, undefined, "should not create a duplicate");
     assert.equal(cap.updated?.id, "log-1");
-    assert.equal(cap.updated?.data.outcome, "PAYMENT_PROMISE");
+    assert.equal(cap.row?.outcome, "PAYMENT_PROMISE");
     // The axes are independent: recording an outcome does not itself advance delivery. Proof
     // of delivery comes from the channel (a status callback, or an inbound reply in
     // ingestEmailReply / ingestWhatsAppMessage), never inferred from the outcome — a FAILED
     // delivery can legitimately carry an outcome when someone answers and hangs up.
-    assert.equal(cap.updated?.data.delivery, "DISPATCHED", "delivery untouched by an outcome");
-    // Merges channel data from the dispatch-time row.
-    assert.deepEqual(cap.updated?.data.channelData, { from: "x" });
+    assert.equal(cap.row?.delivery, "DISPATCHED", "delivery untouched by an outcome");
+    // Keeps the dispatch-time channel data.
+    assert.deepEqual(cap.row?.channelData, { from: "x" });
     // PaymentPromise created for the payment outcome with amount + dueDate.
     assert.equal(cap.promiseCreated?.amount, 500);
     assert.equal(cap.promiseCreated?.status, "PENDING");
@@ -120,7 +123,7 @@ describe("recordOutcome", () => {
       path: "ENGAGED",
       providerRef: "token-1"
     });
-    assert.equal(cap.updated?.data.providerMessageId, "resend-1");
+    assert.equal(cap.row?.providerMessageId, "resend-1");
   });
 
   it("falls back to contactedAt when the promised date is vague (Invalid Date)", async () => {
@@ -155,8 +158,8 @@ describe("recordOutcome", () => {
       }
     });
     await createRecordOutcome(client as never)({ ...BASE, providerRef: "ref-1" });
-    assert.equal(cap.updated?.data.outcome, "PAYMENT_PROMISE", "kept the real outcome");
-    assert.equal(cap.updated?.data.path, "ENGAGED", "kept the recorded path");
+    assert.equal(cap.row?.outcome, "PAYMENT_PROMISE", "kept the real outcome");
+    assert.equal(cap.row?.path, "ENGAGED", "kept the recorded path");
   });
 
   /** delivery only ever advances: once it has left DISPATCHED it is never rewritten. */
@@ -177,8 +180,36 @@ describe("recordOutcome", () => {
       delivery: "DISPATCHED",
       providerRef: "ref-1"
     });
-    assert.equal(cap.updated?.data.delivery, "FAILED");
-    assert.equal(cap.updated?.data.deliveryReason, "NO_ANSWER");
+    assert.equal(cap.row?.delivery, "FAILED");
+    assert.equal(cap.row?.deliveryReason, "NO_ANSWER");
+  });
+
+  /** An incoming DELIVERED/FAILED still advances a DISPATCHED row (non-voice callers). */
+  it("advances an existing DISPATCHED gestión to the DELIVERED or FAILED a non-voice caller records", async () => {
+    for (const signal of [
+      { delivery: "DELIVERED", deliveryReason: undefined },
+      { delivery: "FAILED", deliveryReason: "UNREACHABLE" }
+    ] as const) {
+      const { client, cap } = makeClient({
+        existing: {
+          id: "log-1",
+          delivery: "DISPATCHED",
+          deliveryReason: null,
+          path: null,
+          outcome: null,
+          providerRef: "msg-1",
+          channelData: {}
+        }
+      });
+      await createRecordOutcome(client as never)({
+        ...BASE,
+        agentType: "WHATSAPP",
+        providerRef: "msg-1",
+        ...signal
+      });
+      assert.equal(cap.row?.delivery, signal.delivery);
+      assert.equal(cap.row?.deliveryReason, signal.deliveryReason ?? null);
+    }
   });
 
   /**
@@ -233,7 +264,7 @@ describe("recordOutcome", () => {
       outcome: "CALLBACK_REQUESTED"
     });
 
-    const d = cap.updated?.data ?? {};
+    const d = cap.row ?? {};
     assert.equal(d.outcome, "CALLBACK_REQUESTED", "the new value is applied");
     assert.equal(d.durationSeconds, 134, "duration survives");
     assert.equal(d.aiSummary, "El cliente reconoce la deuda.", "AI summary survives");

@@ -187,6 +187,11 @@ async function applyOutcomeEffectsTx(
  * `DISPATCHED` or flip it between `DELIVERED`/`FAILED`; its `deliveryReason` travels with it.
  * `path`/`outcome` merge forward: a null incoming value never overwrites a non-null
  * stored value. When no `providerRef` is given, a new gestión is always created.
+ *
+ * The enrichment UPDATE names only the columns this call has a new value for. Nothing is
+ * written back from the earlier read: the read takes no row lock, so a concurrent writer (a
+ * Voz IA `call.ended` finalizing the row between this read and this write) would otherwise
+ * be rolled back to the stale values.
  */
 export async function recordOutcomeTx(
   tx: CampaignClient,
@@ -203,8 +208,13 @@ export async function recordOutcomeTx(
   if (existing) {
     const data = logData(params, contactedAt);
 
-    // delivery only ever advances: once it has left DISPATCHED it is never changed again.
-    if (existing.delivery !== "DISPATCHED") {
+    // delivery only ever advances. An incoming DISPATCHED is never a new value, so it isn't
+    // written; a DELIVERED/FAILED is pinned to the stored value once the row has left
+    // DISPATCHED.
+    if (params.delivery === "DISPATCHED") {
+      delete data.delivery;
+      delete data.deliveryReason;
+    } else if (existing.delivery !== "DISPATCHED") {
       data.delivery = existing.delivery;
       data.deliveryReason = existing.deliveryReason;
     }
@@ -212,10 +222,9 @@ export async function recordOutcomeTx(
     // Enrichment arrives piecemeal from several sources — the dispatch writes the template and
     // notes, the channel webhook writes the duration, the AI pass writes the insights — and
     // each one calls this with only the fields it knows. `logData` rebuilds every column from
-    // the input, so without merging forward, whichever source lands last would null everything
-    // the others recorded (e.g. a Voz IA outcome decision wiping the duration stored moments
-    // earlier by `ingestVoiceEvent`). A later signal may add a value or replace one, never
-    // erase one.
+    // the input, so a column this call has no value for is left out of the update: a later
+    // signal may add a value or replace one, never erase one (e.g. a Voz IA outcome decision
+    // wiping the duration `call.ended` stored moments earlier).
     const MERGE_FORWARD = [
       "campaignId",
       "agentTemplateId",
@@ -237,15 +246,18 @@ export async function recordOutcomeTx(
       // Losing it would silently orphan every subsequent Resend delivery/open event.
       "providerMessageId"
     ] as const;
-    const prior = existing as unknown as Record<string, unknown>;
     for (const field of MERGE_FORWARD) {
-      data[field] = data[field] ?? prior[field] ?? null;
+      if (data[field] === null) delete data[field];
     }
-    effectiveOutcome = data.outcome as Outcome | null;
+    effectiveOutcome = params.outcome ?? existing.outcome ?? null;
 
-    // Preserve the original correlation + merge channel data.
+    // Preserve the original correlation; merge channel data only when this call brings some.
     data.providerRef = existing.providerRef;
-    data.channelData = { ...(existing.channelData ?? {}), ...(params.channelData ?? {}) };
+    if (params.channelData) {
+      data.channelData = { ...(existing.channelData ?? {}), ...params.channelData };
+    } else {
+      delete data.channelData;
+    }
     log = await tx.accountContactLog.update({ where: { id: existing.id }, data });
   } else {
     log = await tx.accountContactLog.create({ data: logData(params, contactedAt) });

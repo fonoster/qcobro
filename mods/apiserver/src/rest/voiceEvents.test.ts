@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { Webhooks } from "@fonoster/common";
+import { Prisma } from "@prisma/client";
 import type {
   Delivery,
   DeliveryReason,
@@ -47,8 +48,18 @@ function makeWorld(rows: Partial<Row>[]) {
     contactedAt: DISPATCHED_AT,
     ...r
   }));
+  // A jsonb `{ equals }` filter compares by value; `Prisma.DbNull` matches a null column.
   const matches = (row: Row, where: Record<string, unknown>) =>
-    Object.entries(where).every(([k, v]) => (row as unknown as Record<string, unknown>)[k] === v);
+    Object.entries(where).every(([k, v]) => {
+      const value = (row as unknown as Record<string, unknown>)[k];
+      if (v && typeof v === "object" && "equals" in v) {
+        const expected = (v as { equals: unknown }).equals;
+        return (
+          JSON.stringify(value) === JSON.stringify(expected === Prisma.DbNull ? null : expected)
+        );
+      }
+      return value === v;
+    });
   const counts = {
     settled: [] as { providerRef: string; answeredSeconds: number }[],
     insights: 0,

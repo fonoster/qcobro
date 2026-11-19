@@ -1,5 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { Prisma } from "@prisma/client";
 import { ValidationError } from "@qcobro/common";
 import { createRecordVoiceAiCallStatus } from "./recordVoiceAiCallStatus.js";
 
@@ -12,14 +13,19 @@ interface Row {
 
 interface Captured {
   findFirstCalled?: boolean;
-  updateMany?: { where: { id: string; delivery: string }; data: Record<string, unknown> };
+  updateMany?: {
+    where: { id: string; delivery: string; channelData: { equals: unknown } };
+    data: Record<string, unknown>;
+  };
 }
 
 /**
  * Simulates the real guard: `updateMany` only applies (and reports count: 1) when the
  * row's CURRENT delivery still matches `where.delivery` at write time — re-checked against
  * live state, not whatever an earlier `findFirst` saw. This is what actually closes the
- * TOCTOU race between the live completion webhook and `voiceCompletionTimeoutSweep`.
+ * TOCTOU race between the live completion webhook and `voiceCompletionTimeoutSweep`. The
+ * `where.channelData.equals` compare is enforced the same way, against the live row (a
+ * channelData read as null is matched by `Prisma.DbNull`).
  */
 function makeClient(record: Row | null) {
   const cap: Captured = {};
@@ -31,11 +37,18 @@ function makeClient(record: Row | null) {
         return row ? { ...row } : null;
       },
       updateMany: async (args: {
-        where: { id: string; delivery: string };
+        where: { id: string; delivery: string; channelData: { equals: unknown } };
         data: Record<string, unknown>;
       }) => {
         cap.updateMany = args;
-        if (!row || row.id !== args.where.id || row.delivery !== args.where.delivery) {
+        const expected =
+          args.where.channelData.equals === Prisma.DbNull ? null : args.where.channelData.equals;
+        if (
+          !row ||
+          row.id !== args.where.id ||
+          row.delivery !== args.where.delivery ||
+          JSON.stringify(row.channelData) !== JSON.stringify(expected)
+        ) {
           return { count: 0 };
         }
         row = { ...row, ...args.data } as Row;
@@ -151,7 +164,7 @@ describe("recordVoiceAiCallStatus", () => {
     assert.equal(cap.updateMany?.data.path, "ANSWERED_BY_MACHINE");
   });
 
-  it("writes path null when the sweep reports no AMD verdict", async () => {
+  it("leaves path untouched when the sweep reports no AMD verdict", async () => {
     const { client, cap } = makeClient({
       id: "g-1",
       delivery: "DISPATCHED",
@@ -167,7 +180,8 @@ describe("recordVoiceAiCallStatus", () => {
       deliveryReason: "NO_ANSWER"
     });
 
-    assert.equal(cap.updateMany?.data.path, null);
+    assert.ok(cap.updateMany, "the finalize applied");
+    assert.equal("path" in cap.updateMany.data, false, "path is absent from the update");
   });
 
   it("returns matched:false and does not update when no gestión matches the call ref", async () => {
