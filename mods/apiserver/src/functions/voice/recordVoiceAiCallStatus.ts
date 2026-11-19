@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import {
   deliveryReasonSchema,
@@ -45,15 +45,19 @@ export interface VoiceAiCallStatusClient {
      * webhook and `voiceCompletionTimeoutSweep` — racing for the same row, exactly one
      * `count` comes back 1 and applies; the other comes back 0 and is a safe no-op,
      * regardless of which one's write physically reaches the database last.
+     *
+     * `where.channelData.equals` makes the `channelData` merge a compare-and-set on the value
+     * that was read: a concurrent write to it (the transcript ingest) makes the update miss
+     * instead of being erased by a merge built from the stale read.
      */
     updateMany(args: {
-      where: { id: string; delivery: "DISPATCHED" };
+      where: { id: string; delivery: "DISPATCHED"; channelData: { equals: unknown } };
       data: {
         delivery: Delivery;
         deliveryReason: DeliveryReason | null;
         durationSeconds: number;
         channelData: Record<string, unknown>;
-        path: Path | null;
+        path?: Path;
       };
     }): Promise<{ count: number }>;
   };
@@ -62,6 +66,9 @@ export interface VoiceAiCallStatusClient {
 export type RecordVoiceAiCallStatusResult =
   | { matched: false }
   | { matched: true; id: string; delivery: Delivery; deliveryReason: DeliveryReason | null };
+
+/** Compare-and-set attempts before giving up on a `channelData` that keeps changing. */
+const MAX_ATTEMPTS = 3;
 
 /**
  * Finalizes a VOICE_AI gestión from Fonoster call-status tracking — the recovery path for
@@ -80,67 +87,71 @@ export type RecordVoiceAiCallStatusResult =
  */
 export function createRecordVoiceAiCallStatus(client: VoiceAiCallStatusClient) {
   const fn = async (input: VoiceAiCallStatusInput): Promise<RecordVoiceAiCallStatusResult> => {
-    const match = await client.accountContactLog.findFirst({
-      where: { providerRef: input.providerRef, agentType: "VOICE_AI" },
-      select: { id: true, delivery: true, deliveryReason: true, channelData: true }
-    });
+    const read = () =>
+      client.accountContactLog.findFirst({
+        where: { providerRef: input.providerRef, agentType: "VOICE_AI" },
+        select: { id: true, delivery: true, deliveryReason: true, channelData: true }
+      });
+    let match = await read();
     if (!match) return { matched: false };
 
     const reportedDelivery: Delivery = input.answered ? "DELIVERED" : "FAILED";
     const reportedDeliveryReason: DeliveryReason | null =
       reportedDelivery === "FAILED" ? (input.deliveryReason ?? null) : null;
-    const existing = (match.channelData as Record<string, unknown> | null) ?? {};
-    const channelData: Record<string, unknown> = {
-      ...existing,
-      endedAt: new Date(input.at).toISOString()
-    };
+    const endedAt = new Date(input.at).toISOString();
 
-    // Guarded at the database, not at this earlier read: `where.delivery: "DISPATCHED"` is
-    // re-checked by Postgres against the row's live value when it applies the update, so
-    // exactly one of two racing finalizers (this call vs. voiceCompletionTimeoutSweep) ever
-    // wins, however their reads and writes happen to interleave.
-    const { count } = await client.accountContactLog.updateMany({
-      where: { id: match.id, delivery: "DISPATCHED" },
-      data: {
-        delivery: reportedDelivery,
-        deliveryReason: reportedDeliveryReason,
-        durationSeconds: input.answeredSeconds,
-        channelData,
-        path: input.path ?? null
-      }
-    });
-
-    if (count === 1) {
-      return {
-        matched: true,
-        id: match.id,
-        delivery: reportedDelivery,
-        deliveryReason: reportedDeliveryReason
-      };
-    }
-
-    // Lost the race (or the row had already finalized before our read): report the state
-    // that actually won rather than the one we would have written.
-    if (match.delivery !== "DISPATCHED") {
-      return {
-        matched: true,
-        id: match.id,
-        delivery: match.delivery,
-        deliveryReason: match.deliveryReason
-      };
-    }
-    const current = await client.accountContactLog.findFirst({
-      where: { providerRef: input.providerRef, agentType: "VOICE_AI" },
-      select: { id: true, delivery: true, deliveryReason: true, channelData: true }
-    });
-    return current
-      ? {
-          matched: true,
-          id: current.id,
-          delivery: current.delivery,
-          deliveryReason: current.deliveryReason
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      // Guarded at the database, not at this earlier read: `where.delivery: "DISPATCHED"` is
+      // re-checked by Postgres against the row's live value when it applies the update, so
+      // exactly one of two racing finalizers (this call vs. voiceCompletionTimeoutSweep) ever
+      // wins, however their reads and writes happen to interleave. `where.channelData` keeps
+      // a transcript stored after our read from being erased by the merge. `path` is written
+      // only when given, so a path the outcome decision already recorded survives.
+      const { count } = await client.accountContactLog.updateMany({
+        where: {
+          id: match.id,
+          delivery: "DISPATCHED",
+          channelData: { equals: match.channelData ?? Prisma.DbNull }
+        },
+        data: {
+          delivery: reportedDelivery,
+          deliveryReason: reportedDeliveryReason,
+          durationSeconds: input.answeredSeconds,
+          channelData: {
+            ...((match.channelData as Record<string, unknown> | null) ?? {}),
+            endedAt
+          },
+          ...(input.path ? { path: input.path } : {})
         }
-      : { matched: false };
+      });
+
+      if (count === 1) {
+        return {
+          matched: true,
+          id: match.id,
+          delivery: reportedDelivery,
+          deliveryReason: reportedDeliveryReason
+        };
+      }
+
+      // Lost the race (or the row had already finalized before our read): report the state
+      // that actually won rather than the one we would have written.
+      if (match.delivery !== "DISPATCHED") break;
+      const current = await read();
+      if (!current) return { matched: false };
+      match = current;
+      // Still DISPATCHED: `channelData` changed under us. Retry with the fresh value.
+      if (match.delivery !== "DISPATCHED") break;
+    }
+
+    // Either another finalizer won, or every attempt missed while the row stayed DISPATCHED:
+    // report the row as it reads now.
+    return {
+      matched: true,
+      id: match.id,
+      delivery: match.delivery,
+      deliveryReason: match.deliveryReason
+    };
   };
 
   return withErrorHandlingAndValidation(fn, voiceAiCallStatusInputSchema);
