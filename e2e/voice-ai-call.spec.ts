@@ -60,10 +60,7 @@ test.describe("Voz IA call", () => {
     expect(promises.map((p) => p.status)).toEqual(["PENDING"]);
   });
 
-  // fixme: in this order the outcome decision (run after the call_record.sealed response) races
-  // call.ended's finalize, and about one run in three loses a write: the gestión stays
-  // DISPATCHED, or ends DELIVERED with path null. An apiserver bug, reported on #237.
-  test.fixme("the same result when call_record.sealed arrives before call.ended", async () => {
+  test("the same result when call_record.sealed arrives before call.ended", async () => {
     const { client, portfolioId } = await newVoiceWorkspace("voz-orden");
     const template = await createVoiceAiTemplate(client);
     const phone = uniquePhone();
