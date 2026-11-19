@@ -30,7 +30,7 @@ const quietResult = {
   archived: 21,
   total: 415,
   exitsByReason: {
-    CURED: 0,
+    CAUGHT_UP: 0,
     PAID_OFF: 0,
     WRITTEN_OFF: 0,
     OTHER: 0,
@@ -38,7 +38,7 @@ const quietResult = {
     classified: 0,
     skipped: 0
   },
-  recoveries: { partial: 0, cured: 0, paidOff: 0, amount: 0 }
+  recoveries: { partial: 0, caughtUp: 0, paidOff: 0, amount: 0 }
 };
 
 before(async () => {
@@ -77,7 +77,7 @@ function writeJson(name: string, value: unknown): string {
 }
 
 const exits = [
-  { externalId: "C-0877", reason: "CURED", missedInstallments: 2, termsAmount: 1500 },
+  { externalId: "C-0877", reason: "CAUGHT_UP", missedInstallments: 2, termsAmount: 1500 },
   { externalId: "C-0878", reason: "WRITTEN_OFF" }
 ];
 
@@ -89,8 +89,8 @@ test("an exits-only sync without --file sends rows: [] and prints the non-zero l
     updated: 0,
     archived: 2,
     total: 413,
-    exitsByReason: { ...quietResult.exitsByReason, CURED: 1, WRITTEN_OFF: 1 },
-    recoveries: { partial: 0, cured: 1, paidOff: 0, amount: 3000 }
+    exitsByReason: { ...quietResult.exitsByReason, CAUGHT_UP: 1, WRITTEN_OFF: 1 },
+    recoveries: { partial: 0, caughtUp: 1, paidOff: 0, amount: 3000 }
   };
 
   // Act
@@ -103,8 +103,8 @@ test("an exits-only sync without --file sends rows: [] and prints the non-zero l
   assert.deepEqual(calls, [{ portfolioId: "p1", mode: "UPDATE_EXISTING", rows: [], exits }]);
   assert.deepEqual(lines, [
     "Synced: 0 created, 0 updated, 2 archived (total 413).",
-    "Recovered: 0 partial, 1 cured, 0 paid off (amount 3000).",
-    "Exits: 1 cured, 0 paid off, 1 written off, 0 other, 0 unknown."
+    "Recovered: 0 partial, 1 caught up, 0 paid off (amount 3000).",
+    "Exits: 1 caught up, 0 paid off, 1 written off, 0 other, 0 unknown."
   ]);
 });
 
@@ -122,7 +122,7 @@ test("the Exits line adds classified and skipped when either is non-zero", async
   // Assert
   assert.equal(
     lines[1],
-    "Exits: 0 cured, 0 paid off, 0 written off, 0 other, 0 unknown, 2 classified, 0 skipped."
+    "Exits: 0 caught up, 0 paid off, 0 written off, 0 other, 0 unknown, 2 classified, 0 skipped."
   );
   assert.equal(lines.length, 2);
 });

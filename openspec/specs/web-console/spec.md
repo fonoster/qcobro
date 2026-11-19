@@ -516,7 +516,7 @@ due this week, and fulfillment rate (`MET / (MET + overdue-unresolved)`, excludi
 From the worklist an operator SHALL be able to **cancel** a promise (`CANCELLED`) or
 **follow up** by selecting an agent template that is dispatched ad-hoc against the account
 (no campaign attached). The worklist SHALL NOT offer to mark a promise paid: a promise
-becomes `MET` only when a sync closes the account's episode as `CURED` or `PAID_OFF`.
+becomes `MET` only when a sync closes the account's episode as `CAUGHT_UP` or `PAID_OFF`.
 `EXPIRED` promises SHALL
 remain visible, flagged as no longer applicable (do-not-reach), and excluded from the
 fulfillment rate.
@@ -532,7 +532,7 @@ fulfillment rate.
 
 #### Scenario: A promise met by the sync leaves the worklist
 
-- **WHEN** a sync closes a DUE promise's account episode as `CURED` or `PAID_OFF`
+- **WHEN** a sync closes a DUE promise's account episode as `CAUGHT_UP` or `PAID_OFF`
 - **THEN** its status becomes `MET` and it leaves the active worklist
 - **AND** the worklist offers no action to mark a promise paid
 

@@ -12,8 +12,8 @@ elegiste.
 
 <Note>
   `syncAccounts` está acotado a un workspace. Necesitas un [`Client`](/sdk/authentication)
-  autenticado con un workspace activo seleccionado, y el `id` de una cartera donde
-  sincronizar. Crea una antes con [`client.portfolios.create`](/sdk/portfolios).
+  autenticado con un workspace activo seleccionado, y el `id` de una cartera donde sincronizar. Crea
+  una antes con [`client.portfolios.create`](/sdk/portfolios).
 </Note>
 
 ## Sincroniza un lote
@@ -29,6 +29,7 @@ elegiste.
     await client.login({ email: "me@acme.com", password: process.env.QCOBRO_PASSWORD! });
     client.useWorkspace("WO6ueex0qan9ojhf820wgiae3qi5luy08y");
     ```
+
   </Step>
   <Step title="Envía las filas">
     Pasa el `portfolioId`, un `mode` y al menos una fila o una salida (solo `REPLACE` acepta
@@ -45,6 +46,7 @@ elegiste.
       ]
     });
     ```
+
   </Step>
   <Step title="Lee los conteos">
     La llamada devuelve cuántas cuentas se crearon, actualizaron y archivaron, el nuevo total
@@ -54,10 +56,11 @@ elegiste.
     console.log(result);
     // {
     //   created: 2, updated: 0, archived: 0, total: 2,
-    //   exitsByReason: { CURED: 0, PAID_OFF: 0, WRITTEN_OFF: 0, OTHER: 0, UNKNOWN: 0, classified: 0, skipped: 0 },
-    //   recoveries: { partial: 0, cured: 0, paidOff: 0, amount: 0 }
+    //   exitsByReason: { CAUGHT_UP: 0, PAID_OFF: 0, WRITTEN_OFF: 0, OTHER: 0, UNKNOWN: 0, classified: 0, skipped: 0 },
+    //   recoveries: { partial: 0, caughtUp: 0, paidOff: 0, amount: 0 }
     // }
     ```
+
   </Step>
 </Steps>
 
@@ -66,11 +69,11 @@ elegiste.
 El `mode` decide qué pasa con las cuentas existentes. Las filas se emparejan con las cuentas
 por `externalId` dentro de la cartera.
 
-| Modo | Fila con un `externalId` nuevo | Fila que coincide con una cuenta existente | Cuenta existente **ausente** del lote |
-| --- | --- | --- | --- |
-| `APPEND_ONLY` | Se crea | Se deja sin cambios | Se deja sin cambios |
-| `UPDATE_EXISTING` | Se crea | Se actualiza | Se deja sin cambios |
-| `REPLACE` | Se crea | Se actualiza | Se archiva como salida sin motivo |
+| Modo              | Fila con un `externalId` nuevo | Fila que coincide con una cuenta existente | Cuenta existente **ausente** del lote |
+| ----------------- | ------------------------------ | ------------------------------------------ | ------------------------------------- |
+| `APPEND_ONLY`     | Se crea                        | Se deja sin cambios                        | Se deja sin cambios                   |
+| `UPDATE_EXISTING` | Se crea                        | Se actualiza                               | Se deja sin cambios                   |
+| `REPLACE`         | Se crea                        | Se actualiza                               | Se archiva como salida sin motivo     |
 
 <Tabs>
   <Tab title="APPEND_ONLY">
@@ -80,6 +83,7 @@ por `externalId` dentro de la cartera.
     ```ts
     await client.portfolios.syncAccounts({ portfolioId: "f47ac10b-...", mode: "APPEND_ONLY", rows });
     ```
+
   </Tab>
   <Tab title="UPDATE_EXISTING">
     Añade cuentas nuevas y refresca las que ya existen: un upsert. Úsalo para feeds
@@ -88,6 +92,7 @@ por `externalId` dentro de la cartera.
     ```ts
     await client.portfolios.syncAccounts({ portfolioId: "f47ac10b-...", mode: "UPDATE_EXISTING", rows });
     ```
+
   </Tab>
   <Tab title="REPLACE">
     Haz que la cartera refleje el lote: crea, actualiza y archiva cualquier cuenta cuyo
@@ -98,14 +103,15 @@ por `externalId` dentro de la cartera.
     ```ts
     await client.portfolios.syncAccounts({ portfolioId: "f47ac10b-...", mode: "REPLACE", rows });
     ```
+
   </Tab>
 </Tabs>
 
 <Warning>
   `REPLACE` **archiva** toda cuenta activa cuyo `externalId` no esté ni en `rows` ni en `exits`,
-  como una salida **sin motivo**, y expira sus promesas de pago pendientes. Puedes darle el
-  motivo más tarde, enviando la cuenta en `exits` en otra sincronización. Envía siempre una
-  instantánea completa con `REPLACE`: un lote parcial archivará las cuentas que dejaste fuera.
+  como una salida **sin motivo**, y expira sus promesas de pago pendientes. Puedes darle el motivo
+  más tarde, enviando la cuenta en `exits` en otra sincronización. Envía siempre una instantánea
+  completa con `REPLACE`: un lote parcial archivará las cuentas que dejaste fuera.
 </Warning>
 
 ## Informa las salidas
@@ -120,26 +126,26 @@ await client.portfolios.syncAccounts({
   mode: "UPDATE_EXISTING",
   rows: [],
   exits: [
-    { externalId: "A-1", reason: "CURED", missedInstallments: 3, termsAmount: 1500 },
+    { externalId: "A-1", reason: "CAUGHT_UP", missedInstallments: 3, termsAmount: 1500 },
     { externalId: "A-2", reason: "WRITTEN_OFF" }
   ]
 });
 ```
 
 <ParamField body="exits" type="array" default="[]">
-  Cuentas que salen de la cartera, cada una con su `externalId` y su `reason`. La cuenta se
-  archiva. Un `externalId` no puede estar a la vez en `rows` y en `exits`, ni repetirse en
-  `exits`, y debe existir en la cartera.
+  Cuentas que salen de la cartera, cada una con su `externalId` y su `reason`. La cuenta se archiva.
+  Un `externalId` no puede estar a la vez en `rows` y en `exits`, ni repetirse en `exits`, y debe
+  existir en la cartera.
 </ParamField>
 
-| `reason` | Significado | Campos adicionales | Registra una recuperación |
-| --- | --- | --- | --- |
-| `CURED` | Se puso al día | `missedInstallments` y `termsAmount`, ambos mayores que 0 | Sí, de `missedInstallments × termsAmount` |
-| `PAID_OFF` | Saldó la deuda | `missedInstallments` y `termsAmount`, ambos mayores que 0 | Sí, de `missedInstallments × termsAmount` |
-| `WRITTEN_OFF` | Castigada | Ninguno | No |
-| `OTHER` | Otro motivo | Ninguno | No |
+| `reason`      | Significado    | Campos adicionales                                        | Registra una recuperación                 |
+| ------------- | -------------- | --------------------------------------------------------- | ----------------------------------------- |
+| `CAUGHT_UP`   | Se puso al día | `missedInstallments` y `termsAmount`, ambos mayores que 0 | Sí, de `missedInstallments × termsAmount` |
+| `PAID_OFF`    | Saldó la deuda | `missedInstallments` y `termsAmount`, ambos mayores que 0 | Sí, de `missedInstallments × termsAmount` |
+| `WRITTEN_OFF` | Castigada      | Ninguno                                                   | No                                        |
+| `OTHER`       | Otro motivo    | Ninguno                                                   | No                                        |
 
-En `CURED` y `PAID_OFF`, `missedInstallments` son las cuotas que estaban vencidas y ahora están
+En `CAUGHT_UP` y `PAID_OFF`, `missedInstallments` son las cuotas que estaban vencidas y ahora están
 pagadas, y `termsAmount` es el importe de cada cuota. Las promesas de pago pendientes de la
 cuenta pasan a **Cumplida**.
 
@@ -168,8 +174,8 @@ cuando se omiten. La excepción son `termsAmount` y `missedInstallments`: si los
 actualizar una cuenta, se conserva el valor guardado (y no se detecta ningún pago parcial).
 
 <ParamField body="externalId" type="string" required>
-  Tu identificador estable de la cuenta. Las cuentas se emparejan entre sincronizaciones por
-  este valor, así que debe ser único dentro de la cartera.
+  Tu identificador estable de la cuenta. Las cuentas se emparejan entre sincronizaciones por este
+  valor, así que debe ser único dentro de la cartera.
 </ParamField>
 <ParamField body="fullName" type="string" required>
   Nombre completo del titular de la cuenta.
@@ -196,8 +202,8 @@ actualizar una cuenta, se conserva el valor guardado (y no se detecta ningún pa
   Principal original adeudado.
 </ParamField>
 <ParamField body="termsAmount" type="number">
-  Importe de la cuota según las condiciones de la cuenta. `0` en una cuenta nueva si se omite;
-  en una existente, se conserva el valor guardado.
+  Importe de la cuota según las condiciones de la cuenta. `0` en una cuenta nueva si se omite; en
+  una existente, se conserva el valor guardado.
 </ParamField>
 <ParamField body="termsFrequency" type="string">
   Cada cuánto vencen las cuotas (por ejemplo `monthly`).
@@ -209,8 +215,8 @@ actualizar una cuenta, se conserva el valor guardado (y no se detecta ningún pa
   Días de mora de la cuenta.
 </ParamField>
 <ParamField body="missedInstallments" type="number">
-  Número de cuotas impagadas. `0` en una cuenta nueva si se omite; en una existente, se conserva
-  el valor guardado. Una bajada entre sincronizaciones registra un pago parcial.
+  Número de cuotas impagadas. `0` en una cuenta nueva si se omite; en una existente, se conserva el
+  valor guardado. Una bajada entre sincronizaciones registra un pago parcial.
 </ParamField>
 <ParamField body="lastPaymentDate" type="string">
   Fecha del último pago, como cadena de fecha ISO.
@@ -233,20 +239,20 @@ actualizar una cuenta, se conserva el valor guardado (y no se detecta ningún pa
   Cuentas existentes refrescadas. Siempre `0` en `APPEND_ONLY`.
 </ResponseField>
 <ResponseField name="archived" type="number">
-  Cuentas archivadas por esta llamada: las de `exits` en cualquier modo, y en `REPLACE` las
-  ausentes del lote.
+  Cuentas archivadas por esta llamada: las de `exits` en cualquier modo, y en `REPLACE` las ausentes
+  del lote.
 </ResponseField>
 <ResponseField name="total" type="number">
   Número de cuentas activas de la cartera tras la sincronización (las archivadas se excluyen).
 </ResponseField>
 <ResponseField name="exitsByReason" type="object">
-  Salidas creadas por esta llamada, por motivo: `CURED`, `PAID_OFF`, `WRITTEN_OFF`, `OTHER` y
-  `UNKNOWN` (sin motivo). `classified` cuenta las salidas sin motivo que esta llamada clasificó
-  (no se suman a los motivos) y `skipped` las entradas de `exits` que no cambiaron nada.
+  Salidas creadas por esta llamada, por motivo: `CAUGHT_UP`, `PAID_OFF`, `WRITTEN_OFF`, `OTHER` y
+  `UNKNOWN` (sin motivo). `classified` cuenta las salidas sin motivo que esta llamada clasificó (no
+  se suman a los motivos) y `skipped` las entradas de `exits` que no cambiaron nada.
 </ResponseField>
 <ResponseField name="recoveries" type="object">
-  Recuperaciones registradas por esta llamada: `partial`, `cured`, `paidOff`, y `amount`, la
-  suma de sus importes.
+  Recuperaciones registradas por esta llamada: `partial`, `caughtUp`, `paidOff`, y `amount`, la suma
+  de sus importes.
 </ResponseField>
 
 ## Maneja los errores de validación
@@ -259,8 +265,8 @@ ninguna llamada de red:
 - un `mode` desconocido o un `email` malformado;
 - un `externalId` en `rows` y en `exits`: `externalId "A-1" appears in both rows and exits`;
 - un `externalId` repetido en `exits`: `externalId "A-1" appears twice in exits`;
-- un `reason` desconocido: `reason must be one of CURED, PAID_OFF, WRITTEN_OFF, OTHER`;
-- una salida `CURED` o `PAID_OFF` sin `missedInstallments` o `termsAmount` (`required when reason is CURED or PAID_OFF`), o con valores de 0 o menos (`must be greater than 0`).
+- un `reason` desconocido: `reason must be one of CAUGHT_UP, PAID_OFF, WRITTEN_OFF, OTHER`;
+- una salida `CAUGHT_UP` o `PAID_OFF` sin `missedInstallments` o `termsAmount` (`required when reason is CAUGHT_UP or PAID_OFF`), o con valores de 0 o menos (`must be greater than 0`).
 
 El servidor rechaza además, sin escribir nada, una salida cuyo `externalId` no existe en la
 cartera (`externalId(s) not in this portfolio: A-9`).

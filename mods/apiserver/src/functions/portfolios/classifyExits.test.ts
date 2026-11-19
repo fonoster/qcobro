@@ -116,7 +116,7 @@ const classify = (t: ReturnType<typeof makeDb>, exits: Row[]) =>
   createClassifyExits(t.client as never)({ portfolioId: "p1", exits });
 
 describe("portfolios.classifyExits", () => {
-  it("records a CURED recovery from the sent values on the exit's date and meets its promises", async () => {
+  it("records a CAUGHT_UP recovery from the sent values on the exit's date and meets its promises", async () => {
     const t = makeDb({
       exits: [unknownExit("A")],
       promises: [
@@ -125,11 +125,11 @@ describe("portfolios.classifyExits", () => {
       ]
     });
     const result = await classify(t, [
-      { externalId: "A", reason: "CURED", missedInstallments: 2, termsAmount: 1500 }
+      { externalId: "A", reason: "CAUGHT_UP", missedInstallments: 2, termsAmount: 1500 }
     ]);
     assert.deepEqual(result, {
       classified: 1,
-      recoveries: { cured: 1, paidOff: 0, amount: 3000 },
+      recoveries: { caughtUp: 1, paidOff: 0, amount: 3000 },
       promisesMet: 1
     });
     const rec = t.db.recoveries[0]!;
@@ -139,7 +139,7 @@ describe("portfolios.classifyExits", () => {
     assert.deepEqual(rec.context, CONTEXT);
     assert.deepEqual(rec.campaignIds, ["c1"]);
     assert.equal(rec.lastTouchAgentType, "VOICE_AI");
-    assert.equal(t.db.exits[0]!.reason, "CURED");
+    assert.equal(t.db.exits[0]!.reason, "CAUGHT_UP");
     assert.equal(t.db.exits[0]!.missedInstallments, 2);
     assert.ok(t.db.exits[0]!.classifiedAt instanceof Date);
     assert.equal(t.db.promises[0]!.status, "MET");
@@ -153,7 +153,7 @@ describe("portfolios.classifyExits", () => {
     const result = await classify(t, [
       { externalId: "A", reason: "PAID_OFF", missedInstallments: 4, termsAmount: 1000 }
     ]);
-    assert.deepEqual(result.recoveries, { cured: 0, paidOff: 1, amount: 4000 });
+    assert.deepEqual(result.recoveries, { caughtUp: 0, paidOff: 1, amount: 4000 });
   });
 
   it("only sets the reason for WRITTEN_OFF, leaving promises EXPIRED", async () => {
@@ -166,7 +166,7 @@ describe("portfolios.classifyExits", () => {
     const result = await classify(t, [{ externalId: "A", reason: "WRITTEN_OFF" }]);
     assert.deepEqual(result, {
       classified: 1,
-      recoveries: { cured: 0, paidOff: 0, amount: 0 },
+      recoveries: { caughtUp: 0, paidOff: 0, amount: 0 },
       promisesMet: 0
     });
     assert.equal(t.db.recoveries.length, 0);
@@ -179,7 +179,7 @@ describe("portfolios.classifyExits", () => {
     const t = makeDb({
       exits: [
         unknownExit("A"),
-        unknownExit("B", { reason: "CURED", classifiedAt: new Date() }),
+        unknownExit("B", { reason: "CAUGHT_UP", classifiedAt: new Date() }),
         unknownExit("C")
       ]
     });
@@ -197,7 +197,7 @@ describe("portfolios.classifyExits", () => {
     );
     assert.deepEqual(
       t.db.exits.map((e) => e.reason),
-      ["UNKNOWN", "CURED", "UNKNOWN"]
+      ["UNKNOWN", "CAUGHT_UP", "UNKNOWN"]
     );
   });
 
@@ -213,10 +213,10 @@ describe("portfolios.classifyExits", () => {
     );
   });
 
-  it("rejects CURED without termsAmount before touching anything", async () => {
+  it("rejects CAUGHT_UP without termsAmount before touching anything", async () => {
     const t = makeDb({ exits: [unknownExit("A")] });
     await assert.rejects(
-      classify(t, [{ externalId: "A", reason: "CURED", missedInstallments: 2 }]),
+      classify(t, [{ externalId: "A", reason: "CAUGHT_UP", missedInstallments: 2 }]),
       ValidationError
     );
     assert.equal(t.db.exits[0]!.reason, "UNKNOWN");

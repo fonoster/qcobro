@@ -8,7 +8,7 @@ import {
 
 /**
  * Resolve a payment promise by explicit operator action: the operator can only cancel it.
- * A promise becomes `MET` only when a sync closes the account's episode as CURED or
+ * A promise becomes `MET` only when a sync closes the account's episode as CAUGHT_UP or
  * PAID_OFF, so nothing here touches the portfolio.
  */
 export async function resolvePaymentPromiseTx(

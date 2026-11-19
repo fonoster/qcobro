@@ -225,7 +225,7 @@ USAGE
 
 FLAGS
   --file=<value>          (required) path to a JSON file containing an array of { externalId, reason,
-                          missedInstallments, termsAmount } (the last two only for CURED and PAID_OFF)
+                          missedInstallments, termsAmount } (the last two only for CAUGHT_UP and PAID_OFF)
   --portfolio-id=<value>  (required) the portfolio id
 
 DESCRIPTION
@@ -279,7 +279,7 @@ display the accounts that left a portfolio and have not come back
 
 ```
 USAGE
-  $ qcobro portfolios:list-exits --portfolio-id <value> [--reason CURED|PAID_OFF|WRITTEN_OFF|OTHER|UNKNOWN] [--limit
+  $ qcobro portfolios:list-exits --portfolio-id <value> [--reason CAUGHT_UP|PAID_OFF|WRITTEN_OFF|OTHER|UNKNOWN] [--limit
     <value>] [--offset <value>]
 
 FLAGS
@@ -287,7 +287,7 @@ FLAGS
   --offset=<value>        rows to skip
   --portfolio-id=<value>  (required) the portfolio id
   --reason=<option>       only exits with this reason
-                          <options: CURED|PAID_OFF|WRITTEN_OFF|OTHER|UNKNOWN>
+                          <options: CAUGHT_UP|PAID_OFF|WRITTEN_OFF|OTHER|UNKNOWN>
 
 DESCRIPTION
   display the accounts that left a portfolio and have not come back
@@ -309,7 +309,7 @@ USAGE
 
 FLAGS
   --exits=<value>         path to a JSON file containing an array of { externalId, reason, missedInstallments,
-                          termsAmount } (the last two only for CURED and PAID_OFF)
+                          termsAmount } (the last two only for CAUGHT_UP and PAID_OFF)
   --file=<value>          path to a JSON file containing an array of account rows
   --mode=<option>         [default: APPEND_ONLY] merge strategy
                           <options: APPEND_ONLY|UPDATE_EXISTING|REPLACE>
@@ -355,14 +355,14 @@ list the recoveries detected in a period
 
 ```
 USAGE
-  $ qcobro recovery:list --from <value> --to <value> [--portfolio-id <value>] [--kind PARTIAL|CURED|PAID_OFF]
+  $ qcobro recovery:list --from <value> --to <value> [--portfolio-id <value>] [--kind PARTIAL|CAUGHT_UP|PAID_OFF]
     [--has-gestion] [--limit <value>] [--offset <value>]
 
 FLAGS
   --from=<value>          (required) start date, inclusive (YYYY-MM-DD)
   --[no-]has-gestion      only recoveries with (or, with --no-has-gestion, without) a gestión
   --kind=<option>         only recoveries of this kind
-                          <options: PARTIAL|CURED|PAID_OFF>
+                          <options: PARTIAL|CAUGHT_UP|PAID_OFF>
   --limit=<value>         [default: 50] rows per page
   --offset=<value>        rows to skip
   --portfolio-id=<value>  limit to one portfolio
@@ -374,7 +374,7 @@ DESCRIPTION
 EXAMPLES
   $ qcobro recovery:list --from 2026-10-01 --to 2026-10-31
 
-  $ qcobro recovery:list --from 2026-10-01 --to 2026-10-31 --kind CURED --no-has-gestion
+  $ qcobro recovery:list --from 2026-10-01 --to 2026-10-31 --kind CAUGHT_UP --no-has-gestion
 ```
 
 ## `qcobro recovery:summary`

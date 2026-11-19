@@ -91,7 +91,7 @@ test("portfolios.classifyExits calls portfolios.classifyExits with the exits", a
   const { calls, fetchImpl } = recordingFetch();
   const client = authedClient(fetchImpl);
   const exits = [
-    { externalId: "C-0877", reason: "CURED" as const, missedInstallments: 2, termsAmount: 1500 }
+    { externalId: "C-0877", reason: "CAUGHT_UP" as const, missedInstallments: 2, termsAmount: 1500 }
   ];
 
   await client.portfolios.classifyExits({ portfolioId: "p1", exits });
@@ -100,7 +100,7 @@ test("portfolios.classifyExits calls portfolios.classifyExits with the exits", a
   assert.deepEqual(JSON.parse(calls[0].body ?? "{}")["0"], { portfolioId: "p1", exits });
 });
 
-test("portfolios.classifyExits rejects a CURED exit without its installments before any request", async () => {
+test("portfolios.classifyExits rejects a CAUGHT_UP exit without its installments before any request", async () => {
   const { calls, fetchImpl } = recordingFetch();
   const client = authedClient(fetchImpl);
 
@@ -108,7 +108,7 @@ test("portfolios.classifyExits rejects a CURED exit without its installments bef
     () =>
       client.portfolios.classifyExits({
         portfolioId: "p1",
-        exits: [{ externalId: "C-0877", reason: "CURED" }]
+        exits: [{ externalId: "C-0877", reason: "CAUGHT_UP" }]
       }),
     ValidationError
   );

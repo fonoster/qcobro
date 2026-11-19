@@ -72,12 +72,12 @@ server does nothing but authenticate with them and delegate every tool call to t
    `limit`/`offset`), with the total count.
 7. `portfolios_sync_accounts` — synchronizes a batch of account rows into a portfolio
    (`portfolioId`, `mode`: `APPEND_ONLY` | `UPDATE_EXISTING` | `REPLACE`, `rows`, optional
-   `exits`: accounts that left, each with a `reason`; `CURED` and `PAID_OFF` exits also need
+   `exits`: accounts that left, each with a `reason`; `CAUGHT_UP` and `PAID_OFF` exits also need
    `missedInstallments` and `termsAmount`).
 8. `portfolios_list_exits` — lists the accounts that left a portfolio and have not come back
    (`portfolioId`, optional `reason`, `limit`/`offset`), with the total count.
 9. `portfolios_classify_exits` — assigns a reason to exits recorded as `UNKNOWN` (`portfolioId`,
-   `exits`); `CURED` and `PAID_OFF` record a recovery of `missedInstallments × termsAmount`.
+   `exits`); `CAUGHT_UP` and `PAID_OFF` record a recovery of `missedInstallments × termsAmount`.
 10. `recovery_summary` — gets the amount recovered in a period (`from`/`to`, `YYYY-MM-DD`,
     inclusive), optionally for one `portfolioId`.
 11. `recovery_breakdown` — breaks down the amount recovered in a period `by` `CAMPAIGN`,

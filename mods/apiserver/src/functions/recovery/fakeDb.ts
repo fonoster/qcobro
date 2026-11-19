@@ -81,7 +81,7 @@ export function recovery(fields: Row = {}): Row {
     portfolio: { workspaceRef: "ws" },
     portfolioAccount: { externalId: `C-${id}`, fullName: "Ana Pérez" },
     exitId: null,
-    kind: "CURED",
+    kind: "CAUGHT_UP",
     installments: 1,
     amount: 1000,
     detectedAt: new Date("2026-10-15T15:00:00Z"),

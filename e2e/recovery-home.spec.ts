@@ -49,7 +49,7 @@ function row(externalId: string, fullName: string, missedInstallments: number, t
 /**
  * Recuperado on Inicio and Carteras reads the recoveries the sync detects, for a period in the
  * workspace's timezone. Seeds two syncs through the API: the first loads the accounts, the
- * second reports them as CURED exits. A gestión between the two syncs makes a recovery count
+ * second reports them as CAUGHT_UP exits. A gestión between the two syncs makes a recovery count
  * as "con gestión". Assumes the dev stack is running (see playwright.config.ts).
  */
 test.describe("Recuperado by period", () => {
@@ -67,7 +67,7 @@ test.describe("Recuperado by period", () => {
     await expect(card.getByText("Sin pagos detectados en el período")).toBeVisible();
     await expect(card.getByText("acumulado")).toHaveCount(0);
 
-    // --- Seed: load two accounts, a gestión on one, then both exit CURED ------
+    // --- Seed: load two accounts, a gestión on one, then both exit CAUGHT_UP ------
     const portfolioId = await createPortfolio(page, portfolioName, `cli-${stamp}`);
     await mutate(page, "portfolios.syncAccounts", {
       portfolioId,
@@ -104,8 +104,8 @@ test.describe("Recuperado by period", () => {
       mode: "UPDATE_EXISTING",
       rows: [],
       exits: [
-        { externalId: "REC-1", reason: "CURED", missedInstallments: 3, termsAmount: 2000 },
-        { externalId: "REC-2", reason: "CURED", missedInstallments: 2, termsAmount: 1500 }
+        { externalId: "REC-1", reason: "CAUGHT_UP", missedInstallments: 3, termsAmount: 2000 },
+        { externalId: "REC-2", reason: "CAUGHT_UP", missedInstallments: 2, termsAmount: 1500 }
       ]
     });
 
@@ -147,7 +147,9 @@ test.describe("Recuperado by period", () => {
       portfolioId,
       mode: "UPDATE_EXISTING",
       rows: [],
-      exits: [{ externalId: "REC-3", reason: "CURED", missedInstallments: 2, termsAmount: 1250 }]
+      exits: [
+        { externalId: "REC-3", reason: "CAUGHT_UP", missedInstallments: 2, termsAmount: 1250 }
+      ]
     });
 
     await page.getByRole("link", { name: "Panel" }).click();

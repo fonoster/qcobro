@@ -73,7 +73,7 @@ export function CsvSyncModal({
 
   // Recoveries this import detected; the console shows no exits (classifying them is API-only).
   const detected = result
-    ? result.recoveries.partial + result.recoveries.cured + result.recoveries.paidOff
+    ? result.recoveries.partial + result.recoveries.caughtUp + result.recoveries.paidOff
     : 0;
 
   const canSync = rows.length > 0 && parseErrors.length === 0 && !sync.isPending && !result;

@@ -3,7 +3,7 @@ import { useI18n, type MessageId } from "../../lib/i18n.js";
 import { FilterSelect } from "../ui/select.js";
 import { Pagination } from "../ui/pagination.js";
 
-export const RECOVERY_KINDS: RecoveryKind[] = ["PARTIAL", "CURED", "PAID_OFF"];
+export const RECOVERY_KINDS: RecoveryKind[] = ["PARTIAL", "CAUGHT_UP", "PAID_OFF"];
 export type GestionFilter = "all" | "with" | "without";
 /** A list item as it arrives over the wire: dates may be ISO strings. */
 export type RecoveryListRow = Omit<RecoveryListItem, "detectedAt" | "previousSyncAt"> & {

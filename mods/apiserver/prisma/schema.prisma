@@ -141,7 +141,7 @@ enum IntentStatus {
 // Why an account left a portfolio. UNKNOWN is never sent by a caller: REPLACE writes it for
 // accounts that vanish from the batch, and a later exit entry or classifyExits replaces it.
 enum ExitReason {
-  CURED
+  CAUGHT_UP
   PAID_OFF
   WRITTEN_OFF
   OTHER
@@ -150,7 +150,7 @@ enum ExitReason {
 
 enum RecoveryKind {
   PARTIAL
-  CURED
+  CAUGHT_UP
   PAID_OFF
 }
 
@@ -508,7 +508,7 @@ model PaymentPromise {
   dueDate            DateTime
   status             PaymentPromiseStatus @default(PENDING)
   notes              String?
-  // The exit that expired this promise, so a later CURED/PAID_OFF classification of that
+  // The exit that expired this promise, so a later CAUGHT_UP/PAID_OFF classification of that
   // exit turns exactly these promises MET (not EXPIRED promises of an earlier episode).
   expiredByExitId    String?
   createdAt          DateTime             @default(now())
@@ -532,7 +532,7 @@ model AccountExit {
   reason             ExitReason
   exitedAt           DateTime
   previousSyncAt     DateTime
-  // Sent values for CURED/PAID_OFF; otherwise the account's values before archiving.
+  // Sent values for CAUGHT_UP/PAID_OFF; otherwise the account's values before archiving.
   missedInstallments Int
   termsAmount        Float
   // RecoveryContext, computed once at exit and never recomputed.
@@ -550,7 +550,7 @@ model AccountExit {
 }
 
 // Overdue installments an account caught up on, detected from a sync (PARTIAL) or from a
-// CURED/PAID_OFF exit. The context snapshot is stored once and never recomputed.
+// CAUGHT_UP/PAID_OFF exit. The context snapshot is stored once and never recomputed.
 model Recovery {
   id                 String           @id @default(uuid())
   portfolioId        String

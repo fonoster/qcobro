@@ -32,7 +32,7 @@ const pendingError = (ids: string[]) =>
 
 /**
  * Gives accounts that left a portfolio without a reason (open UNKNOWN exits) their reason.
- * CURED and PAID_OFF record a recovery from the sent installments and amount, on the exit's
+ * CAUGHT_UP and PAID_OFF record a recovery from the sent installments and amount, on the exit's
  * own date and with the snapshot stored at exit, so a past period's Recuperado can go up.
  * All or nothing: one entry that isn't pending classification fails the whole call.
  */
@@ -70,7 +70,7 @@ export function createClassifyExits(client: ClassifyExitsClient) {
 
       const result: ClassifyExitsResult = {
         classified: 0,
-        recoveries: { cured: 0, paidOff: 0, amount: 0 },
+        recoveries: { caughtUp: 0, paidOff: 0, amount: 0 },
         promisesMet: 0
       };
       for (const entry of input.exits) {
@@ -80,7 +80,7 @@ export function createClassifyExits(client: ClassifyExitsClient) {
         result.classified++;
         result.promisesMet += outcome.promisesMet;
         if (outcome.recovery) {
-          if (outcome.recovery.kind === "CURED") result.recoveries.cured++;
+          if (outcome.recovery.kind === "CAUGHT_UP") result.recoveries.caughtUp++;
           else result.recoveries.paidOff++;
           result.recoveries.amount += outcome.recovery.amount;
         }

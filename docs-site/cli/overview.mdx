@@ -91,7 +91,7 @@ fusión: `APPEND_ONLY`, `UPDATE_EXISTING` o `REPLACE`.
 
 Con `--exits`, `portfolios:sync` informa además las cuentas que salieron de la cartera. El
 archivo es un arreglo JSON de `{ externalId, reason, missedInstallments, termsAmount }`; los dos
-últimos campos solo van en `CURED` y `PAID_OFF`.
+últimos campos solo van en `CAUGHT_UP` y `PAID_OFF`.
 
 ```bash
 # Sincroniza las filas e informa las salidas en el mismo lote.
@@ -103,8 +103,8 @@ sus cifras no es cero:
 
 ```
 Synced: 3 created, 412 updated, 21 archived (total 415).
-Recovered: 4 partial, 12 cured, 1 paid off (amount 61500).
-Exits: 12 cured, 1 paid off, 1 written off, 0 other, 7 unknown.
+Recovered: 4 partial, 12 caught up, 1 paid off (amount 61500).
+Exits: 12 caught up, 1 paid off, 1 written off, 0 other, 7 unknown.
 ```
 
 En `APPEND_ONLY` y `UPDATE_EXISTING` puedes enviar solo `--exits`, sin `--file`. En `REPLACE`,
@@ -124,7 +124,7 @@ qcobro recovery:summary --from 2026-10-01 --to 2026-10-31
 qcobro recovery:breakdown --by CHANNEL --from 2026-10-01 --to 2026-10-31
 
 # Recuperaciones detectadas, filtradas por tipo y sin gestión.
-qcobro recovery:list --from 2026-10-01 --to 2026-10-31 --kind CURED --no-has-gestion
+qcobro recovery:list --from 2026-10-01 --to 2026-10-31 --kind CAUGHT_UP --no-has-gestion
 ```
 
 `recovery:breakdown` termina con una fila `TOTAL`, salvo con `--by CAMPAIGN`: cada campaña

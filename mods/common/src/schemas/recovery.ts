@@ -51,7 +51,7 @@ export const recoveryListInputSchema = z
   .object({
     ...period,
     portfolioId: z.string().min(1).optional(),
-    kind: z.enum(["PARTIAL", "CURED", "PAID_OFF"]).optional(),
+    kind: z.enum(["PARTIAL", "CAUGHT_UP", "PAID_OFF"]).optional(),
     hasGestion: z.boolean().optional(),
     ...paging
   })
@@ -65,7 +65,7 @@ export const listExitsInputSchema = z.object({
 });
 export type ListExitsInput = z.infer<typeof listExitsInputSchema>;
 
-// Same entry rules as the sync's `exits`: CURED and PAID_OFF carry the installments now paid
+// Same entry rules as the sync's `exits`: CAUGHT_UP and PAID_OFF carry the installments now paid
 // and the installment amount.
 export const classifyExitsInputSchema = z
   .object({
