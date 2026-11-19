@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.6](https://github.com/fonoster/qcobro/compare/v4.1.5...v4.1.6) (2026-11-19)
+
+### Bug Fixes
+
+- **voice:** keep a Voz IA gestión's path, delivery and transcript when its webhooks race ([#246](https://github.com/fonoster/qcobro/issues/246)) ([d7d7f99](https://github.com/fonoster/qcobro/commit/d7d7f992d0fae4c84878493d694443ee096c53ad)), closes [#245](https://github.com/fonoster/qcobro/issues/245)
+
 ## [4.1.5](https://github.com/fonoster/qcobro/compare/v4.1.4...v4.1.5) (2026-11-19)
 
 ### Bug Fixes
