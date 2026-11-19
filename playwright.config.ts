@@ -1,12 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Lighter setup: assumes the dev stack is already running before `npm run test:e2e`.
- *   docker compose -f compose.dev.yaml up -d   # db + identity + mailpit
- *   npm run start:dev                           # apiserver on :3000
- *   npm run start:webapp                        # webapp on :5173
+ * Runs inside the dev container (README `## Local development`), against a stack already
+ * running there. `bash .devcontainer/ci-e2e.sh` starts it and runs this suite, as CI does:
+ *   npm run start:dev      # apiserver on :3000
+ *   npm run start:webapp   # webapp on :5173
  *
- * Webapp on :5173 (proxies /trpc -> apiserver :3000), Mailpit on :8025.
+ * Webapp on :5173 (proxies /trpc -> apiserver :3000), Mailpit on mailpit:8025.
  */
 export default defineConfig({
   testDir: "./e2e",

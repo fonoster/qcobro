@@ -6,28 +6,38 @@ outreach.
 
 ## Local development
 
-**Prerequisites:** Node 22 and Docker.
+The dev container is the only supported setup. It runs the workspace (Node 22 and the Chromium
+the e2e tests drive) with Postgres, Fonoster Identity, Mailpit and a fake Fonoster, so nothing
+dials a real number. Each checkout, a worktree too, gets its own stack, and no service
+publishes a host port.
+
+**Prerequisites:** Docker, plus VS Code with the Dev Containers extension ("Reopen in
+Container") or the devcontainer CLI (`npx @devcontainers/cli`).
 
 ```bash
-# 1. Backing services (Postgres, Identity, Mailpit) on localhost
-docker compose -f compose.dev.yaml up -d
+# Open the container: builds the workspace image, writes .dev/, installs, migrates and seeds
+npx @devcontainers/cli up --workspace-folder .
 
-# 2. Config — point at the dev DB. The engine stays OFF by default (never auto-dials)
-mkdir -p config
-cp config/qcobro.example.json config/qcobro.json
-#   set database.url to:
-#   postgresql://qcobro:qcobro@localhost:5432/qcobro?schema=public
-
-# 3. Database — apply migrations (and an optional demo seed)
-npm run db:migrate --workspace=mods/apiserver
-npm run db:seed    --workspace=mods/apiserver   # optional
-# Starting over? Drop all app data + re-apply migrations, then re-seed (dev only):
-#   npm run db:reset --workspace=mods/apiserver && npm run db:seed --workspace=mods/apiserver
-
-# 4. Run the API + console
-npm run start:dev      # apiserver on :3000
-npm run start:webapp   # console on :5173
+# Run every command inside it, `git commit` too (so the Git hooks run)
+npx @devcontainers/cli exec --workspace-folder . npm run start:dev      # API on :3000
+npx @devcontainers/cli exec --workspace-folder . npm run start:webapp   # console on :5173
 ```
+
+- **What the first open generates:** `.dev/` (git-ignored) holds Identity's keys and
+  `identity.json`, the fake Fonoster's TLS files and secrets, and `qcobro.json`, derived from
+  `config/qcobro.example.json`. The apiserver reads `.dev/qcobro.json`, never
+  `config/qcobro.json`. The campaigns engine is off.
+- **Log in** as `demo@qcobro.com` / `password123` (the seed's demo user).
+- **URLs:** VS Code forwards the API (3000), the console (5173) and Mailpit's web UI
+  (`mailpit:8025`) to free local ports. Inside the container they are `localhost:3000`,
+  `localhost:5173` and `http://mailpit:8025`.
+- **E2E:** `npx @devcontainers/cli exec --workspace-folder . bash .devcontainer/ci-e2e.sh`
+  starts the API and the console and runs the Playwright suite, as CI does.
+- **Stop** the stack (closing the editor leaves it running):
+  `docker compose -p qcobro-<checkout dir name> stop`. `down -v` also deletes its database.
+- **Regenerate the config:** delete `.dev/` and open the container again.
+- **Start the data over:** `npm run db:reset --workspace=mods/apiserver && npm run db:seed
+--workspace=mods/apiserver` inside the container (dev only).
 
 ### Running the campaigns engine
 
@@ -44,7 +54,7 @@ texted), every tick writes an append-only **flight recorder** stream to `engine_
 within parameters. Same recorder, same judge, whether the ticks came from a sim or from
 production.
 
-End to end from a fresh checkout (dev stack up, migrations applied):
+End to end inside the dev container (it has already migrated and seeded):
 
 1. **Seed the demo** (idempotent — user, portfolio + accounts, agents, and three
    **ACTIVE** campaigns):
@@ -83,7 +93,7 @@ End to end from a fresh checkout (dev stack up, migrations applied):
 
 5. **Judge the run.** No repo checkout or DB access is needed on the machine that runs
    this — only the URL and the key pair (`--url` defaults to `https://api.qcobro.com`;
-   point it at your apiserver for local runs):
+   for local runs, run it inside the dev container, where the API is `localhost:3000`):
 
    ```bash
    npx -p @qcobro/common engine-eval --url http://localhost:3000 \
@@ -176,8 +186,8 @@ openspec validate campaigns-engine
 # (integration tests auto-skip without a DB)
 npm test --workspace=mods/apiserver
 
-# Integration tests — prove at-most-once end to end against the dev DB
-DATABASE_URL=postgresql://qcobro:qcobro@localhost:5432/qcobro?schema=public \
+# Integration tests — prove at-most-once end to end against the dev container's DB
+DATABASE_URL=postgresql://qcobro:qcobro@postgres:5432/qcobro?schema=public \
   npm test --workspace=mods/apiserver
 ```
 

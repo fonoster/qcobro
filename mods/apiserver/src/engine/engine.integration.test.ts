@@ -17,7 +17,7 @@ import { createEventPruner } from "./eventSink.js";
 import { EmulatedSmsClient, InMemoryEngineEventSink } from "./emulators.js";
 
 // Integration tests need a real Postgres. Skipped unless DATABASE_URL is set
-// (the dev stack: `docker compose -f compose.dev.yaml up -d db`).
+// (in the dev container: `postgresql://qcobro:qcobro@postgres:5432/qcobro?schema=public`).
 const RUN = !!process.env.DATABASE_URL;
 
 const NOW = new Date("2026-06-23T15:00:00Z"); // Tue 09:00 local — inside the window
