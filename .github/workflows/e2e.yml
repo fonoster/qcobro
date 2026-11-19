@@ -29,6 +29,11 @@ jobs:
       # (config, keys, secrets) and builds the workspace image, which already has Chromium;
       # post-create.sh installs, migrates and seeds. ci-e2e.sh then starts the API and the
       # console and runs Playwright inside it.
+      # devcontainers/ci runs `devcontainer build` before `up`, and build skips the
+      # initializeCommand, so write .dev/ (Compose reads it) and build the image first.
+      - name: Prepare the dev container
+        run: sh .devcontainer/initialize.sh
+
       - name: Run e2e in the dev container
         uses: devcontainers/ci@v0.3
         with:
