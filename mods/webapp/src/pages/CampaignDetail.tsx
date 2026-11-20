@@ -15,13 +15,6 @@ import { RowActionsMenu } from "../components/ui/row-actions-menu.js";
 import { CampaignAutopausedBanner } from "../components/CampaignAutopausedBanner.js";
 import { humanizeDays } from "../lib/campaignDays.js";
 
-function statusVariant(status: string) {
-  if (status === "ACTIVE") return "success";
-  if (status === "PAUSED") return "orange";
-  if (status === "COMPLETED") return "violet";
-  return "secondary";
-}
-
 const STATUS_ACTION: Record<CampaignStatus, string> = {
   ACTIVE: "campaigns.actions.activate",
   PAUSED: "campaigns.actions.pause",
@@ -102,7 +95,7 @@ export function CampaignDetail() {
         action={
           c ? (
             <div className="flex items-center gap-2">
-              <Badge variant={statusVariant(c.status)}>
+              <Badge variant="secondary">
                 {t(`campaigns.status.${c.status}` as Parameters<typeof t>[0])}
               </Badge>
               {primary && (

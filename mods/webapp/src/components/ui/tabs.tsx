@@ -26,7 +26,7 @@ export function Tabs({ items, defaultTab, onChange, className }: TabsProps) {
 
   return (
     <div className={className}>
-      <div className="flex gap-1 rounded-lg bg-elevated p-1">
+      <div className="flex gap-1 rounded-control bg-elevated p-1">
         {items.map((tab) => (
           <button
             key={tab.id}

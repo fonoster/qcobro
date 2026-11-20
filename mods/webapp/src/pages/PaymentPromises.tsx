@@ -20,13 +20,6 @@ type PaymentPromise = {
   contactLog?: { agentType: string } | null;
 };
 
-function statusVariant(s: string) {
-  if (s === "MET") return "success";
-  if (s === "EXPIRED") return "secondary";
-  if (s === "CANCELLED") return "secondary";
-  return "orange";
-}
-
 function daysUntil(due: string): number {
   const ms = new Date(due).getTime() - Date.now();
   return Math.ceil(ms / (1000 * 60 * 60 * 24));
@@ -142,9 +135,9 @@ export function PaymentPromises() {
             header: t("paymentPromises.col.status"),
             render: (r) =>
               isDue(r as { status: string; dueDate: string }) ? (
-                <Badge variant="destructive">{t("paymentPromises.status.DUE")}</Badge>
+                <Badge variant="secondary">{t("paymentPromises.status.DUE")}</Badge>
               ) : (
-                <Badge variant={statusVariant(r.status as string)}>
+                <Badge variant="secondary">
                   {t(`paymentPromises.status.${r.status}` as Parameters<typeof t>[0])}
                 </Badge>
               )

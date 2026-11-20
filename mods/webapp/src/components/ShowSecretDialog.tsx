@@ -25,7 +25,7 @@ export function ShowSecretDialog({ credentials, onClose }: ShowSecretDialogProps
   if (!credentials) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-overlay p-4">
       <Card className="w-full max-w-[480px] rounded-2xl border-border shadow-xl">
         <div className="flex flex-col gap-5 p-6">
           <div className="flex items-start gap-3">

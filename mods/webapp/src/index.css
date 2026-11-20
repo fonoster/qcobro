@@ -9,55 +9,64 @@
 
 /*
  * Raw palette. These are the values that swap per theme; every semantic token below points
- * at one of them. Light values are the pre-dark-mode palette (slate / emerald); dark values
- * come from the approved Pencil "Mode: Dark" set (see openspec/changes/dark-mode).
+ * at one of them. Values are Fonoster's tokens from designs/fonoster.lib.pen, resolved per
+ * theme: light on :root, dark on :root[data-theme="dark"].
  */
 :root {
-  --qc-bg: #f8fafc;
+  --qc-bg: #f4f4f4;
   --qc-surface: #ffffff;
-  --qc-elevated: #f1f5f9;
-  --qc-border: #e2e8f0;
-  --qc-input: #e2e8f0;
-  --qc-fg: #0f172a;
-  --qc-fg-muted: #475569;
-  --qc-fg-subtle: #64748b;
-  --qc-primary: #10b981;
-  --qc-primary-hover: #059669;
-  --qc-primary-fg: #ffffff;
-  --qc-brand-green: #047857;
-  --qc-success: #10b981;
-  --qc-success-soft: #ecfdf5;
-  --qc-warning: #d97706;
-  --qc-warning-soft: #fffbeb;
-  --qc-danger: #dc2626;
-  --qc-danger-soft: #fef2f2;
+  --qc-elevated: #f4f4f4;
+  --qc-sunken: #efefef;
+  --qc-border: #e8e8e8;
+  --qc-input: #e8e8e8;
+  --qc-fg: #252525;
+  --qc-fg-muted: #555555;
+  --qc-fg-subtle: #555555;
+  --qc-primary: #39e19e;
+  --qc-primary-hover: color-mix(in srgb, var(--qc-primary) 90%, black);
+  --qc-primary-fg: #011900;
+  --qc-brand-green: #008751;
+  --qc-success: #008751;
+  --qc-success-soft: #e6fff5;
+  --qc-warning: #b45309;
+  --qc-warning-soft: #fef3e2;
+  --qc-danger: #d92d20;
+  --qc-danger-soft: #fdecea;
   --qc-info: #2563eb;
-  --qc-info-soft: #eff6ff;
-  --qc-ring: #10b981;
+  --qc-info-soft: #e8effd;
+  --qc-ring: #008751;
+  --qc-sidebar: #efefef;
+  --qc-sidebar-accent: #e8e8e8;
+  --qc-sidebar-fg: #555555;
+  --qc-overlay: rgb(0 0 0 / 0.72);
 }
 
 :root[data-theme="dark"] {
-  --qc-bg: #141417;
-  --qc-surface: #1e1e22;
-  --qc-elevated: #26262b;
-  --qc-border: #33333a;
-  --qc-input: #33333a;
-  --qc-fg: #f2f2f4;
-  --qc-fg-muted: #b4b4bc;
-  --qc-fg-subtle: #94949e;
-  --qc-primary: #10b981;
-  --qc-primary-hover: #34d399;
-  --qc-primary-fg: #ffffff;
-  --qc-brand-green: #34d399;
-  --qc-success: #34d399;
-  --qc-success-soft: #16271f;
-  --qc-warning: #fbbf24;
-  --qc-warning-soft: #2e2408;
-  --qc-danger: #f87171;
-  --qc-danger-soft: #2a1416;
+  --qc-bg: #181818;
+  --qc-surface: #202020;
+  --qc-elevated: #252525;
+  --qc-sunken: #121212;
+  --qc-border: #333333;
+  --qc-input: #333333;
+  --qc-fg: #ffffff;
+  --qc-fg-muted: #c2c2c2;
+  --qc-fg-subtle: #c2c2c2;
+  --qc-primary: #39e19e;
+  --qc-primary-fg: #011900;
+  --qc-brand-green: #39e19e;
+  --qc-success: #39e19e;
+  --qc-success-soft: #0b2a1c;
+  --qc-warning: #f5a524;
+  --qc-warning-soft: #2a1d0b;
+  --qc-danger: #f97066;
+  --qc-danger-soft: #2a1210;
   --qc-info: #60a5fa;
-  --qc-info-soft: #16233a;
-  --qc-ring: #34d399;
+  --qc-info-soft: #111c2e;
+  --qc-ring: #39e19e;
+  --qc-sidebar: #121212;
+  --qc-sidebar-accent: #2a2a2a;
+  --qc-sidebar-fg: #e8e8e8;
+  --qc-overlay: rgb(0 0 0 / 0.72);
 }
 
 /*
@@ -87,6 +96,18 @@
   --color-info: var(--qc-info);
   --color-info-soft: var(--qc-info-soft);
   --color-ring: var(--qc-ring);
+  --color-sunken: var(--qc-sunken);
+  --color-sidebar: var(--qc-sidebar);
+  --color-sidebar-accent: var(--qc-sidebar-accent);
+  --color-sidebar-fg: var(--qc-sidebar-fg);
+  --color-overlay: var(--qc-overlay);
+
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, monospace;
+
+  --radius-control: 10px;
+  --radius-card: 12px;
+  --radius-m: 16px;
 }
 
 @layer base {
@@ -98,7 +119,7 @@
   body {
     background-color: var(--color-bg);
     color: var(--color-fg);
-    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
 }

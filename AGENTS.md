@@ -48,14 +48,14 @@ Overrides:
   without an `Ej.: ` / `E.g. ` prefix, and without restating the label. Show a `{{variable}}`
   only in a field whose text is actually template-rendered. State validation rules in the label
   (`Tiempo de inactividad (ms, mín. 3000)`, `Correo · no editable`), never only in an example.
-- Every color is a token. In dark mode, green is only for the primary CTA, the active nav item,
-  real positive status and progress.
+- Every color is a token. In dark mode, green is only for the primary CTA, real positive status
+  and progress (the active nav item is neutral).
 - UI work is design-first: check or update the design before writing UI code. Designs are
-  `.pen` files in `designs/`, edited with Nib: `dashboard.pen` (console), `website.pen` (`site/`),
-  `docs.pen` (docs diagrams and assets), `sales.pen` (decks, one-pagers, banners). Each
-  imports `qcobro.lib.pen` as `ui` (tokens `$ui:<name>`, components `ui:<id>`); change shared
-  tokens and components only there. Open the worktree's own copy by absolute path; images go
-  in `designs/assets/`.
+  `.pen` files in `designs/`, edited with Nib: `dashboard-fonoster.pen` (console, importing
+  `fonoster.lib.pen`), `website.pen` (`site/`), `docs.pen` (docs diagrams and assets),
+  `sales.pen` (decks, one-pagers, banners). The others import `qcobro.lib.pen` as `ui` (tokens
+  `$ui:<name>`, components `ui:<id>`); change shared tokens and components only in the library.
+  Open the worktree's own copy by absolute path; images go in `designs/assets/`.
 - Commits use Conventional Commits (`type(scope): subject`); a Husky `commit-msg` hook runs
   commitlint. No AI attribution lines on commits, PRs or issues; keep the DCO sign-off.
 - Start every change in its own worktree (`git worktree add ../qcobro-<n> -b <branch>`) and

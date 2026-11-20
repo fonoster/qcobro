@@ -20,7 +20,7 @@ test.describe("profile", () => {
     // Pin dark: <html data-theme> flips and the page ground goes dark, no reload.
     await select.selectOption("dark");
     await expect.poll(() => htmlTheme(page)).toBe("dark");
-    await expect(page.locator("body")).toHaveCSS("background-color", "rgb(20, 20, 23)");
+    await expect(page.locator("body")).toHaveCSS("background-color", "rgb(24, 24, 24)");
 
     // Persisted: a reload comes back dark.
     await page.reload();

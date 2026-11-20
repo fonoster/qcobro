@@ -161,7 +161,7 @@ export function CsvSyncModal({
                       value={m.value}
                       checked={mode === m.value}
                       onChange={() => setMode(m.value)}
-                      className="mt-0.5 accent-emerald-600"
+                      className="mt-0.5 accent-primary"
                     />
                     <div>
                       <p className="text-sm font-medium text-fg">
@@ -186,14 +186,14 @@ export function CsvSyncModal({
             <p className="mb-3 text-sm font-semibold text-primary">{t("portfolios.csv.done")}</p>
             <div className="grid grid-cols-4 gap-3 text-center">
               {[
-                { label: t("portfolios.csv.created"), value: result.created, color: "emerald" },
-                { label: t("portfolios.csv.updated"), value: result.updated, color: "blue" },
-                { label: t("portfolios.csv.archived"), value: result.archived, color: "amber" },
-                { label: t("portfolios.csv.total"), value: result.total, color: "slate" }
-              ].map(({ label, value, color }) => (
+                { label: t("portfolios.csv.created"), value: result.created },
+                { label: t("portfolios.csv.updated"), value: result.updated },
+                { label: t("portfolios.csv.archived"), value: result.archived },
+                { label: t("portfolios.csv.total"), value: result.total }
+              ].map(({ label, value }) => (
                 <div key={label}>
-                  <p className={`text-2xl font-bold text-${color}-700`}>{value}</p>
-                  <p className={`text-xs text-${color}-600`}>{label}</p>
+                  <p className="text-2xl font-bold text-fg">{value}</p>
+                  <p className="text-xs text-fg-muted">{label}</p>
                 </div>
               ))}
             </div>

@@ -17,7 +17,7 @@ export interface AccordionProps {
 export function Accordion({ items, defaultOpen, className }: AccordionProps) {
   const [open, setOpen] = useState<string | null>(defaultOpen ?? null);
   return (
-    <div className={cn("divide-y divide-border rounded-xl border border-border", className)}>
+    <div className={cn("divide-y divide-border rounded-card border border-border", className)}>
       {items.map((item) => {
         const isOpen = open === item.id;
         return (

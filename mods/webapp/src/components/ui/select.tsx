@@ -11,7 +11,7 @@ export function FilterSelect({
     <div className="relative inline-flex">
       <select
         className={cn(
-          "h-9 cursor-pointer appearance-none rounded-lg border border-border bg-surface px-3 pr-8 text-sm text-fg-muted outline-none focus:border-primary focus:ring-2 focus:ring-ring/20",
+          "h-9 cursor-pointer appearance-none rounded-control border border-border bg-surface px-3 pr-8 text-sm text-fg-muted outline-none focus:border-primary focus:ring-2 focus:ring-ring/20",
           className
         )}
         {...props}
@@ -31,7 +31,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       <select
         ref={ref}
         className={cn(
-          "flex h-9 w-full cursor-pointer appearance-none rounded-sm border border-border bg-surface px-3 py-2 pr-8 text-sm text-fg focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50",
+          "flex h-9 w-full cursor-pointer appearance-none rounded-control border border-border bg-surface px-3 py-2 pr-8 text-sm text-fg focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50",
           className
         )}
         {...props}

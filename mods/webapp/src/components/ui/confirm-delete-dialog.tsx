@@ -40,8 +40,8 @@ export function ConfirmDeleteDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30" onClick={handleClose} />
-      <div className="relative z-10 w-full max-w-md rounded-xl bg-surface p-6 shadow-xl">
+      <div className="absolute inset-0 bg-overlay" onClick={handleClose} />
+      <div className="relative z-10 w-full max-w-md rounded-card bg-surface p-6 shadow-xl">
         <button
           onClick={handleClose}
           className="absolute right-4 top-4 rounded-md p-1 text-fg-subtle hover:text-fg-muted"
@@ -68,7 +68,7 @@ export function ConfirmDeleteDialog({
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
             placeholder="CONFIRMAR"
-            className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-danger focus:ring-2 focus:ring-danger/20"
+            className="mt-2 w-full rounded-control border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-danger focus:ring-2 focus:ring-danger/20"
             autoFocus
           />
         </div>

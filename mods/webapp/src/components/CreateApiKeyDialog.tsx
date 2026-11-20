@@ -59,7 +59,7 @@ export function CreateApiKeyDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 p-4">
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-overlay p-4">
       <Card className="w-full max-w-[440px] rounded-2xl border-border shadow-xl">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5 p-6">
           <div className="flex items-start justify-between">

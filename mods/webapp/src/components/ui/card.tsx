@@ -4,7 +4,7 @@ export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
   return (
     <div
       className={cn(
-        "border border-border bg-surface shadow-[0_1px_2px_rgba(0,0,0,0.05)]",
+        "rounded-card border border-border bg-surface shadow-[0_1px_2px_rgba(0,0,0,0.05)]",
         className
       )}
       {...props}
@@ -45,7 +45,7 @@ export function CardImage({
     <img
       src={src}
       alt={alt}
-      className={cn("w-full rounded-t-xl object-cover", className)}
+      className={cn("w-full rounded-t-card object-cover", className)}
       {...props}
     />
   );

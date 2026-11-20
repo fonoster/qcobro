@@ -54,7 +54,7 @@ export function RowActionsMenu({ items }: { items: RowAction[] }) {
           <div
             ref={menuRef}
             style={{ position: "fixed", top: pos.top, right: pos.right }}
-            className="z-50 w-60 overflow-hidden rounded-lg border border-border bg-surface p-1 shadow-md"
+            className="z-50 w-60 overflow-hidden rounded-control border border-border bg-surface p-1 shadow-md"
           >
             {items.map((item) => {
               const Icon = item.icon;

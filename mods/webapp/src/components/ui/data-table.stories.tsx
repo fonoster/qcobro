@@ -65,9 +65,9 @@ const accounts: Account[] = [
   }
 ];
 
-const statusVariant: Record<string, "success" | "destructive" | "orange"> = {
-  Current: "success",
-  "Past Due": "orange",
+const statusVariant: Record<string, "secondary" | "destructive"> = {
+  Current: "secondary",
+  "Past Due": "secondary",
   Critical: "destructive"
 };
 

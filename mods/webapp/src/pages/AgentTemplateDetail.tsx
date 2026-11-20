@@ -80,7 +80,7 @@ export function AgentTemplateDetail() {
         action={
           syncsWithFonoster && tmpl ? (
             <div className="flex items-center gap-3">
-              <Badge variant={syncError ? "destructive" : synced ? "success" : "orange"}>
+              <Badge variant={syncError ? "destructive" : "secondary"}>
                 {syncError
                   ? t("agents.sync.error")
                   : synced

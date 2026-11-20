@@ -276,14 +276,14 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         {isVoiceChannel && (
           <Section icon={PhoneCall} iconClass="text-primary" title={t("gestiones.detail.call")}>
             {hasRecording ? (
-              <div className="rounded-xl bg-brand-green p-4 text-white">
+              <div className="rounded-card border border-border bg-elevated p-4 text-fg">
                 <div className="mb-3 flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface/20">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-fg-subtle">
                     <PhoneCall className="h-4 w-4" />
                   </span>
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">{t("gestiones.detail.call")}</span>
-                    <span className="text-xs text-white/70">
+                    <span className="text-xs text-fg-muted">
                       {t(`agents.type.${g!.agentType}` as Parameters<typeof t>[0])}
                       {g?.campaign?.name ? ` · ${g.campaign.name}` : ""}
                     </span>
@@ -521,7 +521,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         {isWhatsApp && g && (
           <Section
             icon={Sparkles}
-            iconClass="text-violet-600"
+            iconClass="text-fg-subtle"
             title={t("gestiones.detail.whatsAppAnalysis")}
           >
             <div className="flex flex-col gap-3">
@@ -538,7 +538,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         {isEmail && g && (
           <Section
             icon={Sparkles}
-            iconClass="text-violet-600"
+            iconClass="text-fg-subtle"
             title={t("gestiones.detail.emailAnalysis")}
           >
             <div className="flex flex-col gap-3">
@@ -555,7 +555,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         {isVoiceAi && (
           <Section
             icon={Sparkles}
-            iconClass="text-violet-600"
+            iconClass="text-fg-subtle"
             title={t("gestiones.detail.analysis")}
           >
             {hasAnalysis ? (
@@ -626,7 +626,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         {hasGenericInsight && insight && (
           <Section
             icon={Sparkles}
-            iconClass="text-violet-600"
+            iconClass="text-fg-subtle"
             title={t("gestiones.detail.analysis")}
           >
             <p className="text-sm leading-relaxed text-fg-muted">{insight}</p>

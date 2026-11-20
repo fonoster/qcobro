@@ -40,10 +40,10 @@ export function Dialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <div className="absolute inset-0 bg-overlay" onClick={onClose} />
       <div
         className={cn(
-          "relative z-10 flex max-h-[90vh] w-full max-w-md flex-col rounded-lg border border-border bg-surface p-6 shadow-xl",
+          "relative z-10 flex max-h-[90vh] w-full max-w-md flex-col rounded-card border border-border bg-surface p-6 shadow-xl",
           align === "center" && "text-center",
           className
         )}
@@ -63,7 +63,7 @@ export function Dialog({
         {error && (
           <div
             role="alert"
-            className="mt-4 flex items-center gap-2 rounded-xl bg-danger-soft p-3 text-left text-sm font-medium text-danger"
+            className="mt-4 flex items-center gap-2 rounded-control bg-danger-soft p-3 text-left text-sm font-medium text-danger"
           >
             <AlertTriangle className="h-5 w-5 shrink-0" />
             <span>{error}</span>

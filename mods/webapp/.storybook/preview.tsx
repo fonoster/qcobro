@@ -1,6 +1,12 @@
 import { useEffect } from "react";
 import type { Preview } from "@storybook/react";
 import { I18nProvider } from "../src/lib/i18n.js";
+import "@fontsource/poppins/400.css";
+import "@fontsource/poppins/500.css";
+import "@fontsource/poppins/600.css";
+import "@fontsource/roboto-mono/400.css";
+import "@fontsource/roboto-mono/500.css";
+import "@fontsource/roboto-mono/600.css";
 import "../src/index.css";
 
 type ThemeGlobal = "system" | "light" | "dark";

@@ -70,7 +70,10 @@ export function KpiCard({ label, value, subtext, detail, trend, className, perio
     <div
       role="group"
       aria-label={label}
-      className={cn("flex flex-col gap-2 border border-border bg-surface p-5", className)}
+      className={cn(
+        "flex flex-col gap-2 rounded-card border border-border bg-surface p-5",
+        className
+      )}
     >
       {period ? (
         // `min-w-0` + `truncate` on the label so it yields space to the control instead of
@@ -83,7 +86,7 @@ export function KpiCard({ label, value, subtext, detail, trend, className, perio
       ) : (
         <p className="text-[13px] font-medium text-fg-subtle">{label}</p>
       )}
-      <p className="text-[28px] font-bold leading-tight text-fg">{value}</p>
+      <p className="font-mono text-[28px] font-semibold leading-tight text-fg">{value}</p>
       {/* `mt-auto` pins the footer to the bottom of the card so every card's note sits on the
           same baseline across the row. Without it the notes float directly under their values,
           and any card with a taller header — the contact-rate card, whose label row carries the

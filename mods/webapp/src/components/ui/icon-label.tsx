@@ -5,9 +5,7 @@ const iconLabelVariants = cva("inline-flex items-center gap-1.5 text-sm font-med
   variants: {
     variant: {
       secondary: "text-fg-muted",
-      success: "text-primary",
-      violet: "text-violet-600",
-      orange: "text-orange-600"
+      success: "text-primary"
     }
   },
   defaultVariants: { variant: "secondary" }

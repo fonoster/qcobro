@@ -124,7 +124,7 @@ export function DataTable<T extends Record<string, unknown>>({
   const showSelectionBar = selectable && selected.length > 0;
 
   const checkboxClass =
-    "h-4 w-4 cursor-pointer rounded border-border text-primary accent-emerald-500 focus:ring-ring";
+    "h-4 w-4 cursor-pointer rounded border-border text-primary accent-primary focus:ring-ring";
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
@@ -171,7 +171,7 @@ export function DataTable<T extends Record<string, unknown>>({
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-border bg-surface">
+      <div className="overflow-hidden rounded-card border border-border bg-surface">
         <table className="w-full">
           <thead>
             <tr className="h-11 border-b border-border bg-elevated">

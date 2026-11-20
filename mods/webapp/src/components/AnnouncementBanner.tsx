@@ -85,7 +85,7 @@ export function AnnouncementBanner() {
           type="button"
           onClick={dismiss}
           aria-label={t("common.dismiss")}
-          className="shrink-0 cursor-pointer rounded-md p-1 opacity-70 transition hover:bg-black/5 hover:opacity-100"
+          className="shrink-0 cursor-pointer rounded-md p-1 opacity-70 transition hover:bg-fg/5 hover:opacity-100"
         >
           <X className="h-4 w-4" />
         </button>

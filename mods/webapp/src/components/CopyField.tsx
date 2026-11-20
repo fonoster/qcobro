@@ -74,7 +74,7 @@ export function CopyField({
     <div className={cn("flex flex-col gap-1.5", className)}>
       {label && <span className="text-sm font-medium text-fg-muted">{label}</span>}
       <div className="flex items-center gap-2">
-        <code className="flex-1 truncate rounded-lg border border-border bg-elevated px-3 py-2 font-mono text-[13px] text-fg">
+        <code className="flex-1 truncate rounded-control border border-border bg-elevated px-3 py-2 font-mono text-[13px] text-fg">
           {value}
         </code>
         <Button

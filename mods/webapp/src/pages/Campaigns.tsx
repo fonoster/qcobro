@@ -31,13 +31,6 @@ type Campaign = {
   agentTemplate?: { name: string; type: string } | null;
 };
 
-function statusVariant(status: string) {
-  if (status === "ACTIVE") return "success";
-  if (status === "PAUSED") return "orange";
-  if (status === "COMPLETED") return "violet";
-  return "secondary";
-}
-
 const STATUS_FILTERS: CampaignStatus[] = ["ACTIVE", "PAUSED", "COMPLETED", "ARCHIVED"];
 
 export function Campaigns() {
@@ -114,7 +107,7 @@ export function Campaigns() {
             header: t("campaigns.col.status"),
             render: (r) => (
               <div className="flex flex-col items-start gap-1">
-                <Badge variant={statusVariant(r.status)}>
+                <Badge variant="secondary">
                   {t(`campaigns.status.${r.status}` as Parameters<typeof t>[0])}
                 </Badge>
                 {r.pauseReason === "AUTO_ERROR_THRESHOLD" && (
@@ -290,7 +283,7 @@ function EditCampaignModal({
                   onClick={() => toggleDay(d)}
                   className={
                     selected
-                      ? "flex-1 rounded-md bg-primary-hover py-2 text-sm font-semibold text-white"
+                      ? "flex-1 rounded-control bg-primary py-2 text-sm font-semibold text-primary-fg"
                       : "flex-1 rounded-md border border-border py-2 text-sm font-semibold text-fg-subtle"
                   }
                 >
@@ -507,7 +500,7 @@ function CreateCampaignModal({
                   onClick={() => toggleDay(d)}
                   className={
                     selected
-                      ? "flex-1 rounded-md bg-primary-hover py-2 text-sm font-semibold text-white"
+                      ? "flex-1 rounded-control bg-primary py-2 text-sm font-semibold text-primary-fg"
                       : "flex-1 rounded-md border border-border py-2 text-sm font-semibold text-fg-subtle"
                   }
                 >
