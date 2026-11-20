@@ -48,6 +48,10 @@ Overrides:
   without an `Ej.: ` / `E.g. ` prefix, and without restating the label. Show a `{{variable}}`
   only in a field whose text is actually template-rendered. State validation rules in the label
   (`Tiempo de inactividad (ms, mín. 3000)`, `Correo · no editable`), never only in an example.
+- Overlays follow one rule: a drawer for working on a record (row details, long or sectioned
+  create/edit forms such as campaigns and voice agents); a dialog for a short interruption
+  (confirmations, typed deletes, one-time secrets, pickers, short creates of up to four fields, step
+  flows such as the CSV import).
 - Every color is a token. In dark mode, green is only for the primary CTA, real positive status
   and progress (the active nav item is neutral).
 - UI work is design-first: check or update the design before writing UI code. Designs are

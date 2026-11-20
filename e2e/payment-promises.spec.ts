@@ -37,7 +37,7 @@ test.describe("payment promises — worklist", () => {
     await page.getByText(portfolioName).click();
     await expect(page).toHaveURL(/\/portfolios\/[a-f0-9-]+$/);
     const portfolioId = page.url().split("/portfolios/")[1];
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
     await page.getByRole("button", { name: "Cerrar", exact: true }).click();

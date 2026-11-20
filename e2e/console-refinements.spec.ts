@@ -43,8 +43,13 @@ test.describe("console refinements", () => {
     await page.getByRole("link", { name: "Campañas" }).click();
     await page.getByRole("button", { name: /Nueva campaña/ }).click();
     await page.getByLabel("Nombre de la campaña").fill(campaignName);
+    // Carteras is a multi-select: open it, then tick the portfolio.
+    await page.getByLabel("Carteras", { exact: true }).click();
     await page.locator("label", { hasText: portfolioName }).getByRole("checkbox").check();
-    await page.getByLabel("Plantilla de agente").selectOption({ label: agentName });
+    // Agent options read "<channel> · <name>".
+    await page
+      .getByLabel("Agente", { exact: true })
+      .selectOption({ label: `Voz IA · ${agentName}` });
     await page.getByLabel("Fecha de inicio").fill("2026-07-01");
     await page.getByRole("button", { name: "Crear campaña" }).click();
 
@@ -58,14 +63,14 @@ test.describe("console refinements", () => {
     await expect(page.locator("tr", { hasText: campaignName })).toHaveCount(0);
 
     // Filtering by "Archivadas" reveals it with the Archivada badge.
-    await page.getByRole("combobox").selectOption({ label: "Archivadas" });
+    await page.getByLabel("Mostrar archivadas").check();
     const archivedRow = page.locator("tr", { hasText: campaignName });
     await expect(archivedRow.getByText("Archivada")).toBeVisible();
 
     // Restore — the campaign returns to PAUSED (never auto-resumes dispatch).
     await archivedRow.getByRole("button").last().click();
     await page.getByRole("button", { name: "Restaurar" }).click();
-    await page.getByRole("combobox").selectOption({ label: "Todas (no archivadas)" });
+    await page.getByLabel("Mostrar archivadas").uncheck();
     const restoredRow = page.locator("tr", { hasText: campaignName });
     await expect(restoredRow.getByText("Pausada")).toBeVisible();
   });

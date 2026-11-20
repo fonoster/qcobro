@@ -4,6 +4,7 @@ import { trpc } from "../../lib/trpc.js";
 import { useI18n } from "../../lib/i18n.js";
 import { Dialog } from "../ui/dialog.js";
 import { SelectGroup } from "../ui/select.js";
+import { InfoNote } from "./InfoNote.js";
 
 /**
  * Bulk variant of {@link ReachOutModal}: pick one agent template and dispatch it ad-hoc to
@@ -23,6 +24,7 @@ export function BulkReachOutModal({
   const { t } = useI18n();
   const [agentTemplateId, setAgentTemplateId] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [agentError, setAgentError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
   const agentsQuery = trpc.agentTemplates.list.useQuery();
@@ -30,11 +32,11 @@ export function BulkReachOutModal({
     (a) => !(a as { archivedAt?: string | null }).archivedAt
   ) as Array<{ id: string; name: string; type: string }>;
 
-  const selected = agents.find((a) => a.id === agentTemplateId);
   const dispatch = trpc.outreach.dispatch.useMutation();
 
   async function handleConfirm() {
-    if (!agentTemplateId) return setError(t("portfolios.reachOut.noAgent"));
+    if (!agentTemplateId) return setAgentError(t("portfolios.reachOut.noAgent"));
+    setAgentError(null);
     setError(null);
     setSending(true);
     try {
@@ -56,22 +58,26 @@ export function BulkReachOutModal({
       open
       onClose={onClose}
       title={t("portfolios.bulk.title").replace("{count}", String(count))}
-      description={t("portfolios.bulk.subtitle")}
+      subtitle={t("portfolios.bulk.subtitle")}
       confirmLabel={
         sending
           ? t("portfolios.bulk.sending")
           : t("portfolios.bulk.send").replace("{count}", String(count))
       }
+      confirmDisabled={sending}
       onConfirm={handleConfirm}
       error={error}
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-[18px]">
         <SelectGroup
           label={t("portfolios.reachOut.agent")}
           id="bulk-agent"
+          icon={<Bot />}
           value={agentTemplateId}
+          error={agentError ?? undefined}
           onChange={(e) => {
             setAgentTemplateId(e.target.value);
+            setAgentError(null);
             setError(null);
           }}
         >
@@ -83,14 +89,7 @@ export function BulkReachOutModal({
           ))}
         </SelectGroup>
 
-        {selected && (
-          <div className="flex items-center gap-2.5 rounded-lg bg-elevated px-3 py-2.5">
-            <Bot className="h-4 w-4 shrink-0 text-fg-muted" />
-            <span className="text-sm text-fg-muted">{selected.name}</span>
-          </div>
-        )}
-
-        <p className="text-xs text-fg-subtle">{t("portfolios.reachOut.footnote")}</p>
+        <InfoNote>{t("portfolios.reachOut.footnote")}</InfoNote>
       </div>
     </Dialog>
   );

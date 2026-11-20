@@ -2,6 +2,7 @@ import { useI18n } from "../lib/i18n.js";
 import { Dialog } from "./ui/dialog.js";
 import { Button } from "./ui/button.js";
 import { CopyField } from "./CopyField.js";
+import { Alert } from "./ui/alert.js";
 
 export interface ApiKeyCredentials {
   accessKeyId: string;
@@ -25,12 +26,17 @@ export function ShowSecretDialog({ credentials, onClose }: ShowSecretDialogProps
     <Dialog
       open={!!credentials}
       onClose={onClose}
+      width={560}
       title={t("apiKeys.secret.title")}
-      subtitle={t("apiKeys.secret.description")}
       footer={<Button onClick={onClose}>{t("apiKeys.secret.done")}</Button>}
     >
       {credentials && (
         <>
+          <Alert
+            variant="warning"
+            title={t("apiKeys.secret.onceTitle")}
+            description={t("apiKeys.secret.description")}
+          />
           <CopyField label={t("apiKeys.secret.idLabel")} value={credentials.accessKeyId} />
           <CopyField label={t("apiKeys.secret.secretLabel")} value={credentials.accessKeySecret} />
         </>

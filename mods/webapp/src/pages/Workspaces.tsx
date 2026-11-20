@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, Plus } from "lucide-react";
+import { Building2, ChevronRight, Info, Plus } from "lucide-react";
 import { trpc, REFRESH_TOKEN_KEY } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n } from "../lib/i18n.js";
 import { Dialog } from "../components/ui/dialog.js";
 import { Button } from "../components/ui/button.js";
 import { CopyField } from "../components/CopyField.js";
+import { EmptyState } from "../components/ui/empty-state.js";
 import { InputGroup } from "../components/ui/input.js";
 import { SelectGroup } from "../components/ui/select.js";
 import { TIMEZONES } from "../lib/timezones.js";
@@ -34,7 +35,7 @@ export function Workspaces() {
 
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [currency, setCurrency] = useState<"USD" | "DOP">("USD");
+  const [currency, setCurrency] = useState<"USD" | "DOP">("DOP");
   const [timezone, setTimezone] = useState(TIMEZONES[0]);
 
   const items = workspaces.data ?? [];
@@ -69,31 +70,36 @@ export function Workspaces() {
 
   return (
     <>
-      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-4 py-12 sm:px-6">
-        <div className="flex flex-col gap-1.5">
+      <div className="m-auto flex w-full max-w-[640px] flex-col gap-7 px-4 pb-20 pt-12 sm:px-0">
+        <div className="flex flex-col gap-2">
           <h1 className="text-[26px] font-semibold leading-tight text-fg">
             {t(empty ? "workspaces.empty.title" : "workspaces.title")}
           </h1>
-          <p className="text-sm text-fg-subtle">{t("workspaces.subtitle")}</p>
+          <p className="text-sm text-fg-muted">{t("workspaces.subtitle")}</p>
         </div>
 
         {workspaces.isPending ? (
-          <p className="text-sm text-fg-subtle">{t("common.loading")}</p>
+          <p className="text-sm text-fg-muted">{t("common.loading")}</p>
         ) : empty ? (
-          <div className="flex flex-col items-start gap-4 rounded-m border border-border bg-sunken p-8">
-            <div className="flex flex-col gap-1">
-              <p className="text-base font-semibold text-fg">{t("workspaces.empty.heading")}</p>
-              <p className="text-sm text-fg-subtle">{t("workspaces.empty.body")}</p>
-            </div>
-            <Button onClick={() => setOpen(true)}>{t("workspaces.empty.cta")}</Button>
-          </div>
+          <EmptyState
+            icon={<Building2 />}
+            title={t("workspaces.empty.heading")}
+            body={t("workspaces.empty.body")}
+            className="p-10"
+            action={
+              <Button onClick={() => setOpen(true)}>
+                <Plus className="h-4 w-4" />
+                {t("workspaces.empty.cta")}
+              </Button>
+            }
+          />
         ) : (
           <>
             <div className="flex items-center justify-between gap-4">
-              <p className="text-sm text-fg-subtle">
+              <p className="text-[13px] text-fg-muted">
                 {countLabel.replace("{count}", String(items.length))}
               </p>
-              <Button variant="outline" onClick={() => setOpen(true)}>
+              <Button onClick={() => setOpen(true)}>
                 <Plus className="h-4 w-4" />
                 {t("workspaces.create")}
               </Button>
@@ -101,29 +107,29 @@ export function Workspaces() {
 
             <ul
               aria-label={t("workspaces.listLabel")}
-              className="divide-y divide-border overflow-hidden rounded-m border border-border bg-sunken"
+              className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface"
             >
               {items.map((ws) => (
                 <li
                   key={ws.accessKeyId}
-                  className="relative flex items-center gap-4 px-5 py-4 transition hover:bg-elevated"
+                  className="relative flex items-center gap-3.5 px-5 py-4 transition hover:bg-elevated"
                 >
                   {/* The row's one control; its overlay makes the whole row open the workspace,
                       while the copy control sits above it. */}
                   <button
                     type="button"
                     onClick={() => onSelect(ws.accessKeyId)}
-                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:rounded-m focus-visible:after:ring-2 focus-visible:after:ring-ring"
+                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-3.5 text-left after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
                   >
                     <span
                       aria-hidden="true"
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-elevated text-xs font-bold text-fg-muted"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-elevated font-mono text-xs font-semibold text-fg"
                     >
                       {initialsOf(ws.name)}
                     </span>
-                    <span className="flex min-w-0 flex-col leading-tight">
-                      <span className="truncate text-[15px] font-semibold text-fg">{ws.name}</span>
-                      <span className="truncate text-[13px] text-fg-subtle">
+                    <span className="flex min-w-0 flex-col gap-0.5">
+                      <span className="truncate text-sm font-medium text-fg">{ws.name}</span>
+                      <span className="truncate text-xs text-fg-muted">
                         {ws.portfolioCount}{" "}
                         {t(
                           ws.portfolioCount === 1
@@ -143,14 +149,17 @@ export function Workspaces() {
                     variant="inline"
                     value={ws.accessKeyId}
                     copyAriaLabel={t("createWorkspace.card.accessKeyIdAria")}
-                    className="relative z-10 max-w-[170px] rounded-md bg-elevated px-2 py-1 text-fg-muted"
+                    className="relative z-10 max-w-[150px] text-xs"
                   />
-                  <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-fg-subtle" />
+                  <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-fg-muted" />
                 </li>
               ))}
             </ul>
 
-            <p className="text-[13px] text-fg-subtle">{t("workspaces.inviteHint")}</p>
+            <p className="flex items-center gap-2 text-xs text-fg-muted">
+              <Info aria-hidden className="h-3.5 w-3.5 shrink-0" />
+              {t("workspaces.inviteHint")}
+            </p>
           </>
         )}
       </div>
@@ -166,6 +175,7 @@ export function Workspaces() {
         onSubmit={onCreate}
       >
         <InputGroup
+          id="create-workspace-name"
           label={t("createWorkspace.field.name")}
           required
           value={name}
@@ -177,26 +187,33 @@ export function Workspaces() {
           <option value="nyc01">NYC01</option>
         </SelectGroup>
 
-        <SelectGroup
-          label={t("settings.currency")}
-          value={currency}
-          onChange={(e) => setCurrency(e.target.value as "USD" | "DOP")}
-        >
-          <option value="USD">USD</option>
-          <option value="DOP">DOP</option>
-        </SelectGroup>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <SelectGroup
+            label={t("settings.currency")}
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value as "USD" | "DOP")}
+          >
+            <option value="DOP">{t("createWorkspace.currency.DOP")}</option>
+            <option value="USD">{t("createWorkspace.currency.USD")}</option>
+          </SelectGroup>
 
-        <SelectGroup
-          label={t("settings.timezone")}
-          value={timezone}
-          onChange={(e) => setTimezone(e.target.value)}
-        >
-          {TIMEZONES.map((tz) => (
-            <option key={tz} value={tz}>
-              {tz}
-            </option>
-          ))}
-        </SelectGroup>
+          <SelectGroup
+            label={t("settings.timezone")}
+            value={timezone}
+            onChange={(e) => setTimezone(e.target.value)}
+          >
+            {TIMEZONES.map((tz) => (
+              <option key={tz} value={tz}>
+                {tz}
+              </option>
+            ))}
+          </SelectGroup>
+        </div>
+
+        <p className="flex gap-2.5 rounded-control bg-elevated px-3 py-2.5 text-xs text-fg-muted">
+          <Info aria-hidden className="mt-px h-3.5 w-3.5 shrink-0" />
+          {t("createWorkspace.note")}
+        </p>
       </Dialog>
     </>
   );

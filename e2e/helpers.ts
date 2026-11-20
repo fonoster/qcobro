@@ -45,7 +45,7 @@ export async function waitForMail(to: string, count = 1, timeoutMs = 20000) {
 /** Sign up a new account. Leaves the page on the contact-verification screen. */
 export async function signUp(page: Page, creds: Credentials) {
   await page.goto("/signup");
-  await page.getByPlaceholder("Tu nombre").fill(creds.name);
+  await page.getByLabel("Nombre completo").fill(creds.name);
   await page.getByPlaceholder("tú@empresa.com").fill(creds.email);
   await page.getByLabel("Contraseña (mín. 8 caracteres)").fill(creds.password);
   await page.locator('form button[type="submit"]').click();
@@ -61,7 +61,7 @@ export async function skipVerification(page: Page) {
 /** Fill and submit the create-workspace dialog (the hub's "Crear espacio" shares its name). */
 export async function submitCreateWorkspace(page: Page, name: string) {
   const dialog = page.getByRole("dialog", { name: "Crear espacio de trabajo" });
-  await dialog.getByPlaceholder("Ej. Cartera Abril").fill(name);
+  await dialog.getByLabel("Nombre del espacio").fill(name);
   await dialog.getByRole("button", { name: "Crear espacio", exact: true }).click();
 }
 
@@ -98,9 +98,10 @@ export async function openNav(page: Page, item: string) {
 /** Invite a member from the Members page (assumes already on it). */
 export async function inviteMember(page: Page, name: string, email: string) {
   await page.getByRole("button", { name: "Invitar miembro" }).click();
-  await page.getByPlaceholder("Nombre de la persona").fill(name);
-  await page.getByPlaceholder("persona@empresa.com").fill(email);
-  await page.getByRole("button", { name: "Enviar invitación" }).click();
+  const dialog = page.getByRole("dialog", { name: "Invitar miembro" });
+  await dialog.getByLabel("Nombre", { exact: true }).fill(name);
+  await dialog.getByLabel("Correo electrónico").fill(email);
+  await dialog.getByRole("button", { name: "Enviar invitación" }).click();
   await expect(page.getByText(email)).toBeVisible();
 }
 

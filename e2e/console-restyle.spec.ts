@@ -94,7 +94,7 @@ test.describe("console restyle — Fonoster tokens", () => {
     await page.getByText(portfolioName).click();
     await expect(page).toHaveURL(/\/portfolios\/[a-f0-9-]+$/);
     const portfolioId = page.url().split("/portfolios/")[1];
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
     await page.getByRole("button", { name: "Cerrar", exact: true }).click();
@@ -129,21 +129,19 @@ test.describe("console restyle — Fonoster tokens", () => {
       await page.emulateMedia({ colorScheme: scheme });
       await expect.poll(() => htmlTheme(page)).toBe(scheme);
 
-      // Promesas de pago: the status keeps its label in a neutral pill.
+      // Promesas de pago: the status is plain foreground text, no pill and no color.
       await page.getByRole("link", { name: "Promesas de pago" }).click();
       const promise = page.getByRole("row", { name: /María E2E/ });
       const status = promise.getByText("Pendiente", { exact: true });
       await expect(status).toBeVisible();
       const neutral = await page.evaluate(() => {
         const probe = document.createElement("span");
-        probe.className = "bg-elevated text-fg";
+        probe.className = "text-fg";
         document.body.append(probe);
-        const s = getComputedStyle(probe);
-        const out = { bg: s.backgroundColor, fg: s.color };
+        const out = { fg: getComputedStyle(probe).color };
         probe.remove();
         return out;
       });
-      await expect(status).toHaveCSS("background-color", neutral.bg);
       await expect(status).toHaveCSS("color", neutral.fg);
       expect(await countDots(promise)).toBe(0);
 
@@ -472,7 +470,9 @@ test.describe("console restyle — Panel and Cartera detail", () => {
     const order = await page
       .getByRole("group")
       .evaluateAll((els) => els.map((el) => el.getAttribute("aria-label") ?? ""));
-    expect(order.filter((label) => names.includes(label))).toEqual(names);
+    // Contacto's label names its window ("Contacto · 14 d"), which follows the page filter.
+    const base = order.map((label) => label.split(" · ")[0]);
+    expect(base.filter((label) => names.includes(label))).toEqual(names);
 
     // Each card shows its label and value on one line, unclipped, at 1280 px.
     for (const name of names) {
@@ -491,16 +491,20 @@ test.describe("console restyle — Panel and Cartera detail", () => {
       expect(fits, name).toBe(true);
     }
 
-    // Recuperado and Contacto keep their period selects and empty values.
-    const recovered = page.getByRole("group", { name: "Recuperado" });
-    await expect(recovered.getByLabel("Período de recuperado")).toHaveValue("thisMonth");
-    await recovered.getByLabel("Período de recuperado").selectOption("lastMonth");
-    await expect(
-      page.getByRole("region", { name: "Progreso por cartera · mes pasado" })
-    ).toBeVisible();
-    const contact = page.getByRole("group", { name: "Contacto" });
-    await expect(contact.getByRole("combobox")).toHaveValue("7d");
+    // One page-level filter drives Recuperado, Contacto and Progreso; the cards have no selects.
+    const filter = page.getByRole("radiogroup", { name: "Período" });
+    await expect(filter.getByRole("radio", { name: "Este mes" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    await expect(page.getByRole("group").getByRole("combobox")).toHaveCount(0);
+    await filter.getByRole("radio", { name: "7 d" }).click();
+    const progress = page.getByRole("region", { name: "Progreso por cartera" });
+    await expect(progress.getByText("últimos 7 días", { exact: true })).toBeVisible();
+    const contact = page.getByRole("group", { name: "Contacto · 7 d" });
     await expect(contact.getByText("—", { exact: true })).toBeVisible();
+    await filter.getByRole("radio", { name: "Hoy" }).click();
+    await expect(page.getByRole("group", { name: "Contacto · 24 h" })).toBeVisible();
   });
 
   test("cartera: no recovery section", async ({ page }) => {
@@ -524,13 +528,15 @@ test.describe("console restyle — Panel and Cartera detail", () => {
     await expect(page.getByRole("region", { name: "Recuperación" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Volver a carteras" })).toHaveCount(0);
 
-    // A portfolio never synced shows zero accounts and a zero balance.
+    // A portfolio never synced shows zero accounts, a zero balance and "Nunca sincronizada".
     await expect(
-      page.getByText(new RegExp(`^${clientId} · 0 cuentas activas · Saldo \\D*0$`))
+      page.getByText(
+        new RegExp(`^${clientId} · 0 cuentas activas · Saldo \\D*0 · Nunca sincronizada$`)
+      )
     ).toBeVisible();
 
-    // Importar cuentas sits in the page header and opens the import modal.
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    // Sincronizar CSV sits in the page header and opens the import modal.
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
     await page.getByRole("button", { name: "Cerrar", exact: true }).click();

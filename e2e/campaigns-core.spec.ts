@@ -44,7 +44,7 @@ test.describe("campaigns core", () => {
     // Idle options are pre-filled from the deployment default (8000 ms / 3); the operator
     // can override but does not have to.
     await expect(page.getByLabel("Tiempo de inactividad (ms, mín. 3000)")).toHaveValue("8000");
-    await expect(page.getByLabel("Máximo de reintentos por inactividad")).toHaveValue("3");
+    await expect(page.getByLabel("Máximo de reintentos")).toHaveValue("3");
     await expect(page.getByLabel("Mensaje de inactividad")).not.toHaveValue("");
     // Barge-in defaults off.
     await expect(page.getByLabel(/Permitir que el cliente interrumpa/)).not.toBeChecked();
@@ -58,8 +58,13 @@ test.describe("campaigns core", () => {
     await expect(page).toHaveURL(/\/campaigns$/);
     await page.getByRole("button", { name: /Nueva campaña/ }).click();
     await page.getByLabel("Nombre de la campaña").fill(campaignName);
+    // Carteras is a multi-select: open it, then tick the portfolio.
+    await page.getByLabel("Carteras", { exact: true }).click();
     await page.locator("label", { hasText: portfolioName }).getByRole("checkbox").check();
-    await page.getByLabel("Plantilla de agente").selectOption({ label: agentName });
+    // Agent options read "<channel> · <name>".
+    await page
+      .getByLabel("Agente", { exact: true })
+      .selectOption({ label: `Voz IA · ${agentName}` });
     await page.getByLabel("Fecha de inicio").fill("2026-07-01");
     // Days default to weekdays (Lun–Vie); deselect Mar/Mié/Jue → leaves Lun + Vie.
     for (const day of ["Mar", "Mié", "Jue"]) {
@@ -77,9 +82,9 @@ test.describe("campaigns core", () => {
 
     const campaignRow = page.locator("tr", { hasText: campaignName });
     await expect(campaignRow).toBeVisible();
-    // New campaigns start ACTIVE, and the days render humanized.
+    // New campaigns start ACTIVE; the row shows the channel and the agent.
     await expect(campaignRow.getByText("Activa")).toBeVisible();
-    await expect(campaignRow.getByText("Lun, Vie")).toBeVisible();
+    await expect(campaignRow.getByText(`Voz IA · ${agentName}`)).toBeVisible();
 
     // --- 11.3 Pause the campaign, verify the status badge changes -------------
     await campaignRow.getByRole("button").last().click();
@@ -97,15 +102,14 @@ test.describe("campaigns core", () => {
 
     const editedRow = page.locator("tr", { hasText: editedName });
     await expect(editedRow).toBeVisible();
-    // Mon + Fri + Sat doesn't match a named set → explicit list.
-    await expect(editedRow.getByText("Lun, Vie, Sáb")).toBeVisible();
 
     // --- 11.5 Campaign detail shows portfolio, schedule, and updated days ----
     await editedRow.getByText(editedName).click();
     await expect(page).toHaveURL(/\/campaigns\/[a-f0-9-]+$/);
     await expect(page.getByRole("heading", { name: editedName })).toBeVisible();
     await expect(page.getByText(portfolioName)).toBeVisible();
-    await expect(page.getByText("09:00–18:00")).toBeVisible();
+    await expect(page.getByText("09:00 – 18:00")).toBeVisible();
+    // Mon + Fri + Sat doesn't match a named set → explicit list.
     await expect(page.getByText("Lun, Vie, Sáb")).toBeVisible();
   });
 

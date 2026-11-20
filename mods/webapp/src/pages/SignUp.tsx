@@ -1,9 +1,14 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n } from "../lib/i18n.js";
-import { AuthLayout, AuthHeading } from "../components/AuthLayout.js";
+import {
+  AuthLayout,
+  AuthHeading,
+  AuthOrDivider,
+  AuthFooterLine
+} from "../components/AuthLayout.js";
 import { InputGroup } from "../components/ui/input.js";
 import { Button } from "../components/ui/button.js";
 import { GoogleButton } from "../components/GoogleButton.js";
@@ -37,21 +42,13 @@ export function SignUp() {
   const pending = signUp.isPending || login.isPending;
 
   return (
-    <AuthLayout>
+    <AuthLayout
+      footer={<AuthFooterLine text={t("auth.haveAccount")} to="/login" link={t("auth.login")} />}
+    >
       <AuthHeading title={t("auth.signupTitle")} subtitle={t("auth.signupSubtitle")} />
 
-      <GoogleButton type="button" size="lg" className="w-full">
-        {t("auth.continueGoogle")}
-      </GoogleButton>
-
-      <div className="flex items-center gap-3 text-[13px] text-fg-subtle">
-        <span className="h-px flex-1 bg-border" />
-        {t("auth.or")}
-        <span className="h-px flex-1 bg-border" />
-      </div>
-
-      <form onSubmit={onSubmit} className="flex flex-col gap-6">
-        <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
+        <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <InputGroup
             id="signup-name"
             label={t("auth.name")}
@@ -83,19 +80,18 @@ export function SignUp() {
             placeholder="••••••••"
             error={error ?? undefined}
           />
-        </div>
 
-        <Button type="submit" size="lg" className="w-full" disabled={pending}>
-          {t("auth.signup")}
-        </Button>
-      </form>
+          <Button type="submit" className="h-10 w-full" disabled={pending}>
+            {t("auth.signup")}
+          </Button>
+        </form>
 
-      <p className="text-center text-[13px] text-fg-subtle">
-        {t("auth.haveAccount")}{" "}
-        <Link to="/login" className="font-semibold text-fg underline-offset-2 hover:underline">
-          {t("auth.login")}
-        </Link>
-      </p>
+        <AuthOrDivider label={t("auth.or")} />
+
+        <GoogleButton type="button" className="h-10 w-full">
+          {t("auth.continueGoogle")}
+        </GoogleButton>
+      </div>
     </AuthLayout>
   );
 }

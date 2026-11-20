@@ -11,7 +11,7 @@ test.describe("API keys", () => {
 
     // Page + empty state.
     await expect(page.getByRole("heading", { name: "Claves de API" })).toBeVisible();
-    await expect(page.getByText("Aún no tienes claves de API.")).toBeVisible();
+    await expect(page.getByText("Aún no tienes claves de API")).toBeVisible();
 
     // Create a key with the default role and no expiry.
     await page.getByRole("button", { name: "Nueva clave" }).click();
@@ -42,6 +42,6 @@ test.describe("API keys", () => {
     await expect(page.getByRole("heading", { name: "¿Eliminar esta clave de API?" })).toBeVisible();
     await page.getByPlaceholder("CONFIRMAR").fill("CONFIRMAR");
     await page.getByRole("button", { name: "Eliminar" }).last().click();
-    await expect(page.getByText("Aún no tienes claves de API.")).toBeVisible();
+    await expect(page.getByText("Aún no tienes claves de API")).toBeVisible();
   });
 });

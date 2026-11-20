@@ -12,9 +12,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Healthy: Story = {
   args: {
-    planName: "Crecimiento",
     balance: "16.20",
     allowance: "29.00",
+    consumed: "12.80",
     remainingFraction: 16.2 / 29,
     renewsAt: "2026-08-01T00:00:00.000Z",
     projectedDaysRemaining: 12,
@@ -26,6 +26,7 @@ export const RunningLow: Story = {
   args: {
     ...Healthy.args,
     balance: "2.10",
+    consumed: "26.90",
     remainingFraction: 2.1 / 29,
     projectedDaysRemaining: 2
   }
@@ -35,6 +36,7 @@ export const FreshCycleNoUsage: Story = {
   args: {
     ...Healthy.args,
     balance: "29.00",
+    consumed: null,
     remainingFraction: 1,
     projectedDaysRemaining: null
   }

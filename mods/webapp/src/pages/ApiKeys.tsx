@@ -12,7 +12,7 @@ import { Dialog } from "../components/ui/dialog.js";
 import { Button } from "../components/ui/button.js";
 import { Badge } from "../components/ui/badge.js";
 import { EmptyState } from "../components/ui/empty-state.js";
-import { KeyRound, Plus } from "lucide-react";
+import { KeyRound, Plus, Terminal } from "lucide-react";
 import { CreateApiKeyDialog } from "../components/CreateApiKeyDialog.js";
 import { ShowSecretDialog, type ApiKeyCredentials } from "../components/ShowSecretDialog.js";
 
@@ -59,6 +59,15 @@ export function ApiKeys() {
       month: "short",
       year: "numeric"
     }).format(d);
+  }
+
+  function isExpired(v: number | string | null | undefined): boolean {
+    if (v === null || v === undefined || v === "") return false;
+    let value: number | string = v;
+    if (typeof value === "string" && /^\d+$/.test(value)) value = Number(value);
+    if (typeof value === "number" && value < 1e12) value = value * 1000;
+    const ms = new Date(value).getTime();
+    return !Number.isNaN(ms) && ms <= Date.now();
   }
 
   async function onCreate(input: CreateApiKeyInput) {
@@ -117,7 +126,7 @@ export function ApiKeys() {
       />
 
       {!canManage ? (
-        <EmptyState icon={<KeyRound />} title={t("apiKeys.empty")} />
+        <EmptyState icon={<KeyRound />} title={t("apiKeys.adminOnly")} />
       ) : (
         <DataTable
           data={rows}
@@ -126,37 +135,55 @@ export function ApiKeys() {
           rowHeight={56}
           empty={
             list.isLoading ? undefined : (
-              <EmptyState icon={<KeyRound />} title={t("apiKeys.empty")} />
+              <EmptyState
+                icon={<KeyRound />}
+                title={t("apiKeys.empty")}
+                body={t("apiKeys.emptyBody")}
+              />
             )
           }
           columns={[
             {
               key: "accessKeyId",
               header: t("apiKeys.col.accessKeyId"),
-              render: (r) => <code className="font-mono text-[13px] text-fg">{r.accessKeyId}</code>
+              render: (r) => (
+                <code className="font-mono text-[13px] font-normal text-fg">{r.accessKeyId}</code>
+              )
             },
             {
               key: "role",
               header: t("apiKeys.col.role"),
-              render: (r) => <Badge>{t(`apiKeys.role.${r.role}` as MessageId)}</Badge>
+              width: 160,
+              render: (r) => (
+                <Badge className="rounded-md px-2 py-0.5 text-xs">
+                  {t(`apiKeys.role.${r.role}` as MessageId)}
+                </Badge>
+              )
             },
             {
               key: "createdAt",
               header: t("apiKeys.col.created"),
-              mono: true,
-              render: (r) => fmtDate(r.createdAt) ?? "—"
+              width: 140,
+              render: (r) => <span className="text-fg-muted">{fmtDate(r.createdAt) ?? "—"}</span>
             },
             {
               key: "expiresAt",
               header: t("apiKeys.col.expires"),
-              mono: true,
-              render: (r) => fmtDate(r.expiresAt) ?? t("apiKeys.noExpiry")
+              width: 140,
+              render: (r) =>
+                isExpired(r.expiresAt) ? (
+                  t("apiKeys.expired")
+                ) : (
+                  <span className="text-fg-muted">
+                    {fmtDate(r.expiresAt) ?? t("apiKeys.noExpiry")}
+                  </span>
+                )
             },
             {
               key: "actions",
               header: "",
               align: "right",
-              className: "w-px whitespace-nowrap",
+              width: 56,
               render: (r) => (
                 <RowActionsMenu
                   items={[
@@ -175,6 +202,16 @@ export function ApiKeys() {
             }
           ]}
         />
+      )}
+
+      {canManage && (
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Terminal className="h-3.5 w-3.5 text-fg-muted" />
+          <span className="text-xs text-fg-muted">{t("apiKeys.sdkHint")}</span>
+          <code className="rounded-md bg-elevated px-2 py-[3px] font-mono text-xs text-fg">
+            {"new Client({ accessKeyId, accessKeySecret })"}
+          </code>
+        </div>
       )}
 
       <CreateApiKeyDialog
@@ -211,8 +248,16 @@ export function ApiKeys() {
         onConfirm={onDelete}
         title={t("apiKeys.delete.title")}
         description={t("apiKeys.delete.description")}
+        confirmLabel={t("apiKeys.delete.confirm")}
         isPending={remove.isPending}
-      />
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-[13px] text-fg-muted">{t("apiKeys.delete.keyLabel")}</span>
+          <code className="rounded-md bg-elevated px-2 py-[3px] font-mono text-xs text-fg">
+            {rows.find((r) => r.ref === deleteTarget)?.accessKeyId}
+          </code>
+        </div>
+      </ConfirmDeleteDialog>
     </div>
   );
 }

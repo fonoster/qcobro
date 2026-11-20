@@ -65,7 +65,13 @@ test.describe("Recuperado by period", () => {
 
     // --- Empty: no recoveries in the period ----------------------------------
     const card = page.getByRole("group", { name: "Recuperado" });
-    await expect(card.getByLabel("Período de recuperado")).toHaveValue("thisMonth");
+    const filter = page.getByRole("radiogroup", { name: "Período" });
+    await expect(filter.getByRole("radio", { name: "Este mes" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    // The per-card period selects are gone: the page filter drives the KPIs.
+    await expect(card.getByRole("combobox")).toHaveCount(0);
     await expect(card.getByText("—", { exact: true })).toBeVisible();
     await expect(card.getByText("Sin pagos detectados en el período")).toBeVisible();
     await expect(card.getByText("acumulado")).toHaveCount(0);
@@ -118,21 +124,36 @@ test.describe("Recuperado by period", () => {
     await expect(card.getByText("1 cuentas con gestión")).toBeVisible();
     await expect(card.getByText(/Pagos sin gestión reciente: .*3,000 · 1 cuentas/)).toBeVisible();
 
-    const progress = page.getByRole("region", { name: "Progreso por cartera · este mes" });
+    const progress = page.getByRole("region", { name: "Progreso por cartera" });
+    await expect(progress.getByText("este mes", { exact: true })).toBeVisible();
     await expect(progress.getByText(/% · .*6,000/)).toBeVisible();
 
-    // --- Mes pasado: nothing was recovered then ------------------------------
-    await card.getByLabel("Período de recuperado").selectOption({ label: "Mes pasado" });
+    // --- Hoy and 7 d: today's recoveries are in both windows -----------------
+    for (const option of ["Hoy", "7 d"]) {
+      await filter.getByRole("radio", { name: option }).click();
+      await expect(card.getByText(/6,000/)).toBeVisible();
+      await expect(card.getByText("1 cuentas con gestión")).toBeVisible();
+      await expect(progress.getByText(/% · .*6,000/)).toBeVisible();
+    }
+    await expect(page.getByRole("group", { name: "Contacto · 7 d" })).toBeVisible();
+
+    // --- Personalizado, last month: nothing was recovered then ---------------
+    // Days 1–20 of last month: always before today, whatever the workspace's timezone.
+    const now = new Date();
+    const lastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+    const ym = lastMonth.toISOString().slice(0, 7);
+    await filter.getByRole("radio", { name: "Personalizado" }).click();
+    await page.getByLabel("Desde").fill(`${ym}-01`);
+    await page.getByLabel("Hasta").fill(`${ym}-20`);
     await expect(card.getByText("—", { exact: true })).toBeVisible();
     await expect(card.getByText("Sin pagos detectados en el período")).toBeVisible();
     await expect(card.getByText(/Pagos sin gestión reciente/)).toHaveCount(0);
-    await expect(
-      page.getByRole("region", { name: "Progreso por cartera · mes pasado" })
-    ).toBeVisible();
+    await expect(progress.getByText(/^1 .* – 20 /)).toBeVisible();
+    await expect(progress.getByText(/% · .*6,000/)).toHaveCount(0);
 
     // --- Carteras: the current month's figure per portfolio ------------------
     await page.getByRole("link", { name: "Carteras" }).click();
-    await expect(page.getByRole("columnheader", { name: "Recuperado · este mes" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Recuperado · mes" })).toBeVisible();
     await expect(page.getByRole("row", { name: new RegExp(portfolioName) })).toContainText("6,000");
   });
 

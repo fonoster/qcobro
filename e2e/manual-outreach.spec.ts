@@ -48,7 +48,7 @@ test.describe("manual outreach", () => {
     await page.getByRole("link", { name: "Carteras" }).click();
     await page.getByText(portfolioName).click();
     await expect(page).toHaveURL(/\/portfolios\/[a-f0-9-]+$/);
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
     await page.getByRole("button", { name: "Cerrar", exact: true }).click();
@@ -61,7 +61,7 @@ test.describe("manual outreach", () => {
 
     // An agent is required (no campaign); selecting it shows the channel + preview.
     await page.getByLabel("Agente").selectOption({ label: agentName });
-    await expect(page.getByText(/Se enviará por SMS/)).toBeVisible();
+    await expect(page.getByText(/^SMS · mensaje a /)).toBeVisible();
     // The preview renders client-side while the dispatch renders server-side, so this line
     // is what catches the two drifting apart: the amount must arrive grouped (4,800 — not
     // 4800, which text-to-speech reads wrong) and {{digits}} must spell the phone out.

@@ -55,6 +55,11 @@ test.describe("profile", () => {
     await expect(page).toHaveURL(/\/profile/);
     await expect(page.getByRole("heading", { name: "Mi perfil" })).toBeVisible();
 
+    // With a workspace, the profile renders inside the app shell with no nav item active.
+    const nav = page.getByRole("navigation");
+    await expect(nav.getByRole("link", { name: "Panel", exact: true })).toBeVisible();
+    await expect(nav.locator("a[aria-current]")).toHaveCount(0);
+
     // Email is shown read-only.
     await expect(page.getByLabel("Correo")).toHaveValue(owner.email);
 

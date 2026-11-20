@@ -27,6 +27,9 @@ export interface KpiCardProps {
    *  Pencil variant). Only the cards that pass this prop render the pill; every other
    *  `KpiCard` in the app renders exactly as before. */
   period?: KpiCardPeriodControl;
+  /** Places the notes directly under the value instead of pinning them to the card's bottom
+   *  edge (the Panel design). Off by default, so every other `KpiCard` renders as before. */
+  notesUnderValue?: boolean;
 }
 
 /**
@@ -74,7 +77,8 @@ export function KpiCard({
   subtextClassName,
   trend,
   className,
-  period
+  period,
+  notesUnderValue = false
 }: KpiCardProps) {
   return (
     // A named group so the value and its notes are announced (and found) with their label.
@@ -104,7 +108,7 @@ export function KpiCard({
           and any card with a taller header — the contact-rate card, whose label row carries the
           period control — pushes its note out of line with the rest. */}
       {(trend || subtext || detail) && (
-        <div className="mt-auto flex flex-col gap-1">
+        <div className={cn("flex flex-col gap-1", !notesUnderValue && "mt-auto")}>
           {trend && (
             <p
               className={cn("text-xs font-normal", trend.positive ? "text-primary" : "text-danger")}

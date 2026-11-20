@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { Eye, FolderOpen, PhoneCall } from "lucide-react";
+import { Eye, FolderOpen, PhoneOutgoing, Upload } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
+import { formatRelativeDate } from "../lib/relativeDate.js";
 import { useMoney, useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
 import { DataTable, TableCellStack } from "../components/ui/data-table.js";
 import { Button } from "../components/ui/button.js";
@@ -19,7 +20,7 @@ const PAGE_SIZE = 50;
 
 export function PortfolioDetail() {
   const { id } = useParams<{ id: string }>();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   // wsCurrency (the raw currency code) is still needed for the ReachOutModal's outreach
   // preview below; money() is the shared workspace-locale formatter for this page's tables.
   const wsCurrency = useWorkspaceCurrency();
@@ -48,17 +49,28 @@ export function PortfolioDetail() {
       n.toLocaleString()
     );
   const p = portfolio.data;
-  // One facts line from the portfolio record; a portfolio never synced reads 0 and a zero
-  // balance. Nothing renders until the record loads.
-  const facts = p
-    ? [
-        p.clientId,
-        count("activeAccounts", p.accountCount ?? 0),
-        t("portfolios.detail.balance").replace("{amount}", money(p.totalOutstandingBalance ?? 0))
-      ]
-        .filter(Boolean)
-        .join(" · ")
+  // One facts line from the portfolio record: mono client id, then counts, balance and the
+  // last sync ("Sincronizada hace 2 horas"); a portfolio never synced reads 0, a zero balance
+  // and "Nunca sincronizada". Nothing renders until the record loads.
+  const synced = p
+    ? p.lastSyncedAt
+      ? t("portfolios.detail.synced").replace(
+          "{when}",
+          formatRelativeDate(p.lastSyncedAt, language).toLocaleLowerCase(language)
+        )
+      : t("portfolios.lastSynced.never")
     : null;
+  const facts = p ? (
+    <span>
+      <span className="font-mono text-xs">{p.clientId}</span>
+      {" · "}
+      {[
+        count("activeAccounts", p.accountCount ?? 0),
+        t("portfolios.detail.balance").replace("{amount}", money(p.totalOutstandingBalance ?? 0)),
+        synced
+      ].join(" · ")}
+    </span>
+  ) : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -71,7 +83,8 @@ export function PortfolioDetail() {
         meta={facts ?? undefined}
         actions={
           <Button onClick={() => setShowSync(true)} disabled={!p}>
-            {t("portfolios.csv.title")}
+            <Upload className="h-4 w-4" />
+            {t("portfolios.actions.sync")}
           </Button>
         }
       />
@@ -85,6 +98,7 @@ export function PortfolioDetail() {
         toolbarEnd={<span className="text-[13px] text-fg-muted">{count("accounts", total)}</span>}
         rowHeight={60}
         pageSize={PAGE_SIZE}
+        itemLabel={t("portfolios.detail.itemLabel")}
         selectable
         getRowId={(r) => r.id as string}
         selectedIds={selected}
@@ -116,25 +130,25 @@ export function PortfolioDetail() {
             header: t("portfolios.detail.col.balance"),
             render: (r) => money(r.outstandingBalance as number),
             mono: true,
-            align: "right"
+            width: 160
           },
           {
             key: "daysPastDue",
             header: t("portfolios.detail.col.dpd"),
             render: (r) => String(r.daysPastDue),
             mono: true,
-            align: "right"
+            width: 150
           },
           {
             key: "id",
             header: "",
             align: "right",
-            className: "w-px whitespace-nowrap",
+            width: 40,
             render: (r) => {
               const items: RowAction[] = [
                 {
                   label: t("portfolios.reachOut.action"),
-                  icon: PhoneCall,
+                  icon: PhoneOutgoing,
                   onClick: () => setReachOut(r)
                 },
                 {

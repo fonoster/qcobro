@@ -7,10 +7,22 @@ import { useAuth } from "../lib/auth.js";
 import { useI18n } from "../lib/i18n.js";
 import { MenuPanel, MenuDivider, MenuItem } from "./menu.js";
 import { LanguageMenuItem } from "./LanguageMenuItem.js";
+import { cn } from "@/lib/utils.js";
 
 /** Account menu for account-level pages (the workspaces hub and profile). Opens from the
  * top bar's initials, name and email, and drops downward. Unlike the in-app UserMenu it omits
  * workspace-scoped entries (no active workspace here) and offers a language switcher. */
+/** "Juan Soto" → "JS": the first letters of the name's first two words. */
+export function initialsOfName(name?: string | null): string | null {
+  const words = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return null;
+  return words
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+}
+
 export function AccountMenu() {
   const { currentUser, logout } = useAuth();
   const { t } = useI18n();
@@ -28,9 +40,9 @@ export function AccountMenu() {
 
   // The id token carries no `name` claim, so prefer the identity profile for the label.
   const profile = trpc.profile.get.useQuery();
-  const initials = currentUser?.initials ?? "QC";
   const email = currentUser?.email ?? "";
   const name = profile.data?.name?.trim() || currentUser?.name || t("userMenu.fallbackName");
+  const initials = initialsOfName(profile.data?.name) ?? currentUser?.initials ?? "QC";
 
   function go(path: string) {
     setOpen(false);
@@ -74,14 +86,20 @@ export function AccountMenu() {
         aria-label={t("userMenu.aria")}
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2.5 rounded-control px-2 py-1.5 text-left transition hover:bg-elevated"
+        className="flex items-center gap-3 rounded-control px-2 py-1.5 text-left transition hover:bg-elevated"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-elevated font-mono text-xs text-fg">
+        <span
+          aria-hidden
+          className={cn(
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-elevated font-mono text-[11px] font-semibold text-fg",
+            open && "ring-[1.5px] ring-inset ring-fg"
+          )}
+        >
           {initials}
         </span>
         <span className="hidden min-w-0 flex-col leading-tight sm:flex">
-          <span className="truncate text-[13px] font-semibold text-fg">{name}</span>
-          {email && <span className="truncate text-[11px] text-fg-subtle">{email}</span>}
+          <span className="truncate text-[13px] font-medium text-fg">{name}</span>
+          {email && <span className="truncate text-xs text-fg-muted">{email}</span>}
         </span>
       </button>
     </div>

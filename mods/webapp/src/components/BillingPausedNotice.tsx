@@ -24,6 +24,7 @@ export function BillingPausedNotice() {
       variant={data.paused}
       isOwner={isOwner}
       onAction={() => navigate("/billing")}
+      renewsOn={data.cycleEnd}
     />
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bot } from "lucide-react";
+import { Bot, PhoneOutgoing } from "lucide-react";
 import {
   normalizeForGsm7,
   renderTemplate,
@@ -13,7 +13,43 @@ import { useI18n } from "../../lib/i18n.js";
 import { Dialog } from "../ui/dialog.js";
 import { SelectGroup } from "../ui/select.js";
 import { InputGroup } from "../ui/input.js";
-import { TextareaGroup } from "../ui/textarea.js";
+import { Textarea } from "../ui/textarea.js";
+import { FieldLabel } from "../ui/field.js";
+import { InfoNote } from "./InfoNote.js";
+
+/** The first message / script / body preview: editable, styled as the design's muted box. */
+function PreviewBox({
+  id,
+  label,
+  value,
+  rows,
+  readOnly,
+  placeholder,
+  onChange
+}: {
+  id: string;
+  label: string;
+  value: string;
+  rows: number;
+  readOnly?: boolean;
+  placeholder?: string;
+  onChange?: (value: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <Textarea
+        id={id}
+        value={value}
+        rows={rows}
+        readOnly={readOnly}
+        placeholder={placeholder}
+        onChange={(e) => onChange?.(e.target.value)}
+        className="resize-none border-transparent bg-elevated px-3.5 py-3"
+      />
+    </div>
+  );
+}
 
 type Account = Record<string, unknown> & {
   id: string;
@@ -37,6 +73,8 @@ export function ReachOutModal({
   const locale = useWorkspaceLocale();
   const [agentTemplateId, setAgentTemplateId] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // "Selecciona un agente." / no phone / no email: shown under the agent select.
+  const [agentError, setAgentError] = useState<string | null>(null);
   const [editSubject, setEditSubject] = useState("");
   const [editBody, setEditBody] = useState("");
   const [editFirstMessage, setEditFirstMessage] = useState("");
@@ -102,10 +140,21 @@ export function ReachOutModal({
     return type ? t(`agents.type.${type}` as Parameters<typeof t>[0]) : "";
   }
 
+  // "Voz IA · llamada saliente a +1 809 …", "SMS · mensaje a …", "Correo · correo a …".
+  function destination(type: string): string | null {
+    const to = type === "EMAIL" ? account.email : account.phone;
+    if (!to) return null;
+    const kind = type === "EMAIL" ? "email" : type.startsWith("VOICE") ? "call" : "message";
+    return `${channelLabel(type)} · ${t(`portfolios.reachOut.to.${kind}`).replace("{to}", to)}`;
+  }
+
   function handleConfirm() {
-    if (!agentTemplateId) return setError(t("portfolios.reachOut.noAgent"));
-    if (agentType === "EMAIL" && !account.email) return setError(t("portfolios.reachOut.noEmail"));
-    if (agentType !== "EMAIL" && !account.phone) return setError(t("portfolios.reachOut.noPhone"));
+    if (!agentTemplateId) return setAgentError(t("portfolios.reachOut.noAgent"));
+    if (agentType === "EMAIL" && !account.email)
+      return setAgentError(t("portfolios.reachOut.noEmail"));
+    if (agentType !== "EMAIL" && !account.phone)
+      return setAgentError(t("portfolios.reachOut.noPhone"));
+    setAgentError(null);
     setError(null);
     dispatch.mutate({
       portfolioAccountId: account.id,
@@ -118,26 +167,36 @@ export function ReachOutModal({
   }
 
   const isLoading = !!selected && templateQuery.isLoading;
+  const subtitle = [account.fullName, account.externalId as string | undefined]
+    .filter(Boolean)
+    .join(" · ");
+  const to = agentType ? destination(agentType) : null;
 
   return (
     <Dialog
       open
       onClose={onClose}
       title={t("portfolios.reachOut.title")}
-      description={t("portfolios.reachOut.subtitle")}
-      confirmLabel={dispatch.isPending ? "…" : t("portfolios.reachOut.send")}
+      subtitle={subtitle || t("portfolios.reachOut.subtitle")}
+      confirmLabel={
+        dispatch.isPending ? t("portfolios.bulk.sending") : t("portfolios.reachOut.send")
+      }
+      confirmIcon={<PhoneOutgoing className="h-4 w-4" />}
       confirmDisabled={dispatch.isPending}
       onConfirm={handleConfirm}
       error={error}
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-[18px]">
         <SelectGroup
           label={t("portfolios.reachOut.agent")}
           id="reach-agent"
+          icon={<Bot />}
           value={agentTemplateId}
+          error={agentError ?? undefined}
           onChange={(e) => {
             setAgentTemplateId(e.target.value);
             // The "Selecciona un agente" error is stale once an agent is chosen.
+            setAgentError(null);
             setError(null);
           }}
         >
@@ -149,15 +208,6 @@ export function ReachOutModal({
           ))}
         </SelectGroup>
 
-        {selected && (
-          <div className="flex items-center gap-2.5 rounded-lg bg-elevated px-3 py-2.5">
-            <Bot className="h-4 w-4 shrink-0 text-fg-muted" />
-            <span className="text-sm text-fg-muted">
-              {t("portfolios.reachOut.sendVia")} {channelLabel(agentType)}
-            </span>
-          </div>
-        )}
-
         {!isLoading && agentType === "EMAIL" && (
           <>
             <InputGroup
@@ -166,62 +216,65 @@ export function ReachOutModal({
               value={editSubject}
               onChange={(e) => setEditSubject(e.target.value)}
             />
-            <TextareaGroup
+            <PreviewBox
               id="reach-body"
               label={t("portfolios.reachOut.preview.body")}
               value={editBody}
               rows={5}
-              onChange={(e) => setEditBody(e.target.value)}
+              onChange={setEditBody}
             />
           </>
         )}
 
         {!isLoading && agentType === "SMS" && (
-          <TextareaGroup
+          <PreviewBox
             id="reach-sms-body"
             label={t("portfolios.reachOut.preview.SMS")}
             value={editBody}
             rows={3}
-            onChange={(e) => setEditBody(e.target.value)}
+            onChange={setEditBody}
           />
         )}
 
         {!isLoading && agentType === "VOICE_PRERECORDED" && (
-          <TextareaGroup
+          <PreviewBox
             id="reach-script"
             label={t("portfolios.reachOut.preview.VOICE_PRERECORDED")}
             value={editFirstMessage}
             rows={4}
-            onChange={(e) => setEditFirstMessage(e.target.value)}
+            onChange={setEditFirstMessage}
           />
         )}
 
         {!isLoading && agentType === "VOICE_AI" && (
-          <InputGroup
+          <PreviewBox
             id="reach-first-message"
             label={t("portfolios.reachOut.preview.VOICE_AI")}
             value={editFirstMessage}
+            rows={3}
             placeholder={t("portfolios.reachOut.firstMessageNotSet")}
-            onChange={(e) => setEditFirstMessage(e.target.value)}
+            onChange={setEditFirstMessage}
           />
         )}
 
         {!isLoading && agentType === "WHATSAPP" && (
           <>
-            <TextareaGroup
+            <PreviewBox
               id="reach-whatsapp-body"
               label={t("portfolios.reachOut.preview.WHATSAPP")}
               value={editBody}
               rows={3}
               readOnly
-              onChange={() => undefined}
-              className="text-fg-subtle"
             />
-            <p className="text-xs text-fg-subtle">{t("portfolios.reachOut.whatsAppReadOnly")}</p>
+            <p className="-mt-2.5 text-xs text-fg-muted">
+              {t("portfolios.reachOut.whatsAppReadOnly")}
+            </p>
           </>
         )}
 
-        <p className="text-xs text-fg-subtle">{t("portfolios.reachOut.footnote")}</p>
+        {!isLoading && to && <p className="-mt-2.5 text-xs text-fg-muted">{to}</p>}
+
+        <InfoNote>{t("portfolios.reachOut.footnote")}</InfoNote>
       </div>
     </Dialog>
   );

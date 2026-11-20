@@ -52,7 +52,7 @@ test.describe("portfolio recovery", () => {
     const portfolioId = page.url().split("/portfolios/")[1];
 
     // --- Import modal: default mode, the APPEND_ONLY warning, the missing column ---------
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     // The import modal has no dialog role, so its controls are found on the page.
     const dialog = page;
     const appendOnlyWarning = dialog.getByText(
@@ -65,9 +65,7 @@ test.describe("portfolio recovery", () => {
     await dialog.getByRole("radio", { name: /Agregar y actualizar/ }).check();
     await expect(appendOnlyWarning).toHaveCount(0);
 
-    const missingColumn = dialog.getByText(
-      "Falta la columna missed_installments: no se detectarán pagos parciales en este archivo."
-    );
+    const missingColumn = dialog.getByText("Falta la columna missed_installments");
     await page.locator('input[type="file"]').setInputFiles(CSV_WITHOUT_MISSED);
     await expect(missingColumn).toBeVisible();
 
@@ -105,7 +103,7 @@ test.describe("portfolio recovery", () => {
     expect(res.ok()).toBeTruthy();
 
     // --- Second sync: 1 installment overdue, so 2 × 2,500 were paid -------------------
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     await page.locator('input[type="file"]').setInputFiles(accountsFile(1));
     await dialog.getByRole("button", { name: "Importar 1 cuentas" }).click();
     await expect(dialog.getByText("Pagos detectados", { exact: true })).toBeVisible();

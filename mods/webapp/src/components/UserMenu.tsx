@@ -8,6 +8,7 @@ import { useI18n, type MessageId } from "../lib/i18n.js";
 import { activeRole } from "../lib/workspaceRole.js";
 import { MenuPanel, MenuDivider, MenuItem } from "./menu.js";
 import { LanguageMenuItem } from "./LanguageMenuItem.js";
+import { initialsOfName } from "./AccountMenu.js";
 import { cn } from "@/lib/utils.js";
 
 /** The sidebar footer: the user's name and workspace role. It opens the user menu (Mi perfil,
@@ -36,8 +37,9 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
   // The id token carries no `name` claim, so currentUser.name falls back to the email.
   // Prefer the real name from the identity profile for the display label.
   const profile = trpc.profile.get.useQuery();
-  const initials = currentUser?.initials ?? "QC";
+
   const name = profile.data?.name?.trim() || currentUser?.name || t("userMenu.fallbackName");
+  const initials = initialsOfName(profile.data?.name) ?? currentUser?.initials ?? "QC";
   const role = activeRole(accessToken, workspace);
   const roleLabel = role ? t(`members.role.${role}` as MessageId) : "";
 

@@ -3,8 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n } from "../lib/i18n.js";
-import { AuthLayout, AuthHeading } from "../components/AuthLayout.js";
-import { Input, InputGroup } from "../components/ui/input.js";
+import {
+  AuthLayout,
+  AuthHeading,
+  AuthOrDivider,
+  AuthFooterLine
+} from "../components/AuthLayout.js";
+import { InputGroup } from "../components/ui/input.js";
 import { Alert } from "../components/ui/alert.js";
 import { Button } from "../components/ui/button.js";
 import { GoogleButton } from "../components/GoogleButton.js";
@@ -44,18 +49,14 @@ export function Login() {
         />
       )}
 
-      <GoogleButton type="button" size="lg" className="w-full">
-        {t("auth.continueGoogle")}
-      </GoogleButton>
+      <div className="flex flex-col gap-4">
+        <GoogleButton type="button" className="h-10 w-full">
+          {t("auth.continueGoogle")}
+        </GoogleButton>
 
-      <div className="flex items-center gap-3 text-[13px] text-fg-subtle">
-        <span className="h-px flex-1 bg-border" />
-        {t("auth.or")}
-        <span className="h-px flex-1 bg-border" />
-      </div>
+        <AuthOrDivider label={t("auth.or")} />
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-6">
-        <div className="flex flex-col gap-4">
+        <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <InputGroup
             id="login-email"
             label={t("auth.email")}
@@ -66,41 +67,32 @@ export function Login() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t("auth.emailPlaceholder")}
           />
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <label htmlFor="login-password" className="text-sm font-medium text-fg-muted">
-                {t("auth.password")}
-              </label>
+          <InputGroup
+            id="login-password"
+            label={t("auth.password")}
+            labelEnd={
               <Link
                 to="/forgot-password"
-                className="text-[13px] font-medium text-fg underline-offset-2 hover:underline"
+                className="underline-offset-2 hover:text-fg hover:underline"
               >
                 {t("auth.forgot")}
               </Link>
-            </div>
-            <Input
-              id="login-password"
-              type="password"
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-            />
-          </div>
-        </div>
+            }
+            type="password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+          />
 
-        <Button type="submit" size="lg" className="w-full" disabled={login.isPending}>
-          {t("auth.login")}
-        </Button>
-      </form>
+          <Button type="submit" className="h-10 w-full" disabled={login.isPending}>
+            {t("auth.login")}
+          </Button>
+        </form>
 
-      <p className="text-center text-[13px] text-fg-subtle">
-        {t("auth.noAccount")}{" "}
-        <Link to="/signup" className="font-semibold text-fg underline-offset-2 hover:underline">
-          {t("auth.createOne")}
-        </Link>
-      </p>
+        <AuthFooterLine text={t("auth.noAccount")} to="/signup" link={t("auth.createOne")} />
+      </div>
     </AuthLayout>
   );
 }

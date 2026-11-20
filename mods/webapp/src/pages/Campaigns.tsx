@@ -1,22 +1,27 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { PageHeader } from "../components/page-header.js";
 import { BillingPausedNotice } from "../components/BillingPausedNotice.js";
-import { DataTable } from "../components/ui/data-table.js";
-import { Drawer } from "../components/ui/drawer.js";
+import { DataTable, TableCellStack } from "../components/ui/data-table.js";
 import { Button } from "../components/ui/button.js";
 import { EmptyState } from "../components/ui/empty-state.js";
-import { DayPicker } from "../components/ui/day-picker.js";
-import { Field } from "../components/ui/field.js";
+import { FilterChip } from "../components/ui/filter-chip.js";
+import { SearchBox } from "../components/ui/input.js";
 import { Megaphone, Plus } from "lucide-react";
 import { ConfirmDeleteDialog } from "../components/ui/confirm-delete-dialog.js";
-import { InputGroup } from "../components/ui/input.js";
-import { SelectGroup, FilterSelect } from "../components/ui/select.js";
 import { Badge } from "../components/ui/badge.js";
 import { RowActionsMenu, type RowAction } from "../components/ui/row-actions-menu.js";
-import { humanizeDays } from "../lib/campaignDays.js";
+import { channelIcon } from "../lib/channelIcon.js";
+import { useWorkspaceTimezone } from "../lib/useWorkspaceCurrency.js";
+import { formatNextRun, nextRun } from "../lib/campaignSchedule.js";
+import {
+  CreateCampaignDrawer,
+  EditCampaignDrawer,
+  agentLabel
+} from "../components/campaigns/CampaignFormDrawer.js";
+import { Switch } from "../components/ui/switch.js";
 
 type CampaignStatus = "ACTIVE" | "PAUSED" | "COMPLETED" | "ARCHIVED";
 
@@ -36,22 +41,54 @@ type Campaign = {
   agentTemplate?: { name: string; type: string } | null;
 };
 
-const STATUS_FILTERS: CampaignStatus[] = ["ACTIVE", "PAUSED", "COMPLETED", "ARCHIVED"];
+const STATUS_FILTERS: CampaignStatus[] = ["ACTIVE", "PAUSED", "COMPLETED"];
+const CHANNELS = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL", "WHATSAPP"] as const;
+const PAGE_SIZE = 10;
 
 export function Campaigns() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const navigate = useNavigate();
   const utils = trpc.useUtils();
+  const timeZone = useWorkspaceTimezone();
 
   const [statusFilter, setStatusFilter] = useState<"" | CampaignStatus>("");
+  const [channelFilter, setChannelFilter] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<Campaign | null>(null);
   const [deleting, setDeleting] = useState<Campaign | null>(null);
 
+  const [includeArchived, setIncludeArchived] = useState(false);
   const { data } = trpc.campaigns.list.useQuery(
     statusFilter ? { status: statusFilter } : undefined
   );
-  const campaigns: Campaign[] = (data ?? []) as Campaign[];
+  // The API leaves archived campaigns out unless asked for them by status, so "Mostrar
+  // archivadas" fetches them separately and appends them to the unfiltered list.
+  const archived = trpc.campaigns.list.useQuery(
+    { status: "ARCHIVED" },
+    { enabled: includeArchived && !statusFilter }
+  );
+  const campaigns: Campaign[] = [
+    ...((data ?? []) as Campaign[]),
+    ...(includeArchived && !statusFilter ? ((archived.data ?? []) as Campaign[]) : [])
+  ];
+
+  // Search and the channel filter are client-side; the status filter is the API's.
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return campaigns.filter(
+      (c) =>
+        (!channelFilter || c.agentTemplate?.type === channelFilter) &&
+        (!q ||
+          c.name.toLowerCase().includes(q) ||
+          (c.agentTemplate?.name ?? "").toLowerCase().includes(q))
+    );
+  }, [campaigns, channelFilter, search]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageRows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const filtering = Boolean(statusFilter || channelFilter || search || includeArchived);
 
   function invalidate() {
     utils.campaigns.list.invalidate();
@@ -65,8 +102,10 @@ export function Campaigns() {
     }
   });
 
+  const all = t("campaigns.filter.all");
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <BillingPausedNotice />
       <PageHeader
         title={t("campaigns.title")}
@@ -80,26 +119,76 @@ export function Campaigns() {
       />
 
       <DataTable
-        data={campaigns}
+        data={pageRows}
         keyField="id"
-        searchable={false}
         filterElement={
-          <FilterSelect
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as "" | CampaignStatus)}
-          >
-            <option value="">{t("campaigns.filter.default")}</option>
-            {STATUS_FILTERS.map((s) => (
-              <option key={s} value={s}>
-                {t(`campaigns.filter.${s}` as Parameters<typeof t>[0])}
-              </option>
-            ))}
-          </FilterSelect>
+          <SearchBox
+            placeholder={t("campaigns.search")}
+            aria-label={t("campaigns.search")}
+            className="w-80"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
         }
+        filters={
+          <>
+            <FilterChip
+              label={t("campaigns.filter.channel")}
+              value={channelFilter}
+              onChange={(v) => {
+                setChannelFilter(v);
+                setPage(1);
+              }}
+              options={[
+                { value: "", label: all },
+                ...CHANNELS.map((c) => ({
+                  value: c,
+                  label: t(`agents.type.${c}` as Parameters<typeof t>[0])
+                }))
+              ]}
+            />
+            <FilterChip
+              label={t("campaigns.filter.status")}
+              value={statusFilter}
+              onChange={(v) => {
+                setStatusFilter(v as "" | CampaignStatus);
+                setPage(1);
+              }}
+              options={[
+                { value: "", label: all },
+                ...STATUS_FILTERS.map((s) => ({
+                  value: s,
+                  label: t(`campaigns.filter.${s}` as Parameters<typeof t>[0])
+                }))
+              ]}
+            />
+            <div className="pl-1">
+              <Switch
+                id="campaigns-show-archived"
+                label={t("campaigns.filter.showArchived")}
+                checked={includeArchived}
+                onChange={(e) => {
+                  setIncludeArchived(e.target.checked);
+                  setPage(1);
+                }}
+              />
+            </div>
+          </>
+        }
+        countLabel={t("campaigns.items")}
         rowHeight={64}
+        page={currentPage}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalRecords={filtered.length}
+        pageSize={PAGE_SIZE}
+        itemLabel={t("campaigns.items")}
         onRowClick={(row) => navigate(`/campaigns/${row.id}`)}
         empty={
-          statusFilter ? undefined : (
+          filtering ? undefined : (
             <EmptyState
               icon={<Megaphone />}
               title={t("campaigns.empty.title")}
@@ -114,33 +203,22 @@ export function Campaigns() {
           )
         }
         columns={[
-          { key: "name", header: t("campaigns.col.name") },
           {
-            key: "agentTemplate",
-            header: t("campaigns.col.agent"),
-            render: (r) => r.agentTemplate?.name ?? "—"
-          },
-          {
-            key: "daysOfWeek",
-            header: t("campaigns.col.days"),
-            render: (r) => humanizeDays(r.daysOfWeek ?? [], t)
-          },
-          {
-            key: "time",
-            header: t("campaigns.col.time"),
-            mono: true,
-            render: (r) => `${r.startTime}–${r.endTime}`
+            key: "name",
+            header: t("campaigns.col.name"),
+            render: (r) => <TableCellStack title={r.name} />
           },
           {
             key: "status",
             header: t("campaigns.col.status"),
+            width: 150,
             render: (r) => (
               <div className="flex flex-col items-start gap-1">
-                <Badge variant="secondary">
+                <Badge variant="secondary" className="rounded-md px-2 py-0.5 text-xs">
                   {t(`campaigns.status.${r.status}` as Parameters<typeof t>[0])}
                 </Badge>
                 {r.pauseReason === "AUTO_ERROR_THRESHOLD" && (
-                  <span className="text-xs text-warning">
+                  <span className="text-[11px] text-fg-muted">
                     {t("campaigns.list.autopausedReason")}
                   </span>
                 )}
@@ -148,10 +226,46 @@ export function Campaigns() {
             )
           },
           {
+            key: "channel",
+            header: t("campaigns.col.channel"),
+            width: 160,
+            render: (r) => {
+              if (!r.agentTemplate) return <span className="text-fg-muted">—</span>;
+              const Icon = channelIcon(r.agentTemplate.type);
+              return (
+                <span className="inline-flex items-center gap-1.5">
+                  <Icon className="h-4 w-4 text-fg-muted" />
+                  {t(`agents.type.${r.agentTemplate.type}` as Parameters<typeof t>[0])}
+                </span>
+              );
+            }
+          },
+          {
+            key: "agentTemplate",
+            header: t("campaigns.col.agent"),
+            width: 220,
+            render: (r) => <span className="text-fg-muted">{agentLabel(r.agentTemplate, t)}</span>
+          },
+          {
+            key: "nextRun",
+            header: t("campaigns.col.nextRun"),
+            width: 190,
+            mono: true,
+            className: "whitespace-nowrap",
+            render: (r) => {
+              const run = timeZone ? nextRun(r, timeZone) : null;
+              return run ? (
+                formatNextRun(run, t, language)
+              ) : (
+                <span className="text-fg-muted">—</span>
+              );
+            }
+          },
+          {
             key: "id",
             header: "",
             align: "right",
-            className: "w-px whitespace-nowrap",
+            width: 56,
             render: (r) => {
               const items: RowAction[] = [
                 {
@@ -197,7 +311,7 @@ export function Campaigns() {
       />
 
       {showCreate && (
-        <CreateCampaignModal
+        <CreateCampaignDrawer
           onClose={() => setShowCreate(false)}
           onSuccess={() => {
             setShowCreate(false);
@@ -207,7 +321,7 @@ export function Campaigns() {
       )}
 
       {editing && (
-        <EditCampaignModal
+        <EditCampaignDrawer
           campaign={editing}
           onClose={() => setEditing(null)}
           onSuccess={() => {
@@ -226,330 +340,5 @@ export function Campaigns() {
         description={t("campaigns.delete.description")}
       />
     </div>
-  );
-}
-
-function toDateInput(val: Date | string | null | undefined): string {
-  if (!val) return "";
-  return new Date(val).toISOString().slice(0, 10);
-}
-
-function EditCampaignModal({
-  campaign,
-  onClose,
-  onSuccess
-}: {
-  campaign: Campaign;
-  onClose: () => void;
-  onSuccess: () => void;
-}) {
-  const { t } = useI18n();
-  const [name, setName] = useState(campaign.name);
-  const [startDate, setStartDate] = useState(toDateInput(campaign.startDate));
-  const [endDate, setEndDate] = useState(toDateInput(campaign.endDate));
-  const [daysOfWeek, setDaysOfWeek] = useState<number[]>(campaign.daysOfWeek ?? [1, 2, 3, 4, 5]);
-  const [startTime, setStartTime] = useState(campaign.startTime);
-  const [endTime, setEndTime] = useState(campaign.endTime);
-  const [maxPerAccount, setMaxPerAccount] = useState(campaign.maxAttemptsPerAccount);
-  const [maxPerDay, setMaxPerDay] = useState(campaign.maxAttemptsPerDay);
-  const [error, setError] = useState<string | null>(null);
-
-  const update = trpc.campaigns.update.useMutation({
-    onSuccess,
-    onError: (err) => setError(err.message)
-  });
-
-  function handleSave() {
-    if (!name.trim()) return setError(t("campaigns.form.noName"));
-    if (daysOfWeek.length === 0) return setError(t("campaigns.form.noDays"));
-    if (startTime >= endTime) return setError(t("campaigns.form.invalidWindow"));
-    setError(null);
-    update.mutate({
-      id: campaign.id,
-      name: name.trim(),
-      startDate,
-      endDate: endDate || undefined,
-      daysOfWeek,
-      startTime,
-      endTime,
-      maxAttemptsPerAccount: maxPerAccount,
-      maxAttemptsPerDay: maxPerDay
-    });
-  }
-
-  return (
-    <Drawer
-      open
-      onClose={onClose}
-      width={560}
-      title={t("campaigns.form.editTitle")}
-      subtitle={t("campaigns.form.editSubtitle")}
-      confirmLabel={update.isPending ? t("common.saving") : t("campaigns.form.save")}
-      confirmDisabled={update.isPending}
-      onSubmit={handleSave}
-      error={error}
-    >
-      <div className="flex flex-col gap-4">
-        <InputGroup
-          label={t("campaigns.form.name")}
-          id="e-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-
-        <Field label={t("campaigns.form.days")}>
-          <DayPicker
-            aria-label={t("campaigns.form.days")}
-            value={daysOfWeek}
-            onChange={setDaysOfWeek}
-          />
-        </Field>
-
-        <div className="grid grid-cols-2 gap-3">
-          <InputGroup
-            label={t("campaigns.form.startDate")}
-            id="e-start"
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-          <InputGroup
-            label={t("campaigns.form.endDate")}
-            id="e-end"
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-          <InputGroup
-            label={t("campaigns.form.startTime")}
-            id="e-startt"
-            type="time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-          />
-          <InputGroup
-            label={t("campaigns.form.endTime")}
-            id="e-endt"
-            type="time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-          />
-          <InputGroup
-            label={t("campaigns.form.maxPerAccount")}
-            id="e-maxacc"
-            type="number"
-            value={String(maxPerAccount)}
-            onChange={(e) => setMaxPerAccount(Number(e.target.value))}
-          />
-          <InputGroup
-            label={t("campaigns.form.maxPerDay")}
-            id="e-maxday"
-            type="number"
-            value={String(maxPerDay)}
-            onChange={(e) => setMaxPerDay(Number(e.target.value))}
-          />
-        </div>
-      </div>
-    </Drawer>
-  );
-}
-
-function CreateCampaignModal({
-  onClose,
-  onSuccess
-}: {
-  onClose: () => void;
-  onSuccess: () => void;
-}) {
-  const { t } = useI18n();
-  const [name, setName] = useState("");
-  const [portfolioIds, setPortfolioIds] = useState<string[]>([]);
-  const [agentTemplateId, setAgentTemplateId] = useState("");
-  const [whatsAppSenderNumberId, setWhatsAppSenderNumberId] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [daysOfWeek, setDaysOfWeek] = useState<number[]>([1, 2, 3, 4, 5]);
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("18:00");
-  const [maxPerAccount, setMaxPerAccount] = useState(5);
-  const [maxPerDay, setMaxPerDay] = useState(1);
-  const [error, setError] = useState<string | null>(null);
-
-  const portfolios = trpc.portfolios.list.useQuery();
-  const agents = trpc.agentTemplates.list.useQuery();
-  const selectedAgent = (agents.data ?? []).find((a) => a.id === agentTemplateId) as
-    | { id: string; name: string; type: string }
-    | undefined;
-  const isWhatsApp = selectedAgent?.type === "WHATSAPP";
-  const senders = trpc.whatsAppIntegration.listSenders.useQuery(undefined, {
-    enabled: isWhatsApp
-  });
-
-  const create = trpc.campaigns.create.useMutation({
-    onSuccess,
-    onError: (err) => setError(err.message)
-  });
-
-  function togglePortfolio(id: string) {
-    setPortfolioIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
-  }
-
-  function handleCreate() {
-    if (!name.trim()) return setError(t("campaigns.form.noName"));
-    if (portfolioIds.length === 0) return setError(t("campaigns.form.noPortfolios"));
-    if (!agentTemplateId) return setError(t("campaigns.form.noAgents"));
-    if (!startDate) return setError(t("campaigns.form.noStartDate"));
-    if (daysOfWeek.length === 0) return setError(t("campaigns.form.noDays"));
-    if (startTime >= endTime) return setError(t("campaigns.form.invalidWindow"));
-    if (isWhatsApp && !whatsAppSenderNumberId) {
-      return setError(t("campaigns.form.noWhatsAppSender"));
-    }
-    setError(null);
-    create.mutate({
-      name: name.trim(),
-      portfolioIds,
-      agentTemplateId,
-      startDate,
-      endDate: endDate || undefined,
-      daysOfWeek,
-      startTime,
-      endTime,
-      maxAttemptsPerAccount: maxPerAccount,
-      maxAttemptsPerDay: maxPerDay,
-      ...(isWhatsApp && whatsAppSenderNumberId ? { whatsAppSenderNumberId } : {})
-    });
-  }
-
-  return (
-    <Drawer
-      open
-      onClose={onClose}
-      width={560}
-      title={t("campaigns.new")}
-      subtitle={t("campaigns.form.createSubtitle")}
-      confirmLabel={create.isPending ? t("common.creating") : t("campaigns.form.create")}
-      confirmDisabled={create.isPending}
-      onSubmit={handleCreate}
-      error={error}
-    >
-      <div className="flex flex-col gap-4">
-        <InputGroup
-          label={t("campaigns.form.name")}
-          id="c-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-
-        <Field label={t("campaigns.form.portfolios")}>
-          <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-control border border-input bg-bg p-2">
-            {(portfolios.data ?? []).map((p) => (
-              <label
-                key={p.id}
-                className="flex cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 text-[13px] text-fg hover:bg-elevated"
-              >
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 accent-primary"
-                  checked={portfolioIds.includes(p.id)}
-                  onChange={() => togglePortfolio(p.id)}
-                />
-                {p.name}
-              </label>
-            ))}
-          </div>
-        </Field>
-
-        <SelectGroup
-          label={t("campaigns.form.agent")}
-          id="c-agent"
-          value={agentTemplateId}
-          onChange={(e) => {
-            setAgentTemplateId(e.target.value);
-            setWhatsAppSenderNumberId("");
-          }}
-        >
-          <option value="">—</option>
-          {(agents.data ?? []).map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-            </option>
-          ))}
-        </SelectGroup>
-
-        {isWhatsApp && (
-          <SelectGroup
-            label={t("campaigns.form.whatsAppSender")}
-            id="c-wa-sender"
-            value={whatsAppSenderNumberId}
-            onChange={(e) => setWhatsAppSenderNumberId(e.target.value)}
-          >
-            <option value="">—</option>
-            {((senders.data ?? []) as { id: string; displayNumber: string; label: string }[]).map(
-              (s) => (
-                <option key={s.id} value={s.id}>
-                  {s.label} ({s.displayNumber})
-                </option>
-              )
-            )}
-          </SelectGroup>
-        )}
-        {isWhatsApp && !senders.isLoading && (senders.data ?? []).length === 0 && (
-          <p className="text-xs text-fg-muted">{t("campaigns.form.noWhatsAppSender")}</p>
-        )}
-
-        <Field label={t("campaigns.form.days")}>
-          <DayPicker
-            aria-label={t("campaigns.form.days")}
-            value={daysOfWeek}
-            onChange={setDaysOfWeek}
-          />
-        </Field>
-
-        <div className="grid grid-cols-2 gap-3">
-          <InputGroup
-            label={t("campaigns.form.startDate")}
-            id="c-start"
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-          <InputGroup
-            label={t("campaigns.form.endDate")}
-            id="c-end"
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-          <InputGroup
-            label={t("campaigns.form.startTime")}
-            id="c-startt"
-            type="time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-          />
-          <InputGroup
-            label={t("campaigns.form.endTime")}
-            id="c-endt"
-            type="time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-          />
-          <InputGroup
-            label={t("campaigns.form.maxPerAccount")}
-            id="c-maxacc"
-            type="number"
-            value={String(maxPerAccount)}
-            onChange={(e) => setMaxPerAccount(Number(e.target.value))}
-          />
-          <InputGroup
-            label={t("campaigns.form.maxPerDay")}
-            id="c-maxday"
-            type="number"
-            value={String(maxPerDay)}
-            onChange={(e) => setMaxPerDay(Number(e.target.value))}
-          />
-        </div>
-      </div>
-    </Drawer>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useI18n } from "../../lib/i18n.js";
 import { Dialog } from "./dialog.js";
 import { Input } from "./input.js";
@@ -11,6 +11,10 @@ export interface ConfirmDeleteDialogProps {
   title: string;
   description: string;
   isPending?: boolean;
+  /** The destructive button's label ("Eliminar clave"); "Eliminar" by default. */
+  confirmLabel?: string;
+  /** Extra body content above the typed field (e.g. the item being deleted). */
+  children?: ReactNode;
 }
 
 /** A typed delete: the operator writes CONFIRMAR to enable the destructive action. */
@@ -20,7 +24,9 @@ export function ConfirmDeleteDialog({
   onConfirm,
   title,
   description,
-  isPending
+  isPending,
+  confirmLabel,
+  children
 }: ConfirmDeleteDialogProps) {
   const { t } = useI18n();
   const [value, setValue] = useState("");
@@ -40,9 +46,12 @@ export function ConfirmDeleteDialog({
       subtitle={description}
       confirmVariant="destructive"
       confirmDisabled={!confirmed || isPending}
-      confirmLabel={isPending ? t("confirmDialog.deleting") : t("confirmDialog.delete")}
+      confirmLabel={
+        isPending ? t("confirmDialog.deleting") : (confirmLabel ?? t("confirmDialog.delete"))
+      }
       onSubmit={() => confirmed && onConfirm()}
     >
+      {children}
       <div className="flex flex-col gap-2">
         <FieldLabel htmlFor="confirm-delete-input">
           {t("confirmDialog.labelPre")}

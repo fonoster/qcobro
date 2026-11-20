@@ -42,6 +42,7 @@
 }
 
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --qc-bg: #181818;
   --qc-surface: #202020;
   --qc-elevated: #252525;

@@ -15,15 +15,15 @@ test.describe("member actions", () => {
     await waitForMail(memberEmail, 1);
 
     // The pending member is the only row with an actions menu.
-    await expect(page.getByText("Pendiente")).toBeVisible();
+    await expect(page.getByText("Invitación pendiente")).toBeVisible();
 
     // Resend → a second invitation email is delivered.
-    await page.getByTitle("Acciones").click();
+    await page.getByRole("button", { name: "Acciones" }).click();
     await page.getByRole("button", { name: "Reenviar invitación" }).click();
     await waitForMail(memberEmail, 2);
 
     // Cancel → confirm dialog → the row disappears.
-    await page.getByTitle("Acciones").click();
+    await page.getByRole("button", { name: "Acciones" }).click();
     await page.getByRole("button", { name: "Cancelar invitación" }).click();
     await expect(page.getByRole("heading", { name: "¿Cancelar invitación?" })).toBeVisible();
     // The dialog's destructive button (not the menu item) confirms.
@@ -38,8 +38,8 @@ test.describe("member actions", () => {
     await openNav(page, "Equipo");
 
     // The owner row is always present and active.
-    await expect(page.getByText("Activo")).toBeVisible();
-    await expect(page.locator("main").getByText("Propietario")).toBeVisible();
+    await expect(page.locator("main table").getByText("Activo")).toBeVisible();
+    await expect(page.locator("main table").getByText("Propietario")).toBeVisible();
   });
 
   test("the owner's row shows their real name, not their email", async ({ page }) => {

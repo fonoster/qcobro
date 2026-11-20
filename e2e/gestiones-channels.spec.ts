@@ -40,7 +40,7 @@ test.describe("gestiones — channels", () => {
     await page.getByText(portfolioName).click();
     await expect(page).toHaveURL(/\/portfolios\/[a-f0-9-]+$/);
     const portfolioId = page.url().split("/portfolios/")[1];
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
     await page.getByRole("button", { name: "Cerrar", exact: true }).click();
@@ -191,13 +191,12 @@ test.describe("gestiones — channels", () => {
       return panel;
     };
     const closePanel = async () => {
-      await page.getByRole("button", { name: "Volver a gestiones" }).click();
+      await page.getByRole("button", { name: "Cerrar diálogo" }).click();
       await expect(page.getByRole("dialog")).toHaveCount(0);
     };
 
-    // SMS — sent message bubble + real AI summary; no transcript
+    // SMS — sent message card + real AI summary; no transcript
     let panel = await openPanel("SMS");
-    await expect(panel.getByText("Mensaje enviado")).toBeVisible();
     await expect(panel.getByText(smsBody)).toBeVisible();
     await expect(panel.getByText("Transcripción")).toHaveCount(0);
     await closePanel();
@@ -208,7 +207,7 @@ test.describe("gestiones — channels", () => {
     // with a recording — it stays `.nth(0)` since the no-recording case below was seeded
     // first (see the seeds array) and therefore sorts after it (list order is
     // contactedAt desc).
-    panel = await openPanel("Voz pregrabada", 0);
+    panel = await openPanel("Pre-grabada", 0);
     await expect(panel.locator("audio")).toHaveCount(1);
     // Played from a blob: the recording endpoint needs the caller's Bearer token.
     await expect(panel.locator("audio")).toHaveAttribute("src", /^blob:/);
@@ -228,19 +227,18 @@ test.describe("gestiones — channels", () => {
     // Pre-grabada with no captured recording — muted unavailable card, no audio element,
     // and no synthesized stand-in. This is the older of the two "Voz pregrabada" rows
     // (seeded first, so it sorts last / `.nth(1)`).
-    panel = await openPanel("Voz pregrabada", 1);
+    panel = await openPanel("Pre-grabada", 1);
     await expect(panel.locator("audio")).toHaveCount(0);
     await expect(panel.getByText("Grabación no disponible")).toBeVisible();
     await expect(panel.getByText("Guion reproducido")).toBeVisible();
     await expect(panel.getByText(script)).toBeVisible();
     await closePanel();
 
-    // Email — communication card + body; dedicated (not generic) analysis section, empty
-    // until the bidirectional agent has a reply to analyze; no transcript
+    // Email — message card (De / Para / Asunto + body); the analysis waits for a customer
+    // reply to analyze, so the drawer says no reply has arrived yet; no transcript
     panel = await openPanel("Correo");
-    await expect(panel.getByText("Conversación por correo")).toBeVisible();
     await expect(panel.getByText(emailBody)).toBeVisible();
-    await expect(panel.getByText("Análisis del email (AI Insights)")).toBeVisible();
+    await expect(panel.getByText("Sin respuesta del cliente aún.")).toBeVisible();
     await expect(panel.getByText("Transcripción")).toHaveCount(0);
     await closePanel();
 

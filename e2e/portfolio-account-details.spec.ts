@@ -33,7 +33,7 @@ test.describe("portfolio account details", () => {
 
     await page.getByText(portfolioName).click();
     await expect(page).toHaveURL(/\/portfolios\/[a-f0-9-]+$/);
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
     await page.getByRole("button", { name: "Cerrar", exact: true }).click();
@@ -41,7 +41,7 @@ test.describe("portfolio account details", () => {
 
     const accountRow = page.locator("tr", { hasText: "María E2E" });
     await accountRow.getByRole("button").last().click();
-    await page.getByRole("button", { name: "Ver detalle" }).click();
+    await page.getByRole("button", { name: "Ver cuenta" }).click();
 
     await expect(page.getByRole("heading", { name: "María E2E" })).toBeVisible();
 

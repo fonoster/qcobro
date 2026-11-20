@@ -63,6 +63,11 @@ export interface DataTableProps<T> {
   onSelectionChange?: (ids: string[]) => void;
   /** Action nodes shown in the toolbar's selection bar while rows are selected. */
   bulkActions?: React.ReactNode;
+  /**
+   * Where the selection count and bulk actions show while rows are selected: in place of the
+   * toolbar (default), or nowhere, when the page draws its own bar (Promesas' bottom bar).
+   */
+  selectionBar?: "toolbar" | "none";
   /** @deprecated Headers are always uppercase now. */
   uppercaseHeaders?: boolean;
 }
@@ -116,7 +121,8 @@ export function DataTable<T extends Record<string, unknown>>({
   getRowId,
   selectedIds,
   onSelectionChange,
-  bulkActions
+  bulkActions,
+  selectionBar = "toolbar"
 }: DataTableProps<T>) {
   const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState("");
@@ -166,7 +172,7 @@ export function DataTable<T extends Record<string, unknown>>({
     .replace("{items}", itemLabel ?? t("table.items"));
 
   const colSpan = columns.length + (selectable ? 1 : 0);
-  const showSelectionBar = selectable && selected.length > 0;
+  const showSelectionBar = selectable && selectionBar === "toolbar" && selected.length > 0;
   const end =
     toolbarEnd ?? (countLabel ? <TableCount>{`${total} ${countLabel}`}</TableCount> : null);
   const hasToolbar = searchable || filterElement || filters || end;
@@ -222,7 +228,7 @@ export function DataTable<T extends Record<string, unknown>>({
       {showEmpty ? (
         empty
       ) : (
-        <div className="overflow-hidden rounded-card border border-border bg-surface">
+        <div className="overflow-x-auto rounded-card border border-border bg-surface">
           <table className="w-full">
             <thead>
               <tr className="h-10">
@@ -245,7 +251,7 @@ export function DataTable<T extends Record<string, unknown>>({
                     key={String(col.key)}
                     style={widthStyle(col.width)}
                     className={cn(
-                      "px-3 text-left text-[11px] font-normal uppercase tracking-[0.5px] text-fg-muted",
+                      "whitespace-nowrap px-3 text-left text-[11px] font-normal uppercase tracking-[0.5px] text-fg-muted",
                       i === 0 && !selectable && "pl-5",
                       i === columns.length - 1 && "pr-5",
                       col.align === "right" && "text-right",
@@ -296,7 +302,7 @@ export function DataTable<T extends Record<string, unknown>>({
                           key={String(col.key)}
                           style={widthStyle(col.width)}
                           className={cn(
-                            "px-3 text-[13px] text-fg",
+                            "whitespace-nowrap px-3 text-[13px] text-fg",
                             colIdx === 0 && !selectable && "pl-5 font-medium",
                             colIdx === columns.length - 1 && "pr-5",
                             col.mono && "font-mono",

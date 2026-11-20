@@ -16,7 +16,7 @@ test.describe("auth & workspaces", () => {
     const renamed = `QA Renamed ${unique}`;
     await openNav(page, "Configuración");
     await expect(page).toHaveURL(/\/settings/);
-    await page.getByPlaceholder("Nombre del espacio").fill(renamed);
+    await page.getByLabel("Nombre del espacio").fill(renamed);
     await page.getByRole("button", { name: "Guardar cambios" }).click();
     await expect(page.getByText("Cambios guardados")).toBeVisible();
     // New name is reflected in the workspace switcher.

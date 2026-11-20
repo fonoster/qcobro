@@ -1,15 +1,17 @@
-import { useState, type ComponentType, type FormEvent } from "react";
-import { Plus, MoreHorizontal, Mail, Ban, UserMinus } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { Ban, Mail, Send, UserMinus, UserPlus } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
-import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
 import { Dialog } from "../components/ui/dialog.js";
-import { InputGroup } from "../components/ui/input.js";
-import { SelectGroup } from "../components/ui/select.js";
+import { InputGroup, SearchBox } from "../components/ui/input.js";
+import { ChoiceCardGroup } from "../components/ui/choice-cards.js";
+import { DataTable, TableCount } from "../components/ui/data-table.js";
+import { FilterChip } from "../components/ui/filter-chip.js";
+import { RowActionsMenu, type RowAction } from "../components/ui/row-actions-menu.js";
+import { PageHeader } from "../components/page-header.js";
 import { useI18n, type MessageId } from "../lib/i18n.js";
 import { isWorkspaceAdmin } from "../lib/workspaceRole.js";
-import { cn } from "@/lib/utils.js";
 
 type Row = {
   ref: string;
@@ -20,33 +22,35 @@ type Row = {
   removable: boolean;
 };
 
-function StatusBadge({ status, label }: { status: string; label: string }) {
-  const active = status === "ACTIVE";
-  return (
-    <span className={cn("text-[13px] font-medium", active ? "text-fg-muted" : "text-fg-subtle")}>
-      {label}
-    </span>
-  );
+type InviteRole = "WORKSPACE_MEMBER" | "WORKSPACE_ADMIN";
+
+const PAGE_SIZE = 10;
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
 }
 
-function MenuItem({
-  icon: Icon,
-  label,
-  onClick
-}: {
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-  onClick: () => void;
-}) {
+/** Avatar initials (32, --secondary) + name 14/500 + email 12 muted. */
+function MemberCell({ name, email }: { name: string; email: string }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium text-fg-muted hover:bg-elevated"
-    >
-      <Icon className="h-4 w-4 text-fg-subtle" />
-      {label}
-    </button>
+    <div className="flex items-center gap-3">
+      <span
+        aria-hidden
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-elevated text-[11px] font-semibold text-fg"
+      >
+        {initials(name)}
+      </span>
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="truncate text-sm font-medium text-fg">{name}</span>
+        <span className="truncate text-xs font-normal text-fg-muted">{email}</span>
+      </div>
+    </div>
   );
 }
 
@@ -63,9 +67,11 @@ export function Members() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("WORKSPACE_MEMBER");
+  const [role, setRole] = useState<InviteRole>("WORKSPACE_MEMBER");
   const [error, setError] = useState<string | null>(null);
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
+  const [page, setPage] = useState(1);
   const [confirm, setConfirm] = useState<null | {
     title: string;
     message: string;
@@ -107,20 +113,31 @@ export function Members() {
     }))
   ];
 
+  const query = search.trim().toLowerCase();
+  const filtered = rows.filter(
+    (r) =>
+      (!roleFilter || r.role === roleFilter) &&
+      (!query || r.name.toLowerCase().includes(query) || r.email.toLowerCase().includes(query))
+  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageRows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  function closeInvite() {
+    setOpen(false);
+    setName("");
+    setEmail("");
+    setRole("WORKSPACE_MEMBER");
+    setError(null);
+  }
+
   async function onInvite(event: FormEvent) {
     event.preventDefault();
     setError(null);
     try {
-      await invite.mutateAsync({
-        name,
-        email,
-        role: role as "WORKSPACE_ADMIN" | "WORKSPACE_MEMBER"
-      });
+      await invite.mutateAsync({ name, email, role });
       await utils.workspaces.listMembers.invalidate();
-      setOpen(false);
-      setName("");
-      setEmail("");
-      setRole("WORKSPACE_MEMBER");
+      closeInvite();
     } catch {
       setError(t("members.invite.error"));
     }
@@ -137,8 +154,8 @@ export function Members() {
 
   function askRemove(r: Row) {
     setConfirm({
-      title: t("members.remove.title"),
-      message: t("members.remove.message").replace("{name}", r.name).replace("{ws}", wsName),
+      title: t("members.remove.title").replace("{name}", r.name),
+      message: t("members.remove.message").replace("{ws}", wsName),
       confirmLabel: t("members.remove.confirm"),
       run: () => onRemove(r.ref)
     });
@@ -153,128 +170,128 @@ export function Members() {
     });
   }
 
+  function rowActions(r: Row): RowAction[] {
+    return r.status === "PENDING"
+      ? [
+          { icon: Mail, label: t("members.action.resend"), onClick: () => void onResend(r.ref) },
+          { icon: Ban, label: t("members.action.cancelInvite"), onClick: () => askCancel(r) }
+        ]
+      : [{ icon: UserMinus, label: t("members.action.remove"), onClick: () => askRemove(r) }];
+  }
+
+  const roleLabel = (role: string) => t(`members.role.${role}` as MessageId);
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-[22px] font-bold text-fg">{t("members.title")}</h1>
-          <p className="text-sm text-fg-subtle">
-            {canManage ? t("members.subtitle").replace("{ws}", wsName) : t("members.viewerNotice")}
-          </p>
-        </div>
-        {canManage && (
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="h-4 w-4" />
-            {t("members.invite")}
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title={t("members.title")}
+        description={
+          canManage ? t("members.subtitle").replace("{ws}", wsName) : t("members.viewerNotice")
+        }
+        actions={
+          canManage && (
+            <Button onClick={() => setOpen(true)}>
+              <UserPlus className="h-4 w-4" />
+              {t("members.invite")}
+            </Button>
+          )
+        }
+      />
 
-      <Card className="rounded-xl border-border shadow-none">
-        <div className="flex items-center rounded-t-xl border-b border-border bg-elevated px-5 py-3 text-[11px] font-semibold tracking-wide text-fg-subtle">
-          <span className="flex-1">{t("members.col.member")}</span>
-          <span className="w-40">{t("members.col.role")}</span>
-          <span className="w-32">{t("members.col.status")}</span>
-          <span className="w-10" />
-        </div>
-        {members.isLoading ? (
-          <p className="px-5 py-6 text-sm text-fg-subtle">{t("common.loading")}</p>
-        ) : (
-          rows.map((r, i) => (
-            <div
-              key={r.ref}
-              className={cn(
-                "flex items-center px-5 py-3.5",
-                i < rows.length - 1 && "border-b border-border"
-              )}
-            >
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-fg">{r.name}</p>
-                <p className="text-xs text-fg-subtle">{r.email}</p>
-              </div>
-              <div className="w-40">
-                <span className="text-sm font-medium text-fg-muted">
-                  {t(`members.role.${r.role}` as MessageId)}
-                </span>
-              </div>
-              <div className="w-32">
-                <StatusBadge
-                  status={r.status}
-                  label={t(`members.status.${r.status}` as MessageId)}
-                />
-              </div>
-              <div className="relative flex w-10 justify-center">
-                {canManage && r.removable && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setOpenMenu(openMenu === r.ref ? null : r.ref)}
-                      className="rounded-md p-1 text-fg-subtle hover:bg-elevated hover:text-fg-muted"
-                      title={t("members.actions")}
-                    >
-                      <MoreHorizontal className="h-[18px] w-[18px]" />
-                    </button>
-                    {openMenu === r.ref && (
-                      <>
-                        <div className="fixed inset-0 z-10" onClick={() => setOpenMenu(null)} />
-                        <div className="absolute right-0 top-9 z-20 w-52 rounded-xl border border-border bg-surface p-1.5 shadow-lg">
-                          {r.status === "PENDING" ? (
-                            <>
-                              <MenuItem
-                                icon={Mail}
-                                label={t("members.action.resend")}
-                                onClick={() => {
-                                  setOpenMenu(null);
-                                  onResend(r.ref);
-                                }}
-                              />
-                              <MenuItem
-                                icon={Ban}
-                                label={t("members.action.cancelInvite")}
-                                onClick={() => {
-                                  setOpenMenu(null);
-                                  askCancel(r);
-                                }}
-                              />
-                            </>
-                          ) : (
-                            <MenuItem
-                              icon={UserMinus}
-                              label={t("members.action.remove")}
-                              onClick={() => {
-                                setOpenMenu(null);
-                                askRemove(r);
-                              }}
-                            />
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          ))
-        )}
-      </Card>
+      <DataTable
+        data={pageRows}
+        keyField="ref"
+        rowHeight={64}
+        filterElement={
+          <SearchBox
+            className="w-80"
+            placeholder={t("members.search")}
+            aria-label={t("members.search")}
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
+        }
+        filters={
+          <FilterChip
+            label={t("members.filter.role")}
+            value={roleFilter}
+            onChange={(v) => {
+              setRoleFilter(v);
+              setPage(1);
+            }}
+            options={[
+              { value: "", label: t("members.filter.all") },
+              { value: "WORKSPACE_OWNER", label: roleLabel("WORKSPACE_OWNER") },
+              { value: "WORKSPACE_ADMIN", label: roleLabel("WORKSPACE_ADMIN") },
+              { value: "WORKSPACE_MEMBER", label: roleLabel("WORKSPACE_MEMBER") }
+            ]}
+          />
+        }
+        toolbarEnd={
+          <TableCount>
+            {`${filtered.length} ${t(filtered.length === 1 ? "members.countLabelOne" : "members.countLabel")}`}
+          </TableCount>
+        }
+        page={currentPage}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalRecords={members.isLoading ? undefined : filtered.length}
+        pageSize={PAGE_SIZE}
+        itemLabel={t("members.countLabel")}
+        columns={[
+          {
+            key: "name",
+            header: t("members.col.member"),
+            render: (r) => <MemberCell name={r.name} email={r.email} />
+          },
+          {
+            key: "role",
+            header: t("members.col.role"),
+            width: 160,
+            render: (r) => roleLabel(r.role)
+          },
+          {
+            key: "status",
+            header: t("members.col.status"),
+            width: 180,
+            render: (r) => t(`members.status.${r.status}` as MessageId)
+          },
+          {
+            key: "actions",
+            header: "",
+            align: "right",
+            width: 56,
+            render: (r) =>
+              canManage && r.removable ? <RowActionsMenu items={rowActions(r)} /> : null
+          }
+        ]}
+      />
 
       <Dialog
         open={canManage && open}
-        onClose={() => setOpen(false)}
+        onClose={closeInvite}
+        width={480}
         title={t("members.invite")}
         subtitle={t("members.inviteModal.desc").replace("{ws}", wsName)}
         confirmLabel={t("members.inviteSubmit")}
+        confirmIcon={<Send className="h-4 w-4" />}
         confirmDisabled={invite.isPending}
         onSubmit={onInvite}
       >
         <InputGroup
+          id="invite-name"
           label={t("members.field.name")}
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={t("members.field.namePlaceholder")}
+          autoFocus
         />
         <InputGroup
+          id="invite-email"
           label={t("members.field.email")}
           type="email"
           required
@@ -283,22 +300,31 @@ export function Members() {
           placeholder={t("members.field.emailPlaceholder")}
           error={error ?? undefined}
         />
-        <SelectGroup
+        <ChoiceCardGroup
           label={t("members.field.role")}
+          vertical
           value={role}
-          onChange={(e) => setRole(e.target.value)}
-        >
-          <option value="WORKSPACE_MEMBER">{t("members.role.WORKSPACE_MEMBER")}</option>
-          <option value="WORKSPACE_ADMIN">{t("members.role.WORKSPACE_ADMIN")}</option>
-        </SelectGroup>
+          onChange={setRole}
+          options={[
+            {
+              value: "WORKSPACE_MEMBER",
+              title: roleLabel("WORKSPACE_MEMBER"),
+              description: t("members.role.WORKSPACE_MEMBER.desc")
+            },
+            {
+              value: "WORKSPACE_ADMIN",
+              title: roleLabel("WORKSPACE_ADMIN"),
+              description: t("members.role.WORKSPACE_ADMIN.desc")
+            }
+          ]}
+        />
       </Dialog>
 
       <Dialog
         open={canManage && !!confirm}
         onClose={() => setConfirm(null)}
-        width={480}
+        width={440}
         title={confirm?.title}
-        subtitle={confirm?.message}
         confirmVariant="destructive"
         confirmLabel={confirm?.confirmLabel}
         confirmDisabled={remove.isPending}
@@ -306,7 +332,9 @@ export function Members() {
           await confirm?.run();
           setConfirm(null);
         }}
-      />
+      >
+        <p className="text-[13px] text-fg-muted">{confirm?.message}</p>
+      </Dialog>
     </div>
   );
 }

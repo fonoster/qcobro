@@ -4,7 +4,7 @@ import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { InputGroup } from "../components/ui/input.js";
 import { Button } from "../components/ui/button.js";
-import { AuthLayout, AuthHeading } from "../components/AuthLayout.js";
+import { AuthLayout, AuthHeading, AuthBackLink } from "../components/AuthLayout.js";
 
 /**
  * Sets a new password from the link emailed by sendResetPasswordCode. Identity
@@ -57,61 +57,58 @@ export function ResetPassword() {
   }
 
   return (
-    <AuthLayout>
+    <AuthLayout footer={<AuthBackLink>{t("resetPassword.backToLogin")}</AuthBackLink>}>
       {!username || !verificationCode ? (
-        <div className="flex flex-col items-center gap-4 text-center">
+        <>
           <AuthHeading
             title={t("resetPassword.invalidTitle")}
             subtitle={t("resetPassword.invalidSubtitle")}
           />
           <Link
             to="/forgot-password"
-            className="text-[13px] font-semibold text-fg underline-offset-2 hover:underline"
+            className="text-center text-[13px] font-medium text-fg underline-offset-2 hover:underline"
           >
             {t("resetPassword.invalidCta")}
           </Link>
-        </div>
+        </>
       ) : (
-        <form onSubmit={onSubmit} className="flex flex-col gap-6">
-          <AuthHeading title={t("resetPassword.title")} subtitle={t("resetPassword.subtitle")} />
-
-          <div className="flex flex-col gap-4">
+        <>
+          <AuthHeading title={t("resetPassword.title")} />
+          <form onSubmit={onSubmit} className="flex flex-col gap-4">
             <InputGroup
-              label={t("resetPassword.newPassword")}
+              id="reset-password"
+              label={t("resetPassword.newPasswordWithRule")}
               type="password"
               required
+              minLength={8}
               autoFocus
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
             />
             <InputGroup
+              id="reset-confirm-password"
               label={t("resetPassword.confirmPassword")}
               type="password"
               required
+              autoComplete="new-password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
               error={error ?? undefined}
             />
-          </div>
 
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full"
-            disabled={resetPassword.isPending || !password || !confirmPassword}
-          >
-            {resetPassword.isPending ? t("resetPassword.resetting") : t("resetPassword.submit")}
-          </Button>
-        </form>
+            <Button
+              type="submit"
+              className="h-10 w-full"
+              disabled={resetPassword.isPending || !password || !confirmPassword}
+            >
+              {resetPassword.isPending ? t("resetPassword.resetting") : t("resetPassword.submit")}
+            </Button>
+          </form>
+        </>
       )}
-      <Link
-        to="/login"
-        className="text-center text-[13px] font-semibold text-fg underline-offset-2 hover:underline"
-      >
-        {t("resetPassword.backToLogin")}
-      </Link>
     </AuthLayout>
   );
 }

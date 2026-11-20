@@ -1,5 +1,5 @@
-import { CircleAlert } from "lucide-react";
 import { useI18n } from "../lib/i18n.js";
+import { Alert } from "./ui/alert.js";
 
 /**
  * Shown on the campaign detail view when the campaign auto-paused itself
@@ -12,19 +12,10 @@ import { useI18n } from "../lib/i18n.js";
 export function CampaignAutopausedBanner() {
   const { t } = useI18n();
   return (
-    <div
-      role="alert"
-      className="flex items-center gap-4 rounded-xl border border-warning/30 bg-warning-soft p-4"
-    >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning-soft text-warning">
-        <CircleAlert className="h-5 w-5" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-warning">
-          {t("campaigns.detail.autopaused.title")}
-        </p>
-        <p className="text-sm text-warning">{t("campaigns.detail.autopaused.body")}</p>
-      </div>
-    </div>
+    <Alert
+      variant="warning"
+      title={t("campaigns.detail.autopaused.title")}
+      description={t("campaigns.detail.autopaused.body")}
+    />
   );
 }
