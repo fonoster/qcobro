@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { newOwner, signUpAndEnter, openUserMenu } from "./helpers.js";
+import { newOwner, signUpAndEnter, openNav } from "./helpers.js";
 
 /**
  * Billing console golden path: Facturación is reachable from the user menu and
@@ -16,7 +16,7 @@ test.describe("billing console", () => {
     const stamp = Date.now();
     await signUpAndEnter(page, owner, `WS ${stamp}`);
 
-    await openUserMenu(page, "Facturación");
+    await openNav(page, "Facturación");
     await expect(page).toHaveURL(/\/billing$/);
     await expect(page.getByRole("heading", { name: "Facturación" })).toBeVisible();
 

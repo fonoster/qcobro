@@ -1,21 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { User, Globe, LogOut } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
-import { useI18n, languages, languageNames, type Language } from "../lib/i18n.js";
+import { useI18n } from "../lib/i18n.js";
 import { MenuPanel, MenuHeader, MenuDivider, MenuItem } from "./menu.js";
+import { LanguageMenuItem } from "./LanguageMenuItem.js";
 
 /** Account menu for account-level pages (the workspaces hub and profile). Opens from the
  * top-right avatar and drops downward. Unlike the in-app UserMenu it omits
  * workspace-scoped entries (no active workspace here) and offers a language switcher. */
 export function AccountMenu() {
   const { currentUser, logout } = useAuth();
-  const { t, language, setLanguage } = useI18n();
+  const { t } = useI18n();
   const navigate = useNavigate();
-  const utils = trpc.useUtils();
-  const setLang = trpc.profile.setLanguage.useMutation();
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [pos, setPos] = useState({ top: 0, right: 0 });
@@ -38,15 +37,6 @@ export function AccountMenu() {
     navigate(path);
   }
 
-  // Persist to the profile (the source of truth) so the AuthedLayout reconcile effect does
-  // not revert the choice when the user later enters a workspace. Optimistically update the
-  // cache and the UI first, like the Profile page does.
-  function onLanguageChange(next: Language) {
-    setLanguage(next);
-    utils.profile.get.setData(undefined, (prev) => (prev ? { ...prev, language: next } : prev));
-    setLang.mutate({ language: next }, { onSettled: () => utils.profile.get.invalidate() });
-  }
-
   const popup = open
     ? createPortal(
         <>
@@ -55,24 +45,7 @@ export function AccountMenu() {
             <MenuHeader initials={initials} name={name} email={email} />
             <MenuDivider />
             <MenuItem icon={User} label={t("profile.title")} onClick={() => go("/profile")} />
-            <div className="flex items-center justify-between gap-2.5 px-2.5 py-2">
-              <span className="flex items-center gap-2.5 text-[13px] font-medium text-fg">
-                <Globe className="h-4 w-4 text-fg-subtle" />
-                {t("language.label")}
-              </span>
-              <select
-                aria-label={t("language.label")}
-                value={language}
-                onChange={(e) => onLanguageChange(e.target.value as Language)}
-                className="cursor-pointer rounded-md border-none bg-transparent text-[13px] font-medium text-fg-subtle focus:outline-none"
-              >
-                {languages.map((l) => (
-                  <option key={l} value={l}>
-                    {languageNames[l]}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <LanguageMenuItem />
             <MenuDivider />
             <MenuItem
               icon={LogOut}

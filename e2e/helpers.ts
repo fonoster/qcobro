@@ -81,6 +81,11 @@ export async function openUserMenu(page: Page, entry: string) {
   await page.getByRole("button", { name: entry }).click();
 }
 
+/** Open a page from the sidebar navigation by its item's name. */
+export async function openNav(page: Page, item: string) {
+  await page.getByRole("navigation").getByRole("link", { name: item, exact: true }).click();
+}
+
 /** Invite a member from the Members page (assumes already on it). */
 export async function inviteMember(page: Page, name: string, email: string) {
   await page.getByRole("button", { name: "Invitar miembro" }).click();

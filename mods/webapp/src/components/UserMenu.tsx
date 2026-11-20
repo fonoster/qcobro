@@ -1,20 +1,23 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { User, SlidersHorizontal, Users, KeyRound, Plug, LogOut, CreditCard } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
-import { useI18n } from "../lib/i18n.js";
-import { isWorkspaceAdmin } from "../lib/workspaceRole.js";
+import { useI18n, type MessageId } from "../lib/i18n.js";
+import { activeRole } from "../lib/workspaceRole.js";
 import { MenuPanel, MenuHeader, MenuDivider, MenuItem } from "./menu.js";
+import { LanguageMenuItem } from "./LanguageMenuItem.js";
 import { cn } from "@/lib/utils.js";
 
+/** The sidebar footer: the user's name and workspace role. It opens the user menu (Mi perfil,
+ * Idioma, Cerrar sesión); workspace pages live in the sidebar itself. Collapsed, only the
+ * initials avatar shows. */
 export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
   const { currentUser, logout, accessToken, workspace } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const canManageKeys = isWorkspaceAdmin(accessToken, workspace);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [popupPos, setPopupPos] = useState({ bottom: 0, left: 0 });
 
@@ -36,35 +39,22 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
   const initials = currentUser?.initials ?? "QC";
   const email = currentUser?.email ?? "";
   const name = profile.data?.name?.trim() || currentUser?.name || t("userMenu.fallbackName");
+  const role = activeRole(accessToken, workspace);
+  const roleLabel = role ? t(`members.role.${role}` as MessageId) : "";
 
   const popup = open
     ? createPortal(
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <MenuPanel
+            label={t("userMenu.aria")}
             className="fixed z-50 w-[244px]"
             style={{ bottom: popupPos.bottom, left: popupPos.left }}
           >
             <MenuHeader initials={initials} name={name} email={email} />
             <MenuDivider />
             <MenuItem icon={User} label={t("profile.title")} onClick={() => go("/profile")} />
-            <MenuItem
-              icon={SlidersHorizontal}
-              label={t("settings.title")}
-              onClick={() => go("/settings")}
-            />
-            <MenuItem icon={CreditCard} label={t("billing.title")} onClick={() => go("/billing")} />
-            <MenuItem icon={Users} label={t("userMenu.members")} onClick={() => go("/members")} />
-            {canManageKeys && (
-              <MenuItem icon={KeyRound} label={t("nav.apiKeys")} onClick={() => go("/api-keys")} />
-            )}
-            {canManageKeys && (
-              <MenuItem
-                icon={Plug}
-                label={t("userMenu.integrations")}
-                onClick={() => go("/integrations")}
-              />
-            )}
+            <LanguageMenuItem onPicked={() => setOpen(false)} />
             <MenuDivider />
             <MenuItem
               icon={LogOut}
@@ -92,17 +82,18 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
         aria-label={t("userMenu.aria")}
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "flex items-center gap-2.5 rounded-lg hover:bg-elevated",
-          collapsed ? "justify-center p-2" : "w-full px-2 py-2"
+          "flex items-center gap-2.5 rounded-[var(--radius-control)] hover:bg-sidebar-accent",
+          collapsed ? "justify-center p-1.5" : "w-full px-2 py-2"
         )}
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-          {initials}
-        </span>
-        {!collapsed && (
-          <div className="flex min-w-0 flex-col leading-tight text-left">
-            <span className="truncate text-[13px] font-semibold text-fg">{name}</span>
-            <span className="truncate text-[11px] text-fg-subtle">{email || "Cuenta"}</span>
+        {collapsed ? (
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-fg">
+            {initials}
+          </span>
+        ) : (
+          <div className="flex min-w-0 flex-col text-left leading-tight">
+            <span className="truncate text-sm font-medium text-fg">{name}</span>
+            {roleLabel && <span className="truncate text-xs text-fg-subtle">{roleLabel}</span>}
           </div>
         )}
       </button>

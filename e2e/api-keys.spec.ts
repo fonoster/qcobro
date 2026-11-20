@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { newOwner, signUpAndEnter, openUserMenu } from "./helpers.js";
+import { newOwner, signUpAndEnter, openNav } from "./helpers.js";
 
 test.describe("API keys", () => {
   test("owner can create, regenerate, and delete a key", async ({ page }) => {
@@ -7,7 +7,7 @@ test.describe("API keys", () => {
     const owner = newOwner();
 
     await signUpAndEnter(page, owner, `QA Espacio ${unique}`);
-    await openUserMenu(page, "Claves de API");
+    await openNav(page, "Claves de API");
 
     // Page + empty state.
     await expect(page.getByRole("heading", { name: "Claves de API" })).toBeVisible();

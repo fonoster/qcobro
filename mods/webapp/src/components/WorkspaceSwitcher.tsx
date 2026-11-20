@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { cn } from "@/lib/utils.js";
@@ -58,11 +58,11 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
                       isActive && "bg-elevated"
                     )}
                   >
-                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-[11px] font-bold text-primary">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-sidebar-accent text-[11px] font-semibold text-fg">
                       {wsInitials(w.name)}
                     </span>
                     <span className="flex-1 font-medium text-fg">{w.name}</span>
-                    {isActive && <Check className="h-4 w-4 text-primary" />}
+                    {isActive && <Check className="h-4 w-4 text-fg" />}
                   </button>
                 );
               })}
@@ -80,9 +80,9 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-label={active?.name ?? "Espacio"}
-          className="flex h-[33px] w-10 items-center justify-center rounded-[10px] bg-primary/10 hover:bg-elevated"
+          className="flex h-8 w-10 items-center justify-center rounded-[var(--radius-control)] bg-sidebar-accent hover:bg-elevated"
         >
-          <span className="text-[11px] font-bold text-primary">
+          <span className="text-[11px] font-semibold text-fg">
             {wsInitials(active?.name ?? "WS")}
           </span>
         </button>
@@ -95,12 +95,19 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between gap-2 rounded-[10px] border border-border bg-surface px-2.5 py-2 hover:bg-elevated"
+        aria-label={active?.name ?? "Espacio"}
+        className="flex h-10 w-full items-center gap-2.5 rounded-[var(--radius-control)] border border-border px-2.5 hover:bg-sidebar-accent"
       >
-        <span className="truncate text-[14px] font-semibold text-fg">
+        <span
+          aria-hidden
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-sidebar-accent text-[10px] font-semibold text-fg"
+        >
+          {wsInitials(active?.name ?? "WS")}
+        </span>
+        <span className="flex-1 truncate text-left text-sm font-medium text-fg">
           {active?.name ?? "Espacio"}
         </span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-fg-subtle" />
+        <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-sidebar-fg" />
       </button>
 
       {open && (
@@ -125,11 +132,11 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
                     isActive && "bg-elevated"
                   )}
                 >
-                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-[11px] font-bold text-primary">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-sidebar-accent text-[11px] font-semibold text-fg">
                     {wsInitials(w.name)}
                   </span>
                   <span className="flex-1 font-medium text-fg">{w.name}</span>
-                  {isActive && <Check className="h-4 w-4 text-primary" />}
+                  {isActive && <Check className="h-4 w-4 text-fg" />}
                 </button>
               );
             })}

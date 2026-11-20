@@ -7,14 +7,19 @@ import { cn } from "@/lib/utils.js";
 export function MenuPanel({
   children,
   className,
-  style
+  style,
+  label
 }: {
   children: ReactNode;
   className?: string;
   style?: CSSProperties;
+  /** When set, the panel is a labelled dialog (its accessible name). */
+  label?: string;
 }) {
   return (
     <div
+      role={label ? "dialog" : undefined}
+      aria-label={label}
       style={style}
       className={cn("rounded-xl border border-border bg-surface p-1.5 shadow-lg", className)}
     >
