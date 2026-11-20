@@ -1,6 +1,5 @@
 import { localDateString, startOfLocalDay } from "@qcobro/common";
-import { Bot, AudioLines, MessageSquare, Mail, MessageCircle } from "lucide-react";
-import type { ComponentType } from "react";
+import { channelIcon } from "../lib/channelIcon.js";
 
 /**
  * Formatting shared by Gestiones, the gestión drawer and Promesas de pago: the design's
@@ -8,17 +7,8 @@ import type { ComponentType } from "react";
  * ("+1 829 555 4321") and the per-channel icon (bot, audio-lines, message-square…).
  */
 
-const ICONS: Record<string, ComponentType<{ className?: string }>> = {
-  VOICE_AI: Bot,
-  VOICE_PRERECORDED: AudioLines,
-  SMS: MessageSquare,
-  EMAIL: Mail,
-  WHATSAPP: MessageCircle
-};
-
-export function gestionChannelIcon(channel: string): ComponentType<{ className?: string }> {
-  return ICONS[channel] ?? MessageSquare;
-}
+/** The channel icon (bot, audio-lines, message-square…) from the shared map. */
+export const gestionChannelIcon = channelIcon;
 
 /** The browser's timezone, used until the workspace's loads. */
 export function resolveTimeZone(tz: string | undefined): string {

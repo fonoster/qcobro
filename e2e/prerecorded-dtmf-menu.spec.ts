@@ -181,7 +181,7 @@ test.describe("pre-recorded DTMF menu", () => {
 
     // --- List: the opt-out row shows Baja, the baseline row shows an em dash -
     await page.getByRole("link", { name: "Gestiones" }).click();
-    const prerecordedRows = page.locator("tbody tr", { hasText: "Pre-grabada" });
+    const prerecordedRows = page.locator("tbody tr", { hasText: "Voz pregrabada" });
     const optOutRow = prerecordedRows.filter({ hasText: "Baja" });
     // Excludes the machine-detected row too (added below) — it also has no "Baja" outcome,
     // so "baseline" must be narrowed to "neither Baja nor the machine row's delivery reason".

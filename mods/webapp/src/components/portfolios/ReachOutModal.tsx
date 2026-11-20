@@ -16,6 +16,7 @@ import { InputGroup } from "../ui/input.js";
 import { Textarea } from "../ui/textarea.js";
 import { FieldLabel } from "../ui/field.js";
 import { InfoNote } from "./InfoNote.js";
+import { formatPhone } from "../../pages/gestionFormat.js";
 
 /** The first message / script / body preview: editable, styled as the design's muted box. */
 function PreviewBox({
@@ -142,7 +143,7 @@ export function ReachOutModal({
 
   // "Voz IA · llamada saliente a +1 809 …", "SMS · mensaje a …", "Correo · correo a …".
   function destination(type: string): string | null {
-    const to = type === "EMAIL" ? account.email : account.phone;
+    const to = type === "EMAIL" ? account.email : formatPhone(account.phone);
     if (!to) return null;
     const kind = type === "EMAIL" ? "email" : type.startsWith("VOICE") ? "call" : "message";
     return `${channelLabel(type)} · ${t(`portfolios.reachOut.to.${kind}`).replace("{to}", to)}`;

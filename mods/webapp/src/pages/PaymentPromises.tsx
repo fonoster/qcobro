@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Handshake, Send } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
-import { useMoney, useWorkspaceTimezone } from "../lib/useWorkspaceCurrency.js";
+import { useMoney, useWorkspaceLocale, useWorkspaceTimezone } from "../lib/useWorkspaceCurrency.js";
 import { PageHeader } from "../components/page-header.js";
 import { DataTable, TableCellStack } from "../components/ui/data-table.js";
 import { FilterChip } from "../components/ui/filter-chip.js";
@@ -50,6 +50,7 @@ export function PaymentPromises() {
   const { t, language } = useI18n();
   const money = useMoney();
   const timeZone = resolveTimeZone(useWorkspaceTimezone());
+  const numberLocale = useWorkspaceLocale();
   const utils = trpc.useUtils();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"" | ShownStatus>("");
@@ -191,7 +192,8 @@ export function PaymentPromises() {
             />
           </>
         }
-        countLabel={t("paymentPromises.count")}
+        countLabel={(n) => t(n === 1 ? "paymentPromises.countOne" : "paymentPromises.count")}
+        numberLocale={numberLocale}
         selectable
         selectionBar="none"
         getRowId={(r) => r.id as string}
@@ -274,7 +276,10 @@ export function PaymentPromises() {
       {selected.length > 0 && (
         <div className="flex items-center justify-between gap-3 rounded-card border border-border bg-surface px-4 py-3">
           <span className="text-[13px] text-fg">
-            {t("paymentPromises.selected").replace("{count}", String(selected.length))}
+            {(selected.length === 1
+              ? t("paymentPromises.selectedOne")
+              : t("paymentPromises.selected")
+            ).replace("{count}", String(selected.length))}
           </span>
           <div className="flex items-center gap-2.5">
             <Button type="button" variant="ghost" onClick={() => setSelected([])}>

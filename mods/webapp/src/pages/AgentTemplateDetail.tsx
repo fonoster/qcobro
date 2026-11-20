@@ -92,9 +92,12 @@ export function AgentTemplateDetail() {
 
   // Resolve the stored voice id to its catalog label (name, language, gender).
   const voiceEntry = voices?.find((v) => v.id === voiceCfg?.voice);
+  // A voice outside the catalog reads as "Voz personalizada", never as its raw id.
   const voiceLabel = voiceEntry
     ? `${voiceEntry.name} (${voiceEntry.language}, ${t(`agents.gender.${voiceEntry.gender}` as MessageId)})`
-    : str(voiceCfg?.voice);
+    : voiceCfg?.voice && voices
+      ? t("agents.voice.custom")
+      : null;
   // Map the stored language code (e.g. "es-419") to its human-friendly label.
   const languageLabel = voiceCfg?.language
     ? (t(`agents.lang.${voiceCfg.language}` as MessageId) ?? String(voiceCfg.language))

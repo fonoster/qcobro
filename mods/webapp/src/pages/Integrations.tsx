@@ -165,15 +165,13 @@ function WabaPanel() {
             onChange={(e) => edit({ wabaId: e.target.value })}
           />
           <InputGroup
-            label={t("integrations.waba.accessToken")}
+            label={t(
+              connected ? "integrations.waba.accessTokenConnected" : "integrations.waba.accessToken"
+            )}
             id="w-token"
             type="password"
             className="[&_input]:font-mono"
-            placeholder={t(
-              connected
-                ? "integrations.waba.accessTokenConnectedPlaceholder"
-                : "integrations.waba.accessTokenPlaceholder"
-            )}
+            placeholder={connected ? undefined : t("integrations.waba.accessTokenPlaceholder")}
             value={accessToken}
             onChange={(e) => edit({ accessToken: e.target.value })}
           />

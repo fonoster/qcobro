@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { ChevronRight, ListChecks } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
-import { useWorkspaceTimezone } from "../lib/useWorkspaceCurrency.js";
+import { useWorkspaceLocale, useWorkspaceTimezone } from "../lib/useWorkspaceCurrency.js";
 import { PageHeader } from "../components/page-header.js";
 import { DataTable, TableCellStack } from "../components/ui/data-table.js";
 import { FilterChip } from "../components/ui/filter-chip.js";
@@ -28,7 +28,7 @@ const PERIODS: GestionPeriod[] = ["today", "7d", "30d", "custom"];
 
 type Key = Parameters<ReturnType<typeof useI18n>["t"]>[0];
 
-/** A channel as the design draws it: icon + label ("Pre-grabada"). */
+/** A channel as the design draws it: icon + label ("Voz pregrabada"). */
 export function ChannelLabel({ channel }: { channel: string }) {
   const { t } = useI18n();
   const Icon = gestionChannelIcon(channel);
@@ -43,6 +43,7 @@ export function ChannelLabel({ channel }: { channel: string }) {
 export function Gestiones() {
   const { t, language } = useI18n();
   const timeZone = resolveTimeZone(useWorkspaceTimezone());
+  const numberLocale = useWorkspaceLocale();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedId = searchParams.get("gestion");
 
@@ -168,7 +169,8 @@ export function Gestiones() {
         keyField="id"
         searchable={false}
         filters={filters}
-        countLabel={t("gestiones.count")}
+        countLabel={(n) => t(n === 1 ? "gestiones.countOne" : "gestiones.count")}
+        numberLocale={numberLocale}
         itemLabel={t("gestiones.count")}
         page={page}
         pageSize={PAGE_SIZE}

@@ -7546,9 +7546,9 @@
                                     {
                                       "type": "text",
                                       "id": "pn001l",
-                                      "name": "Pre-grabada",
+                                      "name": "Voz pregrabada",
                                       "fill": "$ui:--foreground",
-                                      "content": "Pre-grabada",
+                                      "content": "Voz pregrabada",
                                       "fontFamily": "$ui:--font-secondary",
                                       "fontSize": 13,
                                       "fontWeight": "normal"
@@ -9978,9 +9978,9 @@
                                     {
                                       "type": "text",
                                       "id": "pn007u",
-                                      "name": "Pre-grabada",
+                                      "name": "Voz pregrabada",
                                       "fill": "$ui:--foreground",
-                                      "content": "Pre-grabada",
+                                      "content": "Voz pregrabada",
                                       "fontFamily": "$ui:--font-secondary",
                                       "fontSize": 13,
                                       "fontWeight": "normal"
@@ -43397,9 +43397,9 @@
                                 {
                                   "type": "text",
                                   "id": "ge02qz",
-                                  "name": "Pre-grabada",
+                                  "name": "Voz pregrabada",
                                   "fill": "$ui:--foreground",
-                                  "content": "Pre-grabada",
+                                  "content": "Voz pregrabada",
                                   "fontFamily": "$ui:--font-secondary",
                                   "fontSize": 13,
                                   "fontWeight": "normal"
@@ -46171,9 +46171,9 @@
                                 {
                                   "type": "text",
                                   "id": "ge0021",
-                                  "name": "Pre-grabada",
+                                  "name": "Voz pregrabada",
                                   "fill": "$ui:--foreground",
-                                  "content": "Pre-grabada",
+                                  "content": "Voz pregrabada",
                                   "fontFamily": "$ui:--font-secondary",
                                   "fontSize": 13,
                                   "fontWeight": "normal"
@@ -47377,7 +47377,7 @@
           "content": "/workspaces/:workspaceId/gestiones?gestion=:id"
         },
         "ui:z4SKuT": {
-          "content": "Right drawer per channel. Insight: Resultado / Sentimiento, then Promesa, Motivo de la deuda, Siguiente paso when known. Pre-grabada: ENGAGED is labeled Recibido. Variants: failed call, opt-out, no recording."
+          "content": "Right drawer per channel. Insight: Resultado / Sentimiento, then Promesa, Motivo de la deuda, Siguiente paso when known. Voz pregrabada: ENGAGED is labeled Recibido. Variants: failed call, opt-out, no recording."
         }
       }
     },
@@ -48869,9 +48869,9 @@
                                     {
                                       "type": "text",
                                       "id": "ge00cn",
-                                      "name": "Pre-grabada",
+                                      "name": "Voz pregrabada",
                                       "fill": "$ui:--foreground",
-                                      "content": "Pre-grabada",
+                                      "content": "Voz pregrabada",
                                       "fontFamily": "$ui:--font-secondary",
                                       "fontSize": 13,
                                       "fontWeight": "normal"
@@ -53110,9 +53110,9 @@
                                     {
                                       "type": "text",
                                       "id": "ge00lh",
-                                      "name": "Pre-grabada",
+                                      "name": "Voz pregrabada",
                                       "fill": "$ui:--foreground",
-                                      "content": "Pre-grabada",
+                                      "content": "Voz pregrabada",
                                       "fontFamily": "$ui:--font-secondary",
                                       "fontSize": 13,
                                       "fontWeight": "normal"
@@ -56535,9 +56535,9 @@
                                     {
                                       "type": "text",
                                       "id": "ge00u2",
-                                      "name": "Pre-grabada",
+                                      "name": "Voz pregrabada",
                                       "fill": "$ui:--foreground",
-                                      "content": "Pre-grabada",
+                                      "content": "Voz pregrabada",
                                       "fontFamily": "$ui:--font-secondary",
                                       "fontSize": 13,
                                       "fontWeight": "normal"
@@ -59887,9 +59887,9 @@
                                     {
                                       "type": "text",
                                       "id": "ge012g",
-                                      "name": "Pre-grabada",
+                                      "name": "Voz pregrabada",
                                       "fill": "$ui:--foreground",
-                                      "content": "Pre-grabada",
+                                      "content": "Voz pregrabada",
                                       "fontFamily": "$ui:--font-secondary",
                                       "fontSize": 13,
                                       "fontWeight": "normal"
@@ -63157,9 +63157,9 @@
                                     {
                                       "type": "text",
                                       "id": "ge01be",
-                                      "name": "Pre-grabada",
+                                      "name": "Voz pregrabada",
                                       "fill": "$ui:--foreground",
-                                      "content": "Pre-grabada",
+                                      "content": "Voz pregrabada",
                                       "fontFamily": "$ui:--font-secondary",
                                       "fontSize": 13,
                                       "fontWeight": "normal"
@@ -66655,9 +66655,9 @@
                                     {
                                       "type": "text",
                                       "id": "ge01kc",
-                                      "name": "Pre-grabada",
+                                      "name": "Voz pregrabada",
                                       "fill": "$ui:--foreground",
-                                      "content": "Pre-grabada",
+                                      "content": "Voz pregrabada",
                                       "fontFamily": "$ui:--font-secondary",
                                       "fontSize": 13,
                                       "fontWeight": "normal"
@@ -68669,7 +68669,7 @@
     {
       "type": "frame",
       "id": "ge0202",
-      "name": "Gestión / Detalle / Pre-grabada",
+      "name": "Gestión / Detalle / Voz pregrabada",
       "x": 9240,
       "y": 11140,
       "theme": {
@@ -70154,9 +70154,9 @@
                                     {
                                       "type": "text",
                                       "id": "ge01ui",
-                                      "name": "Pre-grabada",
+                                      "name": "Voz pregrabada",
                                       "fill": "$ui:--foreground",
-                                      "content": "Pre-grabada",
+                                      "content": "Voz pregrabada",
                                       "fontFamily": "$ui:--font-secondary",
                                       "fontSize": 13,
                                       "fontWeight": "normal"
@@ -71403,9 +71403,9 @@
                     {
                       "type": "text",
                       "id": "ge01zu",
-                      "name": "Cuenta LN-01120 · Pre-gr",
+                      "name": "Cuenta LN-01120 · Voz pr",
                       "fill": "$ui:--muted-foreground",
-                      "content": "Cuenta LN-01120 · Pre-grabada · Ayer 17:48",
+                      "content": "Cuenta LN-01120 · Voz pregrabada · Ayer 17:48",
                       "fontFamily": "$ui:--font-secondary",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -72530,7 +72530,7 @@
     {
       "type": "frame",
       "id": "ge02ae",
-      "name": "Gestión / Detalle / Pre-grabada · Baja",
+      "name": "Gestión / Detalle / Voz pregrabada · Baja",
       "x": 10780,
       "y": 11140,
       "theme": {
@@ -74015,9 +74015,9 @@
                                     {
                                       "type": "text",
                                       "id": "ge024u",
-                                      "name": "Pre-grabada",
+                                      "name": "Voz pregrabada",
                                       "fill": "$ui:--foreground",
-                                      "content": "Pre-grabada",
+                                      "content": "Voz pregrabada",
                                       "fontFamily": "$ui:--font-secondary",
                                       "fontSize": 13,
                                       "fontWeight": "normal"
@@ -75264,9 +75264,9 @@
                     {
                       "type": "text",
                       "id": "ge02a6",
-                      "name": "Cuenta LN-01120 · Pre-gr",
+                      "name": "Cuenta LN-01120 · Voz pr",
                       "fill": "$ui:--muted-foreground",
-                      "content": "Cuenta LN-01120 · Pre-grabada · Ayer 17:48",
+                      "content": "Cuenta LN-01120 · Voz pregrabada · Ayer 17:48",
                       "fontFamily": "$ui:--font-secondary",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -76454,7 +76454,7 @@
     {
       "type": "frame",
       "id": "ge02ix",
-      "name": "Gestión / Detalle / Pre-grabada · Sin grabación",
+      "name": "Gestión / Detalle / Voz pregrabada · Sin grabación",
       "x": 12320,
       "y": 11140,
       "theme": {
@@ -77939,9 +77939,9 @@
                                     {
                                       "type": "text",
                                       "id": "ge02dd",
-                                      "name": "Pre-grabada",
+                                      "name": "Voz pregrabada",
                                       "fill": "$ui:--foreground",
-                                      "content": "Pre-grabada",
+                                      "content": "Voz pregrabada",
                                       "fontFamily": "$ui:--font-secondary",
                                       "fontSize": 13,
                                       "fontWeight": "normal"
@@ -79188,9 +79188,9 @@
                     {
                       "type": "text",
                       "id": "ge02ip",
-                      "name": "Cuenta LN-01120 · Pre-gr",
+                      "name": "Cuenta LN-01120 · Voz pr",
                       "fill": "$ui:--muted-foreground",
-                      "content": "Cuenta LN-01120 · Pre-grabada · Ayer 17:48",
+                      "content": "Cuenta LN-01120 · Voz pregrabada · Ayer 17:48",
                       "fontFamily": "$ui:--font-secondary",
                       "fontSize": 13,
                       "fontWeight": "normal"

@@ -33,9 +33,12 @@ export interface DataTableProps<T> {
   toolbarEnd?: React.ReactNode;
   /**
    * Renders "N <countLabel>" at the toolbar's right end, N = rows after search (or
-   * `totalRecords`). Pass the plural noun ("cuentas"); ignored when `toolbarEnd` is set.
+   * `totalRecords`). Pass the plural noun ("cuentas"), or a function of N for a noun that
+   * agrees with it ("1 promesa", "2 promesas"); ignored when `toolbarEnd` is set.
    */
-  countLabel?: string;
+  countLabel?: string | ((total: number) => string);
+  /** Formats N in the count and the pagination line ("1,284"), e.g. the workspace locale. */
+  numberLocale?: string;
   /** Row height in px per screen: 48 Panel · 56 lists (default) · 60 Carteras · 64 Campañas. */
   rowHeight?: number;
   onRowClick?: (row: T) => void;
@@ -107,6 +110,7 @@ export function DataTable<T extends Record<string, unknown>>({
   filterElement,
   toolbarEnd,
   countLabel,
+  numberLocale,
   rowHeight = 56,
   onRowClick,
   page = 1,
@@ -165,16 +169,21 @@ export function DataTable<T extends Record<string, unknown>>({
   const pageStart = total === 0 ? 0 : perPage ? (page - 1) * perPage + 1 : 1;
   const pageEnd = perPage ? Math.min(page * perPage, total) : displayData.length;
 
+  const formatCount = (n: number) =>
+    numberLocale ? new Intl.NumberFormat(numberLocale).format(n) : String(n);
+  const countNoun = typeof countLabel === "function" ? countLabel(total) : countLabel;
+
   const rangeLabel = t("table.rowCount")
     .replace("{start}", String(pageStart))
     .replace("{end}", String(pageEnd))
-    .replace("{total}", String(total))
+    .replace("{total}", formatCount(total))
     .replace("{items}", itemLabel ?? t("table.items"));
 
   const colSpan = columns.length + (selectable ? 1 : 0);
   const showSelectionBar = selectable && selectionBar === "toolbar" && selected.length > 0;
   const end =
-    toolbarEnd ?? (countLabel ? <TableCount>{`${total} ${countLabel}`}</TableCount> : null);
+    toolbarEnd ??
+    (countNoun ? <TableCount>{`${formatCount(total)} ${countNoun}`}</TableCount> : null);
   const hasToolbar = searchable || filterElement || filters || end;
   const showEmpty = empty !== undefined && data.length === 0;
   const showPagination = !showEmpty && (totalPages > 1 || totalRecords !== undefined);

@@ -4,6 +4,7 @@ import { Eye, FolderOpen, PhoneOutgoing, Upload } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { formatRelativeDate } from "../lib/relativeDate.js";
+import { formatPhone } from "./gestionFormat.js";
 import { useMoney, useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
 import { DataTable, TableCellStack } from "../components/ui/data-table.js";
 import { Button } from "../components/ui/button.js";
@@ -121,7 +122,9 @@ export function PortfolioDetail() {
             render: (r) => (
               <TableCellStack
                 title={String(r.fullName ?? "—")}
-                sub={[r.externalId, r.phone].filter(Boolean).join(" · ")}
+                sub={[r.externalId, formatPhone(r.phone as string | null)]
+                  .filter(Boolean)
+                  .join(" · ")}
               />
             )
           },
@@ -174,7 +177,7 @@ export function PortfolioDetail() {
             {[
               [t("portfolios.detail.col.balance"), money(viewDetail.outstandingBalance as number)],
               [t("portfolios.detail.col.dpd"), String(viewDetail.daysPastDue ?? "—")],
-              [t("gestiones.detail.phone"), String(viewDetail.phone ?? "—")],
+              [t("gestiones.detail.phone"), formatPhone(viewDetail.phone as string | null) ?? "—"],
               [t("gestiones.detail.email"), String(viewDetail.email ?? "—")]
             ].map(([label, value]) => (
               <div key={label} className="flex flex-col gap-0.5">

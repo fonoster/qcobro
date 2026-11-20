@@ -8,13 +8,13 @@ const API = "http://localhost:3000";
 
 /**
  * Gestiones golden path for the one-way channels: create a portfolio, import one
- * account, seed SMS / Pre-grabada / Email gestiones via the (dev-open) contact-log
+ * account, seed SMS / Voz pregrabada / Email gestiones via the (dev-open) contact-log
  * REST endpoint, then verify the refined Gestiones list and the channel-aware detail
  * slide-over panel for each (sent content shown; no audio/transcript). Live dispatch
  * is intentionally not exercised. Assumes the dev stack is running.
  */
 test.describe("gestiones — channels", () => {
-  test("list + channel-aware detail panel for SMS, Pre-grabada, Email, Voz IA", async ({
+  test("list + channel-aware detail panel for SMS, Voz pregrabada, Email, Voz IA", async ({
     page
   }) => {
     const owner = newOwner("gestiones-ch");
@@ -72,7 +72,7 @@ test.describe("gestiones — channels", () => {
       extra?: Record<string, unknown>;
       channelData: Record<string, unknown>;
     }[] = [
-      // Inserted first so it gets the earliest `contactedAt` among the two Pre-grabada
+      // Inserted first so it gets the earliest `contactedAt` among the two Voz pregrabada
       // seeds below, and therefore sorts LAST (list is ordered by contactedAt desc) — the
       // "Voz pregrabada" `.first()` row stays the one with a recording, unchanged from
       // before this no-recording case was added.
@@ -201,13 +201,13 @@ test.describe("gestiones — channels", () => {
     await expect(panel.getByText("Transcripción")).toHaveCount(0);
     await closePanel();
 
-    // Pre-grabada — plays the real call recording (not a synthesized re-narration) + the
+    // Voz pregrabada — plays the real call recording (not a synthesized re-narration) + the
     // sent script as a separate, non-playable element + delivery progression in the
     // "Estado de delivery" field + honest insight copy; no transcript. This is the row
     // with a recording — it stays `.nth(0)` since the no-recording case below was seeded
     // first (see the seeds array) and therefore sorts after it (list order is
     // contactedAt desc).
-    panel = await openPanel("Pre-grabada", 0);
+    panel = await openPanel("Voz pregrabada", 0);
     await expect(panel.locator("audio")).toHaveCount(1);
     // Played from a blob: the recording endpoint needs the caller's Bearer token.
     await expect(panel.locator("audio")).toHaveAttribute("src", /^blob:/);
@@ -224,10 +224,10 @@ test.describe("gestiones — channels", () => {
     await expect(panel.getByText("Transcripción")).toHaveCount(0);
     await closePanel();
 
-    // Pre-grabada with no captured recording — muted unavailable card, no audio element,
+    // Voz pregrabada with no captured recording — muted unavailable card, no audio element,
     // and no synthesized stand-in. This is the older of the two "Voz pregrabada" rows
     // (seeded first, so it sorts last / `.nth(1)`).
-    panel = await openPanel("Pre-grabada", 1);
+    panel = await openPanel("Voz pregrabada", 1);
     await expect(panel.locator("audio")).toHaveCount(0);
     await expect(panel.getByText("Grabación no disponible")).toBeVisible();
     await expect(panel.getByText("Guion reproducido")).toBeVisible();

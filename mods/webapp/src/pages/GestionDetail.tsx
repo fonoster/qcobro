@@ -478,7 +478,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         </Button>
       }
     >
-      {/* Voz IA + Pre-grabada: always the actual call recording, never a re-synthesized
+      {/* Voz IA + Voz pregrabada: always the actual call recording, never a re-synthesized
           stand-in for what was said. */}
       {(isVoiceAi || isPrerecorded) &&
         (hasRecording ? (

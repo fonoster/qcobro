@@ -10,18 +10,9 @@ import {
   renderTemplate,
   voicePrerecordedDtmfSchema
 } from "@qcobro/common";
-import {
-  Archive,
-  AudioLines,
-  Bot,
-  Braces,
-  Lock,
-  Mail,
-  MessageCircle,
-  MessageSquare,
-  Plus
-} from "lucide-react";
+import { Archive, Bot, Braces, Lock, Plus } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
+import { channelIcon } from "../lib/channelIcon.js";
 import { useI18n, type MessageId } from "../lib/i18n.js";
 import { formatRelativeDate } from "../lib/relativeDate.js";
 import { SAMPLE_ACCOUNT } from "../lib/sampleAccount.js";
@@ -104,12 +95,17 @@ const FIELD_PLACEHOLDER = {
   idleMaxTimeoutCount: "agents.form.idleMaxTimeoutCountPlaceholder"
 } as const satisfies Record<string, MessageId>;
 
+function typeIcon(type: AgentType): React.ReactNode {
+  const Icon = channelIcon(type);
+  return <Icon />;
+}
+
 export const TYPE_ICON: Record<AgentType, React.ReactNode> = {
-  VOICE_AI: <Bot />,
-  VOICE_PRERECORDED: <AudioLines />,
-  SMS: <MessageSquare />,
-  WHATSAPP: <MessageCircle />,
-  EMAIL: <Mail />
+  VOICE_AI: typeIcon("VOICE_AI"),
+  VOICE_PRERECORDED: typeIcon("VOICE_PRERECORDED"),
+  SMS: typeIcon("SMS"),
+  WHATSAPP: typeIcon("WHATSAPP"),
+  EMAIL: typeIcon("EMAIL")
 };
 
 /** Example template variables + a link to the full reference, under the list. */
@@ -172,21 +168,21 @@ function SmsFields({
   // A malformed template renders as a visible `[Error de plantilla: …]` marker rather than
   // throwing. That marker is not message content, so it must not be counted.
   const countable = rendered.startsWith("[") ? "" : rendered;
+  // An empty body still shows the counter, at zero, so the label row matches the design.
   const seg = countable
     ? calculateSmsSegments(normalizeGsm7 ? normalizeForGsm7(countable) : countable)
-    : null;
+    : { segmentCount: 0, characterCount: 0, nonGsmCharacters: [] as string[] };
 
-  const estimate = seg
-    ? t(seg.segmentCount === 1 ? "agents.form.smsSegmentOne" : "agents.form.smsSegments")
-        .replace("{segments}", String(seg.segmentCount))
-        .replace("{characters}", String(seg.characterCount)) +
-      (seg.nonGsmCharacters.length > 0
-        ? ` · ${t("agents.form.smsCostlyChars").replace(
-            "{characters}",
-            seg.nonGsmCharacters.join(" ")
-          )}`
-        : "")
-    : undefined;
+  const estimate =
+    t(seg.segmentCount === 1 ? "agents.form.smsSegmentOne" : "agents.form.smsSegments")
+      .replace("{segments}", String(seg.segmentCount))
+      .replace("{characters}", String(seg.characterCount)) +
+    (seg.nonGsmCharacters.length > 0
+      ? ` · ${t("agents.form.smsCostlyChars").replace(
+          "{characters}",
+          seg.nonGsmCharacters.join(" ")
+        )}`
+      : "");
 
   return (
     <>
@@ -492,10 +488,9 @@ function ArchiveAgentDialog({
               ? t("agents.archive.usedByOne")
               : t("agents.archive.usedByMany").replace("{count}", String(campaigns.length))
           }
-          description={t("agents.archive.usedByBody").replace(
-            "{names}",
-            campaigns.map((c) => c.name).join(", ")
-          )}
+          description={t(
+            campaigns.length === 1 ? "agents.archive.usedByBodyOne" : "agents.archive.usedByBody"
+          ).replace("{names}", campaigns.map((c) => c.name).join(", "))}
         />
       )}
     </Dialog>
