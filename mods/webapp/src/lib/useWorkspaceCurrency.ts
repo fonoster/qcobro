@@ -54,3 +54,19 @@ export function useMoney(): (value: number) => string {
     [integer, fractional]
   );
 }
+
+/**
+ * The symbol the console prints before amounts (RD$, US$, $…), taken from the same formatter
+ * as `useMoney` so a caption naming the currency matches the figures beside it.
+ */
+export function useCurrencySymbol(): string {
+  const currency = useWorkspaceCurrency();
+  const locale = useWorkspaceLocale();
+  return useMemo(
+    () =>
+      createMoneyFormatters(locale, currency)
+        .integer.formatToParts(0)
+        .find((part) => part.type === "currency")?.value ?? currency,
+    [locale, currency]
+  );
+}

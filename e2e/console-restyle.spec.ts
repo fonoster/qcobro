@@ -438,3 +438,110 @@ test.describe("console restyle — sign-in and workspaces", () => {
     );
   });
 });
+
+/**
+ * Panel and Cartera detail (issue #250): the Panel leads with the portfolio's size, and the
+ * Cartera detail goes straight from its header to the accounts, with no Recuperación section.
+ */
+test.describe("console restyle — Panel and Cartera detail", () => {
+  test("panel: KPI order", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    const wsName = `QA Panel ${Date.now()}`;
+    await signUpAndEnter(page, newOwner("panel-kpis"), wsName);
+
+    await expect(page.getByRole("heading", { name: "Panel de control" })).toBeVisible();
+    await expect(
+      page.getByText(new RegExp(`^Resumen de ${wsName} · montos en \\S+$`))
+    ).toBeVisible();
+    // The workspace ID is copied from /workspaces, not from the Panel.
+    await expect(page.getByText("ID del espacio")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Copiar ID del espacio" })).toHaveCount(0);
+
+    const names = [
+      "Cuentas en gestión",
+      "Saldo pendiente",
+      "Recuperado",
+      "Contacto",
+      "Promesas cumplidas"
+    ];
+    await expect(page.getByRole("group", { name: "Promesas cumplidas" })).toBeVisible();
+    const order = await page
+      .getByRole("group")
+      .evaluateAll((els) => els.map((el) => el.getAttribute("aria-label") ?? ""));
+    expect(order.filter((label) => names.includes(label))).toEqual(names);
+
+    // Each card shows its label and value on one line, unclipped, at 1280 px.
+    for (const name of names) {
+      const card = page.getByRole("group", { name });
+      const fits = await card.evaluate((el) =>
+        Array.from(el.querySelectorAll("p"))
+          .slice(0, 2)
+          .every((p) => {
+            const s = getComputedStyle(p);
+            const lineHeight = parseFloat(s.lineHeight) || parseFloat(s.fontSize) * 1.5;
+            return (
+              p.scrollWidth <= p.clientWidth && p.getBoundingClientRect().height < lineHeight * 1.6
+            );
+          })
+      );
+      expect(fits, name).toBe(true);
+    }
+
+    // Recuperado and Contacto keep their period selects and empty values.
+    const recovered = page.getByRole("group", { name: "Recuperado" });
+    await expect(recovered.getByLabel("Período de recuperado")).toHaveValue("thisMonth");
+    await recovered.getByLabel("Período de recuperado").selectOption("lastMonth");
+    await expect(
+      page.getByRole("region", { name: "Progreso por cartera · mes pasado" })
+    ).toBeVisible();
+    const contact = page.getByRole("group", { name: "Contacto" });
+    await expect(contact.getByRole("combobox")).toHaveValue("7d");
+    await expect(contact.getByText("—", { exact: true })).toBeVisible();
+  });
+
+  test("cartera: no recovery section", async ({ page }) => {
+    await signUpAndEnter(page, newOwner("cartera-detail"), `QA Cartera ${Date.now()}`);
+    const stamp = Date.now();
+    const portfolioName = `Cartera ${stamp}`;
+    const clientId = `cli-${stamp}`;
+
+    await page.getByRole("link", { name: "Carteras" }).click();
+    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page.getByLabel("Nombre de la cartera").fill(portfolioName);
+    await page.getByLabel("ID del cliente").fill(clientId);
+    await page.getByRole("button", { name: "Crear cartera" }).click();
+    await page.getByText(portfolioName).click();
+    await expect(page).toHaveURL(/\/portfolios\/[a-f0-9-]+$/);
+
+    await expect(page.getByRole("heading", { name: portfolioName })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Recuperación" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Volver a carteras" })).toHaveCount(0);
+
+    // A portfolio never synced shows zero accounts and a zero balance.
+    await expect(
+      page.getByText(new RegExp(`^${clientId} · 0 cuentas activas · Saldo \\D*0$`))
+    ).toBeVisible();
+
+    // Importar cuentas sits in the page header and opens the import modal.
+    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.locator('input[type="file"]').setInputFiles(CSV);
+    await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
+    await page.getByRole("button", { name: "Cerrar" }).click();
+    await expect(page.getByText("María E2E")).toBeVisible();
+    await expect(
+      page.getByText(new RegExp(`^${clientId} · 1 cuenta activa · Saldo `))
+    ).toBeVisible();
+
+    // The search, with the account count beside it.
+    await expect(page.getByPlaceholder("Buscar por nombre, ID o teléfono")).toBeVisible();
+    await expect(page.getByText("1 cuenta", { exact: true })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Cuenta", exact: true })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Días de atraso" })).toBeVisible();
+
+    // The breadcrumb links back to the list.
+    const crumb = page.getByRole("navigation", { name: "breadcrumb" });
+    await expect(crumb).toContainText(portfolioName);
+    await crumb.getByRole("link", { name: "Carteras" }).click();
+    await expect(page).toHaveURL(/\/portfolios$/);
+  });
+});

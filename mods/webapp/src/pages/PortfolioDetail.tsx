@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Eye, PhoneCall } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { Eye, PhoneCall } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { useMoney, useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
@@ -10,7 +10,6 @@ import { PageHeader } from "../components/page-header.js";
 import { Dialog } from "../components/ui/dialog.js";
 import { Accordion } from "../components/ui/accordion.js";
 import { CsvSyncModal } from "../components/portfolios/CsvSyncModal.js";
-import { PortfolioRecoverySection } from "../components/portfolios/PortfolioRecoverySection.js";
 import { ReachOutModal } from "../components/portfolios/ReachOutModal.js";
 import { BulkReachOutModal } from "../components/portfolios/BulkReachOutModal.js";
 import { RowActionsMenu, type RowAction } from "../components/ui/row-actions-menu.js";
@@ -24,7 +23,6 @@ export function PortfolioDetail() {
   // preview below; money() is the shared workspace-locale formatter for this page's tables.
   const wsCurrency = useWorkspaceCurrency();
   const money = useMoney();
-  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [showSync, setShowSync] = useState(false);
   const [reachOut, setReachOut] = useState<Record<string, unknown> | null>(null);
@@ -43,27 +41,55 @@ export function PortfolioDetail() {
   const items = accounts.data?.items ?? [];
   const total = accounts.data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const count = (key: "activeAccounts" | "accounts", n: number) =>
+    t(`portfolios.detail.${key}.${n === 1 ? "one" : "other"}`).replace(
+      "{count}",
+      n.toLocaleString()
+    );
+  const p = portfolio.data;
+  // One facts line from the portfolio record; a portfolio never synced reads 0 and a zero
+  // balance. Nothing renders until the record loads.
+  const facts = p
+    ? [
+        p.clientId,
+        count("activeAccounts", p.accountCount ?? 0),
+        t("portfolios.detail.balance").replace("{amount}", money(p.totalOutstandingBalance ?? 0))
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : null;
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/portfolios")}>
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          {t("portfolios.detail.back")}
-        </Button>
+      <div className="flex flex-col gap-3.5">
+        <nav aria-label="breadcrumb" className="flex items-center gap-1.5 text-[13px]">
+          <Link to="/portfolios" className="text-fg-subtle hover:text-fg-muted">
+            {t("portfolios.title")}
+          </Link>
+          <span aria-hidden="true" className="text-fg-subtle">
+            /
+          </span>
+          <span className="text-fg">{p?.name ?? "…"}</span>
+        </nav>
+        <PageHeader
+          title={p?.name ?? "…"}
+          description={facts ?? undefined}
+          action={
+            <Button onClick={() => setShowSync(true)} disabled={!p}>
+              {t("portfolios.csv.title")}
+            </Button>
+          }
+        />
       </div>
-
-      <PageHeader title={portfolio.data?.name ?? "…"} description={portfolio.data?.clientId} />
-
-      <PortfolioRecoverySection portfolioId={id!} />
 
       <DataTable
         data={items as Record<string, unknown>[]}
         keyField="id"
         searchable={true}
-        searchPlaceholder="Buscar cuenta..."
-        actionLabel={t("portfolios.csv.title")}
-        onAction={() => setShowSync(true)}
+        searchPlaceholder={t("portfolios.detail.searchPlaceholder")}
+        searchClassName="w-80"
+        toolbarEnd={<span className="text-[13px] text-fg-subtle">{count("accounts", total)}</span>}
+        uppercaseHeaders
         selectable
         getRowId={(r) => r.id as string}
         selectedIds={selected}

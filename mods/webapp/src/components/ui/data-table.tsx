@@ -20,6 +20,12 @@ export interface DataTableProps<T> {
   keyField?: keyof T;
   searchable?: boolean;
   searchPlaceholder?: string;
+  /** Classes for the search box (its width, e.g. `w-80` for a longer placeholder). */
+  searchClassName?: string;
+  /** Shown at the toolbar's right end when there is no `actionLabel` (e.g. a row count). */
+  toolbarEnd?: React.ReactNode;
+  /** Renders the column headers in uppercase. */
+  uppercaseHeaders?: boolean;
   filterElement?: React.ReactNode;
   actionLabel?: string;
   onAction?: () => void;
@@ -56,6 +62,9 @@ export function DataTable<T extends Record<string, unknown>>({
   keyField,
   searchable = true,
   searchPlaceholder,
+  searchClassName,
+  toolbarEnd,
+  uppercaseHeaders,
   filterElement,
   actionLabel,
   onAction,
@@ -120,7 +129,7 @@ export function DataTable<T extends Record<string, unknown>>({
     .replace("{total}", String(totalRecords ?? displayData.length));
 
   const colSpan = columns.length + (selectable ? 1 : 0);
-  const hasToolbar = searchable || actionLabel || filterElement;
+  const hasToolbar = searchable || actionLabel || filterElement || toolbarEnd;
   const showSelectionBar = selectable && selected.length > 0;
 
   const checkboxClass =
@@ -153,18 +162,20 @@ export function DataTable<T extends Record<string, unknown>>({
                 (searchable ? (
                   <SearchBox
                     placeholder={searchPlaceholder ?? t("table.searchPlaceholder")}
-                    className="w-60"
+                    className={searchClassName ?? "w-60"}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 ) : (
                   <div />
                 ))}
-              {actionLabel && (
+              {actionLabel ? (
                 <Button onClick={onAction}>
                   <Plus className="h-4 w-4" />
                   {actionLabel}
                 </Button>
+              ) : (
+                toolbarEnd
               )}
             </>
           )}
@@ -194,6 +205,7 @@ export function DataTable<T extends Record<string, unknown>>({
                   key={String(col.key)}
                   className={cn(
                     "px-4 text-left text-[12px] font-semibold tracking-[0.3px] text-fg-subtle",
+                    uppercaseHeaders && "uppercase tracking-[0.5px]",
                     col.align === "right" && "text-right",
                     col.align === "center" && "text-center",
                     col.className

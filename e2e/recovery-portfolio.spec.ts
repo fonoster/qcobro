@@ -26,8 +26,8 @@ function accountsFile(missed: number) {
 /**
  * Portfolio recovery golden path (#210): the import modal defaults to "Agregar y actualizar"
  * and warns when a mode or a file can't detect payments; a second import with fewer missed
- * installments shows "Pagos detectados", and the portfolio's Recuperación section shows the
- * partial recovery in its summary, breakdown and list. Assumes the dev stack is running.
+ * installments shows "Pagos detectados" with the partial recovery. (The per-cartera
+ * Recuperación section is no longer rendered: #250.) Assumes the dev stack is running.
  */
 test.describe("portfolio recovery", () => {
   test("an import that lowers missed_installments shows up as a partial recovery", async ({
@@ -47,12 +47,6 @@ test.describe("portfolio recovery", () => {
     await page.getByText(portfolioName).click();
     await expect(page).toHaveURL(/\/portfolios\/[a-f0-9-]+$/);
     const portfolioId = page.url().split("/portfolios/")[1];
-
-    // --- Nothing detected yet ---------------------------------------------------------
-    const recovery = page.getByRole("region", { name: "Recuperación" });
-    await expect(
-      recovery.getByText("Aún no hay pagos detectados. Se detectan al sincronizar la cartera.")
-    ).toBeVisible();
 
     // --- Import modal: default mode, the APPEND_ONLY warning, the missing column ---------
     await page.getByRole("button", { name: "Importar cuentas" }).click();
@@ -114,35 +108,6 @@ test.describe("portfolio recovery", () => {
     await expect(dialog.getByText("Pagos detectados", { exact: true })).toBeVisible();
     await expect(dialog.getByText(/5,000.* · 1 cuenta$/)).toBeVisible();
     await dialog.getByRole("button", { name: "Cerrar" }).click();
-
-    // --- Summary ------------------------------------------------------------------------
-    await expect(recovery.getByText(/5,000/).first()).toBeVisible();
-    await expect(recovery.getByText("1 cuenta con gestión")).toBeVisible();
-    await expect(recovery.getByLabel("Período de recuperación")).toHaveValue("thisMonth");
-
-    // --- Breakdown: Días by default, with a Total; Campaña has none ---------------------
-    const breakdown = recovery.getByRole("radiogroup", { name: "Desglose" });
-    await expect(breakdown.getByRole("radio", { name: "Días" })).toBeChecked();
-    await expect(recovery.getByRole("row", { name: /^Total/ })).toBeVisible();
-    await expect(recovery.getByText(/Depende de cada cuánto sincroniza el cliente/)).toBeVisible();
-
-    // The radios are visually hidden inside their labels, so click the label as a person would.
-    await breakdown.getByText("Campaña", { exact: true }).click();
-    await expect(breakdown.getByRole("radio", { name: "Campaña" })).toBeChecked();
-    await expect(recovery.getByRole("row", { name: /^Total/ })).toHaveCount(0);
-    await expect(
-      recovery.getByText(
-        "Una cuenta gestionada por varias campañas cuenta en cada una: las filas no se suman."
-      )
-    ).toBeVisible();
-    await expect(recovery.getByText(/Depende de cada cuánto sincroniza el cliente/)).toHaveCount(0);
-
-    // --- Recovery list ------------------------------------------------------------------
-    const list = recovery.getByRole("list", { name: "Recuperaciones" });
-    const item = list.getByRole("listitem").filter({ hasText: "Ana E2E" });
-    await expect(item).toBeVisible();
-    await expect(item.getByText("Pago parcial · 2 cuotas")).toBeVisible();
-    await expect(item.getByText(/FT-REC-1 · Voz IA/)).toBeVisible();
 
     // --- The console never mentions exits ----------------------------------------------
     await expect(page.getByText(/salida/i)).toHaveCount(0);

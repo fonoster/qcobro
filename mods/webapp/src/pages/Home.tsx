@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { KeyRound } from "lucide-react";
 import { skipToken } from "@tanstack/react-query";
 import {
   contactStatsPeriodSchema,
@@ -12,10 +11,9 @@ import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { deliveryLabel, outcomeLabel } from "../lib/contactAxes.js";
 import { useI18n, type Language, type MessageId } from "../lib/i18n.js";
-import { useMoney, useWorkspaceTimezone } from "../lib/useWorkspaceCurrency.js";
+import { useCurrencySymbol, useMoney, useWorkspaceTimezone } from "../lib/useWorkspaceCurrency.js";
 import { Card } from "../components/ui/card.js";
 import { KpiCard, type KpiCardPeriodControl } from "../components/kpi-card.js";
-import { CopyField } from "../components/CopyField.js";
 import { channelIcon } from "../lib/channelIcon.js";
 import { cn } from "@/lib/utils.js";
 
@@ -52,13 +50,13 @@ function recoveryPct(recovered: number, outstanding: number): number {
 
 export function Home() {
   const { workspace } = useAuth();
+  const currencySymbol = useCurrencySymbol();
   const { t, language } = useI18n();
   const money = useMoney();
   const workspaces = trpc.workspaces.list.useQuery();
   const active =
     workspaces.data?.items.find((w) => w.accessKeyId === workspace) ?? workspaces.data?.items[0];
   const wsName = active?.name ?? "tu espacio";
-  const wsAccessKeyId = active?.accessKeyId ?? workspace;
 
   const [contactRatePeriod, setContactRatePeriod] = useState<ContactStatsPeriod>("7d");
   const [recoveryPeriod, setRecoveryPeriod] = useState<RecoveryPeriod>("thisMonth");
@@ -119,13 +117,25 @@ export function Home() {
     label: string;
     value: string;
     meta: string;
+    metaClassName?: string;
     detail?: string;
     period?: KpiCardPeriodControl;
   }[] = [
     {
+      label: t("home.kpi.accountsInManagement"),
+      value: accountsInManagement.toLocaleString(),
+      meta: t("home.kpi.active")
+    },
+    {
+      label: t("home.kpi.pendingBalance"),
+      value: money(Math.trunc(outstandingTotal)),
+      meta: t("home.kpi.pendingBalanceMeta")
+    },
+    {
       label: t("home.kpi.recovered"),
       value: recoveredValue,
       meta: recoveredSubtext,
+      metaClassName: "text-fg-muted",
       detail: recoveredDetail,
       period: {
         value: recoveryPeriod,
@@ -136,11 +146,6 @@ export function Home() {
           label: t(`home.recovered.period.${p}` as MessageId)
         }))
       }
-    },
-    {
-      label: t("home.kpi.promisesKept"),
-      value: promisesKept.toLocaleString(),
-      meta: t("home.kpi.promisesKeptMeta")
     },
     {
       label: t("home.kpi.contactRate"),
@@ -157,46 +162,30 @@ export function Home() {
       }
     },
     {
-      label: t("home.kpi.pendingBalance"),
-      value: money(Math.trunc(outstandingTotal)),
-      meta: t("home.kpi.pendingBalanceMeta")
-    },
-    {
-      label: t("home.kpi.accountsInManagement"),
-      value: accountsInManagement.toLocaleString(),
-      meta: t("home.kpi.active")
+      label: t("home.kpi.promisesKept"),
+      value: promisesKept.toLocaleString(),
+      meta: t("home.kpi.promisesKeptMeta")
     }
   ];
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-[22px] font-bold text-fg">{t("home.title")}</h1>
-          <p className="text-sm text-fg-subtle">{t("home.subtitle").replace("{name}", wsName)}</p>
-        </div>
-        {wsAccessKeyId && (
-          <div className="flex shrink-0 items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-2">
-            <KeyRound className="h-[15px] w-[15px] shrink-0 text-fg-subtle" />
-            <span className="text-[13px] font-medium text-fg-subtle">{t("home.workspaceId")}</span>
-            <CopyField
-              variant="inline"
-              value={wsAccessKeyId}
-              copyAriaLabel={t("home.workspaceIdAria")}
-              className="max-w-[160px] text-fg"
-            />
-          </div>
-        )}
+      <div>
+        <h1 className="text-[22px] font-bold text-fg">{t("home.title")}</h1>
+        <p className="text-sm text-fg-subtle">
+          {t("home.subtitle").replace("{name}", wsName).replace("{currency}", currencySymbol)}
+        </p>
       </div>
 
       <div className="grid grid-cols-5 gap-4">
         {kpis.map((k) => (
           <KpiCard
             key={k.label}
-            className="gap-1 rounded-xl shadow-none"
+            className="gap-2.5 rounded-xl px-[18px] py-4 shadow-none"
             label={k.label}
             value={k.value}
             subtext={k.meta}
+            subtextClassName={k.metaClassName}
             detail={k.detail}
             period={k.period}
           />
