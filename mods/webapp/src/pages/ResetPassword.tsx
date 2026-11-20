@@ -66,7 +66,7 @@ export function ResetPassword() {
           />
           <Link
             to="/forgot-password"
-            className="text-[13px] font-semibold text-primary hover:underline"
+            className="text-[13px] font-semibold text-fg underline-offset-2 hover:underline"
           >
             {t("resetPassword.invalidCta")}
           </Link>
@@ -108,7 +108,7 @@ export function ResetPassword() {
       )}
       <Link
         to="/login"
-        className="text-center text-[13px] font-semibold text-primary hover:underline"
+        className="text-center text-[13px] font-semibold text-fg underline-offset-2 hover:underline"
       >
         {t("resetPassword.backToLogin")}
       </Link>

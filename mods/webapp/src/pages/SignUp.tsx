@@ -92,7 +92,7 @@ export function SignUp() {
 
       <p className="text-center text-[13px] text-fg-subtle">
         {t("auth.haveAccount")}{" "}
-        <Link to="/login" className="font-semibold text-primary hover:underline">
+        <Link to="/login" className="font-semibold text-fg underline-offset-2 hover:underline">
           {t("auth.login")}
         </Link>
       </p>

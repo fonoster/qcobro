@@ -65,7 +65,7 @@ export function ForgotPassword() {
       )}
       <Link
         to="/login"
-        className="text-center text-[13px] font-semibold text-primary hover:underline"
+        className="text-center text-[13px] font-semibold text-fg underline-offset-2 hover:underline"
       >
         {t("forgotPassword.backToLogin")}
       </Link>

@@ -101,7 +101,7 @@ export function VerifyContact() {
               type="button"
               onClick={onResend}
               disabled={resending}
-              className="font-semibold text-primary hover:underline disabled:opacity-50"
+              className="font-semibold text-fg underline-offset-2 hover:underline disabled:opacity-50"
             >
               {t("verify.resend")}
             </button>

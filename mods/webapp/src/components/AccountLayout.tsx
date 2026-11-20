@@ -37,7 +37,7 @@ export function AccountLayout() {
           </Button>
         </div>
       </header>
-      <main className="flex flex-1 flex-col overflow-y-auto">
+      <main className="flex flex-1 flex-col overflow-y-auto bg-cover bg-center dark:bg-[url(/pattern-center.png)]">
         <Outlet />
       </main>
     </div>

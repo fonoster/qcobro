@@ -73,7 +73,7 @@ export function Login() {
               </label>
               <Link
                 to="/forgot-password"
-                className="text-[13px] font-medium text-primary hover:underline"
+                className="text-[13px] font-medium text-fg underline-offset-2 hover:underline"
               >
                 {t("auth.forgot")}
               </Link>
@@ -97,7 +97,7 @@ export function Login() {
 
       <p className="text-center text-[13px] text-fg-subtle">
         {t("auth.noAccount")}{" "}
-        <Link to="/signup" className="font-semibold text-primary hover:underline">
+        <Link to="/signup" className="font-semibold text-fg underline-offset-2 hover:underline">
           {t("auth.createOne")}
         </Link>
       </p>

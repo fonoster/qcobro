@@ -111,7 +111,7 @@ export function Workspaces() {
                   <button
                     type="button"
                     onClick={() => onSelect(ws.accessKeyId)}
-                    className="flex min-w-0 flex-1 items-center gap-3 text-left after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:rounded-m focus-visible:after:ring-2 focus-visible:after:ring-ring"
+                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:rounded-m focus-visible:after:ring-2 focus-visible:after:ring-ring"
                   >
                     <span
                       aria-hidden="true"

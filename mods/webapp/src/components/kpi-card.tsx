@@ -96,7 +96,7 @@ export function KpiCard({
       ) : (
         <p className="whitespace-nowrap text-xs font-normal text-fg-subtle">{label}</p>
       )}
-      <p className="whitespace-nowrap text-[22px] font-medium leading-tight text-fg min-[1440px]:text-2xl">
+      <p className="whitespace-nowrap font-mono text-[22px] font-medium leading-tight text-fg min-[1440px]:text-2xl">
         {value}
       </p>
       {/* `mt-auto` pins the footer to the bottom of the card so every card's note sits on the
