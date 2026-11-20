@@ -1,5 +1,5 @@
 /* Kit de Marca v3. Builds on styles.css (tokens, nav, record, footer).
-   Design: pencil.pen → "QCobro — Kit de Marca v3 · Desktop/Mobile". */
+   Design: designs/website.pen → "QCobro — Kit de Marca v3 · Desktop/Mobile". */
 
 .kit-head { border-bottom: 1px solid var(--rule); }
 .kit-head__inner { display: flex; align-items: flex-end; justify-content: space-between; gap: 80px; padding-block: 96px 80px; }

@@ -6,7 +6,7 @@
 **Audience:** Customer — behavior only, no internals (see `docs-site/AGENTS.md`)
 **Preset:** 16:9 `1600 × 900` (exported at 2× → `3200 × 1800`)
 **Diagram Kit version:** v1
-**Pencil node id:** `bDSCq` (file: repo-root `pencil.pen`)
+**Node id:** `bDSCq` (file: `designs/docs.pen`)
 
 > Regenerate from this doc — do not edit the PNG. Change the spec or the kit, then
 > re-export node `bDSCq`.
@@ -41,9 +41,10 @@ Bespoke large step cards (icon medallion + title + wrapping subtitle), same styl
 
 ## Re-export
 
+Open `designs/docs.pen` in Nib, then:
+
 ```
-export_nodes(filePath: "pencil.pen", nodeIds: ["bDSCq"],
-             outputDir: "docs-site/images/campaigns-engine", format: "png")
+get_screenshot(id: "bDSCq", scale: 2)
 ```
 
-Then rename the output (`bDSCq.png`) to `flow.png`.
+and save the PNG as `docs-site/images/campaigns-engine/flow.png`.

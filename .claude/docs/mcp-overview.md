@@ -3,7 +3,7 @@
 - **Page:** `docs-site/mcp/overview.mdx` (update existing page — editorial review + banner)
 - **Stage:** 7 (Wire) — page already wired into `docs.json` under "MCP"; banner added, proofing
 - **Diátaxis type:** Explanation (orientation page for `@qcobro/mcp`, sibling of `sdk/overview`)
-- **Docs surface:** Mintlify, `docs-site/` (docs.json). Pencil file: repo-root `pencil.pen`.
+- **Docs surface:** Mintlify, `docs-site/` (docs.json). Design file: `designs/docs.pen` (Nib).
 
 ## Purpose narrative
 
@@ -41,7 +41,7 @@ workspace API key, and drive portfolios through their assistant.
 ## Asset
 
 - `docs-site/images/mcp-overview/overview.png` (3200×1800 = 1600×900 design, 2× PNG, ~243K).
-  Pencil node `knSrg` "Diagram · MCP Overview (kit)" in repo-root `pencil.pen`.
+  Pencil node `knSrg` "Diagram · MCP Overview (kit)" in `designs/docs.pen`.
   Nodes: Claude Desktop (External) → @qcobro/mcp (Service) → QCobro API (Node), plus
   Autenticación (External). Registered in `images/ASSETS.md`; build doc at
   `docs-site/images/mcp-overview/overview.md`.

@@ -6,7 +6,7 @@
 **Audience:** Customer — behavior only, no internals (see `docs-site/AGENTS.md`)
 **Preset:** 16:9 `1600 × 900` (exported at 2× → `3200 × 1800`)
 **Diagram Kit version:** v1
-**Pencil node id:** `HqFVE` (file: repo-root `pencil.pen`)
+**Node id:** `HqFVE` (file: `designs/docs.pen`)
 
 > Regenerate from this doc — do not edit the PNG. Change the spec or the kit, then
 > re-export node `HqFVE`.

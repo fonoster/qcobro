@@ -3,7 +3,7 @@
 - **Page:** `docs-site/sdk/overview.mdx` (update existing stub)
 - **Stage:** 7 (Wire) — page drafted, diagram exported, proofed; at the going-live gate
 - **Diátaxis type:** Explanation (orientation page for the SDK section)
-- **Docs surface:** Mintlify, `docs-site/` (docs.json). Pencil file: repo-root `pencil.pen`.
+- **Docs surface:** Mintlify, `docs-site/` (docs.json). Design file: `designs/docs.pen` (Nib).
 
 ## Purpose narrative
 
@@ -31,7 +31,7 @@ where to go next (install, authenticate, sync accounts, reference).
 ## Asset
 
 - `docs-site/images/sdk-overview/architecture.png` (3200×2 = 1600×900 design, 2× PNG, 244K).
-  Pencil node `IYv8v` "Doc Asset — SDK Overview Diagram" in repo-root pencil.pen.
+  Pencil node `IYv8v` "Doc Asset — SDK Overview Diagram" in `designs/docs.pen`.
   Built from design-system card/logo/label styling; emerald=request, slate=shared API, amber dashed=auth.
 
 ## Decision log

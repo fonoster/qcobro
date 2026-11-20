@@ -6,7 +6,7 @@
 **Audience:** Customer — behavior only, no internals (see `docs-site/AGENTS.md`)
 **Preset:** 16:9 `1600 × 900` (exported at 2× → `3200 × 1800`)
 **Diagram Kit version:** v1
-**Pencil node id:** `fjsng` (file: repo-root `pencil.pen`)
+**Node id:** `fjsng` (file: `designs/docs.pen`)
 
 > Regenerate from this doc — do not edit the PNG. Change the spec or the kit, then
 > re-export node `fjsng` (see **Re-export** below).
@@ -42,7 +42,7 @@ trabajan sobre la misma API."
 
 ## Built from (Diagram Kit v1)
 
-Components instanced (in `pencil.pen`, frame `Diagram Kit` = `dkktQ`):
+Components instanced (in `designs/docs.pen`, frame `Diagram Kit` = `dkktQ`):
 
 | Component         | id       | Used for                 |
 | :---------------- | :------- | :----------------------- |
@@ -57,20 +57,19 @@ tokens still propagates here.
 
 ## How to change it
 
-- **Minor content** (labels, a card's text): edit the relevant instance in `pencil.pen` via
-  the Pencil MCP, then re-export.
-- **Structure** (add/remove a step): update the spec above, mirror it in `pencil.pen`,
+- **Minor content** (labels, a card's text): edit the relevant instance in `designs/docs.pen` via
+  Nib, then re-export.
+- **Structure** (add/remove a step): update the spec above, mirror it in `designs/docs.pen`,
   re-export.
 - **Brand / style** (color, radius, type): do **not** touch this asset — change the `dgm-*`
   token or the kit component once; every diagram updates. Then re-export all.
 
 ## Re-export
 
-No `pencil` CLI exists; export is driven through the Pencil MCP:
+Open `designs/docs.pen` in Nib, then:
 
 ```
-export_nodes(filePath: "pencil.pen", nodeIds: ["fjsng"],
-             outputDir: "docs-site/images/how-qcobro-works", format: "png")
+get_screenshot(id: "fjsng", scale: 2)
 ```
 
-Then rename the output (`fjsng.png`) to `flow.png`.
+and save the PNG as `docs-site/images/how-qcobro-works/flow.png`.

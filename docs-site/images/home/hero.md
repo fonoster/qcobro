@@ -5,9 +5,9 @@
 **Type:** illustration · brand hero (artistic / technical)
 **Audience:** Customer — behavior/brand only, no internals (see `docs-site/AGENTS.md`)
 **Preset:** 16:9 `1600 × 900` (exported at 2× → `3200 × 1800`)
-**Pencil node id:** `r0KBNV` (file: repo-root `pencil.pen`, named "Asset · Home Hero (artistic)")
+**Node id:** `r0KBNV` (file: `designs/docs.pen`, named "Asset · Home Hero (artistic)")
 
-> Regenerate from this doc — do not edit the PNG. Change the scene in `pencil.pen`, then
+> Regenerate from this doc — do not edit the PNG. Change the scene in `designs/docs.pen`, then
 > re-export node `r0KBNV` (see **Re-export** below).
 
 ## One message
@@ -53,11 +53,10 @@ size well under half the frame height so the linear gradient stays the dominant 
 
 ## Re-export
 
-Driven through the Pencil MCP:
+Open `designs/docs.pen` in Nib, then:
 
 ```
-export_nodes(filePath: "pencil.pen", nodeIds: ["r0KBNV"],
-             outputDir: "docs-site/images/home", format: "png")
+get_screenshot(id: "r0KBNV", scale: 2)
 ```
 
-Then rename the output (`r0KBNV.png`) to `hero.png`.
+and save the PNG as `docs-site/images/home/hero.png`.

@@ -32,7 +32,7 @@ test-results/
 playwright-report/
 playwright/.cache/
 
-# Pencil design backups (active file is pencil.pen)
+# Design backups (design files live in designs/)
 *-old.pen
 
 # Fonoster dependency tarballs pre-packed for Docker builds

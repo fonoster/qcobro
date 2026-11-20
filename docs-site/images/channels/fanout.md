@@ -6,7 +6,7 @@
 **Audience:** Customer — behavior only, no internals (see `docs-site/AGENTS.md`)
 **Preset:** 16:9 `1600 × 900` (exported at 2× → `3200 × 1800`)
 **Diagram Kit version:** v1
-**Pencil node id:** `mqLe9` (file: repo-root `pencil.pen`)
+**Node id:** `mqLe9` (file: `designs/docs.pen`)
 
 > Regenerate from this doc — do not edit the PNG. Change the spec or the kit, then
 > re-export node `mqLe9`.
@@ -40,9 +40,10 @@ technique as `home/hero`). Fully token-bound to `dgm-*`, so a rebrand propagates
 
 ## Re-export
 
+Open `designs/docs.pen` in Nib, then:
+
 ```
-export_nodes(filePath: "pencil.pen", nodeIds: ["mqLe9"],
-             outputDir: "docs-site/images/channels", format: "png")
+get_screenshot(id: "mqLe9", scale: 2)
 ```
 
-Then rename the output (`mqLe9.png`) to `fanout.png`.
+and save the PNG as `docs-site/images/channels/fanout.png`.
