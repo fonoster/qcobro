@@ -3,8 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n } from "../lib/i18n.js";
-import { AuthBrandPanel } from "../components/AuthBrandPanel.js";
-import { InputGroup } from "../components/ui/input.js";
+import { AuthLayout, AuthHeading } from "../components/AuthLayout.js";
+import { Input, InputGroup } from "../components/ui/input.js";
+import { Alert } from "../components/ui/alert.js";
 import { Button } from "../components/ui/button.js";
 import { GoogleButton } from "../components/GoogleButton.js";
 
@@ -16,77 +17,90 @@ export function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    setError(null);
+    setFailed(false);
     try {
       const res = await login.mutateAsync({ email, password });
       setTokens(res.accessToken, res.refreshToken, res.idToken);
       navigate("/workspaces");
     } catch {
-      setError(t("auth.invalidCredentials"));
+      // The API can't tell which field is wrong, so the alert names neither.
+      setFailed(true);
     }
   }
 
   return (
-    <div className="flex min-h-screen">
-      <div className="hidden lg:flex">
-        <AuthBrandPanel />
+    <AuthLayout>
+      <AuthHeading title={t("auth.loginTitle")} subtitle={t("auth.loginSubtitle")} />
+
+      {failed && (
+        <Alert
+          variant="error"
+          title={t("auth.invalidCredentials.title")}
+          description={t("auth.invalidCredentials.body")}
+        />
+      )}
+
+      <GoogleButton type="button" size="lg" className="w-full">
+        {t("auth.continueGoogle")}
+      </GoogleButton>
+
+      <div className="flex items-center gap-3 text-[13px] text-fg-subtle">
+        <span className="h-px flex-1 bg-border" />
+        {t("auth.or")}
+        <span className="h-px flex-1 bg-border" />
       </div>
 
-      <div className="flex flex-1 items-center justify-center bg-surface px-6">
-        <form onSubmit={onSubmit} className="flex w-full max-w-[380px] flex-col gap-7">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-[26px] font-bold text-fg">{t("auth.loginTitle")}</h1>
-            <p className="text-sm text-fg-subtle">{t("auth.loginSubtitle")}</p>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <InputGroup
-              label={t("auth.email")}
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t("auth.emailPlaceholder")}
-            />
-            <div className="flex flex-col gap-1.5">
-              <InputGroup
-                label={t("auth.password")}
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                error={error ?? undefined}
-              />
+      <form onSubmit={onSubmit} className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
+          <InputGroup
+            id="login-email"
+            label={t("auth.email")}
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={t("auth.emailPlaceholder")}
+          />
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <label htmlFor="login-password" className="text-sm font-medium text-fg-muted">
+                {t("auth.password")}
+              </label>
               <Link
                 to="/forgot-password"
-                className="self-end text-[13px] font-medium text-primary hover:underline"
+                className="text-[13px] font-medium text-primary hover:underline"
               >
                 {t("auth.forgot")}
               </Link>
             </div>
+            <Input
+              id="login-password"
+              type="password"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+            />
           </div>
+        </div>
 
-          <Button type="submit" size="lg" className="w-full" disabled={login.isPending}>
-            {t("auth.login")}
-          </Button>
+        <Button type="submit" size="lg" className="w-full" disabled={login.isPending}>
+          {t("auth.login")}
+        </Button>
+      </form>
 
-          <GoogleButton type="button" size="lg" className="w-full">
-            {t("auth.continueGoogle")}
-          </GoogleButton>
-
-          <Link
-            to="/signup"
-            className="text-center text-[13px] font-semibold text-primary hover:underline"
-          >
-            {t("auth.noAccount")}
-          </Link>
-        </form>
-      </div>
-    </div>
+      <p className="text-center text-[13px] text-fg-subtle">
+        {t("auth.noAccount")}{" "}
+        <Link to="/signup" className="font-semibold text-primary hover:underline">
+          {t("auth.createOne")}
+        </Link>
+      </p>
+    </AuthLayout>
   );
 }

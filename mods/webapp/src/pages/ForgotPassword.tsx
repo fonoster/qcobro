@@ -2,10 +2,9 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
-import { Card } from "../components/ui/card.js";
 import { InputGroup } from "../components/ui/input.js";
 import { Button } from "../components/ui/button.js";
-import { Logo } from "../components/Logo.js";
+import { AuthLayout, AuthHeading } from "../components/AuthLayout.js";
 
 /**
  * Requests a password-reset email. Always shows the same "check your email"
@@ -34,51 +33,42 @@ export function ForgotPassword() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-elevated">
-      <header className="flex h-[72px] w-full items-center justify-between border-b border-border bg-surface px-10">
-        <Logo />
-        <Link to="/login" className="text-[13px] font-semibold text-primary hover:underline">
-          {t("forgotPassword.backToLogin")}
-        </Link>
-      </header>
-      <div className="flex flex-1 items-center justify-center px-4 py-10">
-        <Card className="w-full max-w-[400px] rounded-2xl border-border p-8 shadow-none">
-          {sent ? (
-            <div className="flex flex-col items-center gap-1.5 text-center">
-              <h1 className="text-2xl font-bold text-fg">{t("forgotPassword.sentTitle")}</h1>
-              <p className="text-sm text-fg-subtle">
-                {t("forgotPassword.sentSubtitle").replace("{email}", email)}
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={onSubmit} className="flex flex-col gap-7">
-              <div className="flex flex-col gap-1.5">
-                <h1 className="text-2xl font-bold text-fg">{t("forgotPassword.title")}</h1>
-                <p className="text-sm text-fg-subtle">{t("forgotPassword.subtitle")}</p>
-              </div>
+    <AuthLayout>
+      {sent ? (
+        <AuthHeading
+          title={t("forgotPassword.sentTitle")}
+          subtitle={t("forgotPassword.sentSubtitle").replace("{email}", email)}
+        />
+      ) : (
+        <form onSubmit={onSubmit} className="flex flex-col gap-6">
+          <AuthHeading title={t("forgotPassword.title")} subtitle={t("forgotPassword.subtitle")} />
 
-              <InputGroup
-                label={t("auth.email")}
-                type="email"
-                required
-                autoFocus
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t("auth.emailPlaceholder")}
-              />
+          <InputGroup
+            label={t("auth.email")}
+            type="email"
+            required
+            autoFocus
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={t("auth.emailPlaceholder")}
+          />
 
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full"
-                disabled={sendCode.isPending || !email}
-              >
-                {sendCode.isPending ? t("forgotPassword.sending") : t("forgotPassword.submit")}
-              </Button>
-            </form>
-          )}
-        </Card>
-      </div>
-    </div>
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={sendCode.isPending || !email}
+          >
+            {sendCode.isPending ? t("forgotPassword.sending") : t("forgotPassword.submit")}
+          </Button>
+        </form>
+      )}
+      <Link
+        to="/login"
+        className="text-center text-[13px] font-semibold text-primary hover:underline"
+      >
+        {t("forgotPassword.backToLogin")}
+      </Link>
+    </AuthLayout>
   );
 }

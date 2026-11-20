@@ -109,8 +109,6 @@ key).
 The console's brand logo SHALL be the "QCobro" wordmark alone — no separate mark and no
 tagline — and its color SHALL follow the active theme's primary foreground, so it reads as
 dark ink in the light theme and near-white in the dark theme, wherever the logo appears.
-The one exception is a surface that is always dark regardless of theme (the auth brand
-panel), where the logo SHALL always render light.
 
 #### Scenario: Logo adapts to the dark theme
 
@@ -118,10 +116,31 @@ panel), where the logo SHALL always render light.
 - **THEN** every brand logo instance renders the "QCobro" wordmark in the near-white
   foreground color
 
-#### Scenario: Logo on an always-dark surface
+### Requirement: Sign-in pages use one centered card
 
-- **WHEN** the logo is shown on the auth brand panel in either theme
-- **THEN** it renders light
+Every sign-in page (sign in, sign up, contact verification, forgot password, reset
+password and accept invitation) SHALL show the logo above one centered card, on Fonoster's
+pattern background in the dark theme and on the plain page background in the light theme.
+There SHALL be no brand panel. A failed sign-in SHALL show one alert that names neither
+field, since the API cannot tell which one is wrong.
+
+#### Scenario: Sign-in pages show one card
+
+- **WHEN** a user opens any sign-in page
+- **THEN** it shows the logo above one centered card and no brand panel
+- **AND** in the dark theme the page background is Fonoster's pattern
+
+#### Scenario: Wrong password
+
+- **WHEN** a user signs in with a wrong email or password
+- **THEN** one alert says "No pudimos iniciar sesión" and "El correo o la contraseña no
+  coinciden."
+
+#### Scenario: Accepting an invitation while signed in
+
+- **WHEN** a signed-in user accepts a workspace invitation
+- **THEN** the console refreshes their session so they can enter the new workspace with
+  their role, without signing in again
 
 ### Requirement: Contact verification after sign-up
 
@@ -279,18 +298,27 @@ the user returned to login.
 - **THEN** the account is deleted
 - **AND** the session is cleared and the user is returned to login
 
-### Requirement: Workspace card shows cartera and member counts
+### Requirement: Workspace list shows cartera and member counts
 
-Each workspace card on the workspace landing screen SHALL show a meta line with the
-number of carteras and members in that workspace, below the workspace name.
-Until those counts are available from the API, the card SHALL render placeholder
-values (0) so the layout matches the design.
+The workspaces hub SHALL show the heading "Elige un espacio de trabajo", the number of
+workspaces, a "Crear espacio" button that opens the create dialog, one list with a row per
+workspace, and a hint that invitations arrive by email. Each row SHALL show the workspace's
+initials, its name, a meta line with the number of carteras and members, and its ID with a
+copy control; the row SHALL be one control that opens the workspace. While the list is
+loading the hub SHALL show a loading state, not the empty state. A user with no workspaces
+SHALL see "Crea tu primer espacio de trabajo" and one card ("Aún no tienes espacios") with
+a "Crear espacio de trabajo" button, and no count, top button or invitation hint.
 
-#### Scenario: Card renders name and meta line
+#### Scenario: Row renders name and meta line
 
-- **WHEN** a user views the workspace landing screen
-- **THEN** each workspace card shows the workspace name
+- **WHEN** a user views the workspaces hub
+- **THEN** each workspace row shows the workspace name
 - **AND** a meta line of the form "N carteras · N miembros" is shown below it
+
+#### Scenario: No workspaces
+
+- **WHEN** a user with no workspaces views the hub
+- **THEN** it shows "Aún no tienes espacios" and a "Crear espacio de trabajo" button
 
 ### Requirement: Post-authentication landing on the workspaces hub
 
@@ -308,7 +336,7 @@ the hub.
 
 #### Scenario: Selecting a workspace enters it
 
-- **WHEN** the user selects a workspace card on the hub
+- **WHEN** the user selects a workspace row on the hub
 - **THEN** the console enters that workspace's dashboard
 
 #### Scenario: Zero-workspace user is routed to the hub
@@ -337,21 +365,21 @@ workspaces hub's select/create flows) and without requiring a manual reload or n
 
 ### Requirement: Workspaces hub account menu
 
-The workspaces hub SHALL provide an account menu, opened from the avatar, that lets the
-user manage their account without first selecting or creating a workspace. The menu SHALL
-show the user's name and email, and SHALL offer a link to the profile page, a language
-switcher, and a log-out action. Logging out SHALL clear the session and return the user to
-login.
+The workspaces hub's top bar SHALL show the user's initials, name and email as a button
+that opens an account menu, and a separate "Cerrar sesión" button. The menu lets the user
+manage their account without first selecting or creating a workspace: it SHALL show the
+user's name and email, and SHALL offer a link to the profile page, a language switcher,
+and a log-out action. Logging out SHALL clear the session and return the user to login.
 
-#### Scenario: Account menu opens from the avatar
+#### Scenario: Account menu opens from the name
 
-- **WHEN** a user clicks the avatar on the workspaces hub
+- **WHEN** a user clicks their name on the workspaces hub
 - **THEN** a menu opens showing their name and email
 - **AND** options for Profile, language, and Log out
 
 #### Scenario: User can log out from the hub
 
-- **WHEN** the user selects Log out from the account menu
+- **WHEN** the user selects Cerrar sesión from the account menu or the top bar
 - **THEN** the session is cleared
 - **AND** the user is returned to login
 
@@ -881,19 +909,19 @@ the i18n layer.
 The console SHALL display each workspace's `accessKeyId` to the operator and SHALL provide
 a one-click affordance to copy it to the clipboard, so operators can use it for SDK and API
 integration (the `x-workspace` header and `useWorkspace(accessKeyId)`). The `accessKeyId`
-SHALL be shown on the workspace picker cards and on the dashboard for the active workspace.
+SHALL be shown on the workspace hub's rows and on the dashboard for the active workspace.
 The displayed value SHALL be the `accessKeyId` already present on the workspace payload; no
 secret is exposed. All labels and copy-confirmation text SHALL resolve through the i18n
 layer.
 
-#### Scenario: accessKeyId shown on each workspace card
+#### Scenario: accessKeyId shown on each workspace row
 
-- **WHEN** the operator views the workspace picker at `/workspaces`
-- **THEN** each workspace card displays that workspace's `accessKeyId`
+- **WHEN** the operator views the workspace hub at `/workspaces`
+- **THEN** each workspace row displays that workspace's `accessKeyId`
 
-#### Scenario: Copy accessKeyId from a workspace card
+#### Scenario: Copy accessKeyId from a workspace row
 
-- **WHEN** the operator activates the copy affordance on a workspace card
+- **WHEN** the operator activates the copy affordance on a workspace row
 - **THEN** that workspace's `accessKeyId` is written to the clipboard
 - **AND** a transient confirmation is shown
 - **AND** activating the copy affordance does not select/switch into that workspace

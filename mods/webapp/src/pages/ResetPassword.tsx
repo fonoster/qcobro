@@ -2,10 +2,9 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
-import { Card } from "../components/ui/card.js";
 import { InputGroup } from "../components/ui/input.js";
 import { Button } from "../components/ui/button.js";
-import { Logo } from "../components/Logo.js";
+import { AuthLayout, AuthHeading } from "../components/AuthLayout.js";
 
 /**
  * Sets a new password from the link emailed by sendResetPasswordCode. Identity
@@ -58,68 +57,61 @@ export function ResetPassword() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-elevated">
-      <header className="flex h-[72px] w-full items-center justify-between border-b border-border bg-surface px-10">
-        <Logo />
-        <Link to="/login" className="text-[13px] font-semibold text-primary hover:underline">
-          {t("resetPassword.backToLogin")}
-        </Link>
-      </header>
-      <div className="flex flex-1 items-center justify-center px-4 py-10">
-        <Card className="w-full max-w-[400px] rounded-2xl border-border p-8 shadow-none">
-          {!username || !verificationCode ? (
-            <div className="flex flex-col items-center gap-4 text-center">
-              <div className="flex flex-col gap-1.5">
-                <h1 className="text-2xl font-bold text-fg">{t("resetPassword.invalidTitle")}</h1>
-                <p className="text-sm text-fg-subtle">{t("resetPassword.invalidSubtitle")}</p>
-              </div>
-              <Link
-                to="/forgot-password"
-                className="text-[13px] font-semibold text-primary hover:underline"
-              >
-                {t("resetPassword.invalidCta")}
-              </Link>
-            </div>
-          ) : (
-            <form onSubmit={onSubmit} className="flex flex-col gap-7">
-              <div className="flex flex-col gap-1.5">
-                <h1 className="text-2xl font-bold text-fg">{t("resetPassword.title")}</h1>
-                <p className="text-sm text-fg-subtle">{t("resetPassword.subtitle")}</p>
-              </div>
+    <AuthLayout>
+      {!username || !verificationCode ? (
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AuthHeading
+            title={t("resetPassword.invalidTitle")}
+            subtitle={t("resetPassword.invalidSubtitle")}
+          />
+          <Link
+            to="/forgot-password"
+            className="text-[13px] font-semibold text-primary hover:underline"
+          >
+            {t("resetPassword.invalidCta")}
+          </Link>
+        </div>
+      ) : (
+        <form onSubmit={onSubmit} className="flex flex-col gap-6">
+          <AuthHeading title={t("resetPassword.title")} subtitle={t("resetPassword.subtitle")} />
 
-              <div className="flex flex-col gap-4">
-                <InputGroup
-                  label={t("resetPassword.newPassword")}
-                  type="password"
-                  required
-                  autoFocus
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                />
-                <InputGroup
-                  label={t("resetPassword.confirmPassword")}
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  error={error ?? undefined}
-                />
-              </div>
+          <div className="flex flex-col gap-4">
+            <InputGroup
+              label={t("resetPassword.newPassword")}
+              type="password"
+              required
+              autoFocus
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+            <InputGroup
+              label={t("resetPassword.confirmPassword")}
+              type="password"
+              required
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="••••••••"
+              error={error ?? undefined}
+            />
+          </div>
 
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full"
-                disabled={resetPassword.isPending || !password || !confirmPassword}
-              >
-                {resetPassword.isPending ? t("resetPassword.resetting") : t("resetPassword.submit")}
-              </Button>
-            </form>
-          )}
-        </Card>
-      </div>
-    </div>
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={resetPassword.isPending || !password || !confirmPassword}
+          >
+            {resetPassword.isPending ? t("resetPassword.resetting") : t("resetPassword.submit")}
+          </Button>
+        </form>
+      )}
+      <Link
+        to="/login"
+        className="text-center text-[13px] font-semibold text-primary hover:underline"
+      >
+        {t("resetPassword.backToLogin")}
+      </Link>
+    </AuthLayout>
   );
 }

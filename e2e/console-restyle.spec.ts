@@ -7,6 +7,7 @@ import {
   skipVerification,
   signUpAndEnter,
   inviteMember,
+  openNav,
   waitForMail,
   MAILPIT
 } from "./helpers.js";
@@ -237,7 +238,7 @@ test.describe("console restyle — grouped sidebar", () => {
     await memberPage.goto(await inviteLink(member.email));
     await memberPage.getByRole("button", { name: "Aceptar invitación" }).click();
     await expect(memberPage).not.toHaveURL(/accept-invite/);
-    // The access token lists the new membership only after signing in again.
+    // A fresh session lists the membership too.
     await memberPage.evaluate(() => localStorage.clear());
     await memberPage.goto("/login");
     await memberPage.getByPlaceholder("tú@empresa.com").fill(member.email);
@@ -272,5 +273,168 @@ test.describe("console restyle — grouped sidebar", () => {
     await nav.getByRole("link", { name: "Equipo" }).click();
     await expect(page).toHaveURL(/\/members$/);
     await expect(page.getByRole("heading", { name: "Equipo" })).toBeVisible();
+  });
+});
+
+/**
+ * Sign-in and workspace pages (issue #249): the auth pages are the logo above one centered
+ * card on Fonoster's pattern (dark) or the plain ground (light); /workspaces is one list.
+ */
+
+/** Whether any element on the page paints the Fonoster pattern as its background. */
+const hasPattern = (page: Page) =>
+  page.evaluate(() =>
+    Array.from(document.querySelectorAll("*")).some((el) =>
+      getComputedStyle(el).backgroundImage.includes("pattern-center")
+    )
+  );
+
+async function expectAuthCard(page: Page) {
+  await expect(page.locator("[data-auth-card]")).toHaveCount(1);
+  await expect(page.getByText("Gestiona tu cartera")).toHaveCount(0);
+}
+
+test.describe("console restyle — sign-in and workspaces", () => {
+  test("auth: no brand panel", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    for (const route of [
+      "/login",
+      "/signup",
+      "/forgot-password",
+      "/reset-password",
+      "/accept-invite?token=x"
+    ]) {
+      await page.goto(route);
+      await expectAuthCard(page);
+      await expect.poll(() => hasPattern(page), { message: route }).toBe(true);
+    }
+
+    // /verify-contact needs a session: the sign-up lands there.
+    await signUp(page, newOwner("auth-card"));
+    await expectAuthCard(page);
+    await expect.poll(() => hasPattern(page)).toBe(true);
+
+    // Light mode shows the plain background.
+    await page.evaluate(() => localStorage.clear());
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("/login");
+    await expectAuthCard(page);
+    await expect.poll(() => htmlTheme(page)).toBe("light");
+    expect(await hasPattern(page)).toBe(false);
+  });
+
+  test("auth: wrong password", async ({ page }) => {
+    const owner = newOwner("wrong-pass");
+    await signUp(page, owner);
+    await page.evaluate(() => localStorage.clear());
+    await page.goto("/login");
+    await expect(page.getByRole("heading", { name: "Inicia sesión" })).toBeVisible();
+    await page.getByLabel("Correo electrónico").fill(owner.email);
+    await page.getByLabel("Contraseña").fill("wrong-password");
+    await page.getByRole("button", { name: "Iniciar sesión" }).click();
+    const alert = page.getByRole("alert");
+    await expect(alert).toHaveCount(1);
+    await expect(alert).toContainText("No pudimos iniciar sesión");
+    await expect(alert).toContainText("El correo o la contraseña no coinciden.");
+    await expect(page).toHaveURL(/\/login/);
+  });
+
+  test("workspaces: list", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    const wsName = `QA Lista ${Date.now()}`;
+    await signUpAndEnter(page, newOwner("ws-list"), wsName);
+    await page.goto("/workspaces");
+
+    await expect(page.getByRole("heading", { name: "Elige un espacio de trabajo" })).toBeVisible();
+    await expect(page.getByText("te damos la bienvenida")).toHaveCount(0);
+    await expect(page.getByText("1 espacio", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("¿Te invitaron a un espacio? Abre el enlace de la invitación en tu correo.")
+    ).toBeVisible();
+    const rows = page.getByRole("list", { name: "Espacios de trabajo" }).getByRole("listitem");
+    await expect(rows).toHaveCount(1);
+    await expect(page.getByRole("button", { name: "Configuración" })).toHaveCount(0);
+
+    // The ID copies from its row without opening the workspace.
+    const copy = rows.first().getByRole("button", { name: "Copiar ID del espacio" });
+    const id = ((await copy.textContent()) ?? "").trim();
+    expect(id).toMatch(/^WO/);
+    await copy.click();
+    await expect(page).toHaveURL(/\/workspaces$/);
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(id);
+
+    // "Crear espacio" opens the create dialog.
+    await page.getByRole("button", { name: "Crear espacio", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Crear espacio de trabajo" });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: "Cancelar" }).click();
+    await expect(dialog).toHaveCount(0);
+
+    // The name button opens the account menu.
+    await page.getByRole("button", { name: "Menú de usuario" }).click();
+    const menu = page.getByRole("dialog", { name: "Menú de usuario" });
+    await expect(menu.getByRole("button")).toHaveText(["Mi perfil", "Cerrar sesión"]);
+    await expect(menu.getByRole("combobox", { name: "Idioma" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await page.mouse.click(5, 300);
+    await expect(menu).toHaveCount(0);
+
+    // The row opens its workspace.
+    await rows.first().getByRole("button", { name: wsName }).click();
+    await expect(page).toHaveURL(/localhost:\d+\/$/);
+
+    // The top bar's "Cerrar sesión" logs out.
+    await page.goto("/workspaces");
+    await page.getByRole("banner").getByRole("button", { name: "Cerrar sesión" }).click();
+    await expect(page).toHaveURL(/\/login/);
+  });
+
+  test("workspaces: empty", async ({ page }) => {
+    await signUp(page, newOwner("ws-empty"));
+    await skipVerification(page);
+
+    await expect(
+      page.getByRole("heading", { name: "Crea tu primer espacio de trabajo" })
+    ).toBeVisible();
+    await expect(page.getByText("Aún no tienes espacios")).toBeVisible();
+    await expect(page.getByText("Crea uno para importar tu primera cartera.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Crear espacio de trabajo" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Crear espacio", exact: true })).toHaveCount(0);
+    await expect(page.getByText(/¿Te invitaron a un espacio\?/)).toHaveCount(0);
+    await expect(page.getByText(/^\d+ espacios?$/)).toHaveCount(0);
+
+    // Mi perfil stays reachable with no workspace.
+    await page.getByRole("button", { name: "Menú de usuario" }).click();
+    await page
+      .getByRole("dialog", { name: "Menú de usuario" })
+      .getByRole("button", { name: "Mi perfil" })
+      .click();
+    await expect(page).toHaveURL(/\/profile/);
+  });
+
+  test("workspaces: accepted invitation", async ({ browser, page }) => {
+    const member = newOwner("ws-invited");
+    const memberPage = await (await browser.newContext()).newPage();
+    await signUp(memberPage, member);
+    await skipVerification(memberPage);
+
+    const wsName = `QA Invitado ${Date.now()}`;
+    await signUpAndEnter(page, newOwner("ws-inviter"), wsName);
+    await openNav(page, "Equipo");
+    await inviteMember(page, member.name, member.email);
+
+    // Accepting while signed in lists the workspace and enters it as a member with no new
+    // sign-in (the access token used to list the membership only after signing in again).
+    await memberPage.goto(await inviteLink(member.email));
+    await expectAuthCard(memberPage);
+    await memberPage.getByRole("button", { name: "Aceptar invitación" }).click();
+    await expect(memberPage).not.toHaveURL(/accept-invite/);
+    await memberPage.goto("/workspaces");
+    await memberPage.getByRole("button", { name: wsName }).click();
+    await expect(memberPage).toHaveURL(/localhost:\d+\/$/);
+    // The refreshed access token carries the membership: the sidebar shows the role.
+    await expect(memberPage.getByRole("button", { name: "Menú de usuario" })).toContainText(
+      "Miembro"
+    );
   });
 });

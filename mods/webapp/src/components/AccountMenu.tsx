@@ -9,7 +9,7 @@ import { MenuPanel, MenuHeader, MenuDivider, MenuItem } from "./menu.js";
 import { LanguageMenuItem } from "./LanguageMenuItem.js";
 
 /** Account menu for account-level pages (the workspaces hub and profile). Opens from the
- * top-right avatar and drops downward. Unlike the in-app UserMenu it omits
+ * top bar's initials, name and email, and drops downward. Unlike the in-app UserMenu it omits
  * workspace-scoped entries (no active workspace here) and offers a language switcher. */
 export function AccountMenu() {
   const { currentUser, logout } = useAuth();
@@ -41,7 +41,11 @@ export function AccountMenu() {
     ? createPortal(
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <MenuPanel className="fixed z-50 w-[260px]" style={{ top: pos.top, right: pos.right }}>
+          <MenuPanel
+            label={t("userMenu.aria")}
+            className="fixed z-50 w-[260px]"
+            style={{ top: pos.top, right: pos.right }}
+          >
             <MenuHeader initials={initials} name={name} email={email} />
             <MenuDivider />
             <MenuItem icon={User} label={t("profile.title")} onClick={() => go("/profile")} />
@@ -71,10 +75,17 @@ export function AccountMenu() {
         ref={buttonRef}
         type="button"
         aria-label={t("userMenu.aria")}
+        aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-elevated transition hover:bg-elevated"
+        className="flex items-center gap-2.5 rounded-control px-2 py-1.5 text-left transition hover:bg-elevated"
       >
-        <span className="text-[13px] font-bold text-fg-muted">{initials}</span>
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-elevated text-xs font-bold text-fg-muted">
+          {initials}
+        </span>
+        <span className="hidden min-w-0 flex-col leading-tight sm:flex">
+          <span className="truncate text-[13px] font-semibold text-fg">{name}</span>
+          {email && <span className="truncate text-[11px] text-fg-subtle">{email}</span>}
+        </span>
       </button>
     </div>
   );

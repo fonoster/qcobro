@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { newOwner, signUpAndEnter } from "./helpers.js";
+import { newOwner, signUpAndEnter, submitCreateWorkspace } from "./helpers.js";
 
 /**
  * Workspace switch refresh (bug report: "when I switch workspaces, with the workspace
@@ -42,9 +42,8 @@ test.describe("workspace switch — screen refresh", () => {
     // --- Workspace B: created empty, via the account-level workspaces hub -------------
     await page.getByRole("link", { name: "Ir a la lista de espacios" }).click();
     await expect(page).toHaveURL(/\/workspaces$/);
-    await page.getByRole("button", { name: "Nuevo espacio" }).click();
-    await page.getByPlaceholder("Ej. Cartera Abril").fill(wsBName);
-    await page.getByRole("button", { name: "Crear espacio" }).click();
+    await page.getByRole("button", { name: "Crear espacio", exact: true }).click();
+    await submitCreateWorkspace(page, wsBName);
     // Creating a workspace navigates to "/" under the new (empty) workspace.
     await expect(page).toHaveURL(/localhost:\d+\/$/);
     await expect(page.getByText("Aún no hay carteras.")).toBeVisible();

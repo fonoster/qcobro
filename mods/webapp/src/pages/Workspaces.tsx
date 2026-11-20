@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, X, Settings } from "lucide-react";
+import { ChevronRight, X } from "lucide-react";
 import { trpc, REFRESH_TOKEN_KEY } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n } from "../lib/i18n.js";
@@ -10,6 +10,18 @@ import { CopyField } from "../components/CopyField.js";
 import { InputGroup } from "../components/ui/input.js";
 import { SelectGroup } from "../components/ui/select.js";
 import { TIMEZONES } from "../lib/timezones.js";
+
+/** Up to two letters from the workspace name's first words ("Créditos Demo" → "CD"). */
+function initialsOf(name: string) {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  return (
+    words
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase() || "?"
+  );
+}
 
 export function Workspaces() {
   const { setTokens, setWorkspace } = useAuth();
@@ -27,6 +39,7 @@ export function Workspaces() {
 
   const items = workspaces.data ?? [];
   const pending = create.isPending || refresh.isPending;
+  const empty = workspaces.isSuccess && items.length === 0;
 
   function onSelect(accessKeyId: string) {
     setWorkspace(accessKeyId);
@@ -53,78 +66,105 @@ export function Workspaces() {
     navigate("/");
   }
 
+  const countLabel = t(items.length === 1 ? "workspaces.count.one" : "workspaces.count.other");
+
   return (
     <>
-      <div className="flex flex-1 flex-col items-center justify-center gap-8 px-10 py-12">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-[28px] font-bold text-fg">{t("createWorkspace.welcome.title")}</h1>
-          <p className="text-base text-fg-subtle">{t("createWorkspace.welcome.subtitle")}</p>
+      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-4 py-12 sm:px-6">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-[26px] font-semibold leading-tight text-fg">
+            {t(empty ? "workspaces.empty.title" : "workspaces.title")}
+          </h1>
+          <p className="text-sm text-fg-subtle">{t("workspaces.subtitle")}</p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-6">
-          {items.map((ws) => (
-            <div
-              key={ws.accessKeyId}
-              onClick={() => onSelect(ws.accessKeyId)}
-              className="relative flex h-[200px] w-[280px] cursor-pointer flex-col justify-between rounded-[10px] border border-border bg-surface p-6 text-left transition hover:border-primary/40 hover:shadow-sm"
-            >
-              <div className="flex flex-col gap-1">
-                <p className="text-[17px] font-bold text-fg">{ws.name}</p>
-                <p className="text-[13px] text-fg-subtle">
-                  {ws.portfolioCount}{" "}
-                  {t(
-                    ws.portfolioCount === 1
-                      ? "createWorkspace.card.portfolio"
-                      : "createWorkspace.card.portfolios"
-                  )}{" "}
-                  · {ws.memberCount}{" "}
-                  {t(
-                    ws.memberCount === 1
-                      ? "createWorkspace.card.member"
-                      : "createWorkspace.card.members"
-                  )}
-                </p>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <CopyField
-                  variant="inline"
-                  value={ws.accessKeyId}
-                  copyAriaLabel={t("createWorkspace.card.accessKeyIdAria")}
-                  className="max-w-[150px] rounded-md bg-elevated px-2 py-1 text-fg-muted hover:bg-elevated"
-                />
-                <button
-                  type="button"
-                  aria-label={t("settings.title")}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setWorkspace(ws.accessKeyId);
-                    navigate("/settings");
-                  }}
-                  className="shrink-0 text-fg-subtle transition hover:text-fg-muted"
-                >
-                  <Settings className="h-[18px] w-[18px]" />
-                </button>
-              </div>
+        {workspaces.isPending ? (
+          <p className="text-sm text-fg-subtle">{t("common.loading")}</p>
+        ) : empty ? (
+          <div className="flex flex-col items-start gap-4 rounded-m border border-border bg-sunken p-8">
+            <div className="flex flex-col gap-1">
+              <p className="text-base font-semibold text-fg">{t("workspaces.empty.heading")}</p>
+              <p className="text-sm text-fg-subtle">{t("workspaces.empty.body")}</p>
             </div>
-          ))}
+            <Button onClick={() => setOpen(true)}>{t("workspaces.empty.cta")}</Button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm text-fg-subtle">
+                {countLabel.replace("{count}", String(items.length))}
+              </p>
+              <Button onClick={() => setOpen(true)}>{t("workspaces.create")}</Button>
+            </div>
 
-          <button
-            onClick={() => setOpen(true)}
-            className="flex h-[200px] w-[280px] cursor-pointer flex-col items-center justify-center gap-3 rounded-[10px] border border-dashed border-border bg-surface text-fg-subtle transition hover:border-primary hover:text-primary"
-          >
-            <Plus className="h-7 w-7" />
-            <span className="text-[15px] font-semibold">{t("createWorkspace.new")}</span>
-          </button>
-        </div>
+            <ul
+              aria-label={t("workspaces.listLabel")}
+              className="divide-y divide-border overflow-hidden rounded-m border border-border bg-sunken"
+            >
+              {items.map((ws) => (
+                <li
+                  key={ws.accessKeyId}
+                  className="relative flex items-center gap-4 px-5 py-4 transition hover:bg-elevated"
+                >
+                  {/* The row's one control; its overlay makes the whole row open the workspace,
+                      while the copy control sits above it. */}
+                  <button
+                    type="button"
+                    onClick={() => onSelect(ws.accessKeyId)}
+                    className="flex min-w-0 flex-1 items-center gap-3 text-left after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:rounded-m focus-visible:after:ring-2 focus-visible:after:ring-ring"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-elevated text-xs font-bold text-fg-muted"
+                    >
+                      {initialsOf(ws.name)}
+                    </span>
+                    <span className="flex min-w-0 flex-col leading-tight">
+                      <span className="truncate text-[15px] font-semibold text-fg">{ws.name}</span>
+                      <span className="truncate text-[13px] text-fg-subtle">
+                        {ws.portfolioCount}{" "}
+                        {t(
+                          ws.portfolioCount === 1
+                            ? "createWorkspace.card.portfolio"
+                            : "createWorkspace.card.portfolios"
+                        )}{" "}
+                        · {ws.memberCount}{" "}
+                        {t(
+                          ws.memberCount === 1
+                            ? "createWorkspace.card.member"
+                            : "createWorkspace.card.members"
+                        )}
+                      </span>
+                    </span>
+                  </button>
+                  <CopyField
+                    variant="inline"
+                    value={ws.accessKeyId}
+                    copyAriaLabel={t("createWorkspace.card.accessKeyIdAria")}
+                    className="relative z-10 max-w-[170px] rounded-md bg-elevated px-2 py-1 text-fg-muted"
+                  />
+                  <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-fg-subtle" />
+                </li>
+              ))}
+            </ul>
+
+            <p className="text-[13px] text-fg-subtle">{t("workspaces.inviteHint")}</p>
+          </>
+        )}
       </div>
 
       {open && (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-overlay p-4">
-          <Card className="w-full max-w-[480px] rounded-2xl border-border shadow-xl">
+          <Card
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-workspace-title"
+            className="w-full max-w-[480px] rounded-m border-border shadow-xl"
+          >
             <form onSubmit={onCreate} className="flex flex-col gap-5 p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-[18px] font-bold text-fg">
+                  <h2 id="create-workspace-title" className="text-[18px] font-bold text-fg">
                     {t("createWorkspace.modal.title")}
                   </h2>
                   <p className="text-[13px] text-fg-subtle">
@@ -133,6 +173,7 @@ export function Workspaces() {
                 </div>
                 <button
                   type="button"
+                  aria-label={t("common.close")}
                   onClick={() => setOpen(false)}
                   className="cursor-pointer text-fg-subtle hover:text-fg-muted"
                 >
