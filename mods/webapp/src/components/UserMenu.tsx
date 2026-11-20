@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, ChevronsUpDown } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n, type MessageId } from "../lib/i18n.js";
 import { activeRole } from "../lib/workspaceRole.js";
-import { MenuPanel, MenuHeader, MenuDivider, MenuItem } from "./menu.js";
+import { MenuPanel, MenuDivider, MenuItem } from "./menu.js";
 import { LanguageMenuItem } from "./LanguageMenuItem.js";
 import { cn } from "@/lib/utils.js";
 
@@ -37,7 +37,6 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
   // Prefer the real name from the identity profile for the display label.
   const profile = trpc.profile.get.useQuery();
   const initials = currentUser?.initials ?? "QC";
-  const email = currentUser?.email ?? "";
   const name = profile.data?.name?.trim() || currentUser?.name || t("userMenu.fallbackName");
   const role = activeRole(accessToken, workspace);
   const roleLabel = role ? t(`members.role.${role}` as MessageId) : "";
@@ -48,18 +47,15 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <MenuPanel
             label={t("userMenu.aria")}
-            className="fixed z-50 w-[244px]"
+            className="fixed z-50 w-[240px]"
             style={{ bottom: popupPos.bottom, left: popupPos.left }}
           >
-            <MenuHeader initials={initials} name={name} email={email} />
-            <MenuDivider />
             <MenuItem icon={User} label={t("profile.title")} onClick={() => go("/profile")} />
             <LanguageMenuItem onPicked={() => setOpen(false)} />
             <MenuDivider />
             <MenuItem
               icon={LogOut}
               label={t("userMenu.logout")}
-              danger
               onClick={() => {
                 setOpen(false);
                 logout();
@@ -87,14 +83,17 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
         )}
       >
         {collapsed ? (
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-fg">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent font-mono text-xs text-fg">
             {initials}
           </span>
         ) : (
-          <div className="flex min-w-0 flex-col text-left leading-tight">
-            <span className="truncate text-sm font-medium text-fg">{name}</span>
-            {roleLabel && <span className="truncate text-xs text-fg-subtle">{roleLabel}</span>}
-          </div>
+          <>
+            <div className="flex min-w-0 flex-1 flex-col text-left leading-tight">
+              <span className="truncate text-sm text-fg">{name}</span>
+              {roleLabel && <span className="truncate text-xs text-fg-muted">{roleLabel}</span>}
+            </div>
+            <ChevronsUpDown aria-hidden className="h-3.5 w-3.5 shrink-0 text-fg-muted" />
+          </>
         )}
       </button>
     </div>

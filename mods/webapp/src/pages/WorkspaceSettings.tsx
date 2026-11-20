@@ -6,6 +6,7 @@ import { useI18n } from "../lib/i18n.js";
 import { activeRole } from "../lib/workspaceRole.js";
 import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
+import { Dialog } from "../components/ui/dialog.js";
 import { InputGroup } from "../components/ui/input.js";
 import { SelectGroup } from "../components/ui/select.js";
 import { TIMEZONES } from "../lib/timezones.js";
@@ -167,38 +168,27 @@ export function WorkspaceSettings() {
         </Card>
       )}
 
-      {confirmOpen && active && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-overlay p-4">
-          <Card className="w-full max-w-[440px] rounded-2xl border-border shadow-xl">
-            <div className="flex flex-col gap-5 p-6">
-              <div>
-                <h2 className="text-lg font-bold text-fg">{t("settings.delete.title")}</h2>
-                <p className="mt-1 text-[13px] text-fg-subtle">{t("settings.delete.desc")}</p>
-              </div>
-              <InputGroup
-                label={t("settings.delete.confirmLabel")}
-                value={confirmText}
-                onChange={(e) => setConfirmText(e.target.value)}
-                placeholder={CONFIRM_WORD}
-                autoFocus
-                error={deleteError ? t("settings.delete.error") : undefined}
-              />
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={closeConfirm}>
-                  {t("common.cancel")}
-                </Button>
-                <Button
-                  variant="destructive"
-                  disabled={!canDelete || remove.isPending}
-                  onClick={onDelete}
-                >
-                  {t("settings.delete.title")}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
+      <Dialog
+        open={confirmOpen && !!active}
+        onClose={closeConfirm}
+        width={480}
+        title={t("settings.delete.title")}
+        subtitle={t("settings.delete.desc")}
+        confirmVariant="destructive"
+        confirmLabel={t("settings.delete.title")}
+        confirmDisabled={!canDelete || remove.isPending}
+        onSubmit={onDelete}
+      >
+        <InputGroup
+          label={t("settings.delete.confirmLabel")}
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder={CONFIRM_WORD}
+          className="[&_input]:font-mono"
+          autoFocus
+          error={deleteError ? t("settings.delete.error") : undefined}
+        />
+      </Dialog>
     </div>
   );
 }

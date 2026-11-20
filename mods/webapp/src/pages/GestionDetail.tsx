@@ -103,7 +103,7 @@ function CopyableMetaItem({ label, value }: { label: string; value: string }) {
           className="text-fg-subtle transition-colors hover:text-fg-muted"
         >
           {copied ? (
-            <Check className="h-3.5 w-3.5 text-primary" />
+            <Check className="h-3.5 w-3.5 text-fg-muted" />
           ) : (
             <Copy className="h-3.5 w-3.5" />
           )}
@@ -274,7 +274,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         {/* Voz IA + Pre-grabada: call recording player. Always the actual call recording —
             never a re-synthesized stand-in for what was said. */}
         {isVoiceChannel && (
-          <Section icon={PhoneCall} iconClass="text-primary" title={t("gestiones.detail.call")}>
+          <Section icon={PhoneCall} iconClass="text-fg-muted" title={t("gestiones.detail.call")}>
             {hasRecording ? (
               <div className="rounded-card border border-border bg-elevated p-4 text-fg">
                 <div className="mb-3 flex items-center gap-3">
@@ -313,18 +313,18 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         {isVoiceAi && transcript.length > 0 && (
           <Section
             icon={MessagesSquare}
-            iconClass="text-primary"
+            iconClass="text-fg-muted"
             title={t("gestiones.detail.transcript")}
           >
             <div className="flex flex-col gap-2">
               {transcript.map((line, i) =>
                 line.role === "agent" ? (
                   <div key={i} className="flex justify-end">
-                    <div className="max-w-[85%] rounded-2xl rounded-br-sm border border-primary/20 bg-primary/10 px-3.5 py-2.5">
-                      <span className="text-[11px] font-semibold text-primary">
+                    <div className="max-w-[85%] rounded-2xl rounded-br-sm border border-border bg-elevated px-3.5 py-2.5">
+                      <span className="text-[11px] font-medium text-fg-muted">
                         {t("gestiones.detail.agentSpeaker")}
                       </span>
-                      <p className="text-sm leading-relaxed text-primary">{line.text}</p>
+                      <p className="text-sm leading-relaxed text-fg">{line.text}</p>
                     </div>
                   </div>
                 ) : (
@@ -344,7 +344,7 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
 
         {/* EMAIL: email-client card — initial notice header/body + reply thread */}
         {isEmail && (
-          <Section icon={Mail} iconClass="text-primary" title={t("gestiones.detail.emailThread")}>
+          <Section icon={Mail} iconClass="text-fg-muted" title={t("gestiones.detail.emailThread")}>
             <div className="overflow-hidden rounded-xl border border-border bg-surface">
               {/* Email header: De / Para / Asunto */}
               {(fromEmail || toNumber || subject) && (
@@ -408,10 +408,10 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                 ) : (
                   <div
                     key={i}
-                    className="flex flex-col gap-1.5 border-t border-border bg-primary/10 px-4 py-3"
+                    className="flex flex-col gap-1.5 border-t border-border bg-elevated px-4 py-3"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-primary">
+                      <span className="text-xs font-medium text-fg-muted">
                         {t("gestiones.detail.emailAgentName")}
                       </span>
                       <span className="ml-auto text-[11px] text-fg-subtle">
@@ -441,14 +441,14 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
         {isWhatsApp && (
           <Section
             icon={MessageSquare}
-            iconClass="text-primary"
+            iconClass="text-fg-muted"
             title={t("gestiones.detail.whatsAppThread")}
           >
             <div className="overflow-hidden rounded-xl border border-border bg-surface">
               {/* Initial template message */}
               {messageBody && (
-                <div className="flex flex-col gap-2.5 bg-primary/10 px-4 py-4">
-                  <span className="text-[11px] font-semibold text-primary">
+                <div className="flex flex-col gap-2.5 bg-elevated px-4 py-4">
+                  <span className="text-[11px] font-medium text-fg-muted">
                     {t("gestiones.detail.whatsAppAgent")}
                   </span>
                   {messageBody.split(/\n{2,}/).map((para, i) => (
@@ -487,10 +487,10 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
                 ) : (
                   <div
                     key={i}
-                    className="flex flex-col gap-1.5 border-t border-border bg-primary/10 px-4 py-3"
+                    className="flex flex-col gap-1.5 border-t border-border bg-elevated px-4 py-3"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-primary">
+                      <span className="text-xs font-medium text-fg-muted">
                         {t("gestiones.detail.whatsAppAgent")}
                       </span>
                       <span className="ml-auto text-[11px] text-fg-subtle">
@@ -586,14 +586,14 @@ export function GestionDetailContent({ id, onClose }: { id: string; onClose: () 
 
         {/* One-way channels: sent content */}
         {oneWay && (
-          <Section icon={ChannelIcon} iconClass="text-primary" title={sentTitle}>
+          <Section icon={ChannelIcon} iconClass="text-fg-muted" title={sentTitle}>
             {!messageBody ? (
               <p className="text-sm text-fg-subtle">{t("gestiones.detail.noMessage")}</p>
             ) : g!.agentType === "SMS" ? (
               <div className="flex justify-end">
-                <div className="max-w-[85%] rounded-2xl rounded-br-sm border border-primary/20 bg-primary/10 px-4 py-3">
-                  <p className="text-sm leading-relaxed text-primary">{messageBody}</p>
-                  <div className="mt-1 flex items-center justify-end gap-1 text-primary">
+                <div className="max-w-[85%] rounded-2xl rounded-br-sm border border-border bg-elevated px-4 py-3">
+                  <p className="text-sm leading-relaxed text-fg">{messageBody}</p>
+                  <div className="mt-1 flex items-center justify-end gap-1 text-fg-muted">
                     <span className="text-[11px]">{timeStr}</span>
                     <CheckCheck className="h-3.5 w-3.5" />
                   </div>

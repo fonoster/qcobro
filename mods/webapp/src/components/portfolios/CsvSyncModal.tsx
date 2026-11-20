@@ -7,6 +7,7 @@ import { useMoney } from "../../lib/useWorkspaceCurrency.js";
 import type { AccountRowInput, SyncResult } from "@qcobro/common";
 import { Button } from "../ui/button.js";
 import { Dialog } from "../ui/dialog.js";
+import { ChoiceCardGroup } from "../ui/choice-cards.js";
 
 /** A muted warning, icon and words, for an import that won't detect what the operator expects. */
 function ImportWarning({ children }: { children: React.ReactNode }) {
@@ -82,26 +83,22 @@ export function CsvSyncModal({
     <Dialog
       open
       onClose={onClose}
-      title={`${t("portfolios.csv.title")} — ${portfolio.name}`}
-      description={t("portfolios.csv.description")}
+      width={560}
+      title={result ? t("portfolios.csv.done") : t("portfolios.csv.title")}
+      subtitle={result ? undefined : `${portfolio.name} · ${t("portfolios.csv.description")}`}
+      footer={result ? <Button onClick={onSuccess}>{t("portfolios.csv.close")}</Button> : undefined}
       confirmLabel={
-        result
-          ? t("portfolios.csv.close")
-          : sync.isPending
-            ? t("portfolios.csv.importing")
-            : t("portfolios.csv.import").replace("{n}", String(rows.length))
+        sync.isPending
+          ? t("portfolios.csv.importing")
+          : rows.length > 0
+            ? t("portfolios.csv.import").replace("{n}", String(rows.length))
+            : t("portfolios.csv.title")
       }
-      onConfirm={
-        result
-          ? onSuccess
-          : canSync
-            ? () => sync.mutate({ portfolioId: portfolio.id, mode, rows })
-            : undefined
-      }
-      className="max-w-lg"
+      confirmDisabled={!canSync}
+      onConfirm={() => canSync && sync.mutate({ portfolioId: portfolio.id, mode, rows })}
       error={syncError}
     >
-      <div className="mt-4 flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         {!result ? (
           <>
             <div className="flex items-center gap-3">
@@ -136,7 +133,7 @@ export function CsvSyncModal({
             )}
 
             {rows.length > 0 && parseErrors.length === 0 && (
-              <p className="text-sm text-primary">
+              <p className="text-sm text-fg">
                 {t("portfolios.csv.ready").replace("{n}", String(rows.length))}
               </p>
             )}
@@ -146,34 +143,20 @@ export function CsvSyncModal({
             )}
 
             <div>
-              <p className="mb-2 text-xs font-medium text-fg-muted">
-                {t("portfolios.csv.mode.label")}
-              </p>
-              <div className="flex flex-col gap-2">
-                {SYNC_MODES.map((m) => (
-                  <label
-                    key={m.value}
-                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 hover:bg-elevated has-[:checked]:border-primary has-[:checked]:bg-primary/10"
-                  >
-                    <input
-                      type="radio"
-                      name="syncMode"
-                      value={m.value}
-                      checked={mode === m.value}
-                      onChange={() => setMode(m.value)}
-                      className="mt-0.5 accent-primary"
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-fg">
-                        {t(`portfolios.csv.mode.${m.value}.label` as Parameters<typeof t>[0])}
-                      </p>
-                      <p className="text-xs text-fg-subtle">
-                        {t(`portfolios.csv.mode.${m.value}.description` as Parameters<typeof t>[0])}
-                      </p>
-                    </div>
-                  </label>
-                ))}
-              </div>
+              <ChoiceCardGroup
+                label={t("portfolios.csv.mode.label")}
+                name="syncMode"
+                vertical
+                value={mode}
+                onChange={setMode}
+                options={SYNC_MODES.map((m) => ({
+                  value: m.value,
+                  title: t(`portfolios.csv.mode.${m.value}.label` as Parameters<typeof t>[0]),
+                  description: t(
+                    `portfolios.csv.mode.${m.value}.description` as Parameters<typeof t>[0]
+                  )
+                }))}
+              />
               {mode === "APPEND_ONLY" && (
                 <div className="mt-2">
                   <ImportWarning>{t("portfolios.csv.warning.appendOnly")}</ImportWarning>
@@ -182,8 +165,7 @@ export function CsvSyncModal({
             </div>
           </>
         ) : (
-          <div className="rounded-lg border border-primary/30 bg-primary/10 p-4">
-            <p className="mb-3 text-sm font-semibold text-primary">{t("portfolios.csv.done")}</p>
+          <div className="rounded-control border border-border bg-elevated p-4">
             <div className="grid grid-cols-4 gap-3 text-center">
               {[
                 { label: t("portfolios.csv.created"), value: result.created },
@@ -192,13 +174,13 @@ export function CsvSyncModal({
                 { label: t("portfolios.csv.total"), value: result.total }
               ].map(({ label, value }) => (
                 <div key={label}>
-                  <p className="text-2xl font-bold text-fg">{value}</p>
+                  <p className="font-mono text-2xl font-medium text-fg">{value}</p>
                   <p className="text-xs text-fg-muted">{label}</p>
                 </div>
               ))}
             </div>
             {detected > 0 && (
-              <div className="mt-3 flex items-center justify-between border-t border-primary/30 pt-3 text-[13px] text-fg">
+              <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-[13px] text-fg">
                 <span className="font-medium">{t("portfolios.csv.paymentsDetected")}</span>
                 <span className="font-semibold">
                   {money(result.recoveries.amount)} ·{" "}

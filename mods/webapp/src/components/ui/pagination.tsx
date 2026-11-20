@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils.js";
+import { useI18n } from "@/lib/i18n.js";
+import { Button } from "./button.js";
 
 export interface PaginationProps {
   page: number;
@@ -7,24 +9,30 @@ export interface PaginationProps {
   className?: string;
 }
 
+/** Anterior · "x / y" · Siguiente, outline buttons. */
 export function Pagination({ page, totalPages, onPageChange, className }: PaginationProps) {
+  const { t } = useI18n();
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <button
+      <Button
+        type="button"
+        variant="outline"
         onClick={() => onPageChange(page - 1)}
-        disabled={page === 1}
-        className="flex h-10 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-medium text-fg hover:bg-elevated disabled:opacity-40"
+        disabled={page <= 1}
       >
-        Previous
-      </button>
-      <div className="h-10 w-10" />
-      <button
+        {t("table.previous")}
+      </Button>
+      <span className="px-1 font-mono text-[13px] text-fg-muted">
+        {page} / {Math.max(totalPages, 1)}
+      </span>
+      <Button
+        type="button"
+        variant="outline"
         onClick={() => onPageChange(page + 1)}
-        disabled={page === totalPages}
-        className="flex h-10 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-medium text-fg hover:bg-elevated disabled:opacity-40"
+        disabled={page >= totalPages}
       >
-        Next
-      </button>
+        {t("table.next")}
+      </Button>
     </div>
   );
 }

@@ -1,14 +1,20 @@
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils.js";
+import { FieldError, FieldLabel, fieldControlClass, fieldErrorClass } from "./field.js";
 
-export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>;
+export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  invalid?: boolean;
+}
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, ...props }, ref) => (
+  ({ className, invalid, ...props }, ref) => (
     <textarea
       ref={ref}
+      aria-invalid={invalid || undefined}
       className={cn(
-        "flex min-h-[80px] w-full rounded-control border border-border bg-surface px-3 py-2 text-sm placeholder:text-fg-subtle focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50",
+        fieldControlClass,
+        "flex min-h-[80px] px-3 py-2.5 leading-normal",
+        invalid && fieldErrorClass,
         className
       )}
       {...props}
@@ -20,18 +26,26 @@ Textarea.displayName = "Textarea";
 export interface TextareaGroupProps extends TextareaProps {
   label?: string;
   error?: string;
+  labelEnd?: React.ReactNode;
 }
 
-export function TextareaGroup({ label, error, className, id, ...props }: TextareaGroupProps) {
+export function TextareaGroup({
+  label,
+  error,
+  labelEnd,
+  className,
+  id,
+  ...props
+}: TextareaGroupProps) {
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
+    <div className={cn("flex flex-col gap-2", className)}>
       {label && (
-        <label htmlFor={id} className="text-sm font-medium text-fg-muted">
+        <FieldLabel htmlFor={id} end={labelEnd}>
           {label}
-        </label>
+        </FieldLabel>
       )}
-      <Textarea id={id} {...props} />
-      {error && <p className="text-xs text-danger">{error}</p>}
+      <Textarea id={id} invalid={Boolean(error)} {...props} />
+      <FieldError>{error}</FieldError>
     </div>
   );
 }

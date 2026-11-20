@@ -1,9 +1,7 @@
-import { useState, type FormEvent } from "react";
-import { X } from "lucide-react";
+import { useState } from "react";
 import type { CreateApiKeyInput } from "@qcobro/common";
 import { useI18n } from "../lib/i18n.js";
-import { Card } from "./ui/card.js";
-import { Button } from "./ui/button.js";
+import { Dialog } from "./ui/dialog.js";
 import { InputGroup } from "./ui/input.js";
 
 export interface CreateApiKeyDialogProps {
@@ -29,8 +27,6 @@ export function CreateApiKeyDialog({
   const [expiresAtDate, setExpiresAtDate] = useState("");
   const [dateError, setDateError] = useState<string | undefined>();
 
-  if (!open) return null;
-
   function reset() {
     setExpiresAtDate("");
     setDateError(undefined);
@@ -41,8 +37,7 @@ export function CreateApiKeyDialog({
     onClose();
   }
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
+  async function handleSubmit() {
     setDateError(undefined);
 
     let expiresAt: number | undefined;
@@ -59,42 +54,27 @@ export function CreateApiKeyDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-overlay p-4">
-      <Card className="w-full max-w-[440px] rounded-2xl border-border shadow-xl">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5 p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-fg">{t("apiKeys.create.title")}</h2>
-              <p className="text-[13px] text-fg-subtle">{t("apiKeys.create.description")}</p>
-            </div>
-            <button
-              type="button"
-              onClick={handleClose}
-              className="text-fg-subtle hover:text-fg-muted"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <p className="text-[13px] text-fg-subtle">{t("apiKeys.create.roleNote")}</p>
-          <InputGroup
-            label={t("apiKeys.create.expiresAtLabel")}
-            id="create-api-key-expires-at"
-            type="date"
-            value={expiresAtDate}
-            onChange={(e) => setExpiresAtDate(e.target.value)}
-            error={dateError}
-          />
-          {error && <p className="text-[13px] text-danger">{error}</p>}
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={handleClose}>
-              {t("common.cancel")}
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {t("apiKeys.create.submit")}
-            </Button>
-          </div>
-        </form>
-      </Card>
-    </div>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      title={t("apiKeys.create.title")}
+      subtitle={t("apiKeys.create.description")}
+      confirmLabel={t("apiKeys.create.submit")}
+      confirmDisabled={isPending}
+      onSubmit={handleSubmit}
+      error={error}
+    >
+      <p className="rounded-control bg-elevated px-3 py-2.5 text-xs text-fg-muted">
+        {t("apiKeys.create.roleNote")}
+      </p>
+      <InputGroup
+        label={t("apiKeys.create.expiresAtLabel")}
+        id="create-api-key-expires-at"
+        type="date"
+        value={expiresAtDate}
+        onChange={(e) => setExpiresAtDate(e.target.value)}
+        error={dateError}
+      />
+    </Dialog>
   );
 }

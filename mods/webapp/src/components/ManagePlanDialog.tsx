@@ -55,6 +55,7 @@ export function ManagePlanDialog({ open, onClose }: ManagePlanDialogProps) {
       open={open}
       onClose={onClose}
       title={t("billing.managePlan")}
+      width={560}
       error={subscribe.isError || changePlan.isError ? t("billing.changeError") : null}
     >
       <div className="flex flex-col gap-3">
@@ -65,7 +66,7 @@ export function ManagePlanDialog({ open, onClose }: ManagePlanDialogProps) {
             <div
               key={plan.key}
               className={`flex items-center justify-between gap-4 rounded-xl border p-4 ${
-                isCurrent ? "border-primary/40 bg-primary/10/50" : "border-border"
+                isCurrent ? "border-fg bg-elevated" : "border-border"
               }`}
             >
               <div>
@@ -74,7 +75,7 @@ export function ManagePlanDialog({ open, onClose }: ManagePlanDialogProps) {
                     {resolveLocalizedString(plan.name, language)}
                   </p>
                   {isCurrent && (
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                    <span className="rounded-md bg-elevated px-2 py-0.5 text-xs text-fg">
                       {t("billing.currentPlan")}
                     </span>
                   )}

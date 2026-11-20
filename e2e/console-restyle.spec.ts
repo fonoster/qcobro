@@ -66,7 +66,8 @@ test.describe("console restyle — Fonoster tokens", () => {
   test("primary button text", async ({ page }) => {
     await enterIn(page, "light", "primary-btn");
     await page.getByRole("link", { name: "Carteras" }).click();
-    const cta = page.getByRole("button", { name: /Nueva cartera/ });
+    // The header CTA (an empty list repeats it in its empty state).
+    const cta = page.getByRole("button", { name: /Nueva cartera/ }).first();
     await expect(cta).toHaveCSS("color", "rgb(1, 25, 0)");
     await expect(cta).toHaveCSS("background-color", "rgb(57, 225, 158)");
 
@@ -83,7 +84,10 @@ test.describe("console restyle — Fonoster tokens", () => {
 
     // A portfolio with one account and a VOICE_AI gestión that promised a payment.
     await page.getByRole("link", { name: "Carteras" }).click();
-    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page
+      .getByRole("button", { name: /Nueva cartera/ })
+      .first()
+      .click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(`cli-${stamp}`);
     await page.getByRole("button", { name: "Crear cartera" }).click();
@@ -93,7 +97,7 @@ test.describe("console restyle — Fonoster tokens", () => {
     await page.getByRole("button", { name: "Importar cuentas" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
-    await page.getByRole("button", { name: "Cerrar" }).click();
+    await page.getByRole("button", { name: "Cerrar", exact: true }).click();
     await expect(page.getByText("María E2E")).toBeVisible();
 
     const auth = await page.evaluate(() => ({
@@ -506,7 +510,10 @@ test.describe("console restyle — Panel and Cartera detail", () => {
     const clientId = `cli-${stamp}`;
 
     await page.getByRole("link", { name: "Carteras" }).click();
-    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page
+      .getByRole("button", { name: /Nueva cartera/ })
+      .first()
+      .click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(clientId);
     await page.getByRole("button", { name: "Crear cartera" }).click();
@@ -526,7 +533,7 @@ test.describe("console restyle — Panel and Cartera detail", () => {
     await page.getByRole("button", { name: "Importar cuentas" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
-    await page.getByRole("button", { name: "Cerrar" }).click();
+    await page.getByRole("button", { name: "Cerrar", exact: true }).click();
     await expect(page.getByText("María E2E")).toBeVisible();
     await expect(
       page.getByText(new RegExp(`^${clientId} · 1 cuenta activa · Saldo `))

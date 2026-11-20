@@ -6,6 +6,7 @@ import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
 import { Dialog } from "../components/ui/dialog.js";
+import { Plus } from "lucide-react";
 
 type SenderRow = {
   id: string;
@@ -48,11 +49,11 @@ function AddSenderModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
       confirmLabel={
         add.isPending ? t("integrations.senders.adding") : t("integrations.senders.add")
       }
-      cancelLabel={t("common.cancel")}
-      onConfirm={handleAdd}
+      confirmDisabled={add.isPending}
+      onSubmit={handleAdd}
       error={error}
     >
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <InputGroup
           label={t("integrations.senders.phoneNumberId")}
           id="s-pnid"
@@ -127,8 +128,7 @@ function WabaForm() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <span className={`h-2 w-2 rounded-full ${connected ? "bg-primary" : "bg-elevated"}`} />
-        <span className="text-sm text-fg-muted">
+        <span className="text-sm text-fg">
           {connected ? t("integrations.waba.connected") : t("integrations.waba.notConnected")}
           {connected && integration.data?.wabaId ? ` · ${integration.data.wabaId}` : ""}
         </span>
@@ -177,7 +177,7 @@ function WabaForm() {
           {upsert.isPending ? t("integrations.waba.saving") : t("integrations.waba.save")}
         </Button>
         {status === "ok" && (
-          <span className="text-sm text-primary">{t("integrations.waba.saved")}</span>
+          <span className="text-sm text-fg-muted">{t("integrations.waba.saved")}</span>
         )}
         {status === "error" && (
           <span className="text-sm text-danger">{t("integrations.waba.error")}</span>
@@ -253,7 +253,8 @@ export function Integrations() {
               {removeError && <p className="text-xs text-danger">{removeError}</p>}
 
               <div>
-                <Button onClick={() => setShowAddSender(true)}>
+                <Button variant="outline" onClick={() => setShowAddSender(true)}>
+                  <Plus className="h-4 w-4" />
                   {t("integrations.senders.add")}
                 </Button>
               </div>

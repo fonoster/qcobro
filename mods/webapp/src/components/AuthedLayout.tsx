@@ -117,7 +117,9 @@ export function AuthedLayout() {
   }
   if (workspaces.isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-fg-subtle">Cargando…</div>
+      <div className="flex min-h-screen items-center justify-center text-fg-subtle">
+        {t("common.loading")}
+      </div>
     );
   }
   if (!workspaces.isFetching && workspaces.isSuccess && items.length === 0) {
@@ -145,7 +147,7 @@ export function AuthedLayout() {
               >
                 <PanelLeftOpen className="h-[18px] w-[18px]" />
               </button>
-              <Link to="/workspaces" aria-label="Ir a la lista de espacios">
+              <Link to="/workspaces" aria-label={t("nav.toWorkspaces")}>
                 <Logo collapsed />
               </Link>
               <WorkspaceSwitcher collapsed />
@@ -153,7 +155,7 @@ export function AuthedLayout() {
           ) : (
             <div className="flex flex-col gap-4 border-b border-border px-5 pb-5 pt-6">
               <div className="flex items-center justify-between">
-                <Link to="/workspaces" aria-label="Ir a la lista de espacios">
+                <Link to="/workspaces" aria-label={t("nav.toWorkspaces")}>
                   <Logo />
                 </Link>
                 <button
@@ -211,7 +213,7 @@ export function AuthedLayout() {
                   ) : (
                     <span
                       aria-hidden
-                      className="px-3 pb-1.5 pt-[18px] text-[11px] font-medium uppercase tracking-[1px] text-fg-subtle"
+                      className="px-3 pb-1.5 pt-[18px] font-mono text-[11px] uppercase text-fg-muted"
                     >
                       {t(groupKey)}
                     </span>
@@ -222,7 +224,7 @@ export function AuthedLayout() {
             })}
           </nav>
 
-          <div className={cn("border-t border-border", collapsed ? "px-2 py-3" : "px-3 py-3")}>
+          <div className={cn(collapsed ? "px-2 py-3" : "px-3 py-3")}>
             <UserMenu collapsed={collapsed} />
           </div>
         </aside>

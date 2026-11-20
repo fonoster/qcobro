@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { newOwner, signUpAndEnter } from "./helpers.js";
+import { newOwner, signUpAndEnter, startNewAgent } from "./helpers.js";
 
 const CSV = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures", "accounts.csv");
 
@@ -26,7 +26,10 @@ test.describe("manual outreach", () => {
 
     // --- Portfolio -----------------------------------------------------------
     await page.getByRole("link", { name: "Carteras" }).click();
-    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page
+      .getByRole("button", { name: /Nueva cartera/ })
+      .first()
+      .click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(`cli-${stamp}`);
     await page.getByRole("button", { name: "Crear cartera" }).click();
@@ -34,9 +37,8 @@ test.describe("manual outreach", () => {
 
     // --- SMS agent (fast; no Fonoster sync) ----------------------------------
     await page.getByRole("link", { name: "Agentes IA" }).click();
-    await page.getByRole("button", { name: /Nuevo agente/ }).click();
+    await startNewAgent(page, "SMS");
     await page.getByLabel("Nombre del agente").fill(agentName);
-    await page.getByLabel("Tipo de canal").selectOption({ label: "SMS" });
     await page.getByLabel("Cuerpo del mensaje").fill(body);
     await page.getByLabel(/ID de remitente/).fill("DEMO");
     await page.getByRole("button", { name: "Crear agente" }).click();
@@ -49,7 +51,7 @@ test.describe("manual outreach", () => {
     await page.getByRole("button", { name: "Importar cuentas" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
-    await page.getByRole("button", { name: "Cerrar" }).click();
+    await page.getByRole("button", { name: "Cerrar", exact: true }).click();
     await expect(page.getByText("María E2E")).toBeVisible();
 
     // --- ⋯ → Contactar manualmente (agent-based, no campaign) ----------------

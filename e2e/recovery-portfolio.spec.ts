@@ -40,7 +40,10 @@ test.describe("portfolio recovery", () => {
     await signUpAndEnter(page, owner, `WS ${stamp}`);
 
     await page.getByRole("link", { name: "Carteras" }).click();
-    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page
+      .getByRole("button", { name: /Nueva cartera/ })
+      .first()
+      .click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(`cli-${stamp}`);
     await page.getByRole("button", { name: "Crear cartera" }).click();
@@ -74,7 +77,7 @@ test.describe("portfolio recovery", () => {
     await dialog.getByRole("button", { name: "Importar 1 cuentas" }).click();
     await expect(dialog.getByText("Importación completada")).toBeVisible();
     await expect(dialog.getByText("Pagos detectados", { exact: true })).toHaveCount(0);
-    await dialog.getByRole("button", { name: "Cerrar" }).click();
+    await dialog.getByRole("button", { name: "Cerrar", exact: true }).click();
 
     // --- A gestión between the two syncs ------------------------------------------------
     const auth = await page.evaluate(() => ({
@@ -107,7 +110,7 @@ test.describe("portfolio recovery", () => {
     await dialog.getByRole("button", { name: "Importar 1 cuentas" }).click();
     await expect(dialog.getByText("Pagos detectados", { exact: true })).toBeVisible();
     await expect(dialog.getByText(/5,000.* · 1 cuenta$/)).toBeVisible();
-    await dialog.getByRole("button", { name: "Cerrar" }).click();
+    await dialog.getByRole("button", { name: "Cerrar", exact: true }).click();
 
     // --- The console never mentions exits ----------------------------------------------
     await expect(page.getByText(/salida/i)).toHaveCount(0);

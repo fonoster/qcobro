@@ -17,6 +17,11 @@ import { useWorkspaceCurrency, useWorkspaceLocale } from "../lib/useWorkspaceCur
 import { PageHeader } from "../components/page-header.js";
 import { DataTable } from "../components/ui/data-table.js";
 import { Dialog } from "../components/ui/dialog.js";
+import { Drawer } from "../components/ui/drawer.js";
+import type { OverlayChromeProps } from "../components/ui/overlay.js";
+import { ChoiceCardGroup } from "../components/ui/choice-cards.js";
+import { EmptyState } from "../components/ui/empty-state.js";
+import { AudioLines, Bot, Lock, Mail, MessageCircle, MessageSquare, Plus } from "lucide-react";
 import { ConfirmDeleteDialog } from "../components/ui/confirm-delete-dialog.js";
 import { Button } from "../components/ui/button.js";
 import { InputGroup } from "../components/ui/input.js";
@@ -84,7 +89,7 @@ function VariablesHint() {
   const { t } = useI18n();
   return (
     <div className="flex flex-wrap items-center gap-2 text-sm">
-      <span className="font-medium text-fg-subtle">{t("agents.vars.label")}</span>
+      <span className="text-fg-muted">{t("agents.vars.label")}</span>
       {EXAMPLE_VARS.map((v) => (
         <code
           key={v}
@@ -98,7 +103,7 @@ function VariablesHint() {
         href={VARS_DOC_URL}
         target="_blank"
         rel="noreferrer"
-        className="font-medium text-primary underline"
+        className="text-fg-muted underline-offset-2 hover:text-fg hover:underline"
       >
         {t("agents.vars.link")}
       </a>
@@ -198,6 +203,7 @@ export function AgentTemplates() {
   const [typeFilter, setTypeFilter] = useState<"" | AgentType>("");
   const [includeArchived, setIncludeArchived] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  const [createType, setCreateType] = useState<AgentType | null>(null);
   const [editing, setEditing] = useState<Template | null>(null);
   const [deleting, setDeleting] = useState<Template | null>(null);
 
@@ -223,7 +229,16 @@ export function AgentTemplates() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <PageHeader title={t("agents.title")} description={t("agents.description")} />
+        <PageHeader
+          title={t("agents.title")}
+          description={t("agents.description")}
+          actions={
+            <Button onClick={() => setShowCreate(true)}>
+              <Plus className="h-4 w-4" />
+              {t("agents.new")}
+            </Button>
+          }
+        />
         <VariablesHint />
       </div>
 
@@ -255,9 +270,23 @@ export function AgentTemplates() {
             </label>
           </div>
         }
-        actionLabel={t("agents.new")}
-        onAction={() => setShowCreate(true)}
+        rowHeight={64}
         onRowClick={(row) => navigate(`/agent-templates/${row.id}`)}
+        empty={
+          typeFilter || includeArchived ? undefined : (
+            <EmptyState
+              icon={<Bot />}
+              title={t("agents.empty.title")}
+              body={t("agents.empty.body")}
+              action={
+                <Button onClick={() => setShowCreate(true)}>
+                  <Plus className="h-4 w-4" />
+                  {t("agents.new")}
+                </Button>
+              }
+            />
+          )
+        }
         columns={[
           {
             key: "name",
@@ -319,10 +348,21 @@ export function AgentTemplates() {
       />
 
       {showCreate && (
-        <CreateAgentTemplateModal
+        <ChannelPickerDialog
           onClose={() => setShowCreate(false)}
-          onSuccess={() => {
+          onPick={(type) => {
             setShowCreate(false);
+            setCreateType(type);
+          }}
+        />
+      )}
+
+      {createType && (
+        <CreateAgentTemplateModal
+          type={createType}
+          onClose={() => setCreateType(null)}
+          onSuccess={() => {
+            setCreateType(null);
             utils.agentTemplates.list.invalidate();
           }}
         />
@@ -356,7 +396,63 @@ export function AgentTemplates() {
   );
 }
 
-const CREATABLE_TYPES: AgentType[] = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "EMAIL", "WHATSAPP"];
+/** Picker order, per the design: the two voice channels, then the text ones. */
+const CREATABLE_TYPES: AgentType[] = ["VOICE_AI", "VOICE_PRERECORDED", "SMS", "WHATSAPP", "EMAIL"];
+
+const TYPE_ICON: Record<AgentType, React.ReactNode> = {
+  VOICE_AI: <Bot />,
+  VOICE_PRERECORDED: <AudioLines />,
+  SMS: <MessageSquare />,
+  WHATSAPP: <MessageCircle />,
+  EMAIL: <Mail />
+};
+
+/** First step of "Nuevo agente": pick the channel (it can't change later). */
+function ChannelPickerDialog({
+  onClose,
+  onPick
+}: {
+  onClose: () => void;
+  onPick: (type: AgentType) => void;
+}) {
+  const { t } = useI18n();
+  const [type, setType] = useState<AgentType>("VOICE_AI");
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={t("agents.channelPicker.title")}
+      subtitle={t("agents.channelPicker.subtitle")}
+      confirmLabel={t("agents.channelPicker.continue")}
+      onSubmit={() => onPick(type)}
+    >
+      <ChoiceCardGroup
+        label={t("agents.form.type")}
+        name="agent-channel"
+        vertical
+        value={type}
+        onChange={setType}
+        options={CREATABLE_TYPES.map((tp) => ({
+          value: tp,
+          title: t(`agents.type.${tp}` as MessageId),
+          description: t(`agents.channel.${tp}` as MessageId),
+          icon: TYPE_ICON[tp]
+        }))}
+      />
+    </Dialog>
+  );
+}
+
+/**
+ * The agent create/edit container by channel (the overlay rule): the voice forms are long
+ * and sectioned, so they open in a drawer; SMS, WhatsApp and Correo fit a dialog.
+ */
+function AgentFormOverlay({ type, ...props }: OverlayChromeProps & { type: AgentType }) {
+  if (type === "VOICE_AI" || type === "VOICE_PRERECORDED") {
+    return <Drawer width={600} {...props} />;
+  }
+  return <Dialog width={type === "SMS" ? 560 : 620} {...props} />;
+}
 /** Voice template languages. `multi` (callers mixing languages) only means something for
  *  VOICE_AI, whose speech recognition runs on it; a pre-recorded call recognizes no speech. */
 function languagesFor(type: AgentType): string[] {
@@ -441,15 +537,16 @@ function isValidIdleConfig(fields: Record<string, string>): boolean {
 }
 
 function CreateAgentTemplateModal({
+  type,
   onClose,
   onSuccess
 }: {
+  type: AgentType;
   onClose: () => void;
   onSuccess: () => void;
 }) {
   const { t } = useI18n();
   const [name, setName] = useState("");
-  const [type, setType] = useState<AgentType>("VOICE_AI");
   // Boolean, so it lives beside `name`/`type` rather than in the string-valued `fields` bag.
   const [normalizeGsm7, setNormalizeGsm7] = useState(false);
   // Defaults on, mirroring the server default — a new template hangs up on a detected
@@ -458,6 +555,7 @@ function CreateAgentTemplateModal({
   // VOICE_AI barge-in; defaults off, mirroring the server default.
   const [allowUserBargeIn, setAllowUserBargeIn] = useState(false);
   const [fields, setFields] = useState<Record<string, string>>({
+    // `multi` is VOICE_AI-only, so every type starts on the default language.
     language: DEFAULT_VOICE_LANGUAGE,
     // Idle options pre-filled from the deployment default; the operator may override.
     idleMessage: DEFAULT_VOICE_IDLE_OPTIONS.message,
@@ -593,41 +691,23 @@ function CreateAgentTemplateModal({
   const isVoice = type === "VOICE_AI" || type === "VOICE_PRERECORDED";
 
   return (
-    <Dialog
+    <AgentFormOverlay
+      type={type}
       open
       onClose={onClose}
-      title={t("agents.new")}
-      confirmLabel={create.isPending ? "…" : t("agents.form.create")}
-      cancelLabel={t("common.cancel")}
-      onConfirm={handleCreate}
+      title={`${t("agents.new")} · ${t(`agents.type.${type}` as MessageId)}`}
+      confirmLabel={create.isPending ? t("common.creating") : t("agents.form.create")}
+      confirmDisabled={create.isPending}
+      onSubmit={handleCreate}
       error={error}
     >
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <InputGroup
           label={t("agents.form.name")}
           id="a-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <SelectGroup
-          label={t("agents.form.type")}
-          id="a-type"
-          value={type}
-          onChange={(e) => {
-            const next = e.target.value as AgentType;
-            setType(next);
-            // `multi` is VOICE_AI-only; don't carry it into a type that doesn't offer it.
-            if (fields.language && !languagesFor(next).includes(fields.language)) {
-              set("language", DEFAULT_VOICE_LANGUAGE);
-            }
-          }}
-        >
-          {CREATABLE_TYPES.map((tp) => (
-            <option key={tp} value={tp}>
-              {t(`agents.type.${tp}` as Parameters<typeof t>[0])}
-            </option>
-          ))}
-        </SelectGroup>
 
         {isVoice && (
           <>
@@ -894,7 +974,7 @@ function CreateAgentTemplateModal({
           </>
         )}
       </div>
-    </Dialog>
+    </AgentFormOverlay>
   );
 }
 
@@ -1069,16 +1149,18 @@ function EditAgentTemplateModal({
   const isLoading = !seeded && query.isLoading;
 
   return (
-    <Dialog
+    <AgentFormOverlay
+      type={template.type}
       open
       onClose={onClose}
-      title={`${t("agents.actions.edit")}: ${template.name}`}
-      confirmLabel={update.isPending ? "…" : t("agents.form.save")}
-      cancelLabel={t("common.cancel")}
-      onConfirm={handleSave}
+      title={t("agents.form.editTitle")}
+      subtitle={t("agents.form.editSubtitle")}
+      confirmLabel={update.isPending ? t("common.saving") : t("agents.form.save")}
+      confirmDisabled={update.isPending}
+      onSubmit={handleSave}
       error={error}
     >
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {isLoading ? (
           <p className="text-sm text-fg-subtle">…</p>
         ) : (
@@ -1090,9 +1172,12 @@ function EditAgentTemplateModal({
               onChange={(e) => setName(e.target.value)}
             />
 
-            <div className="rounded-md bg-elevated px-3 py-2 text-sm text-fg-subtle">
-              <span className="font-medium">{t("agents.form.type")}:</span>{" "}
-              {t(`agents.type.${template.type}` as Parameters<typeof t>[0])}
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-medium text-fg">{t("agents.form.channelLocked")}</span>
+              <div className="flex h-10 items-center gap-2.5 rounded-control border border-border bg-elevated px-3 text-sm text-fg-muted">
+                <Lock aria-hidden className="h-3.5 w-3.5" />
+                {t(`agents.type.${template.type}` as MessageId)}
+              </div>
             </div>
 
             {isVoice && (
@@ -1365,6 +1450,6 @@ function EditAgentTemplateModal({
           </>
         )}
       </div>
-    </Dialog>
+    </AgentFormOverlay>
   );
 }

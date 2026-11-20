@@ -2,7 +2,7 @@
  * Demo seed: provisions a complete "Créditos Demo" workspace for live demos.
  *
  * Creates (idempotently — safe to re-run):
- *   - user        Demo User <demo@qcobro.com>
+ *   - user        Demo User <demo@qcobro.com>, console language Spanish (es)
  *   - workspace   "Créditos Demo"
  *   - portfolio   "Prueba de concepto"  (+ the inlined demo accounts below)
  *   - agents      Juan (Voz IA), Recordatorio SMS (SMS), Sofia (Voz pregrabada)
@@ -448,6 +448,20 @@ async function main() {
     username: USER.email,
     password: USER.password
   });
+
+  // The demo renders in Spanish: pin the user's console language (app-owned, keyed by the
+  // Identity user ref, the token's `sub`), so a language switched during a demo is reset.
+  const userRef = (
+    JSON.parse(Buffer.from(accessToken.split(".")[1], "base64url").toString("utf8")) as {
+      sub: string;
+    }
+  ).sub;
+  await prisma.userSettings.upsert({
+    where: { userRef },
+    create: { userRef, language: "es" },
+    update: { language: "es" }
+  });
+  log(`console language es`);
 
   // 2. Workspace ------------------------------------------------------------
   console.log("Workspace");

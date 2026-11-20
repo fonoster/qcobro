@@ -1,54 +1,61 @@
 import { forwardRef } from "react";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils.js";
+import { FieldError, FieldLabel, fieldControlClass, fieldErrorClass } from "./field.js";
 
-export type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  /** Shows the danger border. */
+  invalid?: boolean;
+}
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(({ className, ...props }, ref) => (
-  <input
-    ref={ref}
-    className={cn(
-      "flex h-9 w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50",
-      className
-    )}
-    {...props}
-  />
-));
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ className, invalid, ...props }, ref) => (
+    <input
+      ref={ref}
+      aria-invalid={invalid || undefined}
+      className={cn(fieldControlClass, "flex h-10 px-3", invalid && fieldErrorClass, className)}
+      {...props}
+    />
+  )
+);
 Input.displayName = "Input";
 
 /**
  * A label, the field, and — only while something is wrong — an error. Guidance for the
  * operator lives inside the field as its `placeholder`, the way the design system draws it;
- * there is deliberately no explanatory line below the field.
+ * there is deliberately no explanatory line below the field. State rules in the label.
  */
 export interface InputGroupProps extends InputProps {
   label?: string;
   error?: string;
+  /** Muted text at the label row's right end. */
+  labelEnd?: React.ReactNode;
 }
 
-export function InputGroup({ label, error, className, id, ...props }: InputGroupProps) {
+export function InputGroup({ label, error, labelEnd, className, id, ...props }: InputGroupProps) {
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
+    <div className={cn("flex flex-col gap-2", className)}>
       {label && (
-        <label htmlFor={id} className="text-sm font-medium text-fg-muted">
+        <FieldLabel htmlFor={id} end={labelEnd}>
           {label}
-        </label>
+        </FieldLabel>
       )}
-      <Input id={id} className={error ? "border-danger focus:ring-danger/20" : ""} {...props} />
-      {error && <p className="text-xs text-danger">{error}</p>}
+      <Input id={id} invalid={Boolean(error)} {...props} />
+      <FieldError>{error}</FieldError>
     </div>
   );
 }
 
 export type SearchBoxProps = React.InputHTMLAttributes<HTMLInputElement>;
 
+/** The toolbar search: 38 px, card fill, search icon. */
 export const SearchBox = forwardRef<HTMLInputElement, SearchBoxProps>(
   ({ className, ...props }, ref) => (
     <div className={cn("relative", className)}>
-      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-muted" />
       <input
         ref={ref}
-        className="flex h-9 w-full rounded-control border border-border bg-surface pl-9 pr-3 py-2 text-sm placeholder:text-fg-subtle focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20"
+        className={cn(fieldControlClass, "flex h-[38px] bg-surface pl-9 pr-3 border-border")}
         {...props}
       />
     </div>

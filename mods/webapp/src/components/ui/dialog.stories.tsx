@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
+import { Plus } from "lucide-react";
 import { Dialog } from "./dialog.js";
 import { Button } from "./button.js";
-import { AlertTriangle, Trash2 } from "lucide-react";
+import { InputGroup } from "./input.js";
 
 const meta = {
   title: "UI/Dialog",
@@ -13,68 +14,96 @@ const meta = {
 
 export default meta;
 
-export const Default: StoryObj = {
+/** A short create: header band with subtitle, fields, Cancelar + primary on the right. */
+export const ShortCreate: StoryObj = {
   render: () => {
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(true);
+    const [name, setName] = useState("");
+    const [error, setError] = useState<string>();
     return (
       <>
-        <Button onClick={() => setOpen(true)}>Abrir diálogo</Button>
-        <Dialog
-          open={open}
-          onClose={() => setOpen(false)}
-          title="Confirmar acción"
-          description="¿Estás seguro de que deseas continuar? Esta acción no se puede deshacer."
-          confirmLabel="Confirmar"
-          cancelLabel="Cancelar"
-          onConfirm={() => setOpen(false)}
-        />
-      </>
-    );
-  }
-};
-
-export const Centered: StoryObj = {
-  render: () => {
-    const [open, setOpen] = useState(false);
-    return (
-      <>
-        <Button onClick={() => setOpen(true)}>Diálogo centrado</Button>
-        <Dialog
-          open={open}
-          onClose={() => setOpen(false)}
-          align="center"
-          icon={<AlertTriangle className="h-10 w-10 text-warning" />}
-          title="¿Pausar campaña?"
-          description="La campaña se pausará y los agentes no recibirán nuevas asignaciones."
-          confirmLabel="Pausar"
-          cancelLabel="Volver"
-          onConfirm={() => setOpen(false)}
-        />
-      </>
-    );
-  }
-};
-
-export const Destructive: StoryObj = {
-  render: () => {
-    const [open, setOpen] = useState(false);
-    return (
-      <>
-        <Button variant="destructive" onClick={() => setOpen(true)}>
-          Eliminar
+        <Button onClick={() => setOpen(true)}>
+          <Plus className="h-4 w-4" />
+          Nueva cartera
         </Button>
         <Dialog
           open={open}
           onClose={() => setOpen(false)}
-          align="center"
-          icon={<Trash2 className="h-10 w-10 text-danger" />}
-          title="Eliminar cartera"
-          description="Esta acción eliminará permanentemente la cartera y todos sus datos asociados."
-          confirmLabel="Eliminar"
-          cancelLabel="Cancelar"
+          title="Nueva cartera"
+          subtitle="Una cartera agrupa las cuentas de un cliente."
+          confirmLabel="Crear cartera"
+          onSubmit={() => (name ? setOpen(false) : setError("El nombre es requerido."))}
+        >
+          <InputGroup
+            label="Nombre de la cartera"
+            placeholder="Bancolombia Q3 2026"
+            value={name}
+            error={error}
+            onChange={(e) => {
+              setName(e.target.value);
+              setError(undefined);
+            }}
+          />
+          <InputGroup label="ID del cliente" placeholder="bancolombia" className="font-mono" />
+        </Dialog>
+      </>
+    );
+  }
+};
+
+/** A confirmation: 480 wide, no body, destructive primary. */
+export const Confirm: StoryObj = {
+  render: () => {
+    const [open, setOpen] = useState(true);
+    return (
+      <>
+        <Button variant="destructive" onClick={() => setOpen(true)}>
+          Quitar miembro
+        </Button>
+        <Dialog
+          open={open}
+          onClose={() => setOpen(false)}
+          width={480}
+          title="¿Quitar a Carmen Ruiz?"
+          subtitle="Perderá el acceso a este espacio de inmediato."
+          confirmVariant="destructive"
+          confirmLabel="Quitar"
           onConfirm={() => setOpen(false)}
         />
       </>
     );
   }
+};
+
+/** No confirm action: the footer is a single "Cerrar". */
+export const Informational: StoryObj = {
+  render: () => {
+    const [open, setOpen] = useState(true);
+    return (
+      <>
+        <Button variant="outline" onClick={() => setOpen(true)}>
+          Gestionar plan
+        </Button>
+        <Dialog open={open} onClose={() => setOpen(false)} title="Gestionar plan" width={560}>
+          <p className="text-sm text-fg-muted">Contenido informativo.</p>
+        </Dialog>
+      </>
+    );
+  }
+};
+
+/** A submission error from the server, above the footer. */
+export const WithError: StoryObj = {
+  render: () => (
+    <Dialog
+      open
+      onClose={() => {}}
+      title="Agregar número"
+      confirmLabel="Agregar número"
+      onConfirm={() => {}}
+      error="No se pudo agregar el número."
+    >
+      <InputGroup label="Etiqueta" placeholder="Cobranza suave" />
+    </Dialog>
+  )
 };

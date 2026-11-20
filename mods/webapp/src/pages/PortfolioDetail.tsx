@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { Eye, PhoneCall } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { Eye, FolderOpen, PhoneCall } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { useMoney, useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
 import { DataTable, TableCellStack } from "../components/ui/data-table.js";
 import { Button } from "../components/ui/button.js";
-import { PageHeader } from "../components/page-header.js";
-import { Dialog } from "../components/ui/dialog.js";
+import { DetailHeader } from "../components/detail-header.js";
+import { Breadcrumb } from "../components/ui/breadcrumb.js";
+import { Drawer } from "../components/ui/drawer.js";
 import { Accordion } from "../components/ui/accordion.js";
 import { CsvSyncModal } from "../components/portfolios/CsvSyncModal.js";
 import { ReachOutModal } from "../components/portfolios/ReachOutModal.js";
@@ -61,26 +62,19 @@ export function PortfolioDetail() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3.5">
-        <nav aria-label="breadcrumb" className="flex items-center gap-1.5 text-[13px]">
-          <Link to="/portfolios" className="text-fg-subtle hover:text-fg-muted">
-            {t("portfolios.title")}
-          </Link>
-          <span aria-hidden="true" className="text-fg-subtle">
-            /
-          </span>
-          <span className="text-fg">{p?.name ?? "…"}</span>
-        </nav>
-        <PageHeader
-          title={p?.name ?? "…"}
-          description={facts ?? undefined}
-          action={
-            <Button onClick={() => setShowSync(true)} disabled={!p}>
-              {t("portfolios.csv.title")}
-            </Button>
-          }
-        />
-      </div>
+      <Breadcrumb
+        items={[{ label: t("portfolios.title"), href: "/portfolios" }, { label: p?.name ?? "…" }]}
+      />
+      <DetailHeader
+        icon={<FolderOpen />}
+        title={p?.name ?? "…"}
+        meta={facts ?? undefined}
+        actions={
+          <Button onClick={() => setShowSync(true)} disabled={!p}>
+            {t("portfolios.csv.title")}
+          </Button>
+        }
+      />
 
       <DataTable
         data={items as Record<string, unknown>[]}
@@ -88,8 +82,9 @@ export function PortfolioDetail() {
         searchable={true}
         searchPlaceholder={t("portfolios.detail.searchPlaceholder")}
         searchClassName="w-80"
-        toolbarEnd={<span className="text-[13px] text-fg-subtle">{count("accounts", total)}</span>}
-        uppercaseHeaders
+        toolbarEnd={<span className="text-[13px] text-fg-muted">{count("accounts", total)}</span>}
+        rowHeight={60}
+        pageSize={PAGE_SIZE}
         selectable
         getRowId={(r) => r.id as string}
         selectedIds={selected}
@@ -120,12 +115,14 @@ export function PortfolioDetail() {
             key: "outstandingBalance",
             header: t("portfolios.detail.col.balance"),
             render: (r) => money(r.outstandingBalance as number),
+            mono: true,
             align: "right"
           },
           {
             key: "daysPastDue",
             header: t("portfolios.detail.col.dpd"),
             render: (r) => String(r.daysPastDue),
+            mono: true,
             align: "right"
           },
           {
@@ -153,13 +150,13 @@ export function PortfolioDetail() {
       />
 
       {viewDetail && (
-        <Dialog
+        <Drawer
           open
           onClose={() => setViewDetail(null)}
           title={String(viewDetail.fullName ?? "—")}
-          description={String(viewDetail.externalId ?? "")}
+          subtitle={<span className="font-mono">{String(viewDetail.externalId ?? "")}</span>}
         >
-          <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
             {[
               [t("portfolios.detail.col.balance"), money(viewDetail.outstandingBalance as number)],
               [t("portfolios.detail.col.dpd"), String(viewDetail.daysPastDue ?? "—")],
@@ -167,14 +164,13 @@ export function PortfolioDetail() {
               [t("gestiones.detail.email"), String(viewDetail.email ?? "—")]
             ].map(([label, value]) => (
               <div key={label} className="flex flex-col gap-0.5">
-                <dt className="text-xs text-fg-subtle">{label}</dt>
-                <dd className="text-sm font-medium text-fg-muted">{value}</dd>
+                <dt className="text-xs text-fg-muted">{label}</dt>
+                <dd className="font-mono text-sm text-fg">{value}</dd>
               </div>
             ))}
           </dl>
 
           <Accordion
-            className="mt-4"
             items={[
               {
                 id: "raw",
@@ -196,7 +192,7 @@ export function PortfolioDetail() {
               }
             ]}
           />
-        </Dialog>
+        </Drawer>
       )}
 
       {reachOut && portfolio.data && (

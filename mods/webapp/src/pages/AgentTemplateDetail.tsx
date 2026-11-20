@@ -1,18 +1,27 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { AudioLines, Bot, Mail, MessageCircle, MessageSquare, RefreshCw } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { Button } from "../components/ui/button.js";
 import { Badge } from "../components/ui/badge.js";
-import { PageHeader } from "../components/page-header.js";
+import { DetailHeader } from "../components/detail-header.js";
+import { Breadcrumb } from "../components/ui/breadcrumb.js";
 import { SectionCard } from "../components/section-card.js";
+
+const TYPE_ICON: Record<string, React.ReactNode> = {
+  VOICE_AI: <Bot />,
+  VOICE_PRERECORDED: <AudioLines />,
+  SMS: <MessageSquare />,
+  WHATSAPP: <MessageCircle />,
+  EMAIL: <Mail />
+};
 
 function ConfigRow({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null;
   return (
     <div className="flex flex-col gap-1 border-b border-border py-2 last:border-0">
-      <span className="text-xs font-medium text-fg-subtle">{label}</span>
+      <span className="text-xs text-fg-muted">{label}</span>
       <span className="whitespace-pre-wrap text-sm text-fg">{value}</span>
     </div>
   );
@@ -67,36 +76,48 @@ export function AgentTemplateDetail() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/agent-templates")}>
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          {t("agents.detail.back")}
-        </Button>
-      </div>
+      <Breadcrumb
+        items={[
+          { label: t("agents.title"), href: "/agent-templates" },
+          { label: tmpl?.name ?? "…" }
+        ]}
+      />
 
-      <PageHeader
+      <DetailHeader
+        icon={(tmpl && TYPE_ICON[tmpl.type]) ?? <Bot />}
         title={tmpl?.name ?? "…"}
-        description={tmpl ? t(`agents.type.${tmpl.type}` as Parameters<typeof t>[0]) : undefined}
-        action={
+        badge={
           syncsWithFonoster && tmpl ? (
-            <div className="flex items-center gap-3">
-              <Badge variant={syncError ? "destructive" : "secondary"}>
-                {syncError
-                  ? t("agents.sync.error")
-                  : synced
-                    ? t("agents.sync.synced")
-                    : t("agents.sync.pending")}
-              </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={sync.isPending}
-                onClick={() => sync.mutate({ id: tmpl.id })}
-              >
-                <RefreshCw className="mr-1 h-4 w-4" />
-                {t("agents.sync.action")}
-              </Button>
-            </div>
+            <Badge variant={syncError ? "destructive" : "secondary"}>
+              {syncError
+                ? t("agents.sync.error")
+                : synced
+                  ? t("agents.sync.synced")
+                  : t("agents.sync.pending")}
+            </Badge>
+          ) : undefined
+        }
+        meta={
+          tmpl
+            ? [
+                t(`agents.type.${tmpl.type}` as Parameters<typeof t>[0]),
+                languageLabel,
+                voiceEntry?.name
+              ]
+                .filter(Boolean)
+                .join(" · ")
+            : undefined
+        }
+        actions={
+          syncsWithFonoster && tmpl ? (
+            <Button
+              variant="ghost"
+              disabled={sync.isPending}
+              onClick={() => sync.mutate({ id: tmpl.id })}
+            >
+              <RefreshCw className="h-4 w-4" />
+              {t("agents.sync.action")}
+            </Button>
           ) : undefined
         }
       />

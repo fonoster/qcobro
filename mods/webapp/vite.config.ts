@@ -17,7 +17,9 @@ export default defineConfig({
       // WebSocket transport for tRPC subscriptions (realtime-streaming capability),
       // separate from the /trpc HTTP batch mount above.
       "/trpc-ws": { target: "ws://localhost:3000", ws: true },
-      "/api": "http://localhost:3000"
+      // "/api/" with the slash: a bare "/api" prefix also matches the console route
+      // "/api-keys", so reloading that page hit the API server ("Cannot GET /api-keys").
+      "/api/": "http://localhost:3000"
     }
   }
 });

@@ -103,3 +103,19 @@ export async function inviteMember(page: Page, name: string, email: string) {
   await page.getByRole("button", { name: "Enviar invitación" }).click();
   await expect(page.getByText(email)).toBeVisible();
 }
+
+/**
+ * Open "Nuevo agente" and pick its channel in the channel dialog ("Voz IA", "Voz pregrabada",
+ * "SMS", "WhatsApp" or "Correo"), leaving the page on that channel's create form.
+ */
+export async function startNewAgent(page: Page, channel: string) {
+  // The header CTA (an empty list repeats it in its empty state).
+  await page
+    .getByRole("button", { name: /Nuevo agente/ })
+    .first()
+    .click();
+  const picker = page.getByRole("dialog", { name: "Nuevo agente" });
+  await picker.getByRole("radio", { name: new RegExp(`^${channel}\\b`) }).check();
+  await picker.getByRole("button", { name: "Continuar" }).click();
+  await expect(page.getByRole("dialog", { name: `Nuevo agente · ${channel}` })).toBeVisible();
+}

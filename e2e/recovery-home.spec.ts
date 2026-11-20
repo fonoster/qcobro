@@ -26,7 +26,10 @@ async function mutate(page: Page, path: string, input: unknown): Promise<unknown
 /** Creates a portfolio from the Carteras page and returns its id. */
 async function createPortfolio(page: Page, name: string, clientId: string): Promise<string> {
   await page.getByRole("link", { name: "Carteras" }).click();
-  await page.getByRole("button", { name: /Nueva cartera/ }).click();
+  await page
+    .getByRole("button", { name: /Nueva cartera/ })
+    .first()
+    .click();
   await page.getByLabel("Nombre de la cartera").fill(name);
   await page.getByLabel("ID del cliente").fill(clientId);
   await page.getByRole("button", { name: "Crear cartera" }).click();

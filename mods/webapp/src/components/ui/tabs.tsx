@@ -10,15 +10,24 @@ export interface TabItem {
 export interface TabsProps {
   items: TabItem[];
   defaultTab?: string;
+  /** Controlled active tab. */
+  value?: string;
   onChange?: (id: string) => void;
   className?: string;
 }
 
-export function Tabs({ items, defaultTab, onChange, className }: TabsProps) {
-  const [active, setActive] = useState(defaultTab ?? items[0]?.id);
+/**
+ * Underlined tabs: a bottom border across the row, the active tab in the foreground with a
+ * 2 px foreground underline, the rest muted. Gap 24.
+ *
+ * @example <Tabs items={[{ id: "config", label: "Configuración", content: … }]} />
+ */
+export function Tabs({ items, defaultTab, value, onChange, className }: TabsProps) {
+  const [internal, setInternal] = useState(defaultTab ?? items[0]?.id);
+  const active = value ?? internal;
 
   function select(id: string) {
-    setActive(id);
+    setInternal(id);
     onChange?.(id);
   }
 
@@ -26,23 +35,29 @@ export function Tabs({ items, defaultTab, onChange, className }: TabsProps) {
 
   return (
     <div className={className}>
-      <div className="flex gap-1 rounded-control bg-elevated p-1">
-        {items.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => select(tab.id)}
-            className={cn(
-              "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              active === tab.id
-                ? "bg-surface text-fg shadow-sm"
-                : "text-fg-subtle hover:text-fg-muted"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div role="tablist" className="flex gap-6 border-b border-border">
+        {items.map((tab) => {
+          const isActive = active === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => select(tab.id)}
+              className={cn(
+                "-mb-px cursor-pointer border-b-2 py-2.5 text-[13px] transition-colors",
+                isActive
+                  ? "border-fg font-medium text-fg"
+                  : "border-transparent text-fg-muted hover:text-fg"
+              )}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
-      {activeItem?.content && <div className="mt-4">{activeItem.content}</div>}
+      {activeItem?.content && <div className="mt-5">{activeItem.content}</div>}
     </div>
   );
 }

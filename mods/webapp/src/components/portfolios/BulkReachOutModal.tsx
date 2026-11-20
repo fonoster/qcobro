@@ -65,12 +65,15 @@ export function BulkReachOutModal({
       onConfirm={handleConfirm}
       error={error}
     >
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <SelectGroup
           label={t("portfolios.reachOut.agent")}
           id="bulk-agent"
           value={agentTemplateId}
-          onChange={(e) => setAgentTemplateId(e.target.value)}
+          onChange={(e) => {
+            setAgentTemplateId(e.target.value);
+            setError(null);
+          }}
         >
           <option value="">{t("portfolios.reachOut.agentPlaceholder")}</option>
           {agents.map((a) => (

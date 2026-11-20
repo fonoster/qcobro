@@ -9,6 +9,10 @@ import { DataTable } from "../components/ui/data-table.js";
 import { RowActionsMenu } from "../components/ui/row-actions-menu.js";
 import { ConfirmDeleteDialog } from "../components/ui/confirm-delete-dialog.js";
 import { Dialog } from "../components/ui/dialog.js";
+import { Button } from "../components/ui/button.js";
+import { Badge } from "../components/ui/badge.js";
+import { EmptyState } from "../components/ui/empty-state.js";
+import { KeyRound, Plus } from "lucide-react";
 import { CreateApiKeyDialog } from "../components/CreateApiKeyDialog.js";
 import { ShowSecretDialog, type ApiKeyCredentials } from "../components/ShowSecretDialog.js";
 
@@ -99,42 +103,53 @@ export function ApiKeys() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={t("apiKeys.title")} description={t("apiKeys.description")} />
+      <PageHeader
+        title={t("apiKeys.title")}
+        description={t("apiKeys.description")}
+        actions={
+          canManage ? (
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="h-4 w-4" />
+              {t("apiKeys.new")}
+            </Button>
+          ) : undefined
+        }
+      />
 
       {!canManage ? (
-        <p className="text-sm text-fg-subtle">{t("apiKeys.empty")}</p>
+        <EmptyState icon={<KeyRound />} title={t("apiKeys.empty")} />
       ) : (
         <DataTable
           data={rows}
           keyField="ref"
           searchable={false}
-          actionLabel={t("apiKeys.new")}
-          onAction={() => setCreateOpen(true)}
+          rowHeight={56}
+          empty={
+            list.isLoading ? undefined : (
+              <EmptyState icon={<KeyRound />} title={t("apiKeys.empty")} />
+            )
+          }
           columns={[
             {
               key: "accessKeyId",
               header: t("apiKeys.col.accessKeyId"),
-              render: (r) => (
-                <code className="font-mono text-[13px] text-fg-muted">{r.accessKeyId}</code>
-              )
+              render: (r) => <code className="font-mono text-[13px] text-fg">{r.accessKeyId}</code>
             },
             {
               key: "role",
               header: t("apiKeys.col.role"),
-              render: (r) => t(`apiKeys.role.${r.role}` as MessageId)
+              render: (r) => <Badge>{t(`apiKeys.role.${r.role}` as MessageId)}</Badge>
             },
             {
               key: "createdAt",
               header: t("apiKeys.col.created"),
-              align: "right",
-              className: "text-[13px] text-fg-subtle",
+              mono: true,
               render: (r) => fmtDate(r.createdAt) ?? "—"
             },
             {
               key: "expiresAt",
               header: t("apiKeys.col.expires"),
-              align: "right",
-              className: "text-[13px] text-fg-subtle",
+              mono: true,
               render: (r) => fmtDate(r.expiresAt) ?? t("apiKeys.noExpiry")
             },
             {
@@ -162,10 +177,6 @@ export function ApiKeys() {
         />
       )}
 
-      {canManage && rows.length === 0 && !list.isLoading && (
-        <p className="text-sm text-fg-subtle">{t("apiKeys.empty")}</p>
-      )}
-
       <CreateApiKeyDialog
         open={createOpen}
         onClose={() => {
@@ -186,9 +197,11 @@ export function ApiKeys() {
           setRegenError(undefined);
         }}
         title={t("apiKeys.regenerate.title")}
-        description={regenError ?? t("apiKeys.regenerate.description")}
+        width={480}
+        description={t("apiKeys.regenerate.description")}
+        error={regenError}
         confirmLabel={t("apiKeys.regenerate.confirm")}
-        cancelLabel={t("common.cancel")}
+        confirmDisabled={regenerate.isPending}
         onConfirm={onRegenerate}
       />
 

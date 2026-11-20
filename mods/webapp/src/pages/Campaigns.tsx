@@ -5,13 +5,18 @@ import { useI18n } from "../lib/i18n.js";
 import { PageHeader } from "../components/page-header.js";
 import { BillingPausedNotice } from "../components/BillingPausedNotice.js";
 import { DataTable } from "../components/ui/data-table.js";
-import { Dialog } from "../components/ui/dialog.js";
+import { Drawer } from "../components/ui/drawer.js";
+import { Button } from "../components/ui/button.js";
+import { EmptyState } from "../components/ui/empty-state.js";
+import { DayPicker } from "../components/ui/day-picker.js";
+import { Field } from "../components/ui/field.js";
+import { Megaphone, Plus } from "lucide-react";
 import { ConfirmDeleteDialog } from "../components/ui/confirm-delete-dialog.js";
 import { InputGroup } from "../components/ui/input.js";
 import { SelectGroup, FilterSelect } from "../components/ui/select.js";
 import { Badge } from "../components/ui/badge.js";
 import { RowActionsMenu, type RowAction } from "../components/ui/row-actions-menu.js";
-import { humanizeDays, ALL_DAYS } from "../lib/campaignDays.js";
+import { humanizeDays } from "../lib/campaignDays.js";
 
 type CampaignStatus = "ACTIVE" | "PAUSED" | "COMPLETED" | "ARCHIVED";
 
@@ -63,7 +68,16 @@ export function Campaigns() {
   return (
     <div className="flex flex-col gap-6">
       <BillingPausedNotice />
-      <PageHeader title={t("campaigns.title")} description={t("campaigns.description")} />
+      <PageHeader
+        title={t("campaigns.title")}
+        description={t("campaigns.description")}
+        actions={
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4" />
+            {t("campaigns.new")}
+          </Button>
+        }
+      />
 
       <DataTable
         data={campaigns}
@@ -82,9 +96,23 @@ export function Campaigns() {
             ))}
           </FilterSelect>
         }
-        actionLabel={t("campaigns.new")}
-        onAction={() => setShowCreate(true)}
+        rowHeight={64}
         onRowClick={(row) => navigate(`/campaigns/${row.id}`)}
+        empty={
+          statusFilter ? undefined : (
+            <EmptyState
+              icon={<Megaphone />}
+              title={t("campaigns.empty.title")}
+              body={t("campaigns.empty.body")}
+              action={
+                <Button onClick={() => setShowCreate(true)}>
+                  <Plus className="h-4 w-4" />
+                  {t("campaigns.empty.cta")}
+                </Button>
+              }
+            />
+          )
+        }
         columns={[
           { key: "name", header: t("campaigns.col.name") },
           {
@@ -100,6 +128,7 @@ export function Campaigns() {
           {
             key: "time",
             header: t("campaigns.col.time"),
+            mono: true,
             render: (r) => `${r.startTime}–${r.endTime}`
           },
           {
@@ -230,12 +259,6 @@ function EditCampaignModal({
     onError: (err) => setError(err.message)
   });
 
-  function toggleDay(d: number) {
-    setDaysOfWeek((ds) =>
-      ds.includes(d) ? ds.filter((x) => x !== d) : [...ds, d].sort((a, b) => a - b)
-    );
-  }
-
   function handleSave() {
     if (!name.trim()) return setError(t("campaigns.form.noName"));
     if (daysOfWeek.length === 0) return setError(t("campaigns.form.noDays"));
@@ -255,15 +278,18 @@ function EditCampaignModal({
   }
 
   return (
-    <Dialog
+    <Drawer
       open
       onClose={onClose}
+      width={560}
       title={t("campaigns.form.editTitle")}
-      confirmLabel={update.isPending ? "…" : t("campaigns.form.save")}
-      onConfirm={handleSave}
+      subtitle={t("campaigns.form.editSubtitle")}
+      confirmLabel={update.isPending ? t("common.saving") : t("campaigns.form.save")}
+      confirmDisabled={update.isPending}
+      onSubmit={handleSave}
       error={error}
     >
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <InputGroup
           label={t("campaigns.form.name")}
           id="e-name"
@@ -271,28 +297,13 @@ function EditCampaignModal({
           onChange={(e) => setName(e.target.value)}
         />
 
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-fg-muted">{t("campaigns.form.days")}</span>
-          <div className="flex gap-1.5">
-            {ALL_DAYS.map((d) => {
-              const selected = daysOfWeek.includes(d);
-              return (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => toggleDay(d)}
-                  className={
-                    selected
-                      ? "flex-1 rounded-control bg-primary py-2 text-sm font-semibold text-primary-fg"
-                      : "flex-1 rounded-md border border-border py-2 text-sm font-semibold text-fg-subtle"
-                  }
-                >
-                  {t(`campaigns.days.${d}` as Parameters<typeof t>[0])}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <Field label={t("campaigns.form.days")}>
+          <DayPicker
+            aria-label={t("campaigns.form.days")}
+            value={daysOfWeek}
+            onChange={setDaysOfWeek}
+          />
+        </Field>
 
         <div className="grid grid-cols-2 gap-3">
           <InputGroup
@@ -339,7 +350,7 @@ function EditCampaignModal({
           />
         </div>
       </div>
-    </Dialog>
+    </Drawer>
   );
 }
 
@@ -383,12 +394,6 @@ function CreateCampaignModal({
     setPortfolioIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
   }
 
-  function toggleDay(d: number) {
-    setDaysOfWeek((ds) =>
-      ds.includes(d) ? ds.filter((x) => x !== d) : [...ds, d].sort((a, b) => a - b)
-    );
-  }
-
   function handleCreate() {
     if (!name.trim()) return setError(t("campaigns.form.noName"));
     if (portfolioIds.length === 0) return setError(t("campaigns.form.noPortfolios"));
@@ -416,15 +421,18 @@ function CreateCampaignModal({
   }
 
   return (
-    <Dialog
+    <Drawer
       open
       onClose={onClose}
+      width={560}
       title={t("campaigns.new")}
-      confirmLabel={create.isPending ? "…" : t("campaigns.form.create")}
-      onConfirm={handleCreate}
+      subtitle={t("campaigns.form.createSubtitle")}
+      confirmLabel={create.isPending ? t("common.creating") : t("campaigns.form.create")}
+      confirmDisabled={create.isPending}
+      onSubmit={handleCreate}
       error={error}
     >
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <InputGroup
           label={t("campaigns.form.name")}
           id="c-name"
@@ -432,15 +440,16 @@ function CreateCampaignModal({
           onChange={(e) => setName(e.target.value)}
         />
 
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-fg-muted">
-            {t("campaigns.form.portfolios")}
-          </span>
-          <div className="flex max-h-32 flex-col gap-1 overflow-y-auto rounded-lg border border-border p-2">
+        <Field label={t("campaigns.form.portfolios")}>
+          <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-control border border-input bg-bg p-2">
             {(portfolios.data ?? []).map((p) => (
-              <label key={p.id} className="flex items-center gap-2 text-sm text-fg-muted">
+              <label
+                key={p.id}
+                className="flex cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 text-[13px] text-fg hover:bg-elevated"
+              >
                 <input
                   type="checkbox"
+                  className="h-4 w-4 accent-primary"
                   checked={portfolioIds.includes(p.id)}
                   onChange={() => togglePortfolio(p.id)}
                 />
@@ -448,7 +457,7 @@ function CreateCampaignModal({
               </label>
             ))}
           </div>
-        </div>
+        </Field>
 
         <SelectGroup
           label={t("campaigns.form.agent")}
@@ -485,31 +494,16 @@ function CreateCampaignModal({
           </SelectGroup>
         )}
         {isWhatsApp && !senders.isLoading && (senders.data ?? []).length === 0 && (
-          <p className="text-xs text-warning">{t("campaigns.form.noWhatsAppSender")}</p>
+          <p className="text-xs text-fg-muted">{t("campaigns.form.noWhatsAppSender")}</p>
         )}
 
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-fg-muted">{t("campaigns.form.days")}</span>
-          <div className="flex gap-1.5">
-            {ALL_DAYS.map((d) => {
-              const selected = daysOfWeek.includes(d);
-              return (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => toggleDay(d)}
-                  className={
-                    selected
-                      ? "flex-1 rounded-control bg-primary py-2 text-sm font-semibold text-primary-fg"
-                      : "flex-1 rounded-md border border-border py-2 text-sm font-semibold text-fg-subtle"
-                  }
-                >
-                  {t(`campaigns.days.${d}` as Parameters<typeof t>[0])}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <Field label={t("campaigns.form.days")}>
+          <DayPicker
+            aria-label={t("campaigns.form.days")}
+            value={daysOfWeek}
+            onChange={setDaysOfWeek}
+          />
+        </Field>
 
         <div className="grid grid-cols-2 gap-3">
           <InputGroup
@@ -556,6 +550,6 @@ function CreateCampaignModal({
           />
         </div>
       </div>
-    </Dialog>
+    </Drawer>
   );
 }

@@ -22,7 +22,10 @@ test.describe("ai-insights", () => {
     await signUpAndEnter(page, owner, `WS ${stamp}`);
 
     await page.getByRole("link", { name: "Carteras" }).click();
-    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page
+      .getByRole("button", { name: /Nueva cartera/ })
+      .first()
+      .click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(`cli-${stamp}`);
     await page.getByRole("button", { name: "Crear cartera" }).click();
@@ -33,7 +36,7 @@ test.describe("ai-insights", () => {
     await page.getByRole("button", { name: "Importar cuentas" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
-    await page.getByRole("button", { name: "Cerrar" }).click();
+    await page.getByRole("button", { name: "Cerrar", exact: true }).click();
     await expect(page.getByText("María E2E")).toBeVisible();
 
     const auth = await page.evaluate(() => ({

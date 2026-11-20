@@ -5,7 +5,7 @@ import { User, LogOut } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n } from "../lib/i18n.js";
-import { MenuPanel, MenuHeader, MenuDivider, MenuItem } from "./menu.js";
+import { MenuPanel, MenuDivider, MenuItem } from "./menu.js";
 import { LanguageMenuItem } from "./LanguageMenuItem.js";
 
 /** Account menu for account-level pages (the workspaces hub and profile). Opens from the
@@ -43,18 +43,15 @@ export function AccountMenu() {
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <MenuPanel
             label={t("userMenu.aria")}
-            className="fixed z-50 w-[260px]"
+            className="fixed z-50 w-[240px]"
             style={{ top: pos.top, right: pos.right }}
           >
-            <MenuHeader initials={initials} name={name} email={email} />
-            <MenuDivider />
             <MenuItem icon={User} label={t("profile.title")} onClick={() => go("/profile")} />
             <LanguageMenuItem />
             <MenuDivider />
             <MenuItem
               icon={LogOut}
               label={t("userMenu.logout")}
-              danger
               onClick={() => {
                 setOpen(false);
                 logout();
@@ -79,7 +76,7 @@ export function AccountMenu() {
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-2.5 rounded-control px-2 py-1.5 text-left transition hover:bg-elevated"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-elevated text-xs font-bold text-fg-muted">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-elevated font-mono text-xs text-fg">
           {initials}
         </span>
         <span className="hidden min-w-0 flex-col leading-tight sm:flex">

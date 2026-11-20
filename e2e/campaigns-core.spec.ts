@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { newOwner, signUpAndEnter } from "./helpers.js";
+import { newOwner, signUpAndEnter, startNewAgent } from "./helpers.js";
 
 /**
  * Campaigns-core happy path: create an agent template, create a campaign (which
@@ -20,7 +20,10 @@ test.describe("campaigns core", () => {
     // --- A portfolio to target -------------------------------------------------
     await page.getByRole("link", { name: "Carteras" }).click();
     await expect(page).toHaveURL(/\/portfolios$/);
-    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page
+      .getByRole("button", { name: /Nueva cartera/ })
+      .first()
+      .click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(`cli-${stamp}`);
     await page.getByRole("button", { name: "Crear cartera" }).click();
@@ -31,11 +34,11 @@ test.describe("campaigns core", () => {
     await expect(page).toHaveURL(/\/agent-templates$/);
     // Template-variables hint is surfaced on the list header.
     await expect(page.getByText("{{firstName}}")).toBeVisible();
-    await page.getByRole("button", { name: /Nuevo agente/ }).click();
+    await startNewAgent(page, "Voz IA");
     await page.getByLabel("Nombre del agente").fill(agentName);
     // VOICE_AI is the default type. Idioma + Voz are now config-sourced selects.
     await page.getByLabel("Idioma", { exact: true }).selectOption("es-419");
-    await page.getByLabel("Voz").selectOption({ label: "Sofía (es, femenina)" });
+    await page.getByLabel("Voz", { exact: true }).selectOption({ label: "Sofía (es, femenina)" });
     await page.getByLabel("Primer mensaje").fill("Hola, le llamo de QCobro.");
     await page.getByLabel("Prompt del sistema").fill("Sé cordial y claro.");
     // Idle options are pre-filled from the deployment default (8000 ms / 3); the operator
@@ -116,12 +119,10 @@ test.describe("campaigns core", () => {
 
     await page.getByRole("link", { name: "Agentes IA" }).click();
     await expect(page).toHaveURL(/\/agent-templates$/);
-    await page.getByRole("button", { name: /Nuevo agente/ }).click();
-
-    // Switch the channel to SMS — the form swaps to text-channel fields (no voice).
+    // The channel is picked first, in its own dialog; SMS opens the text-channel form (no voice).
+    await startNewAgent(page, "SMS");
     await page.getByLabel("Nombre del agente").fill(agentName);
-    await page.getByLabel("Tipo de canal").selectOption({ label: "SMS" });
-    await expect(page.getByLabel("Voz")).toHaveCount(0);
+    await expect(page.getByLabel("Voz", { exact: true })).toHaveCount(0);
     await page.getByLabel("Cuerpo del mensaje").fill(body);
     await page.getByLabel(/ID de remitente/).fill("DEMO");
     await page.getByRole("button", { name: "Crear agente" }).click();

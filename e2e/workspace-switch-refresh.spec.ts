@@ -33,7 +33,10 @@ test.describe("workspace switch — screen refresh", () => {
     await signUpAndEnter(page, owner, wsAName);
 
     await page.getByRole("link", { name: "Carteras" }).click();
-    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page
+      .getByRole("button", { name: /Nueva cartera/ })
+      .first()
+      .click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(`cli-${stamp}`);
     await page.getByRole("button", { name: "Crear cartera" }).click();

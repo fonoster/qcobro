@@ -10,6 +10,9 @@ import { Dialog } from "../components/ui/dialog.js";
 import { ConfirmDeleteDialog } from "../components/ui/confirm-delete-dialog.js";
 import { InputGroup } from "../components/ui/input.js";
 import { Badge } from "../components/ui/badge.js";
+import { Button } from "../components/ui/button.js";
+import { EmptyState } from "../components/ui/empty-state.js";
+import { FolderOpen, Plus } from "lucide-react";
 import { RowActionsMenu } from "../components/ui/row-actions-menu.js";
 import { CsvSyncModal } from "../components/portfolios/CsvSyncModal.js";
 
@@ -80,7 +83,16 @@ export function Portfolios() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={t("portfolios.title")} description={t("portfolios.description")} />
+      <PageHeader
+        title={t("portfolios.title")}
+        description={t("portfolios.description")}
+        actions={
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4" />
+            {t("portfolios.new")}
+          </Button>
+        }
+      />
 
       <DataTable
         data={portfolios}
@@ -97,9 +109,23 @@ export function Portfolios() {
             {t("portfolios.filter.showArchived")}
           </label>
         }
-        actionLabel={t("portfolios.new")}
-        onAction={() => setShowCreate(true)}
+        rowHeight={60}
         onRowClick={(row) => navigate(`/portfolios/${row.id}`)}
+        empty={
+          includeArchived ? undefined : (
+            <EmptyState
+              icon={<FolderOpen />}
+              title={t("portfolios.empty.title")}
+              body={t("portfolios.empty.body")}
+              action={
+                <Button onClick={() => setShowCreate(true)}>
+                  <Plus className="h-4 w-4" />
+                  {t("portfolios.new")}
+                </Button>
+              }
+            />
+          )
+        }
         columns={[
           {
             key: "name",
@@ -114,20 +140,23 @@ export function Portfolios() {
                 r.name
               )
           },
-          { key: "clientId", header: t("portfolios.col.clientId") },
+          { key: "clientId", header: t("portfolios.col.clientId"), mono: true },
           {
             key: "accountCount",
             header: t("portfolios.col.accounts"),
+            mono: true,
             render: (r) => r.accountCount.toLocaleString()
           },
           {
             key: "totalOutstandingBalance",
             header: t("portfolios.col.balance"),
+            mono: true,
             render: (r) => money(r.totalOutstandingBalance as number)
           },
           {
             key: "recoveredThisMonth",
             header: t("portfolios.col.recovered"),
+            mono: true,
             render: (r) => {
               const recovered = recoveredThisMonth.get(r.id);
               return recovered === undefined ? "" : money(recovered);
@@ -224,6 +253,8 @@ function CreatePortfolioModal({
   const [name, setName] = useState("");
   const [clientId, setClientId] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [clientIdError, setClientIdError] = useState<string | null>(null);
 
   const create = trpc.portfolios.create.useMutation({
     onSuccess,
@@ -231,14 +262,11 @@ function CreatePortfolioModal({
   });
 
   function handleCreate() {
-    if (!name.trim()) {
-      setError("El nombre es requerido.");
-      return;
-    }
-    if (!clientId.trim()) {
-      setError("El ID del cliente es requerido.");
-      return;
-    }
+    const nameMissing = !name.trim();
+    const clientIdMissing = !clientId.trim();
+    setNameError(nameMissing ? t("portfolios.form.nameRequired") : null);
+    setClientIdError(clientIdMissing ? t("portfolios.form.clientIdRequired") : null);
+    if (nameMissing || clientIdMissing) return;
     setError(null);
     create.mutate({ name: name.trim(), clientId: clientId.trim() });
   }
@@ -248,27 +276,34 @@ function CreatePortfolioModal({
       open
       onClose={onClose}
       title={t("portfolios.new")}
-      confirmLabel={create.isPending ? "Creando…" : t("portfolios.form.create")}
-      onConfirm={handleCreate}
+      confirmLabel={create.isPending ? t("common.creating") : t("portfolios.form.create")}
+      confirmDisabled={create.isPending}
+      onSubmit={handleCreate}
       error={error}
     >
-      <div className="mt-4 flex flex-col gap-3">
-        <InputGroup
-          label={t("portfolios.form.name")}
-          id="p-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="ej. Bancolombia Q2 2025"
-        />
-        <InputGroup
-          label={t("portfolios.form.clientId")}
-          id="p-client"
-          value={clientId}
-          onChange={(e) => setClientId(e.target.value)}
-          placeholder="ej. bancolombia"
-        />
-        <p className="text-xs text-fg-subtle">{t("portfolios.form.csvNote")}</p>
-      </div>
+      <InputGroup
+        label={t("portfolios.form.name")}
+        id="p-name"
+        value={name}
+        onChange={(e) => {
+          setName(e.target.value);
+          setNameError(null);
+        }}
+        error={nameError ?? undefined}
+        placeholder="Bancolombia Q3 2026"
+      />
+      <InputGroup
+        label={t("portfolios.form.clientId")}
+        id="p-client"
+        value={clientId}
+        onChange={(e) => {
+          setClientId(e.target.value);
+          setClientIdError(null);
+        }}
+        error={clientIdError ?? undefined}
+        placeholder="bancolombia"
+      />
+      <p className="text-xs text-fg-muted">{t("portfolios.form.csvNote")}</p>
     </Dialog>
   );
 }
@@ -292,17 +327,16 @@ function EditPortfolioModal({
       open
       onClose={onClose}
       title={t("portfolios.form.editTitle")}
-      confirmLabel={update.isPending ? "Guardando…" : t("portfolios.form.save")}
-      onConfirm={() => update.mutate({ id: portfolio.id, name })}
+      confirmLabel={update.isPending ? t("common.saving") : t("portfolios.form.save")}
+      confirmDisabled={update.isPending}
+      onSubmit={() => update.mutate({ id: portfolio.id, name })}
     >
-      <div className="mt-4 flex flex-col gap-3">
-        <InputGroup
-          label={t("portfolios.form.name")}
-          id="ep-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </div>
+      <InputGroup
+        label={t("portfolios.form.name")}
+        id="ep-name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
     </Dialog>
   );
 }

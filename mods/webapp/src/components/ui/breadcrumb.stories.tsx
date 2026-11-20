@@ -10,25 +10,20 @@ const meta = {
 
 export default meta;
 
-export const Simple: StoryObj = {
-  render: () => <Breadcrumb items={[{ label: "Inicio", href: "/" }, { label: "Campañas" }]} />
+export const Detail: StoryObj = {
+  render: () => (
+    <Breadcrumb items={[{ label: "Agentes IA", href: "/agents" }, { label: "Carla" }]} />
+  )
 };
 
 export const Deep: StoryObj = {
   render: () => (
     <Breadcrumb
       items={[
-        { label: "Inicio", href: "/" },
-        { label: "Carteras", href: "/carteras" },
-        { label: "Bancolombia", href: "/carteras/1" },
-        { label: "Campaña Q2" }
+        { label: "Campañas", href: "/campaigns" },
+        { label: "Mora 8–30", href: "/campaigns/1" },
+        { label: "Editar" }
       ]}
     />
-  )
-};
-
-export const WithEllipsis: StoryObj = {
-  render: () => (
-    <Breadcrumb items={[{ label: "Inicio", href: "/" }, { label: "" }, { label: "Campaña Q2" }]} />
   )
 };

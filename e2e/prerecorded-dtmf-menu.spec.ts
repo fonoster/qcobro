@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { newOwner, signUpAndEnter } from "./helpers.js";
+import { newOwner, signUpAndEnter, startNewAgent } from "./helpers.js";
 
 const CSV = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures", "accounts.csv");
 const API = "http://localhost:3000";
@@ -31,7 +31,10 @@ test.describe("pre-recorded DTMF menu", () => {
 
     // --- Portfolio + import one account --------------------------------------
     await page.getByRole("link", { name: "Carteras" }).click();
-    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page
+      .getByRole("button", { name: /Nueva cartera/ })
+      .first()
+      .click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(`cli-${stamp}`);
     await page.getByRole("button", { name: "Crear cartera" }).click();
@@ -43,14 +46,13 @@ test.describe("pre-recorded DTMF menu", () => {
     await page.getByRole("button", { name: "Importar cuentas" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
-    await page.getByRole("button", { name: "Cerrar" }).click();
+    await page.getByRole("button", { name: "Cerrar", exact: true }).click();
     await expect(page.getByText("María E2E")).toBeVisible();
 
     // --- Create a VOICE_PRERECORDED template with a half-configured menu -----
     await page.getByRole("link", { name: "Agentes IA" }).click();
-    await page.getByRole("button", { name: /Nuevo agente/ }).click();
+    await startNewAgent(page, "Voz pregrabada");
     await page.getByLabel("Nombre del agente").fill(agentName);
-    await page.getByLabel("Tipo de canal").selectOption({ label: "Voz pregrabada" });
     await page.getByLabel("Idioma", { exact: true }).selectOption("es-419");
     // Exact match: the new AMD checkbox's label ends in "buzón de voz", which a
     // substring match against "Voz" would otherwise also resolve to.

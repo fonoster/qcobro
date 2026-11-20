@@ -1,5 +1,5 @@
-import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { Megaphone } from "lucide-react";
 import {
   campaignStatusTransitions,
   type CampaignPauseReason,
@@ -9,7 +9,8 @@ import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
 import { Button } from "../components/ui/button.js";
 import { Badge } from "../components/ui/badge.js";
-import { PageHeader } from "../components/page-header.js";
+import { DetailHeader } from "../components/detail-header.js";
+import { Breadcrumb } from "../components/ui/breadcrumb.js";
 import { SectionCard } from "../components/section-card.js";
 import { RowActionsMenu } from "../components/ui/row-actions-menu.js";
 import { CampaignAutopausedBanner } from "../components/CampaignAutopausedBanner.js";
@@ -25,8 +26,8 @@ const STATUS_ACTION: Record<CampaignStatus, string> = {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between border-b border-border py-2 text-sm last:border-0">
-      <span className="text-fg-subtle">{label}</span>
-      <span className="font-medium text-fg">{value}</span>
+      <span className="text-fg-muted">{label}</span>
+      <span className="text-fg">{value}</span>
     </div>
   );
 }
@@ -34,7 +35,6 @@ function Row({ label, value }: { label: string; value: string }) {
 export function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
   const { t } = useI18n();
-  const navigate = useNavigate();
   const utils = trpc.useUtils();
 
   const query = trpc.campaigns.get.useQuery({ id: id! });
@@ -82,33 +82,34 @@ export function CampaignDetail() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/campaigns")}>
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          {t("campaigns.detail.back")}
-        </Button>
-      </div>
+      <Breadcrumb
+        items={[{ label: t("campaigns.title"), href: "/campaigns" }, { label: c?.name ?? "…" }]}
+      />
 
-      <PageHeader
+      <DetailHeader
+        icon={<Megaphone />}
         title={c?.name ?? "…"}
-        description={c?.agentTemplate?.name}
-        action={
+        badge={
           c ? (
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary">
-                {t(`campaigns.status.${c.status}` as Parameters<typeof t>[0])}
-              </Badge>
+            <Badge variant="secondary">
+              {t(`campaigns.status.${c.status}` as Parameters<typeof t>[0])}
+            </Badge>
+          ) : undefined
+        }
+        meta={c?.agentTemplate?.name}
+        actions={
+          c ? (
+            <>
               {primary && (
                 <Button
-                  size="sm"
-                  variant={primary === "ACTIVE" ? "default" : "outline"}
+                  variant={primary === "ACTIVE" ? "default" : "secondary"}
                   onClick={() => updateStatus.mutate({ id: c.id, status: primary })}
                 >
                   {t(STATUS_ACTION[primary] as Parameters<typeof t>[0])}
                 </Button>
               )}
               {menuItems.length > 0 && <RowActionsMenu items={menuItems} />}
-            </div>
+            </>
           ) : undefined
         }
       />

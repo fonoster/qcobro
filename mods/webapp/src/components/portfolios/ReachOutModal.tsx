@@ -126,15 +126,20 @@ export function ReachOutModal({
       title={t("portfolios.reachOut.title")}
       description={t("portfolios.reachOut.subtitle")}
       confirmLabel={dispatch.isPending ? "…" : t("portfolios.reachOut.send")}
+      confirmDisabled={dispatch.isPending}
       onConfirm={handleConfirm}
       error={error}
     >
-      <div className="mt-4 flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <SelectGroup
           label={t("portfolios.reachOut.agent")}
           id="reach-agent"
           value={agentTemplateId}
-          onChange={(e) => setAgentTemplateId(e.target.value)}
+          onChange={(e) => {
+            setAgentTemplateId(e.target.value);
+            // The "Selecciona un agente" error is stale once an agent is chosen.
+            setError(null);
+          }}
         >
           <option value="">{t("portfolios.reachOut.agentPlaceholder")}</option>
           {agents.map((a) => (

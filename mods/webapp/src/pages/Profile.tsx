@@ -6,6 +6,7 @@ import { useI18n, languages, languageNames, type Language } from "../lib/i18n.js
 import { useTheme, themes, type ThemePreference } from "../lib/theme.js";
 import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
+import { Dialog } from "../components/ui/dialog.js";
 import { InputGroup } from "../components/ui/input.js";
 import { SelectGroup } from "../components/ui/select.js";
 
@@ -249,38 +250,27 @@ export function Profile() {
         </div>
       </Card>
 
-      {confirmOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-overlay p-4">
-          <Card className="w-full max-w-[440px] rounded-2xl border-border shadow-xl">
-            <div className="flex flex-col gap-5 p-6">
-              <div>
-                <h2 className="text-lg font-bold text-fg">{t("profile.danger.title")}</h2>
-                <p className="mt-1 text-[13px] text-fg-subtle">{t("profile.danger.desc")}</p>
-              </div>
-              <InputGroup
-                label={t("profile.delete.confirmLabel")}
-                value={confirmText}
-                onChange={(e) => setConfirmText(e.target.value)}
-                placeholder={CONFIRM_WORD}
-                autoFocus
-                error={deleteError ? t("profile.delete.error") : undefined}
-              />
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={closeConfirm}>
-                  {t("common.cancel")}
-                </Button>
-                <Button
-                  variant="destructive"
-                  disabled={!canDelete || remove.isPending}
-                  onClick={onDelete}
-                >
-                  {t("profile.danger.action")}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
+      <Dialog
+        open={confirmOpen}
+        onClose={closeConfirm}
+        width={480}
+        title={t("profile.danger.title")}
+        subtitle={t("profile.danger.desc")}
+        confirmVariant="destructive"
+        confirmLabel={t("profile.danger.action")}
+        confirmDisabled={!canDelete || remove.isPending}
+        onSubmit={onDelete}
+      >
+        <InputGroup
+          label={t("profile.delete.confirmLabel")}
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder={CONFIRM_WORD}
+          className="[&_input]:font-mono"
+          autoFocus
+          error={deleteError ? t("profile.delete.error") : undefined}
+        />
+      </Dialog>
     </div>
   );
 }

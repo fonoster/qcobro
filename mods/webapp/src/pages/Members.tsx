@@ -1,9 +1,10 @@
 import { useState, type ComponentType, type FormEvent } from "react";
-import { Plus, X, MoreHorizontal, Mail, Ban, UserMinus } from "lucide-react";
+import { Plus, MoreHorizontal, Mail, Ban, UserMinus } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { Card } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
+import { Dialog } from "../components/ui/dialog.js";
 import { InputGroup } from "../components/ui/input.js";
 import { SelectGroup } from "../components/ui/select.js";
 import { useI18n, type MessageId } from "../lib/i18n.js";
@@ -257,89 +258,55 @@ export function Members() {
         )}
       </Card>
 
-      {canManage && open && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-overlay p-4">
-          <Card className="w-full max-w-[440px] rounded-2xl border-border shadow-xl">
-            <form onSubmit={onInvite} className="flex flex-col gap-5 p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-fg">{t("members.invite")}</h2>
-                  <p className="text-[13px] text-fg-subtle">
-                    {t("members.inviteModal.desc").replace("{ws}", wsName)}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="text-fg-subtle hover:text-fg-muted"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <InputGroup
-                label={t("members.field.name")}
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={t("members.field.namePlaceholder")}
-              />
-              <InputGroup
-                label={t("members.field.email")}
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t("members.field.emailPlaceholder")}
-                error={error ?? undefined}
-              />
-              <SelectGroup
-                label={t("members.field.role")}
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-              >
-                <option value="WORKSPACE_MEMBER">{t("members.role.WORKSPACE_MEMBER")}</option>
-                <option value="WORKSPACE_ADMIN">{t("members.role.WORKSPACE_ADMIN")}</option>
-              </SelectGroup>
-              <div className="flex justify-end gap-3">
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                  {t("common.cancel")}
-                </Button>
-                <Button type="submit" disabled={invite.isPending}>
-                  {t("members.inviteSubmit")}
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
-      )}
+      <Dialog
+        open={canManage && open}
+        onClose={() => setOpen(false)}
+        title={t("members.invite")}
+        subtitle={t("members.inviteModal.desc").replace("{ws}", wsName)}
+        confirmLabel={t("members.inviteSubmit")}
+        confirmDisabled={invite.isPending}
+        onSubmit={onInvite}
+      >
+        <InputGroup
+          label={t("members.field.name")}
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={t("members.field.namePlaceholder")}
+        />
+        <InputGroup
+          label={t("members.field.email")}
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder={t("members.field.emailPlaceholder")}
+          error={error ?? undefined}
+        />
+        <SelectGroup
+          label={t("members.field.role")}
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+        >
+          <option value="WORKSPACE_MEMBER">{t("members.role.WORKSPACE_MEMBER")}</option>
+          <option value="WORKSPACE_ADMIN">{t("members.role.WORKSPACE_ADMIN")}</option>
+        </SelectGroup>
+      </Dialog>
 
-      {canManage && confirm && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-overlay p-4">
-          <Card className="w-full max-w-[440px] rounded-2xl border-border shadow-xl">
-            <div className="flex flex-col gap-5 p-6">
-              <div>
-                <h2 className="text-lg font-bold text-fg">{confirm.title}</h2>
-                <p className="mt-1 text-[13px] text-fg-subtle">{confirm.message}</p>
-              </div>
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setConfirm(null)}>
-                  Cancelar
-                </Button>
-                <Button
-                  variant="destructive"
-                  disabled={remove.isPending}
-                  onClick={async () => {
-                    await confirm.run();
-                    setConfirm(null);
-                  }}
-                >
-                  {confirm.confirmLabel}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
+      <Dialog
+        open={canManage && !!confirm}
+        onClose={() => setConfirm(null)}
+        width={480}
+        title={confirm?.title}
+        subtitle={confirm?.message}
+        confirmVariant="destructive"
+        confirmLabel={confirm?.confirmLabel}
+        confirmDisabled={remove.isPending}
+        onConfirm={async () => {
+          await confirm?.run();
+          setConfirm(null);
+        }}
+      />
     </div>
   );
 }

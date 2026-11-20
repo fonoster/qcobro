@@ -1,10 +1,10 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, X } from "lucide-react";
+import { ChevronRight, Plus } from "lucide-react";
 import { trpc, REFRESH_TOKEN_KEY } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n } from "../lib/i18n.js";
-import { Card } from "../components/ui/card.js";
+import { Dialog } from "../components/ui/dialog.js";
 import { Button } from "../components/ui/button.js";
 import { CopyField } from "../components/CopyField.js";
 import { InputGroup } from "../components/ui/input.js";
@@ -46,8 +46,7 @@ export function Workspaces() {
     navigate("/");
   }
 
-  async function onCreate(event: FormEvent) {
-    event.preventDefault();
+  async function onCreate() {
     const { ref } = await create.mutateAsync({ name, currency, timezone });
 
     const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
@@ -94,7 +93,10 @@ export function Workspaces() {
               <p className="text-sm text-fg-subtle">
                 {countLabel.replace("{count}", String(items.length))}
               </p>
-              <Button onClick={() => setOpen(true)}>{t("workspaces.create")}</Button>
+              <Button variant="outline" onClick={() => setOpen(true)}>
+                <Plus className="h-4 w-4" />
+                {t("workspaces.create")}
+              </Button>
             </div>
 
             <ul
@@ -153,79 +155,49 @@ export function Workspaces() {
         )}
       </div>
 
-      {open && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-overlay p-4">
-          <Card
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="create-workspace-title"
-            className="w-full max-w-[480px] rounded-m border-border shadow-xl"
-          >
-            <form onSubmit={onCreate} className="flex flex-col gap-5 p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 id="create-workspace-title" className="text-[18px] font-bold text-fg">
-                    {t("createWorkspace.modal.title")}
-                  </h2>
-                  <p className="text-[13px] text-fg-subtle">
-                    {t("createWorkspace.modal.subtitle")}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  aria-label={t("common.close")}
-                  onClick={() => setOpen(false)}
-                  className="cursor-pointer text-fg-subtle hover:text-fg-muted"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        width={560}
+        title={t("createWorkspace.modal.title")}
+        subtitle={t("createWorkspace.modal.subtitle")}
+        confirmLabel={pending ? t("createWorkspace.creating") : t("createWorkspace.create")}
+        confirmDisabled={pending}
+        onSubmit={onCreate}
+      >
+        <InputGroup
+          label={t("createWorkspace.field.name")}
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={t("createWorkspace.field.namePlaceholder")}
+        />
 
-              <InputGroup
-                label={t("createWorkspace.field.name")}
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={t("createWorkspace.field.namePlaceholder")}
-              />
+        <SelectGroup label={t("createWorkspace.field.region")} defaultValue="nyc01">
+          <option value="nyc01">NYC01</option>
+        </SelectGroup>
 
-              <SelectGroup label={t("createWorkspace.field.region")} defaultValue="nyc01">
-                <option value="nyc01">NYC01</option>
-              </SelectGroup>
+        <SelectGroup
+          label={t("settings.currency")}
+          value={currency}
+          onChange={(e) => setCurrency(e.target.value as "USD" | "DOP")}
+        >
+          <option value="USD">USD</option>
+          <option value="DOP">DOP</option>
+        </SelectGroup>
 
-              <SelectGroup
-                label={t("settings.currency")}
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value as "USD" | "DOP")}
-              >
-                <option value="USD">USD</option>
-                <option value="DOP">DOP</option>
-              </SelectGroup>
-
-              <SelectGroup
-                label={t("settings.timezone")}
-                value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-              >
-                {TIMEZONES.map((tz) => (
-                  <option key={tz} value={tz}>
-                    {tz}
-                  </option>
-                ))}
-              </SelectGroup>
-
-              <div className="flex justify-end gap-3">
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                  {t("common.cancel")}
-                </Button>
-                <Button type="submit" disabled={pending}>
-                  {pending ? t("createWorkspace.creating") : t("createWorkspace.create")}
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
-      )}
+        <SelectGroup
+          label={t("settings.timezone")}
+          value={timezone}
+          onChange={(e) => setTimezone(e.target.value)}
+        >
+          {TIMEZONES.map((tz) => (
+            <option key={tz} value={tz}>
+              {tz}
+            </option>
+          ))}
+        </SelectGroup>
+      </Dialog>
     </>
   );
 }
