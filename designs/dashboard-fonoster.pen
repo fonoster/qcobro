@@ -5916,202 +5916,6 @@
                     {
                       "type": "frame",
                       "id": "pn000i",
-                      "name": "KPI Recuperado",
-                      "layout": "vertical",
-                      "width": "fill_container",
-                      "fill": "$ui:--card",
-                      "cornerRadius": 12,
-                      "stroke": "$ui:--border",
-                      "strokeWidth": 1,
-                      "strokeAlignment": "inner",
-                      "gap": 10,
-                      "padding": [
-                        16,
-                        18
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "pn000f",
-                          "name": "Recuperado",
-                          "fill": "$ui:--muted-foreground",
-                          "content": "Recuperado",
-                          "fontFamily": "$ui:--font-secondary",
-                          "fontSize": 12,
-                          "fontWeight": "normal"
-                        },
-                        {
-                          "type": "text",
-                          "id": "pn000g",
-                          "name": "RD$61,500",
-                          "fill": "$ui:--foreground",
-                          "content": "RD$61,500",
-                          "fontFamily": "$ui:--font-primary",
-                          "fontSize": 24,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "text",
-                          "id": "pn000h",
-                          "name": "13 cuentas con gestión",
-                          "fill": "$ui:accent",
-                          "content": "13 cuentas con gestión",
-                          "fontFamily": "$ui:--font-secondary",
-                          "fontSize": 12,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "pn000m",
-                      "name": "KPI Promesas cumplidas",
-                      "layout": "vertical",
-                      "width": "fill_container",
-                      "fill": "$ui:--card",
-                      "cornerRadius": 12,
-                      "stroke": "$ui:--border",
-                      "strokeWidth": 1,
-                      "strokeAlignment": "inner",
-                      "gap": 10,
-                      "padding": [
-                        16,
-                        18
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "pn000j",
-                          "name": "Promesas cumplidas",
-                          "fill": "$ui:--muted-foreground",
-                          "content": "Promesas cumplidas",
-                          "fontFamily": "$ui:--font-secondary",
-                          "fontSize": 12,
-                          "fontWeight": "normal"
-                        },
-                        {
-                          "type": "text",
-                          "id": "pn000k",
-                          "name": "312",
-                          "fill": "$ui:--foreground",
-                          "content": "312",
-                          "fontFamily": "$ui:--font-primary",
-                          "fontSize": 24,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "text",
-                          "id": "pn000l",
-                          "name": "este mes",
-                          "fill": "$ui:--muted-foreground",
-                          "content": "este mes",
-                          "fontFamily": "$ui:--font-secondary",
-                          "fontSize": 12,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "pn000q",
-                      "name": "KPI Contacto · 7 d",
-                      "layout": "vertical",
-                      "width": "fill_container",
-                      "fill": "$ui:--card",
-                      "cornerRadius": 12,
-                      "stroke": "$ui:--border",
-                      "strokeWidth": 1,
-                      "strokeAlignment": "inner",
-                      "gap": 10,
-                      "padding": [
-                        16,
-                        18
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "pn000n",
-                          "name": "Contacto · 7 d",
-                          "fill": "$ui:--muted-foreground",
-                          "content": "Contacto · 7 d",
-                          "fontFamily": "$ui:--font-secondary",
-                          "fontSize": 12,
-                          "fontWeight": "normal"
-                        },
-                        {
-                          "type": "text",
-                          "id": "pn000o",
-                          "name": "92%",
-                          "fill": "$ui:--foreground",
-                          "content": "92%",
-                          "fontFamily": "$ui:--font-primary",
-                          "fontSize": 24,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "text",
-                          "id": "pn000p",
-                          "name": "230 de 250 cuentas · 410",
-                          "fill": "$ui:--muted-foreground",
-                          "content": "230 de 250 cuentas · 410 envíos",
-                          "fontFamily": "$ui:--font-secondary",
-                          "fontSize": 12,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "pn000u",
-                      "name": "KPI Saldo pendiente",
-                      "layout": "vertical",
-                      "width": "fill_container",
-                      "fill": "$ui:--card",
-                      "cornerRadius": 12,
-                      "stroke": "$ui:--border",
-                      "strokeWidth": 1,
-                      "strokeAlignment": "inner",
-                      "gap": 10,
-                      "padding": [
-                        16,
-                        18
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "pn000r",
-                          "name": "Saldo pendiente",
-                          "fill": "$ui:--muted-foreground",
-                          "content": "Saldo pendiente",
-                          "fontFamily": "$ui:--font-secondary",
-                          "fontSize": 12,
-                          "fontWeight": "normal"
-                        },
-                        {
-                          "type": "text",
-                          "id": "pn000s",
-                          "name": "RD$1,204,900",
-                          "fill": "$ui:--foreground",
-                          "content": "RD$1,204,900",
-                          "fontFamily": "$ui:--font-primary",
-                          "fontSize": 24,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "text",
-                          "id": "pn000t",
-                          "name": "por cobrar",
-                          "fill": "$ui:--muted-foreground",
-                          "content": "por cobrar",
-                          "fontFamily": "$ui:--font-secondary",
-                          "fontSize": 12,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "pn000y",
                       "name": "KPI Cuentas en gestión",
                       "layout": "vertical",
                       "width": "fill_container",
@@ -6128,7 +5932,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "pn000v",
+                          "id": "pn000f",
                           "name": "Cuentas en gestión",
                           "fill": "$ui:--muted-foreground",
                           "content": "Cuentas en gestión",
@@ -6138,7 +5942,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "pn000w",
+                          "id": "pn000g",
                           "name": "12,430",
                           "fill": "$ui:--foreground",
                           "content": "12,430",
@@ -6148,10 +5952,206 @@
                         },
                         {
                           "type": "text",
-                          "id": "pn000x",
+                          "id": "pn000h",
                           "name": "activas",
                           "fill": "$ui:--muted-foreground",
                           "content": "activas",
+                          "fontFamily": "$ui:--font-secondary",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pn000m",
+                      "name": "KPI Saldo pendiente",
+                      "layout": "vertical",
+                      "width": "fill_container",
+                      "fill": "$ui:--card",
+                      "cornerRadius": 12,
+                      "stroke": "$ui:--border",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "gap": 10,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "pn000j",
+                          "name": "Saldo pendiente",
+                          "fill": "$ui:--muted-foreground",
+                          "content": "Saldo pendiente",
+                          "fontFamily": "$ui:--font-secondary",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "pn000k",
+                          "name": "RD$1,204,900",
+                          "fill": "$ui:--foreground",
+                          "content": "RD$1,204,900",
+                          "fontFamily": "$ui:--font-primary",
+                          "fontSize": 24,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "pn000l",
+                          "name": "por cobrar",
+                          "fill": "$ui:--muted-foreground",
+                          "content": "por cobrar",
+                          "fontFamily": "$ui:--font-secondary",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pn000q",
+                      "name": "KPI Recuperado",
+                      "layout": "vertical",
+                      "width": "fill_container",
+                      "fill": "$ui:--card",
+                      "cornerRadius": 12,
+                      "stroke": "$ui:--border",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "gap": 10,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "pn000n",
+                          "name": "Recuperado",
+                          "fill": "$ui:--muted-foreground",
+                          "content": "Recuperado",
+                          "fontFamily": "$ui:--font-secondary",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "pn000o",
+                          "name": "RD$61,500",
+                          "fill": "$ui:--foreground",
+                          "content": "RD$61,500",
+                          "fontFamily": "$ui:--font-primary",
+                          "fontSize": 24,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "pn000p",
+                          "name": "13 cuentas con gestión",
+                          "fill": "$ui:accent",
+                          "content": "13 cuentas con gestión",
+                          "fontFamily": "$ui:--font-secondary",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pn000u",
+                      "name": "KPI Contacto · 7 d",
+                      "layout": "vertical",
+                      "width": "fill_container",
+                      "fill": "$ui:--card",
+                      "cornerRadius": 12,
+                      "stroke": "$ui:--border",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "gap": 10,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "pn000r",
+                          "name": "Contacto · 7 d",
+                          "fill": "$ui:--muted-foreground",
+                          "content": "Contacto · 7 d",
+                          "fontFamily": "$ui:--font-secondary",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "pn000s",
+                          "name": "92%",
+                          "fill": "$ui:--foreground",
+                          "content": "92%",
+                          "fontFamily": "$ui:--font-primary",
+                          "fontSize": 24,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "pn000t",
+                          "name": "230 de 250 cuentas · 410",
+                          "fill": "$ui:--muted-foreground",
+                          "content": "230 de 250 cuentas · 410 envíos",
+                          "fontFamily": "$ui:--font-secondary",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pn000y",
+                      "name": "KPI Promesas cumplidas",
+                      "layout": "vertical",
+                      "width": "fill_container",
+                      "fill": "$ui:--card",
+                      "cornerRadius": 12,
+                      "stroke": "$ui:--border",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "gap": 10,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "pn000v",
+                          "name": "Promesas cumplidas",
+                          "fill": "$ui:--muted-foreground",
+                          "content": "Promesas cumplidas",
+                          "fontFamily": "$ui:--font-secondary",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "pn000w",
+                          "name": "312",
+                          "fill": "$ui:--foreground",
+                          "content": "312",
+                          "fontFamily": "$ui:--font-primary",
+                          "fontSize": 24,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "pn000x",
+                          "name": "este mes",
+                          "fill": "$ui:--muted-foreground",
+                          "content": "este mes",
                           "fontFamily": "$ui:--font-secondary",
                           "fontSize": 12,
                           "fontWeight": "normal"
