@@ -3,6 +3,9 @@ import { useState } from "react";
 import { DataTable, TableCellStack } from "./data-table.js";
 import { Badge } from "./badge.js";
 import { Button } from "./button.js";
+import { EmptyState } from "./empty-state.js";
+import { FilterChip } from "./filter-chip.js";
+import { FolderOpen, Plus } from "lucide-react";
 
 const meta = {
   title: "UI/DataTable",
@@ -65,9 +68,9 @@ const accounts: Account[] = [
   }
 ];
 
-const statusVariant: Record<string, "success" | "destructive" | "orange"> = {
-  Current: "success",
-  "Past Due": "orange",
+const statusVariant: Record<string, "secondary" | "destructive"> = {
+  Current: "secondary",
+  "Past Due": "secondary",
   Critical: "destructive"
 };
 
@@ -110,18 +113,41 @@ export const WithPagination: StoryObj = {
   }
 };
 
-export const WithSearchAndAction: StoryObj = {
-  name: "With Search + Action",
-  render: () => (
-    <DataTable
-      data={accounts}
-      keyField="id"
-      columns={[...columns]}
-      searchable
-      actionLabel="New account"
-      onAction={() => alert("New account")}
-    />
-  )
+export const WithToolbar: StoryObj = {
+  name: "Search + filter chip + count, 60 px rows",
+  render: () => {
+    const [status, setStatus] = useState("");
+    const rows = status ? accounts.filter((a) => a.status === status) : accounts;
+    return (
+      <DataTable
+        data={rows}
+        keyField="id"
+        columns={[
+          { key: "name", header: "Cuenta" },
+          { key: "accountId", header: "ID", mono: true },
+          { key: "balance", header: "Saldo", mono: true, width: 140 },
+          { key: "daysPastDue", header: "Días", mono: true, width: 80 }
+        ]}
+        searchable
+        searchPlaceholder="Buscar cuentas"
+        rowHeight={60}
+        countLabel="cuentas"
+        filters={
+          <FilterChip
+            label="Estado"
+            value={status}
+            onChange={setStatus}
+            options={[
+              { value: "", label: "Todos" },
+              { value: "Current", label: "Al día" },
+              { value: "Past Due", label: "Vencida" },
+              { value: "Critical", label: "Crítica" }
+            ]}
+          />
+        }
+      />
+    );
+  }
 };
 
 export const TwoLineCell: StoryObj = {
@@ -196,7 +222,19 @@ export const Empty: StoryObj = {
       keyField="id"
       columns={[...columns]}
       searchable={false}
-      actionLabel="New account"
+      empty={
+        <EmptyState
+          icon={<FolderOpen />}
+          title="Todavía no tienes carteras"
+          body="Crea una cartera por cliente y sincroniza sus cuentas desde un CSV."
+          action={
+            <Button>
+              <Plus className="h-4 w-4" />
+              Nueva cartera
+            </Button>
+          }
+        />
+      }
     />
   )
 };

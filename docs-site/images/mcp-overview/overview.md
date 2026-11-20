@@ -6,7 +6,7 @@
 **Audience:** Customer / MCP integrator — behavior only, no internals (see `docs-site/AGENTS.md`)
 **Preset:** 16:9 `1600 × 900` (exported at 2× → `3200 × 1800`)
 **Diagram Kit version:** v1
-**Pencil node id:** `knSrg` (file: repo-root `pencil.pen`)
+**Node id:** `knSrg` (file: `designs/docs.pen`)
 
 > Regenerate from this doc — do not edit the PNG. Change the spec or the kit, then
 > re-export node `knSrg` (see **Re-export** below).
@@ -71,21 +71,20 @@ a hyphenated `dgm-*` token.)
 
 ## How to change it
 
-- **Minor content** (labels, a node's text): edit the relevant instance in `pencil.pen`
-  via the Pencil MCP, then re-export.
+- **Minor content** (labels, a node's text): edit the relevant instance in `designs/docs.pen`
+  in Nib, then re-export.
 - **Structure** (add/remove a node or edge): update the spec above, mirror it in
-  `pencil.pen`, re-export.
+  `designs/docs.pen`, re-export.
 - **Brand / style** (color, radius, type): do **not** touch this asset for kit-token
   colors — change the `dgm-*` token once; every diagram updates, then re-export all.
   The Claude accent is the one color that must be changed here directly if ever revised.
 
 ## Re-export
 
-Driven through the Pencil MCP:
+Open `designs/docs.pen` in Nib, then:
 
 ```
-export_nodes(filePath: "pencil.pen", nodeIds: ["knSrg"],
-             outputDir: "docs-site/images/mcp-overview", format: "png")
+get_screenshot(id: "knSrg", scale: 2)
 ```
 
-Then rename the output (`knSrg.png`) to `overview.png`.
+and save the PNG as `docs-site/images/mcp-overview/overview.png`.

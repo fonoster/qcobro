@@ -7,6 +7,12 @@ import { I18nProvider } from "./lib/i18n.js";
 import { ThemeProvider } from "./lib/theme.js";
 import { AuthProvider } from "./lib/auth.js";
 import App from "./App.js";
+import "@fontsource/poppins/400.css";
+import "@fontsource/poppins/500.css";
+import "@fontsource/poppins/600.css";
+import "@fontsource/roboto-mono/400.css";
+import "@fontsource/roboto-mono/500.css";
+import "@fontsource/roboto-mono/600.css";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(

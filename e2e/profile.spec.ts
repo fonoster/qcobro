@@ -20,7 +20,7 @@ test.describe("profile", () => {
     // Pin dark: <html data-theme> flips and the page ground goes dark, no reload.
     await select.selectOption("dark");
     await expect.poll(() => htmlTheme(page)).toBe("dark");
-    await expect(page.locator("body")).toHaveCSS("background-color", "rgb(20, 20, 23)");
+    await expect(page.locator("body")).toHaveCSS("background-color", "rgb(24, 24, 24)");
 
     // Persisted: a reload comes back dark.
     await page.reload();
@@ -54,6 +54,11 @@ test.describe("profile", () => {
     await openUserMenu(page, "Mi perfil");
     await expect(page).toHaveURL(/\/profile/);
     await expect(page.getByRole("heading", { name: "Mi perfil" })).toBeVisible();
+
+    // With a workspace, the profile renders inside the app shell with no nav item active.
+    const nav = page.getByRole("navigation");
+    await expect(nav.getByRole("link", { name: "Panel", exact: true })).toBeVisible();
+    await expect(nav.locator("a[aria-current]")).toHaveCount(0);
 
     // Email is shown read-only.
     await expect(page.getByLabel("Correo")).toHaveValue(owner.email);

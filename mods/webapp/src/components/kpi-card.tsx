@@ -19,12 +19,17 @@ export interface KpiCardProps {
   subtext?: string;
   /** A second note under `subtext`, for a figure that qualifies the main one. */
   detail?: string;
+  /** Classes for the `subtext` note (its color), when it should read stronger than `detail`. */
+  subtextClassName?: string;
   trend?: { value: string; positive: boolean };
   className?: string;
   /** Optional in-card period pill, right-aligned next to the label (the "KPI Card Period"
    *  Pencil variant). Only the cards that pass this prop render the pill; every other
    *  `KpiCard` in the app renders exactly as before. */
   period?: KpiCardPeriodControl;
+  /** Places the notes directly under the value instead of pinning them to the card's bottom
+   *  edge (the Panel design). Off by default, so every other `KpiCard` renders as before. */
+  notesUnderValue?: boolean;
 }
 
 /**
@@ -64,32 +69,46 @@ function KpiCardPeriodSelect({ value, options, onChange, ariaLabel }: KpiCardPer
   );
 }
 
-export function KpiCard({ label, value, subtext, detail, trend, className, period }: KpiCardProps) {
+export function KpiCard({
+  label,
+  value,
+  subtext,
+  detail,
+  subtextClassName,
+  trend,
+  className,
+  period,
+  notesUnderValue = false
+}: KpiCardProps) {
   return (
     // A named group so the value and its notes are announced (and found) with their label.
     <div
       role="group"
       aria-label={label}
-      className={cn("flex flex-col gap-2 border border-border bg-surface p-5", className)}
+      className={cn(
+        "flex flex-col gap-2 rounded-card border border-border bg-surface p-5",
+        className
+      )}
     >
       {period ? (
-        // `min-w-0` + `truncate` on the label so it yields space to the control instead of
-        // crowding it: at five cards across a narrow viewport there isn't room for both at
-        // full width, and the label is the half that degrades gracefully.
-        <div className="flex items-center justify-between gap-2">
-          <p className="min-w-0 truncate text-[13px] font-medium text-fg-subtle">{label}</p>
+        // The control wraps under the label rather than truncating it: at five cards across a
+        // 1280px viewport each card is ~180px, too narrow for both on one line.
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+          <p className="whitespace-nowrap text-xs font-normal text-fg-subtle">{label}</p>
           <KpiCardPeriodSelect {...period} />
         </div>
       ) : (
-        <p className="text-[13px] font-medium text-fg-subtle">{label}</p>
+        <p className="whitespace-nowrap text-xs font-normal text-fg-subtle">{label}</p>
       )}
-      <p className="text-[28px] font-bold leading-tight text-fg">{value}</p>
+      <p className="whitespace-nowrap font-mono text-[22px] font-medium leading-tight text-fg min-[1440px]:text-2xl">
+        {value}
+      </p>
       {/* `mt-auto` pins the footer to the bottom of the card so every card's note sits on the
           same baseline across the row. Without it the notes float directly under their values,
           and any card with a taller header — the contact-rate card, whose label row carries the
           period control — pushes its note out of line with the rest. */}
       {(trend || subtext || detail) && (
-        <div className="mt-auto flex flex-col gap-1">
+        <div className={cn("flex flex-col gap-1", !notesUnderValue && "mt-auto")}>
           {trend && (
             <p
               className={cn("text-xs font-normal", trend.positive ? "text-primary" : "text-danger")}
@@ -99,7 +118,9 @@ export function KpiCard({ label, value, subtext, detail, trend, className, perio
           )}
           {/* slate-400, matching the sibling KPI cards Home renders inline — the contact-rate
               card sits in that same row and a 100-level difference reads as a mistake. */}
-          {subtext && <p className="text-xs font-normal text-fg-subtle">{subtext}</p>}
+          {subtext && (
+            <p className={cn("text-xs font-normal text-fg-subtle", subtextClassName)}>{subtext}</p>
+          )}
           {detail && <p className="text-xs font-normal text-fg-subtle">{detail}</p>}
         </div>
       )}

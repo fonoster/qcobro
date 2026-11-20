@@ -2,11 +2,11 @@
 
 Applies the framework (`../../framework/`) to QCobro. Direction and its reasoning:
 `../../DIRECTION.md`. Visual source of truth: website v3 ("Todo a la vista") in the main
-`pencil.pen` (site v3 frames `SRget` / `qAkg8`, record component `Site3/Gestion Record`).
+`designs/website.pen` (site v3 frames `SRget` / `qAkg8`, record component `Site3/Gestion Record`).
 
 ## Tokens
 
-The `brand-*` variables in `ads.pen` mirror the `site3-*` variables in `pencil.pen`. If the site
+The `brand-*` variables in `ads.pen` mirror the `site3-*` variables in `designs/qcobro.lib.pen`. If the site
 tokens change, update these to match.
 
 | Token                            | Value                             | Use                                                             |

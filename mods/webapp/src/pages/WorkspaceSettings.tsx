@@ -4,8 +4,10 @@ import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n } from "../lib/i18n.js";
 import { activeRole } from "../lib/workspaceRole.js";
-import { Card } from "../components/ui/card.js";
+import { PageHeader } from "../components/page-header.js";
+import { Panel } from "../components/panel.js";
 import { Button } from "../components/ui/button.js";
+import { Dialog } from "../components/ui/dialog.js";
 import { InputGroup } from "../components/ui/input.js";
 import { SelectGroup } from "../components/ui/select.js";
 import { TIMEZONES } from "../lib/timezones.js";
@@ -95,110 +97,122 @@ export function WorkspaceSettings() {
     }
   }
 
+  function resetDrafts() {
+    setDraft(null);
+    setPrefDraft(null);
+    setStatus(null);
+  }
+
+  const currencyLabel = (code: "USD" | "DOP") =>
+    `${code} · ${t(code === "USD" ? "settings.currency.USD" : "settings.currency.DOP")}`;
+
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-[22px] font-bold text-fg">{t("settings.title")}</h1>
-        <p className="text-sm text-fg-subtle">{t("settings.subtitle")}</p>
+      <PageHeader title={t("settings.title")} description={t("settings.subtitle")} />
+
+      <div className="flex w-full max-w-[760px] flex-col gap-5">
+        <form onSubmit={onSave}>
+          <Panel title={t("settings.preferences")} aside={t("settings.preferencesAside")}>
+            <InputGroup
+              id="ws-name"
+              label={t("settings.name")}
+              required
+              value={name}
+              onChange={(e) => setDraft(e.target.value)}
+            />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <SelectGroup
+                label={t("settings.currency")}
+                id="ws-currency"
+                value={currency}
+                onChange={(e) =>
+                  setPrefDraft({ currency: e.target.value as "USD" | "DOP", timezone })
+                }
+              >
+                <option value="DOP">{currencyLabel("DOP")}</option>
+                <option value="USD">{currencyLabel("USD")}</option>
+              </SelectGroup>
+              <SelectGroup
+                label={t("settings.timezone")}
+                id="ws-timezone"
+                value={timezone}
+                onChange={(e) => setPrefDraft({ currency, timezone: e.target.value })}
+              >
+                {(TIMEZONES.includes(timezone) || !timezone
+                  ? TIMEZONES
+                  : [timezone, ...TIMEZONES]
+                ).map((tz) => (
+                  <option key={tz} value={tz}>
+                    {tz}
+                  </option>
+                ))}
+              </SelectGroup>
+            </div>
+            <div className="flex items-center justify-end gap-2.5">
+              {status === "ok" && (
+                <span className="mr-auto text-[13px] text-fg-muted">{t("settings.saved")}</span>
+              )}
+              {status === "error" && (
+                <span className="mr-auto text-[13px] text-danger">{t("settings.saveError")}</span>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={!anyDirty || saving}
+                onClick={resetDrafts}
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button type="submit" disabled={!anyDirty || saving}>
+                {t("settings.save")}
+              </Button>
+            </div>
+          </Panel>
+        </form>
+
+        {isOwner && (
+          <Panel title={t("settings.danger.title")} danger>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex min-w-0 flex-col gap-1">
+                <h3 className="text-sm font-medium text-fg">{t("settings.delete.title")}</h3>
+                <p className="text-[13px] text-fg-muted">{t("settings.delete.desc")}</p>
+              </div>
+              <Button
+                variant="destructive"
+                className="shrink-0"
+                onClick={() => setConfirmOpen(true)}
+              >
+                {t("settings.delete.title")}
+              </Button>
+            </div>
+          </Panel>
+        )}
       </div>
 
-      <Card className="max-w-[680px] rounded-xl border-border shadow-none">
-        <form onSubmit={onSave} className="flex flex-col gap-5 p-6">
-          <h2 className="text-[15px] font-semibold text-fg">{t("settings.preferences")}</h2>
-          <InputGroup
-            label={t("settings.name")}
-            required
-            value={name}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder={t("settings.name")}
-          />
-          <SelectGroup
-            label={t("settings.currency")}
-            id="ws-currency"
-            value={currency}
-            onChange={(e) => setPrefDraft({ currency: e.target.value as "USD" | "DOP", timezone })}
-          >
-            <option value="USD">USD</option>
-            <option value="DOP">DOP</option>
-          </SelectGroup>
-          <SelectGroup
-            label={t("settings.timezone")}
-            id="ws-timezone"
-            value={timezone}
-            onChange={(e) => setPrefDraft({ currency, timezone: e.target.value })}
-          >
-            {(TIMEZONES.includes(timezone) || !timezone ? TIMEZONES : [timezone, ...TIMEZONES]).map(
-              (tz) => (
-                <option key={tz} value={tz}>
-                  {tz}
-                </option>
-              )
-            )}
-          </SelectGroup>
-          <div className="flex items-center justify-end gap-3">
-            {status === "ok" && (
-              <span className="text-[13px] text-primary">{t("settings.saved")}</span>
-            )}
-            {status === "error" && (
-              <span className="text-[13px] text-danger">{t("settings.saveError")}</span>
-            )}
-            <Button type="submit" disabled={!anyDirty || saving}>
-              {t("settings.save")}
-            </Button>
-          </div>
-        </form>
-      </Card>
-
-      {isOwner && (
-        <Card className="max-w-[680px] rounded-xl border-danger/30 shadow-none">
-          <div className="flex items-center justify-between gap-6 p-6">
-            <div>
-              <h2 className="text-[15px] font-semibold text-fg">{t("settings.delete.title")}</h2>
-              <p className="mt-0.5 text-[13px] text-fg-subtle">{t("settings.delete.desc")}</p>
-            </div>
-            <Button
-              variant="outline"
-              className="shrink-0 border-danger/30 text-danger hover:bg-danger-soft"
-              onClick={() => setConfirmOpen(true)}
-            >
-              {t("settings.delete.title")}
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {confirmOpen && active && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
-          <Card className="w-full max-w-[440px] rounded-2xl border-border shadow-xl">
-            <div className="flex flex-col gap-5 p-6">
-              <div>
-                <h2 className="text-lg font-bold text-fg">{t("settings.delete.title")}</h2>
-                <p className="mt-1 text-[13px] text-fg-subtle">{t("settings.delete.desc")}</p>
-              </div>
-              <InputGroup
-                label={t("settings.delete.confirmLabel")}
-                value={confirmText}
-                onChange={(e) => setConfirmText(e.target.value)}
-                placeholder={CONFIRM_WORD}
-                autoFocus
-                error={deleteError ? t("settings.delete.error") : undefined}
-              />
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={closeConfirm}>
-                  {t("common.cancel")}
-                </Button>
-                <Button
-                  variant="destructive"
-                  disabled={!canDelete || remove.isPending}
-                  onClick={onDelete}
-                >
-                  {t("settings.delete.title")}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
+      <Dialog
+        open={confirmOpen && !!active}
+        onClose={closeConfirm}
+        width={480}
+        title={t("settings.delete.title")}
+        confirmVariant="destructive"
+        confirmLabel={t("settings.delete.title")}
+        confirmDisabled={!canDelete || remove.isPending}
+        onSubmit={onDelete}
+      >
+        <p className="text-[13px] text-fg-muted">
+          {t("settings.delete.dialogBody").replace("{ws}", active?.name ?? "")}
+        </p>
+        <InputGroup
+          id="ws-delete-confirm"
+          label={t("settings.delete.confirmLabel")}
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder={CONFIRM_WORD}
+          className="[&_input]:font-mono"
+          autoFocus
+          error={deleteError ? t("settings.delete.error") : undefined}
+        />
+      </Dialog>
     </div>
   );
 }

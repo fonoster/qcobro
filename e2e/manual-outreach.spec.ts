@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { newOwner, signUpAndEnter } from "./helpers.js";
+import { newOwner, signUpAndEnter, startNewAgent } from "./helpers.js";
 
 const CSV = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures", "accounts.csv");
 
@@ -26,7 +26,10 @@ test.describe("manual outreach", () => {
 
     // --- Portfolio -----------------------------------------------------------
     await page.getByRole("link", { name: "Carteras" }).click();
-    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page
+      .getByRole("button", { name: /Nueva cartera/ })
+      .first()
+      .click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(`cli-${stamp}`);
     await page.getByRole("button", { name: "Crear cartera" }).click();
@@ -34,9 +37,8 @@ test.describe("manual outreach", () => {
 
     // --- SMS agent (fast; no Fonoster sync) ----------------------------------
     await page.getByRole("link", { name: "Agentes IA" }).click();
-    await page.getByRole("button", { name: /Nuevo agente/ }).click();
+    await startNewAgent(page, "SMS");
     await page.getByLabel("Nombre del agente").fill(agentName);
-    await page.getByLabel("Tipo de canal").selectOption({ label: "SMS" });
     await page.getByLabel("Cuerpo del mensaje").fill(body);
     await page.getByLabel(/ID de remitente/).fill("DEMO");
     await page.getByRole("button", { name: "Crear agente" }).click();
@@ -46,10 +48,10 @@ test.describe("manual outreach", () => {
     await page.getByRole("link", { name: "Carteras" }).click();
     await page.getByText(portfolioName).click();
     await expect(page).toHaveURL(/\/portfolios\/[a-f0-9-]+$/);
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
-    await page.getByRole("button", { name: "Cerrar" }).click();
+    await page.getByRole("button", { name: "Cerrar", exact: true }).click();
     await expect(page.getByText("María E2E")).toBeVisible();
 
     // --- ⋯ → Contactar manualmente (agent-based, no campaign) ----------------
@@ -59,7 +61,7 @@ test.describe("manual outreach", () => {
 
     // An agent is required (no campaign); selecting it shows the channel + preview.
     await page.getByLabel("Agente").selectOption({ label: agentName });
-    await expect(page.getByText(/Se enviará por SMS/)).toBeVisible();
+    await expect(page.getByText(/^SMS · mensaje a /)).toBeVisible();
     // The preview renders client-side while the dispatch renders server-side, so this line
     // is what catches the two drifting apart: the amount must arrive grouped (4,800 — not
     // 4800, which text-to-speech reads wrong) and {{digits}} must spell the phone out.

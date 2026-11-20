@@ -52,7 +52,7 @@ export const WithBadge: StoryObj = {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Agente: María López</CardTitle>
-          <Badge variant="success">Activo</Badge>
+          <Badge variant="secondary">Activo</Badge>
         </div>
         <CardDescription>Cobrador senior</CardDescription>
       </CardHeader>

@@ -3,10 +3,9 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n } from "../lib/i18n.js";
-import { Card } from "../components/ui/card.js";
 import { InputGroup } from "../components/ui/input.js";
 import { Button } from "../components/ui/button.js";
-import { Logo } from "../components/Logo.js";
+import { AuthLayout, AuthHeading } from "../components/AuthLayout.js";
 
 /**
  * Email contact verification, shown right after sign-up. The user is already
@@ -69,64 +68,54 @@ export function VerifyContact() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-elevated">
-      <header className="flex h-[72px] w-full items-center border-b border-border bg-surface px-10">
-        <Logo />
-      </header>
-      <div className="flex flex-1 items-center justify-center px-4 py-10">
-        <Card className="w-full max-w-[400px] rounded-2xl border-border p-8 shadow-none">
-          <form onSubmit={onSubmit} className="flex flex-col gap-7">
-            <div className="flex flex-col gap-1.5">
-              <h1 className="text-2xl font-bold text-fg">{t("verify.title")}</h1>
-              <p className="text-sm text-fg-subtle">{t("verify.subtitle")}</p>
-            </div>
+    <AuthLayout>
+      <form onSubmit={onSubmit} className="flex flex-col gap-6">
+        <AuthHeading title={t("verify.title")} subtitle={t("verify.subtitle")} />
 
-            <InputGroup
-              label={t("verify.codeLabel")}
-              required
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              autoFocus
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="••••••"
-              error={error ?? undefined}
-            />
+        <InputGroup
+          label={t("verify.codeLabel")}
+          required
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          autoFocus
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          placeholder="••••••"
+          error={error ?? undefined}
+        />
 
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full"
-              disabled={verify.isPending || !code.trim()}
-            >
-              {verify.isPending ? t("verify.verifying") : t("verify.submit")}
-            </Button>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          disabled={verify.isPending || !code.trim()}
+        >
+          {verify.isPending ? t("verify.verifying") : t("verify.submit")}
+        </Button>
 
-            <div className="flex items-center justify-between text-[13px]">
-              {/* `sent` is only set by a resend, so the confirmation belongs beside that
+        <div className="flex items-center justify-between text-[13px]">
+          {/* `sent` is only set by a resend, so the confirmation belongs beside that
                   button — it says nothing about the field above it. */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={onResend}
-                  disabled={resending}
-                  className="font-semibold text-primary hover:underline disabled:opacity-50"
-                >
-                  {t("verify.resend")}
-                </button>
-                {sent && <span className="text-fg-subtle">{t("verify.sent")}</span>}
-              </div>
-              <button
-                type="button"
-                onClick={() => navigate("/workspaces")}
-                className="text-fg-subtle hover:underline"
-              >
-                {t("verify.skip")}
-              </button>
-            </div>
-          </form>
-        </Card>
-      </div>
-    </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onResend}
+              disabled={resending}
+              className="font-semibold text-fg underline-offset-2 hover:underline disabled:opacity-50"
+            >
+              {t("verify.resend")}
+            </button>
+            {sent && <span className="text-fg-subtle">{t("verify.sent")}</span>}
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/workspaces")}
+            className="text-fg-subtle hover:underline"
+          >
+            {t("verify.skip")}
+          </button>
+        </div>
+      </form>
+    </AuthLayout>
   );
 }

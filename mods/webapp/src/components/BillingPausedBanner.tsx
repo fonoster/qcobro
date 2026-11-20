@@ -1,5 +1,5 @@
-import { CircleAlert, CreditCard } from "lucide-react";
 import { useI18n } from "../lib/i18n.js";
+import { Alert } from "./ui/alert.js";
 import { Button } from "./ui/button.js";
 
 export interface BillingPausedBannerProps {
@@ -7,44 +7,46 @@ export interface BillingPausedBannerProps {
   /** Owners get the CTA; admins see the informational banner (role-aware). */
   isOwner: boolean;
   onAction?: () => void;
+  /** ISO date the billing cycle renews (billing.status `cycleEnd`); named in the exhausted copy. */
+  renewsOn?: string | null;
 }
 
 /**
- * The "collections paused" banner (billing-console spec): amber for credits
- * exhausted (owner CTA: upgrade), red for payment failure (owner CTA: fix the
- * payment method — explicitly NOT an upgrade prompt).
+ * The "collections paused" banner (billing-console spec): an error Alert with full sentences
+ * and, for owners, an outline action beside it — upgrade when credits are exhausted, fix the
+ * payment method when the charge failed (explicitly NOT an upgrade prompt).
  */
-export function BillingPausedBanner({ variant, isOwner, onAction }: BillingPausedBannerProps) {
-  const { t } = useI18n();
+export function BillingPausedBanner({
+  variant,
+  isOwner,
+  onAction,
+  renewsOn
+}: BillingPausedBannerProps) {
+  const { t, language } = useI18n();
   const exhausted = variant === "credits_exhausted";
-  const Icon = exhausted ? CircleAlert : CreditCard;
+  const renewal = renewsOn
+    ? new Intl.DateTimeFormat(language, { day: "numeric", month: "short", year: "numeric" })
+        .format(new Date(renewsOn))
+        .replace(/\./g, "")
+        .replace(/ de /g, " ")
+    : null;
+  const body = exhausted
+    ? renewal
+      ? t("billing.paused.exhausted.bodyDated").replace("{date}", renewal)
+      : t("billing.paused.exhausted.body")
+    : t("billing.paused.paymentFailed.body");
   return (
-    <div
-      role="alert"
-      className={`flex items-center gap-4 rounded-xl border p-4 ${
-        exhausted ? "border-warning/30 bg-warning-soft" : "border-danger/30 bg-danger-soft"
-      }`}
-    >
-      <span
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-          exhausted ? "bg-warning-soft text-warning" : "bg-danger-soft text-danger"
-        }`}
-      >
-        <Icon className="h-5 w-5" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className={`text-sm font-semibold ${exhausted ? "text-warning" : "text-danger"}`}>
-          {t(exhausted ? "billing.paused.exhausted.title" : "billing.paused.paymentFailed.title")}
-        </p>
-        <p className={`text-sm ${exhausted ? "text-warning" : "text-danger"}`}>
-          {t(exhausted ? "billing.paused.exhausted.body" : "billing.paused.paymentFailed.body")}
-        </p>
-      </div>
+    <div className="flex items-center gap-3">
+      <Alert
+        variant="error"
+        className="min-w-0 flex-1"
+        title={t(
+          exhausted ? "billing.paused.exhausted.title" : "billing.paused.paymentFailed.title"
+        )}
+        description={body}
+      />
       {isOwner && onAction && (
-        <Button
-          onClick={onAction}
-          className={exhausted ? "bg-warning hover:opacity-90" : "bg-danger hover:opacity-90"}
-        >
+        <Button variant="outline" className="shrink-0" onClick={onAction}>
           {t(exhausted ? "billing.paused.exhausted.cta" : "billing.paused.paymentFailed.cta")}
         </Button>
       )}

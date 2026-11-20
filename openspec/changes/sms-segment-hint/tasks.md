@@ -1,7 +1,7 @@
 ## 1. Design
 
 - [x] 1.1 Add the estimate line and the normalization checkbox to the `Crear agente · SMS` modal
-      frame in `pencil.pen`, under the message-body field
+      frame in `designs/dashboard.pen`, under the message-body field
 - [ ] 1.2 The design has no SMS variant of the edit modal (its only edit frame is VOICE_AI). The
       create frame is the reference for both; add an edit-SMS frame only if the design file starts
       carrying per-channel edit frames generally

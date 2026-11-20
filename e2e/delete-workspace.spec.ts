@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { newOwner, signUpAndEnter, openUserMenu } from "./helpers.js";
+import { newOwner, signUpAndEnter, openNav } from "./helpers.js";
 
 test.describe("delete workspace", () => {
   test("owner deletes a workspace via type-to-confirm", async ({ page }) => {
@@ -7,7 +7,7 @@ test.describe("delete workspace", () => {
     const owner = newOwner("del");
     await signUpAndEnter(page, owner, `QA Del ${unique}`);
 
-    await openUserMenu(page, "Configuración del espacio");
+    await openNav(page, "Configuración");
     await expect(page).toHaveURL(/\/settings/);
 
     // Owner sees the Danger Zone.

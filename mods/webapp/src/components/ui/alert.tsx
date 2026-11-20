@@ -2,7 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { AlertCircle, CheckCircle2, Info, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils.js";
 
-const alertVariants = cva("flex gap-3 rounded-lg p-4 text-sm", {
+const alertVariants = cva("flex gap-3 rounded-card p-4 text-sm", {
   variants: {
     variant: {
       error: "bg-danger-soft text-danger",

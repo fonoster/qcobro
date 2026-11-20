@@ -4,12 +4,18 @@ import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { useI18n, languages, languageNames, type Language } from "../lib/i18n.js";
 import { useTheme, themes, type ThemePreference } from "../lib/theme.js";
-import { Card } from "../components/ui/card.js";
+import { PageHeader } from "../components/page-header.js";
+import { cn } from "@/lib/utils.js";
 import { Button } from "../components/ui/button.js";
+import { Dialog } from "../components/ui/dialog.js";
 import { InputGroup } from "../components/ui/input.js";
 import { SelectGroup } from "../components/ui/select.js";
 
 const CONFIRM_WORD = "ELIMINAR";
+
+/** A bordered panel: card fill, padding 20, gap 16, title 14/500. */
+const panelClass = "flex flex-col gap-4 rounded-card border border-border bg-surface p-5";
+const panelTitleClass = "text-sm font-medium text-fg";
 
 export function Profile() {
   const { logout } = useAuth();
@@ -122,15 +128,12 @@ export function Profile() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-8">
-      <div>
-        <h1 className="text-[22px] font-bold text-fg">{t("profile.title")}</h1>
-        <p className="text-sm text-fg-subtle">{t("profile.subtitle")}</p>
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader title={t("profile.title")} description={t("profile.subtitle")} />
 
-      <Card className="max-w-[680px] rounded-xl border-border shadow-none">
-        <form onSubmit={onSubmit} className="flex flex-col gap-5 p-6">
-          <h2 className="text-[15px] font-semibold text-fg">{t("profile.section.general")}</h2>
+      <div className="flex w-full max-w-[720px] flex-col gap-5">
+        <form onSubmit={onSubmit} className={panelClass}>
+          <h2 className={panelTitleClass}>{t("profile.section.general")}</h2>
           <InputGroup
             id="profile-name"
             label={t("profile.field.name")}
@@ -152,6 +155,7 @@ export function Profile() {
             value={phoneValue}
             onChange={(e) => setPhone(e.target.value)}
             placeholder={t("profile.field.phonePlaceholder")}
+            className="[&_input]:font-mono"
           />
           <SelectGroup
             id="profile-language"
@@ -189,33 +193,33 @@ export function Profile() {
             </Button>
           </div>
         </form>
-      </Card>
 
-      <Card className="max-w-[680px] rounded-xl border-border shadow-none">
-        <form onSubmit={onChangePassword} className="flex flex-col gap-5 p-6">
-          <div>
-            <h2 className="text-[15px] font-semibold text-fg">{t("profile.password.title")}</h2>
-            <p className="mt-0.5 text-[13px] text-fg-subtle">{t("profile.password.subtitle")}</p>
+        <form onSubmit={onChangePassword} className={panelClass}>
+          <h2 className={panelTitleClass}>{t("profile.password.title")}</h2>
+          <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
+            <InputGroup
+              id="profile-new-password"
+              label={t("profile.password.newPassword")}
+              type="password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+            <InputGroup
+              id="profile-confirm-password"
+              label={t("profile.password.confirmPassword")}
+              type="password"
+              required
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="••••••••"
+              error={passwordError ?? undefined}
+            />
           </div>
-          <InputGroup
-            id="profile-new-password"
-            label={t("profile.password.newPassword")}
-            type="password"
-            required
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="••••••••"
-          />
-          <InputGroup
-            id="profile-confirm-password"
-            label={t("profile.password.confirmPassword")}
-            type="password"
-            required
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="••••••••"
-            error={passwordError ?? undefined}
-          />
           <div className="flex items-center justify-end gap-3">
             {passwordStatus === "ok" && (
               <span className="text-[13px] text-primary">{t("profile.password.saved")}</span>
@@ -225,62 +229,46 @@ export function Profile() {
             )}
             <Button
               type="submit"
+              variant="outline"
               disabled={changePassword.isPending || !newPassword || !confirmPassword}
             >
               {changePassword.isPending ? t("profile.password.saving") : t("profile.password.save")}
             </Button>
           </div>
         </form>
-      </Card>
 
-      <Card className="max-w-[680px] rounded-xl border-danger/30 shadow-none">
-        <div className="flex items-center justify-between gap-6 p-6">
-          <div>
-            <h2 className="text-[15px] font-semibold text-fg">{t("profile.danger.title")}</h2>
-            <p className="mt-0.5 text-[13px] text-fg-subtle">{t("profile.danger.desc")}</p>
+        <section className={cn(panelClass, "border-danger")}>
+          <h2 className={panelTitleClass}>{t("profile.danger.title")}</h2>
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-[13px] leading-normal text-fg-muted">{t("profile.danger.desc")}</p>
+            <Button variant="destructive" className="shrink-0" onClick={() => setConfirmOpen(true)}>
+              {t("profile.danger.action")}
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            className="shrink-0 border-danger/30 text-danger hover:bg-danger-soft"
-            onClick={() => setConfirmOpen(true)}
-          >
-            {t("profile.danger.action")}
-          </Button>
-        </div>
-      </Card>
+        </section>
+      </div>
 
-      {confirmOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
-          <Card className="w-full max-w-[440px] rounded-2xl border-border shadow-xl">
-            <div className="flex flex-col gap-5 p-6">
-              <div>
-                <h2 className="text-lg font-bold text-fg">{t("profile.danger.title")}</h2>
-                <p className="mt-1 text-[13px] text-fg-subtle">{t("profile.danger.desc")}</p>
-              </div>
-              <InputGroup
-                label={t("profile.delete.confirmLabel")}
-                value={confirmText}
-                onChange={(e) => setConfirmText(e.target.value)}
-                placeholder={CONFIRM_WORD}
-                autoFocus
-                error={deleteError ? t("profile.delete.error") : undefined}
-              />
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={closeConfirm}>
-                  {t("common.cancel")}
-                </Button>
-                <Button
-                  variant="destructive"
-                  disabled={!canDelete || remove.isPending}
-                  onClick={onDelete}
-                >
-                  {t("profile.danger.action")}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
+      <Dialog
+        open={confirmOpen}
+        onClose={closeConfirm}
+        width={480}
+        title={t("profile.danger.title")}
+        subtitle={t("profile.danger.desc")}
+        confirmVariant="destructive"
+        confirmLabel={t("profile.danger.action")}
+        confirmDisabled={!canDelete || remove.isPending}
+        onSubmit={onDelete}
+      >
+        <InputGroup
+          label={t("profile.delete.confirmLabel")}
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder={CONFIRM_WORD}
+          className="[&_input]:font-mono"
+          autoFocus
+          error={deleteError ? t("profile.delete.error") : undefined}
+        />
+      </Dialog>
     </div>
   );
 }

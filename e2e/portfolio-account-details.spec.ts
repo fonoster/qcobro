@@ -22,7 +22,10 @@ test.describe("portfolio account details", () => {
     await signUpAndEnter(page, owner, `WS ${stamp}`);
 
     await page.getByRole("link", { name: "Carteras" }).click();
-    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page
+      .getByRole("button", { name: /Nueva cartera/ })
+      .first()
+      .click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(`cli-${stamp}`);
     await page.getByRole("button", { name: "Crear cartera" }).click();
@@ -30,15 +33,15 @@ test.describe("portfolio account details", () => {
 
     await page.getByText(portfolioName).click();
     await expect(page).toHaveURL(/\/portfolios\/[a-f0-9-]+$/);
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
-    await page.getByRole("button", { name: "Cerrar" }).click();
+    await page.getByRole("button", { name: "Cerrar", exact: true }).click();
     await expect(page.getByText("María E2E")).toBeVisible();
 
     const accountRow = page.locator("tr", { hasText: "María E2E" });
     await accountRow.getByRole("button").last().click();
-    await page.getByRole("button", { name: "Ver detalle" }).click();
+    await page.getByRole("button", { name: "Ver cuenta" }).click();
 
     await expect(page.getByRole("heading", { name: "María E2E" })).toBeVisible();
 
@@ -47,7 +50,7 @@ test.describe("portfolio account details", () => {
     // Money now renders through the workspace formatter (currency symbol + grouping), e.g.
     // "US$4,800" — anchoring on a bare "4800" prefix stopped matching when that landed.
     await expect(page.getByText(/4,800/).last()).toBeVisible();
-    await expect(page.getByText("+17853178070").last()).toBeVisible();
+    await expect(page.getByText("+1 785 317 8070").last()).toBeVisible();
     const viewMore = page.getByRole("button", { name: "Ver metadata" });
     await expect(viewMore).toBeVisible();
     await expect(page.getByText(/"principalAmount"/)).not.toBeVisible();

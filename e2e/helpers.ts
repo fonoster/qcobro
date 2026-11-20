@@ -45,9 +45,9 @@ export async function waitForMail(to: string, count = 1, timeoutMs = 20000) {
 /** Sign up a new account. Leaves the page on the contact-verification screen. */
 export async function signUp(page: Page, creds: Credentials) {
   await page.goto("/signup");
-  await page.getByPlaceholder("Tu nombre").fill(creds.name);
+  await page.getByLabel("Nombre completo").fill(creds.name);
   await page.getByPlaceholder("tú@empresa.com").fill(creds.email);
-  await page.getByPlaceholder("Mínimo 8 caracteres").fill(creds.password);
+  await page.getByLabel("Contraseña (mín. 8 caracteres)").fill(creds.password);
   await page.locator('form button[type="submit"]').click();
   await expect(page).toHaveURL(/\/verify-contact/);
 }
@@ -58,11 +58,17 @@ export async function skipVerification(page: Page) {
   await expect(page).toHaveURL(/\/workspaces/);
 }
 
-/** Create the first workspace from the workspaces screen → dashboard. */
+/** Fill and submit the create-workspace dialog (the hub's "Crear espacio" shares its name). */
+export async function submitCreateWorkspace(page: Page, name: string) {
+  const dialog = page.getByRole("dialog", { name: "Crear espacio de trabajo" });
+  await dialog.getByLabel("Nombre del espacio").fill(name);
+  await dialog.getByRole("button", { name: "Crear espacio", exact: true }).click();
+}
+
+/** Create the first workspace from the empty workspaces screen → dashboard. */
 export async function createFirstWorkspace(page: Page, name: string) {
-  await page.getByRole("button", { name: "Nuevo espacio" }).click();
-  await page.getByPlaceholder("Ej. Cartera Abril").fill(name);
-  await page.getByRole("button", { name: "Crear espacio" }).click();
+  await page.getByRole("button", { name: "Crear espacio de trabajo" }).click();
+  await submitCreateWorkspace(page, name);
   // Port-agnostic: Vite falls back to :5174/:5175 when another checkout already holds :5173,
   // and pinning the port here fails the whole suite before it asserts anything real.
   await expect(page).toHaveURL(/localhost:\d+\/$/);
@@ -78,14 +84,39 @@ export async function signUpAndEnter(page: Page, creds: Credentials, workspaceNa
 /** Open the user menu and navigate to one of its entries. */
 export async function openUserMenu(page: Page, entry: string) {
   await page.getByRole("button", { name: "Menú de usuario" }).click();
-  await page.getByRole("button", { name: entry }).click();
+  await page
+    .getByRole("dialog", { name: "Menú de usuario" })
+    .getByRole("button", { name: entry })
+    .click();
+}
+
+/** Open a page from the sidebar navigation by its item's name. */
+export async function openNav(page: Page, item: string) {
+  await page.getByRole("navigation").getByRole("link", { name: item, exact: true }).click();
 }
 
 /** Invite a member from the Members page (assumes already on it). */
 export async function inviteMember(page: Page, name: string, email: string) {
   await page.getByRole("button", { name: "Invitar miembro" }).click();
-  await page.getByPlaceholder("Nombre de la persona").fill(name);
-  await page.getByPlaceholder("persona@empresa.com").fill(email);
-  await page.getByRole("button", { name: "Enviar invitación" }).click();
+  const dialog = page.getByRole("dialog", { name: "Invitar miembro" });
+  await dialog.getByLabel("Nombre", { exact: true }).fill(name);
+  await dialog.getByLabel("Correo electrónico").fill(email);
+  await dialog.getByRole("button", { name: "Enviar invitación" }).click();
   await expect(page.getByText(email)).toBeVisible();
+}
+
+/**
+ * Open "Nuevo agente" and pick its channel in the channel dialog ("Voz IA", "Voz pregrabada",
+ * "SMS", "WhatsApp" or "Correo"), leaving the page on that channel's create form.
+ */
+export async function startNewAgent(page: Page, channel: string) {
+  // The header CTA (an empty list repeats it in its empty state).
+  await page
+    .getByRole("button", { name: /Nuevo agente/ })
+    .first()
+    .click();
+  const picker = page.getByRole("dialog", { name: "Nuevo agente" });
+  await picker.getByRole("radio", { name: new RegExp(`^${channel}\\b`) }).check();
+  await picker.getByRole("button", { name: "Continuar" }).click();
+  await expect(page.getByRole("dialog", { name: `Nuevo agente · ${channel}` })).toBeVisible();
 }

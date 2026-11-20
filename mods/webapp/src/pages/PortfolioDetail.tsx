@@ -1,16 +1,18 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Eye, PhoneCall } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { Eye, FolderOpen, PhoneOutgoing, Upload } from "lucide-react";
 import { trpc } from "../lib/trpc.js";
 import { useI18n } from "../lib/i18n.js";
+import { formatRelativeDate } from "../lib/relativeDate.js";
+import { formatPhone } from "./gestionFormat.js";
 import { useMoney, useWorkspaceCurrency } from "../lib/useWorkspaceCurrency.js";
 import { DataTable, TableCellStack } from "../components/ui/data-table.js";
 import { Button } from "../components/ui/button.js";
-import { PageHeader } from "../components/page-header.js";
-import { Dialog } from "../components/ui/dialog.js";
+import { DetailHeader } from "../components/detail-header.js";
+import { Breadcrumb } from "../components/ui/breadcrumb.js";
+import { Drawer } from "../components/ui/drawer.js";
 import { Accordion } from "../components/ui/accordion.js";
 import { CsvSyncModal } from "../components/portfolios/CsvSyncModal.js";
-import { PortfolioRecoverySection } from "../components/portfolios/PortfolioRecoverySection.js";
 import { ReachOutModal } from "../components/portfolios/ReachOutModal.js";
 import { BulkReachOutModal } from "../components/portfolios/BulkReachOutModal.js";
 import { RowActionsMenu, type RowAction } from "../components/ui/row-actions-menu.js";
@@ -19,12 +21,11 @@ const PAGE_SIZE = 50;
 
 export function PortfolioDetail() {
   const { id } = useParams<{ id: string }>();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   // wsCurrency (the raw currency code) is still needed for the ReachOutModal's outreach
   // preview below; money() is the shared workspace-locale formatter for this page's tables.
   const wsCurrency = useWorkspaceCurrency();
   const money = useMoney();
-  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [showSync, setShowSync] = useState(false);
   const [reachOut, setReachOut] = useState<Record<string, unknown> | null>(null);
@@ -43,27 +44,62 @@ export function PortfolioDetail() {
   const items = accounts.data?.items ?? [];
   const total = accounts.data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const count = (key: "activeAccounts" | "accounts", n: number) =>
+    t(`portfolios.detail.${key}.${n === 1 ? "one" : "other"}`).replace(
+      "{count}",
+      n.toLocaleString()
+    );
+  const p = portfolio.data;
+  // One facts line from the portfolio record: mono client id, then counts, balance and the
+  // last sync ("Sincronizada hace 2 horas"); a portfolio never synced reads 0, a zero balance
+  // and "Nunca sincronizada". Nothing renders until the record loads.
+  const synced = p
+    ? p.lastSyncedAt
+      ? t("portfolios.detail.synced").replace(
+          "{when}",
+          formatRelativeDate(p.lastSyncedAt, language).toLocaleLowerCase(language)
+        )
+      : t("portfolios.lastSynced.never")
+    : null;
+  const facts = p ? (
+    <span>
+      <span className="font-mono text-xs">{p.clientId}</span>
+      {" · "}
+      {[
+        count("activeAccounts", p.accountCount ?? 0),
+        t("portfolios.detail.balance").replace("{amount}", money(p.totalOutstandingBalance ?? 0)),
+        synced
+      ].join(" · ")}
+    </span>
+  ) : null;
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/portfolios")}>
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          {t("portfolios.detail.back")}
-        </Button>
-      </div>
-
-      <PageHeader title={portfolio.data?.name ?? "…"} description={portfolio.data?.clientId} />
-
-      <PortfolioRecoverySection portfolioId={id!} />
+      <Breadcrumb
+        items={[{ label: t("portfolios.title"), href: "/portfolios" }, { label: p?.name ?? "…" }]}
+      />
+      <DetailHeader
+        icon={<FolderOpen />}
+        title={p?.name ?? "…"}
+        meta={facts ?? undefined}
+        actions={
+          <Button onClick={() => setShowSync(true)} disabled={!p}>
+            <Upload className="h-4 w-4" />
+            {t("portfolios.actions.sync")}
+          </Button>
+        }
+      />
 
       <DataTable
         data={items as Record<string, unknown>[]}
         keyField="id"
         searchable={true}
-        searchPlaceholder="Buscar cuenta..."
-        actionLabel={t("portfolios.csv.title")}
-        onAction={() => setShowSync(true)}
+        searchPlaceholder={t("portfolios.detail.searchPlaceholder")}
+        searchClassName="w-80"
+        toolbarEnd={<span className="text-[13px] text-fg-muted">{count("accounts", total)}</span>}
+        rowHeight={60}
+        pageSize={PAGE_SIZE}
+        itemLabel={t("portfolios.detail.itemLabel")}
         selectable
         getRowId={(r) => r.id as string}
         selectedIds={selected}
@@ -86,7 +122,9 @@ export function PortfolioDetail() {
             render: (r) => (
               <TableCellStack
                 title={String(r.fullName ?? "—")}
-                sub={[r.externalId, r.phone].filter(Boolean).join(" · ")}
+                sub={[r.externalId, formatPhone(r.phone as string | null)]
+                  .filter(Boolean)
+                  .join(" · ")}
               />
             )
           },
@@ -94,24 +132,26 @@ export function PortfolioDetail() {
             key: "outstandingBalance",
             header: t("portfolios.detail.col.balance"),
             render: (r) => money(r.outstandingBalance as number),
-            align: "right"
+            mono: true,
+            width: 160
           },
           {
             key: "daysPastDue",
             header: t("portfolios.detail.col.dpd"),
             render: (r) => String(r.daysPastDue),
-            align: "right"
+            mono: true,
+            width: 150
           },
           {
             key: "id",
             header: "",
             align: "right",
-            className: "w-px whitespace-nowrap",
+            width: 40,
             render: (r) => {
               const items: RowAction[] = [
                 {
                   label: t("portfolios.reachOut.action"),
-                  icon: PhoneCall,
+                  icon: PhoneOutgoing,
                   onClick: () => setReachOut(r)
                 },
                 {
@@ -127,28 +167,27 @@ export function PortfolioDetail() {
       />
 
       {viewDetail && (
-        <Dialog
+        <Drawer
           open
           onClose={() => setViewDetail(null)}
           title={String(viewDetail.fullName ?? "—")}
-          description={String(viewDetail.externalId ?? "")}
+          subtitle={<span className="font-mono">{String(viewDetail.externalId ?? "")}</span>}
         >
-          <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
             {[
               [t("portfolios.detail.col.balance"), money(viewDetail.outstandingBalance as number)],
               [t("portfolios.detail.col.dpd"), String(viewDetail.daysPastDue ?? "—")],
-              [t("gestiones.detail.phone"), String(viewDetail.phone ?? "—")],
+              [t("gestiones.detail.phone"), formatPhone(viewDetail.phone as string | null) ?? "—"],
               [t("gestiones.detail.email"), String(viewDetail.email ?? "—")]
             ].map(([label, value]) => (
               <div key={label} className="flex flex-col gap-0.5">
-                <dt className="text-xs text-fg-subtle">{label}</dt>
-                <dd className="text-sm font-medium text-fg-muted">{value}</dd>
+                <dt className="text-xs text-fg-muted">{label}</dt>
+                <dd className="font-mono text-sm text-fg">{value}</dd>
               </div>
             ))}
           </dl>
 
           <Accordion
-            className="mt-4"
             items={[
               {
                 id: "raw",
@@ -170,7 +209,7 @@ export function PortfolioDetail() {
               }
             ]}
           />
-        </Dialog>
+        </Drawer>
       )}
 
       {reachOut && portfolio.data && (

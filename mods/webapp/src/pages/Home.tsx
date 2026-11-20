@@ -1,25 +1,33 @@
 import { useState } from "react";
-import { KeyRound } from "lucide-react";
 import { skipToken } from "@tanstack/react-query";
-import {
-  contactStatsPeriodSchema,
-  RECOVERY_PERIODS,
-  recoveryPeriodRange,
-  type ContactStatsPeriod,
-  type RecoveryPeriod
-} from "@qcobro/common";
+import { Activity } from "lucide-react";
+import { localDateString, recoveryPeriodRange, type ContactStatsPeriod } from "@qcobro/common";
 import { trpc } from "../lib/trpc.js";
 import { useAuth } from "../lib/auth.js";
 import { deliveryLabel, outcomeLabel } from "../lib/contactAxes.js";
 import { useI18n, type Language, type MessageId } from "../lib/i18n.js";
-import { useMoney, useWorkspaceTimezone } from "../lib/useWorkspaceCurrency.js";
-import { Card } from "../components/ui/card.js";
-import { KpiCard, type KpiCardPeriodControl } from "../components/kpi-card.js";
-import { CopyField } from "../components/CopyField.js";
+import { useCurrencySymbol, useMoney, useWorkspaceTimezone } from "../lib/useWorkspaceCurrency.js";
+import { KpiCard } from "../components/kpi-card.js";
+import { PageHeader } from "../components/page-header.js";
+import { SegmentedControl } from "../components/ui/segmented.js";
+import { Input } from "../components/ui/input.js";
+import { DataTable, TableCellStack } from "../components/ui/data-table.js";
+import { EmptyState } from "../components/ui/empty-state.js";
 import { channelIcon } from "../lib/channelIcon.js";
-import { cn } from "@/lib/utils.js";
 
-const CONTACT_STATS_PERIODS = contactStatsPeriodSchema.options;
+/** The page-level time filter. It drives Recuperado, Progreso por cartera and Contacto. */
+const PANEL_PERIODS = ["today", "7d", "thisMonth", "custom"] as const;
+type PanelPeriod = (typeof PANEL_PERIODS)[number];
+
+/** The rolling windows `portfolios.contactStats` supports, in days. */
+const CONTACT_WINDOWS: [ContactStatsPeriod, number][] = [
+  ["24h", 1],
+  ["7d", 7],
+  ["14d", 14],
+  ["28d", 28]
+];
+
+const RECENT_LIMIT = 9;
 
 /** Minimal shape of a recent gestión row used by the dashboard widget. */
 type RecentGestion = {
@@ -29,7 +37,7 @@ type RecentGestion = {
   deliveryReason: string | null;
   outcome: string | null;
   contactedAt: string | Date;
-  portfolioAccount: { fullName: string } | null;
+  portfolioAccount: { fullName: string; externalId?: string } | null;
 };
 
 /** Relative timestamp ("Hace 5 min" / "5 min ago") localized to the active language. */
@@ -50,34 +58,84 @@ function recoveryPct(recovered: number, outstanding: number): number {
   return denom > 0 ? Math.min(100, Math.round((recovered / denom) * 100)) : 0;
 }
 
+/** `YYYY-MM-DD` shifted by `days` (calendar arithmetic, no timezone involved). */
+function addDays(date: string, days: number): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Inclusive length in days of a `YYYY-MM-DD` range. */
+function rangeDays(range: { from: string; to: string }): number {
+  const ms = Date.parse(`${range.to}T00:00:00Z`) - Date.parse(`${range.from}T00:00:00Z`);
+  return Math.round(ms / 86_400_000) + 1;
+}
+
+/**
+ * The rolling contact window closest to the period. Contacto is computed over rolling windows
+ * only, so a calendar period (Este mes, Personalizado) reads the nearest one and the card's
+ * label names the window it actually shows.
+ */
+function contactWindowFor(days: number): ContactStatsPeriod {
+  return CONTACT_WINDOWS.reduce((best, w) =>
+    Math.abs(w[1] - days) < Math.abs(best[1] - days) ? w : best
+  )[0];
+}
+
 export function Home() {
   const { workspace } = useAuth();
+  const currencySymbol = useCurrencySymbol();
   const { t, language } = useI18n();
   const money = useMoney();
   const workspaces = trpc.workspaces.list.useQuery();
   const active =
     workspaces.data?.items.find((w) => w.accessKeyId === workspace) ?? workspaces.data?.items[0];
   const wsName = active?.name ?? "tu espacio";
-  const wsAccessKeyId = active?.accessKeyId ?? workspace;
-
-  const [contactRatePeriod, setContactRatePeriod] = useState<ContactStatsPeriod>("7d");
-  const [recoveryPeriod, setRecoveryPeriod] = useState<RecoveryPeriod>("thisMonth");
   const timeZone = useWorkspaceTimezone();
 
+  const [period, setPeriod] = useState<PanelPeriod>("thisMonth");
+  const [custom, setCustom] = useState<{ from: string; to: string } | null>(null);
+
+  const today = timeZone ? localDateString(new Date(), timeZone) : undefined;
+  const thisMonth = timeZone ? recoveryPeriodRange("thisMonth", timeZone) : undefined;
+  const customRange = custom ?? thisMonth;
+  const customInvalid = !!customRange && customRange.from > customRange.to;
+  const range: { from: string; to: string } | undefined = !today
+    ? undefined
+    : period === "today"
+      ? { from: today, to: today }
+      : period === "7d"
+        ? { from: addDays(today, -6), to: today }
+        : period === "thisMonth"
+          ? thisMonth
+          : customInvalid
+            ? undefined
+            : customRange;
+
+  // Contacto follows the filter through the nearest rolling window it supports.
+  const contactWindow: ContactStatsPeriod =
+    period === "today"
+      ? "24h"
+      : period === "7d"
+        ? "7d"
+        : range
+          ? contactWindowFor(rangeDays(range))
+          : "7d";
+
   const portfolios = trpc.portfolios.list.useQuery();
-  const recent = trpc.campaigns.contactLog.list.useQuery({ limit: 5 });
+  const recent = trpc.campaigns.contactLog.list.useQuery({ limit: RECENT_LIMIT });
   const promises = trpc.campaigns.paymentPromise.list.useQuery();
-  const contactStats = trpc.portfolios.contactStats.useQuery({ period: contactRatePeriod });
+  const contactStats = trpc.portfolios.contactStats.useQuery({ period: contactWindow });
 
   const carteras = portfolios.data ?? [];
-  // Recuperado and Progreso por cartera read the same period: the one chosen on the card.
-  const range = timeZone ? recoveryPeriodRange(recoveryPeriod, timeZone) : undefined;
+  // Recuperado and Progreso por cartera read the same period: the page's filter.
   const recovery = trpc.recovery.summary.useQuery(range ?? skipToken);
   const recoveryByPortfolio = trpc.useQueries((q) =>
     range ? carteras.map((p) => q.recovery.summary({ ...range, portfolioId: p.id })) : []
   );
   const accountsInManagement = carteras.reduce((sum, p) => sum + p.accountCount, 0);
   const outstandingTotal = carteras.reduce((sum, p) => sum + (p.totalOutstandingBalance ?? 0), 0);
+  // Promises carry no "met at" date, so this stays the all-time count of kept promises.
   const promisesKept = (promises.data ?? []).filter(
     (p) => (p as { status: string }).status === "MET"
   ).length;
@@ -112,49 +170,28 @@ export function Home() {
           .replace("{count}", rs.withoutGestionCount.toLocaleString())
       : undefined;
 
-  // All KPIs are sourced from live workspace data, and all five render through the same
-  // `KpiCard` so their notes share a baseline. Recuperado and Contacto carry a period control,
-  // which each declares here rather than being spliced into the row separately.
+  const shortDate = (date: string) =>
+    new Intl.DateTimeFormat(language, { day: "numeric", month: "short", timeZone: "UTC" }).format(
+      new Date(`${date}T00:00:00Z`)
+    );
+  const periodInline =
+    period === "custom"
+      ? customRange
+        ? `${shortDate(customRange.from)} – ${shortDate(customRange.to)}`
+        : ""
+      : t(`home.period.inline.${period}` as MessageId);
+
   const kpis: {
     label: string;
     value: string;
     meta: string;
+    metaClassName?: string;
     detail?: string;
-    period?: KpiCardPeriodControl;
   }[] = [
     {
-      label: t("home.kpi.recovered"),
-      value: recoveredValue,
-      meta: recoveredSubtext,
-      detail: recoveredDetail,
-      period: {
-        value: recoveryPeriod,
-        onChange: (value) => setRecoveryPeriod(value as RecoveryPeriod),
-        ariaLabel: t("home.recovered.periodAriaLabel"),
-        options: RECOVERY_PERIODS.map((p) => ({
-          value: p,
-          label: t(`home.recovered.period.${p}` as MessageId)
-        }))
-      }
-    },
-    {
-      label: t("home.kpi.promisesKept"),
-      value: promisesKept.toLocaleString(),
-      meta: t("home.kpi.promisesKeptMeta")
-    },
-    {
-      label: t("home.kpi.contactRate"),
-      value: contactRateValue,
-      meta: contactRateSubtext,
-      period: {
-        value: contactRatePeriod,
-        onChange: (value) => setContactRatePeriod(value as ContactStatsPeriod),
-        ariaLabel: t("home.contactRate.periodAriaLabel"),
-        options: CONTACT_STATS_PERIODS.map((p) => ({
-          value: p,
-          label: t(`home.contactRate.period.${p}` as MessageId)
-        }))
-      }
+      label: t("home.kpi.accountsInManagement"),
+      value: accountsInManagement.toLocaleString(),
+      meta: t("home.kpi.active")
     },
     {
       label: t("home.kpi.pendingBalance"),
@@ -162,99 +199,170 @@ export function Home() {
       meta: t("home.kpi.pendingBalanceMeta")
     },
     {
-      label: t("home.kpi.accountsInManagement"),
-      value: accountsInManagement.toLocaleString(),
-      meta: t("home.kpi.active")
+      label: t("home.kpi.recovered"),
+      value: recoveredValue,
+      meta: recoveredSubtext,
+      metaClassName: "text-fg-muted",
+      detail: recoveredDetail
+    },
+    {
+      label: `${t("home.kpi.contactRate")} · ${t(`home.contactRate.window.${contactWindow}` as MessageId)}`,
+      value: contactRateValue,
+      meta: contactRateSubtext
+    },
+    {
+      label: t("home.kpi.promisesKept"),
+      value: promisesKept.toLocaleString(),
+      meta: t("home.kpi.promisesKeptMeta")
     }
   ];
 
+  const selectPeriod = (next: PanelPeriod) => {
+    if (next === "custom" && !custom && thisMonth) setCustom(thisMonth);
+    setPeriod(next);
+  };
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-[22px] font-bold text-fg">{t("home.title")}</h1>
-          <p className="text-sm text-fg-subtle">{t("home.subtitle").replace("{name}", wsName)}</p>
-        </div>
-        {wsAccessKeyId && (
-          <div className="flex shrink-0 items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-2">
-            <KeyRound className="h-[15px] w-[15px] shrink-0 text-fg-subtle" />
-            <span className="text-[13px] font-medium text-fg-subtle">{t("home.workspaceId")}</span>
-            <CopyField
-              variant="inline"
-              value={wsAccessKeyId}
-              copyAriaLabel={t("home.workspaceIdAria")}
-              className="max-w-[160px] text-fg"
+    <div className="flex min-h-full flex-col gap-5">
+      <PageHeader
+        title={t("home.title")}
+        description={t("home.subtitle")
+          .replace("{name}", wsName)
+          .replace("{currency}", currencySymbol)}
+        actions={
+          <>
+            {period === "custom" && customRange && (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="date"
+                  aria-label={t("home.period.from")}
+                  className="h-9 w-[150px] font-mono text-xs"
+                  value={customRange.from}
+                  max={today}
+                  invalid={customInvalid}
+                  onChange={(e) =>
+                    e.target.value && setCustom({ ...customRange, from: e.target.value })
+                  }
+                />
+                <span className="text-fg-muted">–</span>
+                <Input
+                  type="date"
+                  aria-label={t("home.period.to")}
+                  className="h-9 w-[150px] font-mono text-xs"
+                  value={customRange.to}
+                  max={today}
+                  invalid={customInvalid}
+                  onChange={(e) =>
+                    e.target.value && setCustom({ ...customRange, to: e.target.value })
+                  }
+                />
+              </div>
+            )}
+            <SegmentedControl
+              aria-label={t("home.period.ariaLabel")}
+              value={period}
+              onChange={selectPeriod}
+              options={PANEL_PERIODS.map((p) => ({
+                value: p,
+                label: t(`home.period.${p}` as MessageId)
+              }))}
             />
-          </div>
-        )}
-      </div>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-5 gap-4">
         {kpis.map((k) => (
           <KpiCard
             key={k.label}
-            className="gap-1 rounded-xl shadow-none"
+            className="gap-2.5 rounded-xl px-[18px] py-4 shadow-none"
             label={k.label}
             value={k.value}
             subtext={k.meta}
+            subtextClassName={k.metaClassName}
             detail={k.detail}
-            period={k.period}
+            notesUnderValue
           />
         ))}
       </div>
 
-      <div className="grid grid-cols-[1fr_360px] gap-6">
-        <Card className="rounded-xl border-border p-5 shadow-none">
-          <h2 className="mb-2 text-[15px] font-semibold text-fg">{t("home.recentActivity")}</h2>
+      <div className="grid flex-1 grid-cols-[1fr_380px] gap-4">
+        <section aria-label={t("home.recentActivity")} className="flex min-w-0 flex-col">
           {activity.length === 0 ? (
-            <p className="py-6 text-sm text-fg-subtle">{t("gestiones.empty")}</p>
+            <EmptyState
+              className="flex-1"
+              icon={<Activity />}
+              title={t("home.recentActivity")}
+              body={t("gestiones.empty")}
+            />
           ) : (
-            <div className="flex flex-col">
-              {activity.map((a, i) => {
-                const Icon = channelIcon(a.agentType);
-                return (
-                  <div
-                    key={a.id}
-                    className={cn(
-                      "flex items-center gap-3 py-3",
-                      i < activity.length - 1 && "border-b border-border"
-                    )}
-                  >
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-elevated">
-                      <Icon className="h-[18px] w-[18px] text-fg-subtle" />
-                    </span>
-                    <div className="flex-1">
-                      <p className="text-[13px] font-semibold text-fg">
-                        {a.portfolioAccount?.fullName ?? "—"}
-                      </p>
-                      <p className="text-xs text-fg-subtle">
-                        {outcomeLabel(t, a.outcome) ??
-                          deliveryLabel(t, a.delivery, a.deliveryReason, a.agentType)}
-                      </p>
-                    </div>
-                    <span className="text-xs text-fg-subtle">
+            <DataTable<RecentGestion & Record<string, unknown>>
+              className="flex-1 [&>div]:flex-1"
+              searchable={false}
+              rowHeight={48}
+              data={activity as (RecentGestion & Record<string, unknown>)[]}
+              keyField="id"
+              columns={[
+                {
+                  key: "portfolioAccount",
+                  header: t("home.recent.col.account"),
+                  render: (a) => (
+                    <TableCellStack
+                      title={a.portfolioAccount?.fullName ?? "—"}
+                      sub={a.portfolioAccount?.externalId}
+                    />
+                  )
+                },
+                {
+                  key: "agentType",
+                  header: t("home.recent.col.channel"),
+                  width: 140,
+                  render: (a) => {
+                    const Icon = channelIcon(a.agentType);
+                    return (
+                      <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                        <Icon className="h-4 w-4 text-fg-muted" />
+                        {t(`agents.type.${a.agentType}` as MessageId)}
+                      </span>
+                    );
+                  }
+                },
+                {
+                  key: "outcome",
+                  header: t("home.recent.col.result"),
+                  width: 220,
+                  render: (a) =>
+                    outcomeLabel(t, a.outcome) ??
+                    deliveryLabel(t, a.delivery, a.deliveryReason, a.agentType)
+                },
+                {
+                  key: "contactedAt",
+                  header: t("home.recent.col.when"),
+                  width: 110,
+                  render: (a) => (
+                    <span className="whitespace-nowrap text-fg-muted">
                       {formatRelative(a.contactedAt, language)}
                     </span>
-                  </div>
-                );
-              })}
-            </div>
+                  )
+                }
+              ]}
+            />
           )}
-        </Card>
+        </section>
 
-        <Card
+        <section
           role="region"
           aria-labelledby="home-progress-by-portfolio"
-          className="rounded-xl border-border p-5 shadow-none"
+          className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5"
         >
-          <h2 id="home-progress-by-portfolio" className="mb-4 text-[15px] font-semibold text-fg">
-            {t("home.progressByPortfolio").replace(
-              "{period}",
-              t(`home.recovered.periodInline.${recoveryPeriod}` as MessageId)
-            )}
-          </h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="home-progress-by-portfolio" className="text-sm font-medium text-fg">
+              {t("home.progressTitle")}
+            </h2>
+            <span className="text-xs text-fg-muted">{periodInline}</span>
+          </div>
           {carteras.length === 0 ? (
-            <p className="py-6 text-sm text-fg-subtle">{t("home.noPortfolios")}</p>
+            <p className="py-6 text-sm text-fg-muted">{t("home.noPortfolios")}</p>
           ) : (
             <div className="flex flex-col gap-4">
               {carteras.map((p, i) => {
@@ -262,21 +370,21 @@ export function Home() {
                 const pct = recoveryPct(recovered, p.totalOutstandingBalance ?? 0);
                 return (
                   <div key={p.id} className="flex flex-col gap-1.5">
-                    <div className="flex justify-between text-[13px]">
-                      <span className="text-fg-muted">{p.name}</span>
-                      <span className="font-semibold text-fg-muted">
+                    <div className="flex justify-between gap-3 text-[13px]">
+                      <span className="truncate text-fg-muted">{p.name}</span>
+                      <span className="shrink-0 font-mono text-xs text-fg">
                         {pct}% · {money(recovered)}
                       </span>
                     </div>
-                    <div className="h-2 w-full rounded-full bg-elevated">
-                      <div className="h-2 rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                    <div className="h-1.5 w-full rounded-full bg-elevated">
+                      <div className="h-1.5 rounded-full bg-primary" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 );
               })}
             </div>
           )}
-        </Card>
+        </section>
       </div>
     </div>
   );

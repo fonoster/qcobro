@@ -8,13 +8,13 @@ const API = "http://localhost:3000";
 
 /**
  * Gestiones golden path for the one-way channels: create a portfolio, import one
- * account, seed SMS / Pre-grabada / Email gestiones via the (dev-open) contact-log
+ * account, seed SMS / Voz pregrabada / Email gestiones via the (dev-open) contact-log
  * REST endpoint, then verify the refined Gestiones list and the channel-aware detail
  * slide-over panel for each (sent content shown; no audio/transcript). Live dispatch
  * is intentionally not exercised. Assumes the dev stack is running.
  */
 test.describe("gestiones — channels", () => {
-  test("list + channel-aware detail panel for SMS, Pre-grabada, Email, Voz IA", async ({
+  test("list + channel-aware detail panel for SMS, Voz pregrabada, Email, Voz IA", async ({
     page
   }) => {
     const owner = newOwner("gestiones-ch");
@@ -28,7 +28,10 @@ test.describe("gestiones — channels", () => {
 
     // --- Portfolio + import one account --------------------------------------
     await page.getByRole("link", { name: "Carteras" }).click();
-    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page
+      .getByRole("button", { name: /Nueva cartera/ })
+      .first()
+      .click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(`cli-${stamp}`);
     await page.getByRole("button", { name: "Crear cartera" }).click();
@@ -37,10 +40,10 @@ test.describe("gestiones — channels", () => {
     await page.getByText(portfolioName).click();
     await expect(page).toHaveURL(/\/portfolios\/[a-f0-9-]+$/);
     const portfolioId = page.url().split("/portfolios/")[1];
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
-    await page.getByRole("button", { name: "Cerrar" }).click();
+    await page.getByRole("button", { name: "Cerrar", exact: true }).click();
     await expect(page.getByText("María E2E")).toBeVisible();
 
     // --- Resolve the account id, seed three gestiones via the API ------------
@@ -69,7 +72,7 @@ test.describe("gestiones — channels", () => {
       extra?: Record<string, unknown>;
       channelData: Record<string, unknown>;
     }[] = [
-      // Inserted first so it gets the earliest `contactedAt` among the two Pre-grabada
+      // Inserted first so it gets the earliest `contactedAt` among the two Voz pregrabada
       // seeds below, and therefore sorts LAST (list is ordered by contactedAt desc) — the
       // "Voz pregrabada" `.first()` row stays the one with a recording, unchanged from
       // before this no-recording case was added.
@@ -188,18 +191,17 @@ test.describe("gestiones — channels", () => {
       return panel;
     };
     const closePanel = async () => {
-      await page.getByRole("button", { name: "Volver a gestiones" }).click();
+      await page.getByRole("button", { name: "Cerrar diálogo" }).click();
       await expect(page.getByRole("dialog")).toHaveCount(0);
     };
 
-    // SMS — sent message bubble + real AI summary; no transcript
+    // SMS — sent message card + real AI summary; no transcript
     let panel = await openPanel("SMS");
-    await expect(panel.getByText("Mensaje enviado")).toBeVisible();
     await expect(panel.getByText(smsBody)).toBeVisible();
     await expect(panel.getByText("Transcripción")).toHaveCount(0);
     await closePanel();
 
-    // Pre-grabada — plays the real call recording (not a synthesized re-narration) + the
+    // Voz pregrabada — plays the real call recording (not a synthesized re-narration) + the
     // sent script as a separate, non-playable element + delivery progression in the
     // "Estado de delivery" field + honest insight copy; no transcript. This is the row
     // with a recording — it stays `.nth(0)` since the no-recording case below was seeded
@@ -222,7 +224,7 @@ test.describe("gestiones — channels", () => {
     await expect(panel.getByText("Transcripción")).toHaveCount(0);
     await closePanel();
 
-    // Pre-grabada with no captured recording — muted unavailable card, no audio element,
+    // Voz pregrabada with no captured recording — muted unavailable card, no audio element,
     // and no synthesized stand-in. This is the older of the two "Voz pregrabada" rows
     // (seeded first, so it sorts last / `.nth(1)`).
     panel = await openPanel("Voz pregrabada", 1);
@@ -232,12 +234,11 @@ test.describe("gestiones — channels", () => {
     await expect(panel.getByText(script)).toBeVisible();
     await closePanel();
 
-    // Email — communication card + body; dedicated (not generic) analysis section, empty
-    // until the bidirectional agent has a reply to analyze; no transcript
+    // Email — message card (De / Para / Asunto + body); the analysis waits for a customer
+    // reply to analyze, so the drawer says no reply has arrived yet; no transcript
     panel = await openPanel("Correo");
-    await expect(panel.getByText("Conversación por correo")).toBeVisible();
     await expect(panel.getByText(emailBody)).toBeVisible();
-    await expect(panel.getByText("Análisis del email (AI Insights)")).toBeVisible();
+    await expect(panel.getByText("Sin respuesta del cliente aún.")).toBeVisible();
     await expect(panel.getByText("Transcripción")).toHaveCount(0);
     await closePanel();
 

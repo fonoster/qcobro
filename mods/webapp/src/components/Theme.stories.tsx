@@ -12,8 +12,12 @@ export default meta;
 
 const TOKENS: [string, string][] = [
   ["bg-bg", "page ground"],
-  ["bg-surface", "card / sidebar"],
+  ["bg-surface", "card"],
   ["bg-elevated", "raised / hover"],
+  ["bg-sunken", "sunken well"],
+  ["bg-sidebar", "sidebar"],
+  ["bg-sidebar-accent", "sidebar active item"],
+  ["bg-overlay", "modal backdrop"],
   ["bg-primary", "primary action"],
   ["bg-brand-green", "brand accent"],
   ["bg-success-soft", "success tint"],
@@ -25,6 +29,7 @@ const TEXT: [string, string][] = [
   ["text-fg", "primary text"],
   ["text-fg-muted", "secondary text"],
   ["text-fg-subtle", "tertiary text"],
+  ["text-sidebar-fg", "sidebar text"],
   ["text-primary", "accent text"],
   ["text-danger", "danger text"],
   ["text-warning", "warning text"]

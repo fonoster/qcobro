@@ -1,8 +1,8 @@
-import { KeyRound } from "lucide-react";
 import { useI18n } from "../lib/i18n.js";
-import { Card } from "./ui/card.js";
+import { Dialog } from "./ui/dialog.js";
 import { Button } from "./ui/button.js";
 import { CopyField } from "./CopyField.js";
+import { Alert } from "./ui/alert.js";
 
 export interface ApiKeyCredentials {
   accessKeyId: string;
@@ -22,28 +22,25 @@ export interface ShowSecretDialogProps {
  */
 export function ShowSecretDialog({ credentials, onClose }: ShowSecretDialogProps) {
   const { t } = useI18n();
-  if (!credentials) return null;
-
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
-      <Card className="w-full max-w-[480px] rounded-2xl border-border shadow-xl">
-        <div className="flex flex-col gap-5 p-6">
-          <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning-soft">
-              <KeyRound className="h-5 w-5 text-warning" />
-            </span>
-            <div>
-              <h2 className="text-lg font-bold text-fg">{t("apiKeys.secret.title")}</h2>
-              <p className="mt-0.5 text-[13px] text-fg-subtle">{t("apiKeys.secret.description")}</p>
-            </div>
-          </div>
+    <Dialog
+      open={!!credentials}
+      onClose={onClose}
+      width={560}
+      title={t("apiKeys.secret.title")}
+      footer={<Button onClick={onClose}>{t("apiKeys.secret.done")}</Button>}
+    >
+      {credentials && (
+        <>
+          <Alert
+            variant="warning"
+            title={t("apiKeys.secret.onceTitle")}
+            description={t("apiKeys.secret.description")}
+          />
           <CopyField label={t("apiKeys.secret.idLabel")} value={credentials.accessKeyId} />
           <CopyField label={t("apiKeys.secret.secretLabel")} value={credentials.accessKeySecret} />
-          <div className="flex justify-end">
-            <Button onClick={onClose}>{t("apiKeys.secret.done")}</Button>
-          </div>
-        </div>
-      </Card>
-    </div>
+        </>
+      )}
+    </Dialog>
   );
 }

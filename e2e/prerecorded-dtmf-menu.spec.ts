@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { newOwner, signUpAndEnter } from "./helpers.js";
+import { newOwner, signUpAndEnter, startNewAgent } from "./helpers.js";
 
 const CSV = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures", "accounts.csv");
 const API = "http://localhost:3000";
@@ -31,7 +31,10 @@ test.describe("pre-recorded DTMF menu", () => {
 
     // --- Portfolio + import one account --------------------------------------
     await page.getByRole("link", { name: "Carteras" }).click();
-    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page
+      .getByRole("button", { name: /Nueva cartera/ })
+      .first()
+      .click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(`cli-${stamp}`);
     await page.getByRole("button", { name: "Crear cartera" }).click();
@@ -40,17 +43,16 @@ test.describe("pre-recorded DTMF menu", () => {
     await page.getByText(portfolioName).click();
     await expect(page).toHaveURL(/\/portfolios\/[a-f0-9-]+$/);
     const portfolioId = page.url().split("/portfolios/")[1];
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
-    await page.getByRole("button", { name: "Cerrar" }).click();
+    await page.getByRole("button", { name: "Cerrar", exact: true }).click();
     await expect(page.getByText("María E2E")).toBeVisible();
 
     // --- Create a VOICE_PRERECORDED template with a half-configured menu -----
     await page.getByRole("link", { name: "Agentes IA" }).click();
-    await page.getByRole("button", { name: /Nuevo agente/ }).click();
+    await startNewAgent(page, "Voz pregrabada");
     await page.getByLabel("Nombre del agente").fill(agentName);
-    await page.getByLabel("Tipo de canal").selectOption({ label: "Voz pregrabada" });
     await page.getByLabel("Idioma", { exact: true }).selectOption("es-419");
     // Exact match: the new AMD checkbox's label ends in "buzón de voz", which a
     // substring match against "Voz" would otherwise also resolve to.
@@ -58,15 +60,13 @@ test.describe("pre-recorded DTMF menu", () => {
     await page.getByLabel("Guion").fill(script);
 
     // The hang-up-on-detected-machine toggle defaults on, matching the server default.
-    await expect(
-      page.getByLabel("Colgar si se detecta un contestador automático o buzón de voz")
-    ).toBeChecked();
+    await expect(page.getByLabel("Colgar si contesta un buzón de voz")).toBeChecked();
 
     // A digit with no message is rejected client-side before it ever reaches the API.
-    await page.getByLabel("Dígito para repetir").fill("1");
+    await page.getByLabel("Tecla para repetir").fill("1");
     await page.getByRole("button", { name: "Crear agente" }).click();
     await expect(
-      page.getByText("Se requiere un mensaje cuando este dígito está definido.")
+      page.getByText("Se requiere un mensaje cuando esta tecla está definida.")
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Crear agente" })).toBeVisible(); // dialog still open
 
@@ -75,19 +75,19 @@ test.describe("pre-recorded DTMF menu", () => {
       .getByLabel("Mensaje de repetición")
       .fill("Presione 1 para escuchar el mensaje de nuevo.");
     await page.getByLabel("Máximo de repeticiones").fill("2");
-    await page.getByLabel("Dígito para darse de baja").fill("9");
+    await page.getByLabel("Tecla para darse de baja").fill("9");
     await page.getByLabel("Mensaje de baja").fill("Presione 9 si no desea recibir más llamadas.");
 
     // The opt-out digit + message alone are not enough — the confirmation message played
     // after the digit is detected is required too, so the caller isn't left with silence.
     await page.getByRole("button", { name: "Crear agente" }).click();
     await expect(
-      page.getByText("Se requiere un mensaje cuando este dígito está definido.")
+      page.getByText("Se requiere un mensaje cuando esta tecla está definida.")
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Crear agente" })).toBeVisible();
 
     await page
-      .getByLabel("Mensaje de confirmación de baja")
+      .getByLabel("Confirmación de baja")
       .fill("Hemos registrado su solicitud. No recibirá más llamadas de este número.");
     await page.getByRole("button", { name: "Crear agente" }).click();
     await expect(page.getByText(agentName)).toBeVisible();
@@ -96,38 +96,32 @@ test.describe("pre-recorded DTMF menu", () => {
     const templateRow = page.getByRole("row", { name: new RegExp(agentName) });
     await templateRow.getByRole("button", { name: "Acciones" }).click();
     await page.getByRole("button", { name: "Editar" }).click();
-    await expect(page.getByLabel("Dígito para repetir")).toHaveValue("1");
-    await expect(page.getByLabel("Dígito para darse de baja")).toHaveValue("9");
+    await expect(page.getByLabel("Tecla para repetir")).toHaveValue("1");
+    await expect(page.getByLabel("Tecla para darse de baja")).toHaveValue("9");
     await expect(page.getByLabel("Máximo de repeticiones")).toHaveValue("2");
-    await expect(page.getByLabel("Mensaje de confirmación de baja")).toHaveValue(
+    await expect(page.getByLabel("Confirmación de baja")).toHaveValue(
       "Hemos registrado su solicitud. No recibirá más llamadas de este número."
     );
-    await expect(
-      page.getByLabel("Colgar si se detecta un contestador automático o buzón de voz")
-    ).toBeChecked();
+    await expect(page.getByLabel("Colgar si contesta un buzón de voz")).toBeChecked();
     await page.getByRole("button", { name: "Cancelar", exact: true }).click();
 
     // --- Clearing the opt-out digit/messages and the AMD toggle actually persist (not silently ignored) --
     await templateRow.getByRole("button", { name: "Acciones" }).click();
     await page.getByRole("button", { name: "Editar" }).click();
-    await page.getByLabel("Dígito para darse de baja").fill("");
+    await page.getByLabel("Tecla para darse de baja").fill("");
     await page.getByLabel("Mensaje de baja").fill("");
-    await page.getByLabel("Mensaje de confirmación de baja").fill("");
-    await page
-      .getByLabel("Colgar si se detecta un contestador automático o buzón de voz")
-      .uncheck();
+    await page.getByLabel("Confirmación de baja").fill("");
+    await page.getByLabel("Colgar si contesta un buzón de voz").uncheck();
     await page.getByRole("button", { name: "Guardar cambios" }).click();
     await expect(page.getByRole("button", { name: "Guardar cambios" })).toHaveCount(0);
     await templateRow.getByRole("button", { name: "Acciones" }).click();
     await page.getByRole("button", { name: "Editar" }).click();
-    await expect(page.getByLabel("Dígito para darse de baja")).toHaveValue("");
+    await expect(page.getByLabel("Tecla para darse de baja")).toHaveValue("");
     await expect(page.getByLabel("Mensaje de baja")).toHaveValue("");
-    await expect(page.getByLabel("Mensaje de confirmación de baja")).toHaveValue("");
-    await expect(
-      page.getByLabel("Colgar si se detecta un contestador automático o buzón de voz")
-    ).not.toBeChecked();
+    await expect(page.getByLabel("Confirmación de baja")).toHaveValue("");
+    await expect(page.getByLabel("Colgar si contesta un buzón de voz")).not.toBeChecked();
     // The repeat digit was never touched, so it should still be there.
-    await expect(page.getByLabel("Dígito para repetir")).toHaveValue("1");
+    await expect(page.getByLabel("Tecla para repetir")).toHaveValue("1");
     await page.getByRole("button", { name: "Cancelar", exact: true }).click();
 
     // --- Resolve the account id, seed two pre-recorded gestiones -------------
@@ -204,7 +198,7 @@ test.describe("pre-recorded DTMF menu", () => {
     await expect(panel.getByText("Conectada").first()).toBeVisible();
     await expect(panel.getByText("Camino", { exact: true })).toHaveCount(0);
     await expect(panel.getByText("Resultado", { exact: true })).toHaveCount(0);
-    await page.getByRole("button", { name: "Volver a gestiones" }).click();
+    await page.getByRole("button", { name: "Cerrar diálogo" }).click();
 
     // --- Detail: the opt-out press shows both Camino and Resultado -----------
     await optOutRow.first().click();
@@ -215,7 +209,7 @@ test.describe("pre-recorded DTMF menu", () => {
     await expect(panel.getByText("Despachado → Recibido")).toBeVisible();
     await expect(panel.getByText("Resultado", { exact: true })).toBeVisible();
     await expect(panel.getByText("Baja").first()).toBeVisible();
-    await page.getByRole("button", { name: "Volver a gestiones" }).click();
+    await page.getByRole("button", { name: "Cerrar diálogo" }).click();
 
     // --- Detail: the machine-detected hang-up shows Camino, no Resultado -----
     // Selected by its delivery-reason label ("Inalcanzable") — the list has no path column

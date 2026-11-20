@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { IconLabel } from "./icon-label.js";
-import { Phone, Mail, Calendar, AlertTriangle } from "lucide-react";
+import { Phone, Mail, Calendar } from "lucide-react";
 
 const meta = {
   title: "UI/IconLabel",
@@ -23,22 +23,6 @@ export const Success: StoryObj = {
   )
 };
 
-export const Violet: StoryObj = {
-  render: () => (
-    <IconLabel variant="violet" icon={<Calendar className="h-4 w-4" />}>
-      Vence: 15 Jun 2024
-    </IconLabel>
-  )
-};
-
-export const Orange: StoryObj = {
-  render: () => (
-    <IconLabel variant="orange" icon={<AlertTriangle className="h-4 w-4" />}>
-      45 días en mora
-    </IconLabel>
-  )
-};
-
 export const AllVariants: StoryObj = {
   render: () => (
     <div className="flex flex-col gap-3">
@@ -48,11 +32,8 @@ export const AllVariants: StoryObj = {
       <IconLabel variant="success" icon={<Mail className="h-4 w-4" />}>
         Email
       </IconLabel>
-      <IconLabel variant="violet" icon={<Calendar className="h-4 w-4" />}>
-        Fecha
-      </IconLabel>
-      <IconLabel variant="orange" icon={<AlertTriangle className="h-4 w-4" />}>
-        Alerta
+      <IconLabel variant="secondary" icon={<Calendar className="h-4 w-4" />}>
+        Vence: 15 Jun 2024
       </IconLabel>
     </div>
   )

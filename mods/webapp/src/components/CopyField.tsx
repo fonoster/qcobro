@@ -71,10 +71,10 @@ export function CopyField({
   }
 
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
-      {label && <span className="text-sm font-medium text-fg-muted">{label}</span>}
+    <div className={cn("flex flex-col gap-2", className)}>
+      {label && <span className="text-xs font-medium text-fg">{label}</span>}
       <div className="flex items-center gap-2">
-        <code className="flex-1 truncate rounded-lg border border-border bg-elevated px-3 py-2 font-mono text-[13px] text-fg">
+        <code className="h-10 min-w-0 flex-1 truncate rounded-control border border-input bg-bg px-3 font-mono text-xs leading-10 text-fg">
           {value}
         </code>
         <Button

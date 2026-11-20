@@ -30,17 +30,20 @@ test.describe("contact log — delivery / path / outcome", () => {
 
     // --- Portfolio + import one account --------------------------------------
     await page.getByRole("link", { name: "Carteras" }).click();
-    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page
+      .getByRole("button", { name: /Nueva cartera/ })
+      .first()
+      .click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(`cli-${stamp}`);
     await page.getByRole("button", { name: "Crear cartera" }).click();
     await page.getByText(portfolioName).click();
     await expect(page).toHaveURL(/\/portfolios\/[a-f0-9-]+$/);
     const portfolioId = page.url().split("/portfolios/")[1];
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
-    await page.getByRole("button", { name: "Cerrar" }).click();
+    await page.getByRole("button", { name: "Cerrar", exact: true }).click();
     await expect(page.getByText("María E2E")).toBeVisible();
 
     const auth = await page.evaluate(() => ({
@@ -118,13 +121,13 @@ test.describe("contact log — delivery / path / outcome", () => {
     await expect(rowWith("Persona equivocada")).toHaveCount(1);
 
     // --- Filters are independent -------------------------------------------
-    const deliveryFilter = page.getByRole("combobox").first();
+    const deliveryFilter = page.getByRole("combobox", { name: "Entrega" });
     await deliveryFilter.selectOption("FAILED");
     await expect(rowWith("Fallido · Sin respuesta")).toHaveCount(1);
     await expect(rowWith("Persona equivocada")).toHaveCount(0);
     await deliveryFilter.selectOption("");
 
-    const outcomeFilter = page.getByRole("combobox").nth(1);
+    const outcomeFilter = page.getByRole("combobox", { name: "Resultado" });
     await outcomeFilter.selectOption("WRONG_PARTY");
     await expect(rowWith("Persona equivocada")).toHaveCount(1);
     await expect(rowWith("Fallido · Sin respuesta")).toHaveCount(0);
@@ -137,8 +140,8 @@ test.describe("contact log — delivery / path / outcome", () => {
     await expect(panel.getByText("Entrega", { exact: true })).toBeVisible();
     await expect(panel.getByText("Camino", { exact: true })).toBeVisible();
     await expect(panel.getByText("Despachado → Conversación")).toBeVisible();
-    await expect(panel.getByText("Persona equivocada")).toBeVisible();
-    await page.getByRole("button", { name: "Volver a gestiones" }).click();
+    await expect(panel.getByText("Persona equivocada").first()).toBeVisible();
+    await page.getByRole("button", { name: "Cerrar diálogo" }).click();
 
     // --- Detail: a one-way channel shows delivery only -----------------------
     await rowWith("SMS").first().click();

@@ -7,14 +7,19 @@ import { cn } from "@/lib/utils.js";
 export function MenuPanel({
   children,
   className,
-  style
+  style,
+  label
 }: {
   children: ReactNode;
   className?: string;
   style?: CSSProperties;
+  /** When set, the panel is a labelled dialog (its accessible name). */
+  label?: string;
 }) {
   return (
     <div
+      role={label ? "dialog" : undefined}
+      aria-label={label}
       style={style}
       className={cn("rounded-xl border border-border bg-surface p-1.5 shadow-lg", className)}
     >
@@ -23,31 +28,8 @@ export function MenuPanel({
   );
 }
 
-/** Account identity block shown at the top of a menu. */
-export function MenuHeader({
-  initials,
-  name,
-  email
-}: {
-  initials: string;
-  name: string;
-  email?: string;
-}) {
-  return (
-    <div className="flex items-center gap-2.5 px-2.5 py-2">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-        {initials}
-      </span>
-      <div className="flex min-w-0 flex-col leading-tight">
-        <span className="truncate text-[13px] font-semibold text-fg">{name}</span>
-        {email && <span className="truncate text-[11px] text-fg-subtle">{email}</span>}
-      </div>
-    </div>
-  );
-}
-
 export function MenuDivider() {
-  return <div className="my-1 h-px bg-elevated" />;
+  return <div className="my-1 h-px bg-border" />;
 }
 
 export function MenuItem({
@@ -66,11 +48,11 @@ export function MenuItem({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium hover:bg-elevated",
+        "flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] hover:bg-elevated",
         danger ? "text-danger" : "text-fg"
       )}
     >
-      <Icon className={cn("h-4 w-4", danger ? "text-danger" : "text-fg-subtle")} />
+      <Icon className={cn("h-4 w-4", danger ? "text-danger" : "text-fg-muted")} />
       {label}
     </button>
   );

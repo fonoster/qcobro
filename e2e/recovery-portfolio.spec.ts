@@ -26,8 +26,8 @@ function accountsFile(missed: number) {
 /**
  * Portfolio recovery golden path (#210): the import modal defaults to "Agregar y actualizar"
  * and warns when a mode or a file can't detect payments; a second import with fewer missed
- * installments shows "Pagos detectados", and the portfolio's Recuperación section shows the
- * partial recovery in its summary, breakdown and list. Assumes the dev stack is running.
+ * installments shows "Pagos detectados" with the partial recovery. (The per-cartera
+ * Recuperación section is no longer rendered: #250.) Assumes the dev stack is running.
  */
 test.describe("portfolio recovery", () => {
   test("an import that lowers missed_installments shows up as a partial recovery", async ({
@@ -40,7 +40,10 @@ test.describe("portfolio recovery", () => {
     await signUpAndEnter(page, owner, `WS ${stamp}`);
 
     await page.getByRole("link", { name: "Carteras" }).click();
-    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page
+      .getByRole("button", { name: /Nueva cartera/ })
+      .first()
+      .click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(`cli-${stamp}`);
     await page.getByRole("button", { name: "Crear cartera" }).click();
@@ -48,14 +51,8 @@ test.describe("portfolio recovery", () => {
     await expect(page).toHaveURL(/\/portfolios\/[a-f0-9-]+$/);
     const portfolioId = page.url().split("/portfolios/")[1];
 
-    // --- Nothing detected yet ---------------------------------------------------------
-    const recovery = page.getByRole("region", { name: "Recuperación" });
-    await expect(
-      recovery.getByText("Aún no hay pagos detectados. Se detectan al sincronizar la cartera.")
-    ).toBeVisible();
-
     // --- Import modal: default mode, the APPEND_ONLY warning, the missing column ---------
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     // The import modal has no dialog role, so its controls are found on the page.
     const dialog = page;
     const appendOnlyWarning = dialog.getByText(
@@ -68,9 +65,7 @@ test.describe("portfolio recovery", () => {
     await dialog.getByRole("radio", { name: /Agregar y actualizar/ }).check();
     await expect(appendOnlyWarning).toHaveCount(0);
 
-    const missingColumn = dialog.getByText(
-      "Falta la columna missed_installments: no se detectarán pagos parciales en este archivo."
-    );
+    const missingColumn = dialog.getByText("Falta la columna missed_installments");
     await page.locator('input[type="file"]').setInputFiles(CSV_WITHOUT_MISSED);
     await expect(missingColumn).toBeVisible();
 
@@ -80,7 +75,7 @@ test.describe("portfolio recovery", () => {
     await dialog.getByRole("button", { name: "Importar 1 cuentas" }).click();
     await expect(dialog.getByText("Importación completada")).toBeVisible();
     await expect(dialog.getByText("Pagos detectados", { exact: true })).toHaveCount(0);
-    await dialog.getByRole("button", { name: "Cerrar" }).click();
+    await dialog.getByRole("button", { name: "Cerrar", exact: true }).click();
 
     // --- A gestión between the two syncs ------------------------------------------------
     const auth = await page.evaluate(() => ({
@@ -108,41 +103,12 @@ test.describe("portfolio recovery", () => {
     expect(res.ok()).toBeTruthy();
 
     // --- Second sync: 1 installment overdue, so 2 × 2,500 were paid -------------------
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     await page.locator('input[type="file"]').setInputFiles(accountsFile(1));
     await dialog.getByRole("button", { name: "Importar 1 cuentas" }).click();
     await expect(dialog.getByText("Pagos detectados", { exact: true })).toBeVisible();
     await expect(dialog.getByText(/5,000.* · 1 cuenta$/)).toBeVisible();
-    await dialog.getByRole("button", { name: "Cerrar" }).click();
-
-    // --- Summary ------------------------------------------------------------------------
-    await expect(recovery.getByText(/5,000/).first()).toBeVisible();
-    await expect(recovery.getByText("1 cuenta con gestión")).toBeVisible();
-    await expect(recovery.getByLabel("Período de recuperación")).toHaveValue("thisMonth");
-
-    // --- Breakdown: Días by default, with a Total; Campaña has none ---------------------
-    const breakdown = recovery.getByRole("radiogroup", { name: "Desglose" });
-    await expect(breakdown.getByRole("radio", { name: "Días" })).toBeChecked();
-    await expect(recovery.getByRole("row", { name: /^Total/ })).toBeVisible();
-    await expect(recovery.getByText(/Depende de cada cuánto sincroniza el cliente/)).toBeVisible();
-
-    // The radios are visually hidden inside their labels, so click the label as a person would.
-    await breakdown.getByText("Campaña", { exact: true }).click();
-    await expect(breakdown.getByRole("radio", { name: "Campaña" })).toBeChecked();
-    await expect(recovery.getByRole("row", { name: /^Total/ })).toHaveCount(0);
-    await expect(
-      recovery.getByText(
-        "Una cuenta gestionada por varias campañas cuenta en cada una: las filas no se suman."
-      )
-    ).toBeVisible();
-    await expect(recovery.getByText(/Depende de cada cuánto sincroniza el cliente/)).toHaveCount(0);
-
-    // --- Recovery list ------------------------------------------------------------------
-    const list = recovery.getByRole("list", { name: "Recuperaciones" });
-    const item = list.getByRole("listitem").filter({ hasText: "Ana E2E" });
-    await expect(item).toBeVisible();
-    await expect(item.getByText("Pago parcial · 2 cuotas")).toBeVisible();
-    await expect(item.getByText(/FT-REC-1 · Voz IA/)).toBeVisible();
+    await dialog.getByRole("button", { name: "Cerrar", exact: true }).click();
 
     // --- The console never mentions exits ----------------------------------------------
     await expect(page.getByText(/salida/i)).toHaveCount(0);

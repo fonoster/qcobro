@@ -11,7 +11,7 @@ Prettier ignore it); `docs-site/` is the Mintlify docs, with its own `AGENTS.md`
 
 Product behavior is specified first with OpenSpec: specs in `openspec/specs/`, changes in
 `openspec/changes/` (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`). `/ps:ship <change>` drives
-one change through design (Pencil), spec reconcile, build (Storybook first), tests, sync and
+one change through design (Nib), spec reconcile, build (Storybook first), tests, sync and
 archive. The previous implementation is archived on the `demo` branch.
 
 ## Commands
@@ -48,11 +48,18 @@ Overrides:
   without an `Ej.: ` / `E.g. ` prefix, and without restating the label. Show a `{{variable}}`
   only in a field whose text is actually template-rendered. State validation rules in the label
   (`Tiempo de inactividad (ms, mín. 3000)`, `Correo · no editable`), never only in an example.
-- Every color is a token. In dark mode, green is only for the primary CTA, the active nav item,
-  real positive status and progress.
-- UI work is design-first: check or update `pencil.pen` before writing UI code. The Pencil MCP
-  writes to the file Pen.app has open (the main checkout), not the worktree's copy; move the
-  change into the branch.
+- Overlays follow one rule: a drawer for working on a record (row details, long or sectioned
+  create/edit forms such as campaigns and voice agents); a dialog for a short interruption
+  (confirmations, typed deletes, one-time secrets, pickers, short creates of up to four fields, step
+  flows such as the CSV import).
+- Every color is a token. In dark mode, green is only for the primary CTA, real positive status
+  and progress (the active nav item is neutral).
+- UI work is design-first: check or update the design before writing UI code. Designs are
+  `.pen` files in `designs/`, edited with Nib: `dashboard-fonoster.pen` (console, importing
+  `fonoster.lib.pen`), `website.pen` (`site/`), `docs.pen` (docs diagrams and assets),
+  `sales.pen` (decks, one-pagers, banners). The others import `qcobro.lib.pen` as `ui` (tokens
+  `$ui:<name>`, components `ui:<id>`); change shared tokens and components only in the library.
+  Open the worktree's own copy by absolute path; images go in `designs/assets/`.
 - Commits use Conventional Commits (`type(scope): subject`); a Husky `commit-msg` hook runs
   commitlint. No AI attribution lines on commits, PRs or issues; keep the DCO sign-off.
 - Start every change in its own worktree (`git worktree add ../qcobro-<n> -b <branch>`) and
@@ -72,7 +79,7 @@ Overrides:
 | area: channels | `mods/apiserver/src/rest`, `mods/apiserver/src/services/{twilio,resend,metaWhatsApp}*`, `mods/apiserver/src/functions/{email,whatsApp}`                         | security-engineer, qa-engineer                        |
 | area: billing  | `mods/apiserver/src/functions/billing`, `mods/common/src/billing`, `mods/apiserver/src/rest/stripeWebhook.ts`                                                   | security-engineer, database-engineer                  |
 | area: api      | `mods/apiserver/src/trpc`, `mods/apiserver/prisma`, `mods/common`                                                                                               | software-architect, database-engineer                 |
-| area: console  | `mods/webapp`, `pencil.pen`                                                                                                                                     | ux-designer, visual-designer                          |
+| area: console  | `mods/webapp`, `designs/`                                                                                                                                       | ux-designer, visual-designer                          |
 | area: sdk      | `mods/sdk`, `mods/ctl`, `mods/mcp`                                                                                                                              | release-engineer, technical-writer                    |
 | area: docs     | `docs-site`, `site`                                                                                                                                             | technical-writer                                      |
 | area: release  | `.github/workflows`, `Dockerfile`, `compose*.yaml`, `config/`                                                                                                   | release-engineer, security-engineer                   |

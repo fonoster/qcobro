@@ -30,17 +30,20 @@ test.describe("message delivery — delivery and the Leído stage", () => {
 
     // --- Portfolio + import one account --------------------------------------
     await page.getByRole("link", { name: "Carteras" }).click();
-    await page.getByRole("button", { name: /Nueva cartera/ }).click();
+    await page
+      .getByRole("button", { name: /Nueva cartera/ })
+      .first()
+      .click();
     await page.getByLabel("Nombre de la cartera").fill(portfolioName);
     await page.getByLabel("ID del cliente").fill(`cli-${stamp}`);
     await page.getByRole("button", { name: "Crear cartera" }).click();
     await page.getByText(portfolioName).click();
     await expect(page).toHaveURL(/\/portfolios\/[a-f0-9-]+$/);
     const portfolioId = page.url().split("/portfolios/")[1];
-    await page.getByRole("button", { name: "Importar cuentas" }).click();
+    await page.getByRole("button", { name: "Sincronizar CSV" }).click();
     await page.locator('input[type="file"]').setInputFiles(CSV);
     await page.getByRole("button", { name: "Importar 1 cuentas" }).click();
-    await page.getByRole("button", { name: "Cerrar" }).click();
+    await page.getByRole("button", { name: "Cerrar", exact: true }).click();
     await expect(page.getByText("María E2E")).toBeVisible();
 
     const auth = await page.evaluate(() => ({
@@ -123,7 +126,7 @@ test.describe("message delivery — delivery and the Leído stage", () => {
     // Nothing is left at Despachado — that was the bug.
     await expect(rowWith("Despachado")).toHaveCount(0);
 
-    const deliveryFilter = page.getByRole("combobox").first();
+    const deliveryFilter = page.getByRole("combobox", { name: "Entrega" });
     await deliveryFilter.selectOption("DELIVERED");
     await expect(rowWith("Entregado")).toHaveCount(2);
     await deliveryFilter.selectOption("");
@@ -145,13 +148,13 @@ test.describe("message delivery — delivery and the Leído stage", () => {
     // `Leído` sits between dispatch and the reply, and on a threaded channel ENGAGED reads
     // as "Respondió" rather than "Conversación".
     await expect(panel.getByText("Despachado → Leído → Respondió")).toBeVisible();
-    await panel.getByRole("button", { name: "Volver a gestiones" }).click();
+    await panel.getByRole("button", { name: "Cerrar diálogo" }).click();
 
     // --- Delivered-but-unopened claims delivery and nothing more ------------
     await unopened.click();
     const second = page.getByRole("dialog");
     await expect(second).toBeVisible();
-    await expect(second.getByText("Entregado")).toBeVisible();
+    await expect(second.getByText("Entregado").first()).toBeVisible();
     // No interaction was observed, so there is no Camino field at all — not an empty one.
     await expect(second.getByText("Camino", { exact: true })).toHaveCount(0);
     await expect(second.getByText("Leído")).toHaveCount(0);

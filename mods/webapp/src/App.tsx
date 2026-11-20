@@ -25,6 +25,7 @@ import { Integrations } from "./pages/Integrations.js";
 import { RequireAuth } from "./components/RequireAuth.js";
 import { AuthedLayout } from "./components/AuthedLayout.js";
 import { AccountLayout } from "./components/AccountLayout.js";
+import { ProfileLayout } from "./components/ProfileLayout.js";
 
 export default function App() {
   return (
@@ -42,6 +43,14 @@ export default function App() {
         }
       >
         <Route path="/workspaces" element={<Workspaces />} />
+      </Route>
+      <Route
+        element={
+          <RequireAuth>
+            <ProfileLayout />
+          </RequireAuth>
+        }
+      >
         <Route path="/profile" element={<Profile />} />
       </Route>
       <Route
