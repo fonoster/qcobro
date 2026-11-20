@@ -53,11 +53,8 @@
         "ui:eUcmA": {
           "content": "Propietario"
         },
-        "ui:NfVJG": {
-          "content": "Documentación"
-        },
-        "ui:tIDWt": {
-          "content": "Soporte"
+        "ui:o1UV4": {
+          "enabled": false
         },
         "ui:jzgJQ/ui:TXca3": {
           "content": "Panel"
