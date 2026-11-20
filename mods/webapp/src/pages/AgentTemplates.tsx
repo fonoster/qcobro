@@ -1270,7 +1270,8 @@ export function EditAgentTemplateModal({
     update.mutate({ id: template.id, name: name.trim(), config });
   }
 
-  const isLoading = !seeded && query.isLoading;
+  // Never show the fields before the saved config is seeded: typing first would be overwritten.
+  const isLoading = !seeded;
 
   return (
     <AgentFormOverlay
