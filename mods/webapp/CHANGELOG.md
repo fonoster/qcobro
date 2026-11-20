@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.2.0](https://github.com/fonoster/qcobro/compare/v4.1.6...v4.2.0) (2026-11-20)
+
+### Features
+
+- **console:** rebuild the console on Fonoster's design system ([#251](https://github.com/fonoster/qcobro/issues/251)) ([f66a81c](https://github.com/fonoster/qcobro/commit/f66a81c601072f40c252781cf5a31c7581d58426)), closes [#011900](https://github.com/fonoster/qcobro/issues/011900) [#39E19](https://github.com/fonoster/qcobro/issues/39E19) [#247](https://github.com/fonoster/qcobro/issues/247) [#248](https://github.com/fonoster/qcobro/issues/248) [#249](https://github.com/fonoster/qcobro/issues/249) [#250](https://github.com/fonoster/qcobro/issues/250) [#247](https://github.com/fonoster/qcobro/issues/247) [#249](https://github.com/fonoster/qcobro/issues/249) [#247](https://github.com/fonoster/qcobro/issues/247) [#247](https://github.com/fonoster/qcobro/issues/247) [#248](https://github.com/fonoster/qcobro/issues/248) [#249](https://github.com/fonoster/qcobro/issues/249) [#250](https://github.com/fonoster/qcobro/issues/250) [#247](https://github.com/fonoster/qcobro/issues/247) [#247](https://github.com/fonoster/qcobro/issues/247) [#247](https://github.com/fonoster/qcobro/issues/247)
+
 ## [4.1.4](https://github.com/fonoster/qcobro/compare/v4.1.3...v4.1.4) (2026-11-19)
 
 **Note:** Version bump only for package @qcobro/webapp
