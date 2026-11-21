@@ -57,7 +57,8 @@ Overrides:
 - UI work is design-first: check or update the design before writing UI code. Designs are
   `.pen` files in `designs/`, edited with Nib: `dashboard-fonoster.pen` (console, importing
   `fonoster.lib.pen`), `website.pen` (`site/`), `docs.pen` (docs diagrams and assets),
-  `sales.pen` (decks, one-pagers, banners). The others import `qcobro.lib.pen` as `ui` (tokens
+  `sales.pen` (decks, one-pagers, banners), `ads/ads.pen` (Meta ads, with their brief, framework
+  and research beside it). The others import `qcobro.lib.pen` as `ui` (tokens
   `$ui:<name>`, components `ui:<id>`); change shared tokens and components only in the library.
   Open the worktree's own copy by absolute path; images go in `designs/assets/`.
 - Commits use Conventional Commits (`type(scope): subject`); a Husky `commit-msg` hook runs

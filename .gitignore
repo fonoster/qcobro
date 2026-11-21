@@ -39,7 +39,7 @@ playwright/.cache/
 .docker-deps/
 
 # Customer case studies (real customer metrics; never commit)
-design/case-studies/
+designs/case-studies/
 
 # Dev container config and secrets (.devcontainer/initialize.sh, scripts/dev-config.mjs).
 .dev/
