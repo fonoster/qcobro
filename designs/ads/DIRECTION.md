@@ -1,7 +1,7 @@
 # QCobro Meta Ads — Direction
 
 Decided with Pedro on 2026-09-16. This brief is the input to the ads framework
-(`design/ads/framework/`) and to every `/ps:ads` run for QCobro. Change it here, not in a
+(`designs/ads/framework/`) and to every `/ps:ads` run for QCobro. Change it here, not in a
 campaign.
 
 ## What an ad is for

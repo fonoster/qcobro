@@ -1,6 +1,6 @@
 # Canvases
 
-Every ad is designed on one of these canvases. They live in `design/ads/ads.pen`, section
+Every ad is designed on one of these canvases. They live in `designs/ads/ads.pen`, section
 **02 · Static templates** (frames `tpl/<canvas>`) and **03 · Sequences**. Numbers come from
 Meta's Ads Guide as of 2026-09-16 (`../research/FORMATS-INVENTORY.md`). Where Meta gives no
 number, the rule is marked **heuristic**.
